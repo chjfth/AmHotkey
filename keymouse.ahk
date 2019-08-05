@@ -159,7 +159,7 @@ km_DefineEasymouseLiteHotkeys(is_save_ini:=false, is_disable_old_hotkey:=false)
 	{	
 		; Remove all "relating" AHK hotkeys first.
 		; Note a side effect here: User's already effective "conflicting" hotkeys will be removed as well.
-		; Workaround: Reload the whole DEV.ahk, then is_disable_old_hotkey will be false and the remove actions
+		; Workaround: Reload the whole AmHotkey.ahk, then is_disable_old_hotkey will be false and the remove actions
 		; will be bypassed.
 		apphots := ["SC137", "SC046", "Pause", "Home", "End", "PgUp", "PgDn"] ; this is hard-coded, should manually sync
 		for index, hot in apphots

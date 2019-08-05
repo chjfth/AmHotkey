@@ -1,5 +1,7 @@
 
-; Note: *i means "ignore if that .ahk does not exist"
+; Note: 
+;	A Line starting with semicolon is a comment line.
+;	*i means "ignore if that .ahk does not exist"
 
 #Include WinClipAPI.ahk
 #Include WinClip.ahk
@@ -8,6 +10,7 @@
 #Include *i quick-switch-app.ahk
 
 #Include *i keymouse.ahk
+
 #Include *i hotstrings.ahk
 
 #Include *i winshell.ahk

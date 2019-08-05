@@ -176,14 +176,14 @@ if(g_tmp==0) ; no modules loaded, probably _more_includes_.ahk not generated yet
 	if(! (ErrorLevel==0 && A_LastError==0) )
 	{
 ;		MsgBox, % Format("{} , {}", ErrorLevel, A_LastError)
-		MsgBox, 0x10, % "DEV.ahk starts error!",  % Format("Cannot find or generate ""{}"" . The program will exit.", dstfile)
+		MsgBox, 0x10, % "AmHotkey.ahk starts error!",  % Format("Cannot find or generate ""{}"" . The program will exit.", dstfile)
 ;	no_ahk_modules := "(no modules)`n`nMaybe you should get a copy of _more_includes_.ahk from _more_includes_.ahk.sample"
 		ExitApp, 4
 	}
 	
 	if(1) ;if(ErrorLevel==0) ; success
 	{
-		MsgBox, 0x40, % "DEV.ahk starts", 
+		MsgBox, 0x40, % "AmHotkey.ahk starts", 
 (
 This is the first time you run this script. 
 
@@ -199,7 +199,7 @@ Click OK to continue.
 	}
 	else
 	{
-		MsgBox, 0x10, % "DEV.ahk starts error!",  % Format("Cannot find or generate ""{}"" . The program will exit.", dstfile)
+		MsgBox, 0x10, % "AmHotkey.ahk starts error!",  % Format("Cannot find or generate ""{}"" . The program will exit.", dstfile)
 ;	no_ahk_modules := "(no modules)`n`nMaybe you should get a copy of _more_includes_.ahk from _more_includes_.ahk.sample"
 		ExitApp, 4
 	}
