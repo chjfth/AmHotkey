@@ -1,0 +1,53 @@
+﻿; Note: This file is saved with UTF8 with BOM, which is the best encoding choice to write Unicode chars here.
+
+AUTOEXEC_customize_ahk: ; Workaround for Autohotkey's ugly auto-exec feature. Don't delete.
+	; MUST DO: Change the above ahk label to a specific one, such as AUTOEXEC_foobar_ahk
+
+; Something to place here.
+; * Customize these global vars according to your running machine:
+; * Call the run-once functions.
+
+; Example
+;g_dirEverpic = D:\chj\scripts\everpic
+
+; Init_MyCustomizedEnv() ; Function can be defined later.
+
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+return ; End of auto-execute section.
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+
+^!F8::
+MsgBox, 0x40, Autohotkey script info, 
+(
+Chj: You pressed Ctrl+Alt+F8 hotkey, which is intercepted by me.
+
+Otherwise, Intel graphics driver (Intel HD4600 etc) will grab it and revert(ruin) your monitors layout without any warning.
+)
+	; 禁掉 Intel 核心显卡（比如 Z87 主板上的 HD4600 显卡）控制面板的强制绑定的“恢复显卡默认值”热键。
+	; 该热键会导致 Windows 7 显示器布局重排。 （是否能挡住待验证）
+return
+
+
+
+; Define hotkeys below::::::::
+
+
+; TotalPhase DataCenter click the small "Auto scrolling" button(position guess)
+#If IsWinClassActive("QWidget") && IsWinTitleMatchRegex("Total Phase Data Center")
+F12::
+	MouseGetPos origx, origy
+	ClickInActiveWindow(-366, -266)
+	MouseMove origx, origy
+return
+#If
+
+
+
+; AMCap2 window set position, for presentation purpose
+;#[:: WinMove_MatchTitleRegex("^AMCap2", 10, 10, 1000, 720)
+;#]:: WinMove_MatchTitleRegex("^AMCap2", 211, 210)
+

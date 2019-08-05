@@ -1,0 +1,2326 @@
+﻿; Tested with Autohotkey v1.1.19.02
+
+#InstallKeybdHook
+
+global g_winmove_unit := 50 ; window move unit small
+global g_winmove_scale := 5 ; window move 5x larger step if you tap LCtrl just before doing win move
+
+global g_saved_xMouseScreen := 0
+global g_saved_yMouseScreen := 0
+
+;g_NumpadKeyMouse = 1
+	; Use Numpad keys as mouse navigator.
+	; Win+NumLock will toggle this behavior.
+
+global g_MouseNudgeUnit = 10
+global g_MouseNudgeUnitAM = 10 ; AM: Application Match
+global g_MouseNudgeTitleAM = "Non-existing title"
+	; Write ``global`` so that these vars can be referenced in later functions' body.
+
+g_EvernoteMain_y = 166
+g_EvernoteSingleNote_y = 170
+	; You can override above global vars in customize.ahk to suit your customized env.
+g_dirEverjpeg = F:\chj\scripts\everjpeg
+
+
+
+global g_RCtrl_WinMoveScale_graceticks = 3000
+
+
+
+global g_func_IsTypingZhongwen := "IsTypingZhongwen_PinyinJiaJia"
+global g_func_IMEToggleZhonwen := "ToggleZhongwenStatus_PinyinJiaJia"
+	; User can override these two function pointers to suit their own IME(Input MEthod).
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;; ^^^ user configurable globals end ^^^ ;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+global g_UntitledNotpad := "Untitled - Notepad"
+
+global gtc_last_RCtrl = 0 ; Last RCtrl release tickcount
+global Eme_Fn_idle = true ; no need to configure
+
+global g_clipboard_cache
+global g_pathop_last_numop = 14
+
+RegRead, g_CmdCompletionChar, HKEY_CURRENT_USER, Software\Microsoft\Command Processor, CompletionChar
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Cope with auto-exec section in sub-ahk. Thanks to:
+; http://www.autohotkey.com/board/topic/9890-multiple-auto-execute-sections/ with IsLabel() fix
+
+
+global g_arAutoexecLabels := []
+global g_dictAutoexecExistingFname := {} ; for checking duplicate
+global g_customize_ahk := "customize.ahk"
+
+
+global msgboxoption_Ok := 0
+global msgboxoption_OkCancel := 1
+global msgboxoption_YesNo := 4
+global msgboxoption_YesNoCancel := 3
+global msgboxoption_IconStop := 16
+global msgboxoption_IconQuestion := 32
+global msgboxoption_IconExclamation := 48
+global msgboxoption_IconInfo := 64
+global msgboxoption_2nddefault := 256
+global msgboxoption_3rddefault := 512
+global msgboxoption_SystemModal := 0x1000
+global msgboxoption_TaskModal := 0x2000
+global msgboxoption_Topmost := 0x40000
+
+global g_devGuiAutoResizeDict := {}
+
+GetFirstNoncommentLine(ahkfname)
+{
+	Loop, read, %ahkfname%
+	{
+		if(Trim(A_LoopReadLine)=="")
+			continue ; this is a blank line
+		else if( A_LoopReadLine ~= "^\s*(?=;);+" ) ; \s space or tab
+		{	
+			continue ; this is a comment line 
+		}
+		else
+			return A_LoopReadLine
+	}
+	return ""
+}
+
+AddAutoExecAhk(ahkdir, filename)
+{
+	ahkfname := ahkdir . "\" . filename
+
+	; check duplicate
+	if(g_dictAutoexecExistingFname.HasKey(ahkfname)) {
+		return
+	}
+
+	; Check whether the first non comment line is in pattern AUTOEXEC_xxx:
+	chkline := GetFirstNoncommentLine(ahkfname)
+	
+	foundpos := RegExMatch(chkline, "^(AUTOEXEC_[a-zA-Z0-9_.]+)\:", subpat)
+	if( foundpos>0 )
+	{
+		g_arAutoexecLabels.Insert( {"filename":filename , "label":subpat1} )
+		g_dictAutoexecExistingFname[ahkfname] := "yes"
+	}
+}
+
+ScanAhkFilesForAutoexecLabel()
+{
+	; Scan all ahk files in the same folder as the master ahk file.
+
+	; some stock ahk first
+	AddAutoExecAhk(A_ScriptDir , "keymouse.ahk")
+	AddAutoExecAhk(A_ScriptDir , "quick-switch-app.ahk")
+	
+	Loop, %A_ScriptDir%\*.ahk
+	{
+		; Loop, %A_ScriptDir%\*.ahk ; this matches XXX.ahkx , XXX.ahky etc (AHK bug?)
+		; so I have to filter it once more.
+		
+		if(not A_LoopFileName ~= ".ahk$" )
+			continue
+
+		if(A_LoopFileName==A_ScriptName)
+			continue ; skip self
+		
+		
+		if(A_LoopFileName==g_customize_ahk)
+			continue ; leave this at end
+			
+		if(InStr(A_LoopFileName, " "))
+			continue ; reject those with spaces in filename
+		
+		AddAutoExecAhk(A_ScriptDir, A_LoopFileName)
+	}
+	
+	AddAutoExecAhk(A_ScriptDir, g_customize_ahk)
+		; Load this at the final stage, because it is intended to override some 
+		; global vars defined by other modules.
+	
+;	msgbox, % "g_arAutoexecLabels maxindex=" . g_arAutoexecLabels.MaxIndex()
+}
+
+ScanAhkFilesForAutoexecLabel() ; call it on master ahk load
+
+; "Call" auto-exec sections collected(for those ahks with AUTOEXEC_xxx: label at start of file)
+global g_tmp := 0
+global g_msglistmodules := ""
+for index, autolabel in g_arAutoexecLabels 
+{
+	label_varname := autolabel.label
+
+	if(IsLabel(label_varname)) 
+	{
+		g_tmp++
+		g_msglistmodules .=  g_tmp . ". " . autolabel.filename . " [" . label_varname . "]`n"
+		GoSub, %label_varname%
+	}
+	else
+	{
+		; This label_varname is not found, probably because its containing XXX.ahk 
+		; is not included in _more_includes_.ahk .
+	}
+}
+if(g_tmp==0) ; no modules loaded, probably _more_includes_.ahk not generated yet
+{
+	srcfile := A_ScriptDir . "\" . "_more_includes_.ahk.sample"
+	dstfile := A_ScriptDir . "\" . "_more_includes_.ahk"
+
+;	MsgBox, % Format("filecopy {} -- {}", srcfile, dstfile)
+	
+	FileCopy, %srcfile%, %dstfile%
+	
+	if(! (ErrorLevel==0 && A_LastError==0) )
+	{
+;		MsgBox, % Format("{} , {}", ErrorLevel, A_LastError)
+		MsgBox, 0x10, % "DEV.ahk starts error!",  % Format("Cannot find or generate ""{}"" . The program will exit.", dstfile)
+;	no_ahk_modules := "(no modules)`n`nMaybe you should get a copy of _more_includes_.ahk from _more_includes_.ahk.sample"
+		ExitApp, 4
+	}
+	
+	if(1) ;if(ErrorLevel==0) ; success
+	{
+		MsgBox, 0x40, % "DEV.ahk starts", 
+(
+This is the first time you run this script. 
+
+You can edit 
+
+    %dstfile% 
+
+to customize what AHK modules to load into this program.
+
+Click OK to continue.
+)
+		Reload
+	}
+	else
+	{
+		MsgBox, 0x10, % "DEV.ahk starts error!",  % Format("Cannot find or generate ""{}"" . The program will exit.", dstfile)
+;	no_ahk_modules := "(no modules)`n`nMaybe you should get a copy of _more_includes_.ahk from _more_includes_.ahk.sample"
+		ExitApp, 4
+	}
+}
+;
+MsgBox, 0x40, Autohotkey script loading info, 
+(
+%A_ScriptDir%\%A_ScriptName% has loaded the following modules:`n
+%g_msglistmodules%
+)
+
+
+; ########## global vars ##########
+global g_winx, g_winy, g_winwidth=-1, g_winheight
+	; These four vars tells previous window position before a window-size change, 
+	; so that user can undo the change(if inadvertently changed an undesired window)
+	; g_winwidth = -1 means "these values are invalid now".
+	;
+	; 奇怪, 按理说 global 变量定义不能写在 #Include 后头的，
+	; 但去掉 此句后又有影响， Ctrl+Win+0 变得无法恢复窗口大小了。
+
+
+
+
+;################################################################################################ 
+;################################### Global-exec section ENDS ################################### 
+;################################################################################################ 
+
+; ########## Some debugging hotkeys first ##########
+
+; 2010-03-13 Win+Alt+R to reload current script
+#!r:: Reload
+
+; Win+Alt+C : Check Window class
+!#c:: dev_CheckInfo()
+dev_CheckInfo()
+{
+	tooltip
+	WinGet, Awinid, ID, A ; cache active window unique id
+	WinGetClass, class, ahk_id %Awinid%
+	WinGetTitle, title, ahk_id %Awinid%
+	WinGetPos, x,y,w,h, ahk_id %Awinid%
+	WinGet, pid, PID, ahk_id %Awinid%
+	WinGet, exepath, ProcessPath, ahk_id %Awinid%
+	ControlGetFocus, focusNN, ahk_id %Awinid%
+	ControlGet, focus_hctrl, HWND, , %focusNN%, ahk_id %Awinid%
+	
+	CoordMode, Mouse, Screen
+	MouseGetPos, mxScreen, myScreen
+	
+	CoordMode, Mouse, Window
+	MouseGetPos, mxWindow, myWindow, , classnn
+	
+	MsgBox, % msgboxoption_IconInfo, ,
+	(
+The Active window class is "%class%" (Hwnd=%Awinid%)
+Title is "%title%"
+Position: x=%x% , y=%y% , width=%w% , height=%h%
+
+Current focused classnn: %focusNN%
+Current focused hctrl: ahk_id=%focus_hctrl%
+
+Process ID: %pid%
+Process path: %exepath%
+
+Mouse position: In-window: (%mxWindow%,%myWindow%)  `; In-screen: (%mxScreen%,%myScreen%)
+
+ClassNN under mouse is "%classnn%"
+	)
+}
+
+
+#!s:: Launch_AU3Spy()
+Launch_AU3Spy()
+{
+	tooltip
+	if not A_AhkPath {
+		MsgBox, A_AhkPath is blank, so I don't know where to find AU3_Spy.exe
+	}
+	
+	spypath := RegExReplace(A_AhkPath, "(.+)\\[^\\]+$", "$1\AU3_Spy.exe")
+	Run, %spypath%, , UseErrorLevel
+	if ErrorLevel {
+		MsgBox, "%spypath%" launch failed!
+	}
+	else {
+		winspy_class := "ahk_class AutoHotkeyGUI"
+		WinWait, %winspy_class%
+		WinActivate, %winspy_class%
+		WinWaitActive, %winspy_class%
+	}
+}
+
+Get_HCtrlFromClassNN(classnn, wintitle)
+{
+	ControlGet, hctrl, HWND, , %classnn%, %wintitle%
+	return hctrl
+}
+
+
+!#f:: ; Try to set focus to the control beneath current mouse pointer.
+	MouseGetPos, _mx, _my, hwnd, target_classnn
+	ControlFocus, %target_classnn%, A ; [2015-02-10] Strange, without explicity A param, it will not succeed.
+	if not ErrorLevel {
+		tooltip, % "New focus @ #" . hwnd . " classnn=" . target_classnn
+	} else {
+		MsgBox, % "ControlFocus reports ErrorLevel = " . ErrorLevel
+	}
+return
+
+Get_DPIScale()
+{
+	return A_ScreenDPI/96
+}
+
+
+FlashRectInActiveWindow(x, y, width, height) ; old test code
+{
+	speed = 10, sleep = 100
+	tooltip, ☆ , % x, % y
+	mousemove, % x , % y , 1
+	sleep, %sleep%
+	mousemove, % x, % y+height , %speed%
+	sleep, %sleep%
+	mousemove, % x+width, % y+height , %speed%
+	sleep, %sleep%
+	mousemove, % x+width, % y , %speed%
+	sleep, %sleep%
+	mousemove, % x, % y , %speed%
+
+	tooltip, ★ , % x+width, % y+height 
+}
+
+HighlightRectInScreen(screenx, screeny, width, height, rgb:="8000FF", duration_msec:=2000) ; "8000FF"=purple
+{
+	Gui, hilightScreen:New
+	Gui, hilightScreen:-Caption +ToolWindow ; so that it can be transparent
+	Gui, hilightScreen:+HwndHRwnd ; generate variable HRwnd
+	Gui, hilightScreen:Color, % rgb
+	Gui, hilightScreen:Font, s8 c888888, Tahoma
+	Gui, hilightScreen:Add, Text, , AHK Highlight
+	;
+	showopt := "X" . screenx . " Y" . screeny . " W" . width . " H" . height
+	Gui, hilightScreen:Show, %showopt%
+	WinSet, AlwaysOnTop, On, ahk_id %HRwnd%
+	WinSet, Transparent, 160, ahk_id %HRwnd%
+	;
+	SetTimer, hilightScreenGuiEscape, -%duration_msec%
+	return 
+
+hilightScreenGuiClose:
+hilightScreenGuiEscape:
+;	tooltip timer...END (A_Gui=%A_Gui% A_GuiControl=%A_GuiControl%)
+	Gui, hilightScreen:Destroy 
+	return
+
+}
+
+HighlightRectInActiveWindow(hx, hy, hwidth, hheight, duration_msec:=2000) ; old code, use DoHilightRectInTopwin instead
+{
+	; hx, hy relative to current active window
+	WinGetPos, Ax, Ay, Awidth, Aheight, A 
+
+	Gui, hilightwin:New
+	Gui, hilightwin:-Caption +ToolWindow ; so that it can be transparent
+	Gui, hilightwin:+HwndHRwnd ; generate variable HRwnd
+	Gui, hilightwin:Color, FFFF00
+	Gui, hilightwin:Font, s8 c888888, Tahoma
+	Gui, hilightwin:Add, Text, , AHK Highlight
+	;
+	screenx := Ax + hx
+	screeny := Ay + hy
+	showopt := "X" . screenx . " Y" . screeny . " W" . hwidth . " H" . hheight
+	Gui, hilightwin:Show, %showopt%
+	WinSet, AlwaysOnTop, On, ahk_id %HRwnd%
+	WinSet, Transparent, 200, ahk_id %HRwnd%
+	;
+	SetTimer, hilightwinGuiEscape, -%duration_msec%
+	return 
+
+hilightwinGuiClose:
+hilightwinGuiEscape:
+;	tooltip timer...END (A_Gui=%A_Gui% A_GuiControl=%A_GuiControl%)
+	Gui, hilightwin:Destroy 
+	return
+	
+}
+
+DoHilightRectInTopwin(wintitle, x, y, w, h, duration_msec:=1000, rgb:="FFE0BE")
+{
+	arRects := [ { "x":x, "y":y, "w":w, "h":h, "rgb":rgb, "notext":true} ]
+	DoHilightBlocksInTopwin(wintitle, arRects, duration_msec)
+}
+
+DoHilightBlocksInTopwin_rs(wintitle, arRectStrs, msec_step:=1000)
+{
+	; arRects sample:
+	;
+	; arRects := [ "100,100,100,100", "200,200,200,100" ]
+	
+	arRects := array()
+	for index, rectstr in arRectStrs
+	{
+		inputvar := arRectStrs[index]
+		StringSplit, num, inputvar , `,
+		arRects.Insert( { "x":num1 , "y":num2 , "w":num3 , "h":num4 } )
+	}
+	DoHilightBlocksInTopwin(wintitle, arRects, msec_step)
+
+}
+
+DoHilightBlocksInTopwin(wintitle, arRects, msec_step:=1000)
+{
+	; arRects is an array; array element is a dict with member .x .y .w .h 
+
+	WinGet, hwndBase, ID, %wintitle%
+
+	static ccyellow := "FFFF00" , ccred := "FF8888" , ccmagenta := "FF00FF" ; cc: color code
+
+	static hilictl := {}
+	static s_hili_running := false
+	if (s_hili_running) {
+		tooltip, Another instance of DoHilightBlocksInTopwin is running.
+		return
+	}
+	s_hili_running := true
+
+	static s_name := ""
+	global HiliText 
+		; must be global, otherwise, second timer's will GuiControl will not update control text
+		; The manual explicitly states this in "Functions -> Using Subroutines Within a Function"
+
+	hilictl := {}
+	hilictl.wintitle := wintitle
+ 	; hilictl.name := "hiname" ; optional
+	hilictl.msec_step := msec_step
+	hilictl.nextstep := 1
+
+	hilictl.arsteps := arRects
+
+	; hx, hy relative to current active window
+	WinGetPos, Ax, Ay, Awidth, Aheight, A 
+
+	Gui, hiliblock:New
+	Gui, hiliblock:-Caption +ToolWindow ; so that it can be transparent
+	Gui, hiliblock:+HwndHIwnd ; generate variable HIwnd (global or local? seems global)
+;	Gui, hiliblock:Color, %ccyellow% ; set later
+	Gui, hiliblock:Font, s8 c333333, Tahoma
+	Gui, hiliblock:Add, Text, vHiliText, "any" ; text modified later
+	
+	
+	hilictl.HIwnd := HIwnd
+	hilictl.hwndBase := hwndBase
+	
+	GoSub, HiliStepTimer ; Starting the highlight!
+	; Wait until all hilight done
+	while (s_hili_running)
+		sleep 100
+	return
+	
+
+hiliblockGuiClose:
+hiliblockGuiEscape:
+;	tooltip, % "close " . hilictl.nextstep
+HiliStepTimer:
+
+	arsteps := hilictl.arsteps ; each step is an object containing xywh(4 members)
+	thisstep := hilictl.nextstep
+	hilictl.nextstep += 1
+	maxsteps := arsteps.MaxIndex()
+	thisrect := arsteps[thisstep]
+
+	if(thisstep>maxsteps)
+	{
+		; kill timer
+		SetTimer, HiliStepTimer, Off
+		Gui, hiliblock:Destroy
+		s_hili_running := false
+		return
+	}
+
+	WinGetPos, xbase, ybase, wbase, hbase, % "ahk_id " hilictl.hwndBase
+
+	boxcolor := thisrect.rgb ? thisrect.rgb : ccyellow
+	halfw := 200, halfh := 100
+
+	; Check Rect validity:
+	is_goodwnd := true ; assume true
+	;
+	if(xbase=="" || ybase=="")
+	{
+		is_goodwnd := false
+		; Will display a RED box at center of the main monitor warning the user
+		x := A_ScreenWidth/2 - halfw
+		y := A_ScreenHeight/2 - halfh
+		w := halfw * 2
+		h := halfh * 2
+		
+		boxtext := "Can not get valid HWND by AHK wintitle:`n`n" . hilictl.wintitle
+			. "`n`nPress cancel to dismiss."
+	}
+	else if(thisrect.x=="" || thisrect.y=="" || thisrect.w=="" || thisrect.h=="")
+	{
+		is_goodwnd := false
+		x := xbase
+		y := ybase
+		w := halfw * 2
+		h := halfh * 2
+		boxtext := "Invalid xywh input.`n`n" 
+			. "x=" . thisrect.x . " y=" . thisrect.y . " w=" . thisrect.w . " h=" . thisrect.h
+			. "`n`nPress cancel to dismiss."
+	}
+	else 
+	{
+		if(thisrect.w>0 && thisrect.h>0)
+		{
+			x := thisrect.x + xbase
+			y := thisrect.y + ybase
+			w := thisrect.w
+			h := thisrect.h
+		
+			boxtext := "x=" . thisrect.x . " y=" . thisrect.y . "`n[w=" . thisrect.w . " h=" . thisrect.h . "]"
+				; display x,y relative to the topmost window
+		}
+		else 
+		{
+			x := thisrect.x + xbase
+			y := thisrect.y + ybase
+			w := 200
+			h := 200
+			boxcolor := thisrect.rgb ? thisrect.rgb : ccmagenta
+			boxtext := "Invisible! w=" . thisrect.w . " h=" . thisrect.h
+		}
+
+		if(maxsteps>1)
+			boxtext := thisstep . "/" . maxsteps . ": " . boxtext
+	}
+	
+	if(not is_goodwnd)
+		boxcolor := thisrect.rgb ? thisrect.rgb : ccred
+	
+	if(thisrect.notext)
+		boxtext := ""
+	
+	Gui, hiliblock:Color, %boxcolor%
+	GuiControl, hiliblock:, HiliText, %boxtext%
+	GuiControl, hiliblock:Move, HiliText, X0 Y0 w%w% h%h% ; this is relative to HIwnd
+
+	Gui, hiliblock:Show, X0 Y0 W20 H10 ; init arbitrary small window 
+		; Don't use %screen_xywh% in Gui,Show (its W,H means client area), so use WinMove .
+	HIwnd := hilictl.HIwnd ; optional, because HIwnd has been a global
+	WinMove, % "ahk_id " . HIwnd, 
+		, % xbase+thisrect.x , ybase+thisrect.y, % w, % h
+	WinSet, AlwaysOnTop, On, ahk_id %HIwnd% 
+
+	if(is_goodwnd)
+	{
+		WinSet, Transparent, 188, ahk_id %HIwnd% ; set-transparent must be AFTER Gui,Show , no effect otherwise
+		SetTimer, HiliStepTimer, % 0-hilictl.msec_step
+	}
+	else
+	{
+		WinSet, Transparent, 244, ahk_id %HIwnd%
+		hilictl.nextstep := maxsteps+1 ; so that next callback will destroy the Gui
+		SetTimer, HiliStepTimer, Off ; so user have to explicitly close the box (keyboard cancel)
+	}	
+	return
+}
+
+;##############################################################################
+; Something with global effects
+;##############################################################################
+
+~RCtrl up:: ; [2015-02-06] moveWinRelative() requires this
+	gtc_last_RCtrl := A_TickCount
+;	Send {Blind}{RCtrl up}
+return
+
+
+
+
+;##############################################################################
+;#################### Environment checking functions ##########################
+;##############################################################################
+
+IsWin5x()
+{
+	if A_OSVersion in WIN_2003,WIN_XP,WIN_2000
+	{
+	    return true
+	}
+	else
+	{
+		return false
+	}
+}
+
+GetMonitorWorkArea(monidx)
+{
+	; monidx 1 means first monitor, 2 means second ...
+;	SysGet, wa, Monitor, %monidx%
+	SysGet, wa, MonitorWorkArea, %monidx% ; this exlcudes taskbar region
+	if(waLeft!=None) 
+	{
+		return {"left":waLeft, "right":waRight, "top":waTop, "bottom":waBottom
+			, "width":waRight-waLeft, "height":waBottom-waTop }
+	}
+	else
+		return None
+}
+
+IsWinidActive(winid) ; Check against active window
+{
+	IfWinActive, ahk_id %winid%
+	{
+	    return true
+	}
+	return false
+}
+
+IsWinClassActive(winclass, wintext="") ; Check against active window
+{
+	IfWinActive, ahk_class %winclass%, %wintext%
+	{
+	    return true
+	}
+	return false
+}
+
+IsWinClassMatchRegex(regex) ; Check against active window class
+{
+	WinGetClass, class, A
+	foundpos := RegExMatch(class, regex)
+	if (foundpos>0)
+		return true
+	else 
+		return false
+}
+
+IsWinTitleMatchRegex(regex) ; Check against active window
+{
+	WinGetTitle, title, A
+	foundpos := RegExMatch(title, regex)
+	if (foundpos>0)
+		return true
+	else 
+		return false
+}
+
+dev_IsWin7SaveAsDialog()
+{
+	if(not IsWinClassActive("#32770"))
+		return false
+	
+	if(IsWinTitleMatchRegex("另存为")
+		or IsWinTitleMatchRegex("Save As") )
+	{
+		return true
+	}
+	else
+		return false
+}
+
+Is_XY_in_Rect(x,y, xrect, yrect, wrect, hrect)
+{
+	if(x>=xrect and x<=xrect+wrect and y>yrect and y<yrect+hrect)
+		return true
+	else
+		return false
+}
+
+Is_RectA_in_RectB(Ax, Ay, Aw, Ah, Bx, By, Bw, Bh, tolerance:=0)
+{
+	t := tolerance
+	if(Ax>=(Bx-t) and Ay>=(By-t) and (Ax+Aw)<=(Bx+Bw+t) and (Ay+Ah)<=(By+Bh+t))
+		return true
+	else
+		return false
+}
+
+GetActiveClassnnFromXY(x, y)
+{
+	; Providing X,Y inside the active window, return control classnn from that position
+	
+	if(x==None)
+	{
+		MsgBox, % "Error: GetActiveClassnnFromXY() null x"
+		return 
+	}
+	if(y==None)
+	{
+		MsgBox, % "Error: GetActiveClassnnFromXY() null y"
+		return 
+	}
+	
+	MouseMove, %x%, %y%
+	MouseGetPos,,,, classnn
+	return classnn
+}
+
+; [2015-02-07] The great dynamically hotkey defining function. (tested on AHK 1.1.13.01)
+; BIG Thanks to: http://stackoverflow.com/a/17932358
+; Usage:
+; DefineHotkey("x", "Foo", "Bar1", "Bar2") ; this defines:  x:: Foo("Bar1", "Bar2")
+; [2015-03-16] But due to its lack of support for conditional hotkeys, I have superceded it with 
+; DefineHotkeyWithCondition() and UnDefineHotkeyWithCondition()
+;
+DefineHotkey_old(hk, fun, arg*) {
+;MsgBox, %hk% @ %fun%
+    Static funs := {}, args := {}
+    if(fun) {
+	    funs[hk] := Func(fun), args[hk] := arg
+    	Hotkey, %hk%, Hotkey_Handle, On
+    } else {
+    	Hotkey, %hk%, Off
+    	; [2015-02-26] Chj: Autohotkey 1.19 does not seem to provide a way to remove a hotkey definition, 
+    	; only turn it Off.
+    }
+    Return
+Hotkey_Handle:
+tooltip, Ooops! you used oooooooold Hotkey_Handle DefineHotkey(). Please use upgrade to DefineHotkeyWithCondition()
+    funs[A_ThisHotkey].(args[A_ThisHotkey]*)
+    Return
+}
+
+UnDefineHotkey(hk, fun)
+{
+	DefineHotkey(hk, "")
+}
+
+DefineHotkey(hk, fun, args*) ; will define global hotkey
+{
+	; fun  is a function name string, like "DoMyWork", DoMyWork() is defined somewhere else.
+	; If fun=="", the previously registered global hotkey is removed.
+	;
+	; Data structure example:
+	; funs["F1"]    => anonther object
+	; funs["F1"].fn => Function object for the hotkey
+	; funs["F1"].pr => function parameters for the .fn function
+
+	static funs := {}
+	
+	if(fun)
+	{
+		if(not funs[hk])
+			funs[hk] := {}
+		
+		funs[hk].fn_name := fun
+		funs[hk].fn := Func(fun)
+		funs[hk].pr := args
+		
+		Hotkey, If ; -- use the global context
+		Hotkey, %hk%, Hotkey_Handler_global, On
+	}
+	else 
+	{
+		funs.remove(hk)
+		
+		Hotkey, If ; -- use the global context
+		Hotkey, %hk%, Off
+	}
+	
+	return
+
+Hotkey_Handler_global:
+;tooltip, % "Hotkey_Handler_global() [" . A_ThisHotkey . "] ........"
+	fnpr := funs[A_ThisHotkey]
+	if(fnpr)
+	{
+;		tooltip, % "Hotkey_Handler_global() [" . A_ThisHotkey . "] => " . fnpr.fn_name . "()" ; debug
+		fnpr.fn.(fnpr.pr*)
+	}
+	else
+		tooltip, Bad! funs[%A_ThisHotkey%] is null!!!!!
+	
+	return
+}
+
+
+UnDefineHotkeyWithCondition(hk, cond)
+{
+	DefineHotkeyWithCondition(hk, cond, "")
+}
+
+DefineHotkeyWithCondition(hk, cond, fun, args*)
+{
+	; fun  is a function name string, like "DoMyWork", DoMyWork() is defined somewhere else.
+	; If fun=="", the previously registered hotkey *for the cond* is removed.
+	;
+	; cond is a function name string, like "Spc_IsActive".
+	;
+	; (Autohotkey 1.1.19.02 MEMO)
+	; ALERT!: User should already have an exact ``#If cond()`` block defined to use with DefineHotkeyWithCondition().
+	; Missing this step will *silently* fail the conditional-hotkey, OR, fail the global hotkey(random from the two).
+	;
+	; This step is easily ignored because there will be no ``Parameter #2 must match an existing #If expression``
+	; error message on reloading the script. That error message can usually be seen when you write explicit 
+	; ``Hotkey, If, somecond()`` instead of [ a variable-flavored ``Hotkey, If, %cond%()`` as in this function ].
+	;
+	; For example, if you call like this.
+	;
+	;	DefineHotkeyWithCondition("F9", "IsNotepadActive", "mytooltip", "Hit", "notePad")
+	;
+	; then you must have an #If block with at least two lines(an empty block is enough)
+	;
+	;	#If IsNotepadActive()
+	;	#If
+	;
+	;	IsNotepadActive()
+	;	{
+	;		IfWinActive, ahk_class Notepad
+	;	    {
+	;	         return true
+	;		}
+	;		return false
+	;	}
+	;
+	;
+	; Data structure example:
+	; condfuns["F1"]                    => anonther object
+	; condfuns["F1"]["Spc_IsActive"]    => yet anonther object
+	; condfuns["F1"]["Spc_IsActive"].fn => Function object for Spc_IsActive() true condition
+	; condfuns["F1"]["Spc_IsActive"].pr => function parameters for the .fn function
+	
+	if(cond=="")
+	{
+		MsgBox, % msgboxoption_IconStop, , % "BUG! Call with null cond: `n`nDefineHotkeyWithCondition(" . hk . "`, (null)`, " . fun . ")"
+		return 
+	}
+	
+	static condfuns := {}
+	
+	if(not condfuns[hk])
+	{
+		condfuns[hk] := {}
+		condfuns[hk].count := 0
+	}
+		
+	
+	if(not condfuns[hk][cond])
+		condfuns[hk][cond] := {}
+
+	if(fun)
+	{
+		; To improve(maybe): cache cond's function in ``condfuns[hk][cond].condfn`` to improve speed
+
+		condfuns[hk][cond].fn_name := fun
+		condfuns[hk][cond].fn := Func(fun)
+		condfuns[hk][cond].pr := args
+		condfuns[hk][cond].cnt := 0
+		
+		Hotkey, If, %cond%()
+		Hotkey, %hk%, Hotkey_Handler_conditional, On
+	}
+	else 
+	{
+		condfuns[hk].remove(cond)
+		
+		Hotkey, If, %cond%()
+		Hotkey, %hk%, Off
+	}
+	
+	Hotkey, If ; to be third-party code friendly, revert to global Hotkey context
+	
+	return
+
+Hotkey_Handler_conditional:
+	hk_dict := condfuns[A_ThisHotkey]
+	hk_dict.count += 1
+;tooltip, % "Hotkey_Handler_conditional() [" . A_ThisHotkey . "] ........(" . hk_dict.count . ")"
+	
+	for cond, fnpr in hk_dict
+	{
+		if(%cond%()) ; if the condition is true
+		{
+;			tooltip, % "Hotkey_Handler_conditional() [" . A_ThisHotkey . "@" . cond . "] => " . fnpr.fn_name . "()" ; debug ok
+;			sleep, 500 ; debug
+
+			fnpr.cnt += 1
+			fnpr.fn.(fnpr.pr*)
+		}
+	}
+
+	return
+}
+
+Get_ClientAreaPos(htopwin, byref x, byref y, byref w, byref h)
+{
+	if(not htopwin)
+	{
+		WinGet, htopwin, ID, A ; cache active window unique id
+	}
+
+	GetWindowInfo(htopwin, left, top, right, bottom, cleft, ctop, cright, cbottom)
+	
+	x := cleft-left
+	y := ctop-top
+	w := cright-cleft
+	h := cbottom-ctop
+}
+
+GetWindowInfo(_hGui
+				, ByRef _winLeft=0, ByRef _winTop=0, ByRef _winRight=0, ByRef _winBottom=0
+				, ByRef _cliLeft=0, ByRef _cliTop=0, ByRef _cliRight=0, ByRef _cliBottom=0
+				, ByRef _xWinBorder=0, ByRef _yWinBorder=0, ByRef _winStyle=0)
+{
+	; Thanks to http://www.autohotkey.com/board/topic/101025-wingetpos-bug/
+	
+;	if TraceLevel
+;		SendTrace(A_ThisFunc, "START")
+	
+	;---------------------------------------------------------------------
+	; DWORD + 2 RECT + 3 DWORD + 2 UINT + ATOM + WORD		(RECT = 4 LONG)
+	;---------------------------------------------------------------------
+	windowInfoSize := 56 + A_PtrSize + 2
+	VarSetCapacity(windowInfo, windowInfoSize, 0)
+	NumPut(windowInfoSize, windowInfo, 0, "UInt") 	; cbSize
+	
+	if !DllCall("User32.dll\GetWindowInfo", Ptr, _hGui, Ptr, &windowInfo)
+		return false
+	
+	_winLeft   := NumGet(windowInfo, 4, "Int")	; RECT of the Window
+	_winTop    := NumGet(windowInfo, 8, "Int")
+	_winRight  := NumGet(windowInfo, 12, "Int")
+	_winBottom := NumGet(windowInfo, 16, "Int")
+	
+;	if (TraceLevel >= 2)
+;		SendTrace(A_ThisFunc, "Window", "Left:" _winLeft " Top:" _winTop . " Right:" _winRight " Bottom:" _winBottom)
+	
+	_cliLeft   := NumGet(windowInfo, 20, "Int")	; RECT of the Window Client Area
+	_cliTop    := NumGet(windowInfo, 24, "Int")
+	_cliRight  := NumGet(windowInfo, 28, "Int")
+	_cliBottom := NumGet(windowInfo, 32, "Int")
+	
+;	if (TraceLevel >= 2)
+;		SendTrace(A_ThisFunc, "Client", "Left:" _cliLeft " Top:" _cliTop . " Right:" _cliRight " Bottom:" _cliBottom)
+	
+	SetFormat, Integer, H
+	_winStyle := NumGet(windowInfo, 36, "UInt") + 0
+	SetFormat, IntegerFast, D
+	
+	_xWinBorder := NumGet(windowInfo, 48, "UInt")
+	_yWinBorder := NumGet(windowInfo, 52, "UInt")
+	
+;	if (TraceLevel >= 2)
+;		SendTrace(A_ThisFunc, "winStyle:" _winStyle, "xBorder:" _xWinBorder
+;								  . " yBorder:" _yWinBorder)
+;	
+;	if TraceLevel
+;		SendTrace(A_ThisFunc, "END")
+	
+	return true
+}
+
+dev_StrIsEqualI(s1, s2) ; case insensitive compare
+{
+	StringUpper, s1u, s1
+	StringUpper, s2u, s2
+	if(s1u==s2u)
+		return true
+	else
+		return false
+}
+
+StrIsStartsWith(str, prefix, is_case_sensitive:=false)
+{
+	; Check if the string str starts with prefix
+	pfxlen := strlen(prefix)
+	if(pfxlen<=0)
+		return false
+	
+	s1 := substr(str, 1, pfxlen)
+	
+	StringUpper, s1_u, s1
+	StringUpper, s2_u, prefix
+	
+	if(s1_u==s2_u)
+		return true
+	else
+		return false
+}
+
+StrIsEndsWith(str, suffix)
+{
+	suffix_len := strlen(suffix)
+	if(suffix_len==0)
+		return false
+	if(substr(str, 1-suffix_len)==suffix)
+		return true
+	else
+		return false
+}
+
+StrCountLines(str)
+{
+	if(!str)
+		return 0
+	
+	strlfs := RegExReplace(str, "[^\n]", "")
+	return strlen(strlfs)+1
+}
+
+CharIsAlphaNum(c)
+{
+	if(not c)
+		return false
+	
+	ascii := Asc( substr(c, 1) )
+	if(ascii>=Asc("A") and ascii<=Asc("Z") || ascii>=Asc("a") and ascii<=Asc("z") || ascii>=Asc("0") and ascii<=Asc("9"))
+		return true
+	else
+		return false
+	
+}
+
+dev_TooltipAutoClear(text, keep_milisec:=2000)
+{
+	tooltip, %text%
+	SetTimer, lb_TooltipAutoClear, % 0-keep_milisec
+	return
+	
+lb_TooltipAutoClear:
+	tooltip
+	return
+}
+
+dev_WriteLogFile(filepath, text, is_append:=true)
+{
+	; memo: Use "`n" in text to represent a new line.
+
+	if(not filepath)
+		return
+	
+	if(not is_append)
+		FileDelete, %filepath%
+	
+	FileAppend, %text%, %filepath%
+}
+
+dev_RunWaitOne(command, is_hidewindow:=false, working_dir:="") 
+{
+	if(not is_hidewindow)
+	{
+		; // From Autohotkey chm doc
+		; // Problem: if StdOut contains Unicode, they may be swallowed.
+		;
+		; WshShell object: http://msdn.microsoft.com/en-us/library/aew9yb99
+		shell := ComObjCreate("WScript.Shell")
+		; Execute a single command via cmd.exe
+		exec := shell.Exec(ComSpec " /C " command)
+		; Read and return the command's output
+		return exec.StdOut.ReadAll()
+	}
+	else
+	{
+		; Redirect the new process's stdout to a file then retrieve it.
+		; I have to do this because WScript.Shell.Exec does not support "hide window" param,
+		; while Autohotkey's Run allows "hiding".
+		EnvGet, dir_localapp, LocalAppData
+		tempfile := dir_localapp . "\temp\dev_RunWaitOne.txt"
+		run_string = %ComSpec% /c %command% > %tempfile%
+		try {
+			RunWait, %run_string%, %working_dir%, Hide
+		} catch e {
+			return "In dev_RunWaitOne(), the following command failed:`n" . run_string
+		}
+		FileRead, cmd_output, %tempfile%
+		return cmd_output
+	}
+}
+
+dev_MsgBoxWarning(text)
+{
+	MsgBox, 48, % "AHK Warning", % text
+}
+
+dev_MsgBoxError(text)
+{
+	MsgBox, 16, % "AHK Error", % text
+}
+
+dev_MsgBoxYesNo(text, default_yes:=true, parent_winid:=0)
+{
+	; hope to display the message box at the center of parent_winid window...(pending)
+
+	opt := msgboxoption_YesNo + (default_yes ? 0 : msgboxoption_2nddefault)
+	MsgBox, % opt, , %text%, 1000
+		; [2016-02-09] I can't use ``%opt%`` for ``% opt`` here(dialogbox would display 260), don't know why.
+	
+	IfMsgBox, Yes
+		return true
+	Else
+		return false
+}
+
+dev_IsClassnnFocused_regex(regex)
+{
+	ControlGetFocus, focusNN, A
+	if(focusNN ~= regex)
+		return true
+	else
+		return false
+}
+
+dev_SetClipboardWithTimeout(text, timeout_milisec:=1000)
+{
+	is_ok := false
+	msec_start := A_TickCount
+	Loop
+	{
+		try {
+			Clipboard := text
+		} catch e {
+			; e seems to be null
+			Sleep, 10
+			continue
+		}
+		
+		is_ok := true
+		break
+		
+	} until (A_TickCount-msec_start>timeout_milisec)
+	
+	return is_ok
+}
+
+;################### Windows GUI tweaking functions ###########################
+
+dev_ReadRemoteBuffer(hpRemote, RemoteBuffer, ByRef LocalVar, bytes)
+{
+	result := DllCall( "ReadProcessMemory" 
+	            , "Ptr", hpRemote 
+	            , "Ptr", RemoteBuffer 
+	            , "Ptr", &LocalVar 
+	            , "uint", bytes 
+	            , "uint", 0 ) 
+}
+
+EnumToolbarButtons(ctrlhwnd, is_apply_scale:=false)
+{
+	; Thanks to LabelControl code from 
+	; https://www.donationcoder.com/Software/Skrommel/
+	;
+	; ctrlhwnd is the toolbar hwnd.
+	; Return an array of objects, with element:
+	; * .x .y .w .h (button position relative to the toolbar)
+	; * .cmd  (command id of the button)
+	; * .text  (text displayed on the button)
+	;
+	; is_apply_scale should keep false; true is only for testing purpose
+	
+	arbtn := []
+
+	ControlGetPos, ctrlx, ctrly, ctrlw, ctrlh, , ahk_id %ctrlhwnd%
+	
+	WinGet, pid_target, PID, ahk_id %ctrlhwnd%
+	hpRemote := DllCall( "OpenProcess" 
+	                    , "uint", 0x18    ; PROCESS_VM_OPERATION|PROCESS_VM_READ 
+	                    , "int", false 
+	                    , "uint", pid_target ) 
+    ; hpRemote: Remote process handle
+	if(!hpRemote) {
+		tooltip, % "Autohotkey: Cannot OpenProcess(pid=" . pid_target . ")"
+		return
+	}
+	remote_buffer := DllCall( "VirtualAllocEx" 
+                    , "uint", hpRemote 
+                    , "Ptr", 0          ; LPVOID lpAddress ("uint" tolerable) 
+                    , "uint", 0x1000    ; size to allocate, 4KB
+                    , "uint", 0x1000         ; MEM_COMMIT 
+                    , "uint", 0x4 )          ; PAGE_READWRITE 
+	x1=
+	x2=
+	y1=
+	WM_USER:=0x400
+	TB_GETSTATE:=WM_USER+18
+	TB_GETBITMAP     :=     (WM_USER + 44) ; only for test
+	TB_GETBUTTONSIZE :=     (WM_USER + 58) ; only for test
+	TB_GETBUTTON:=WM_USER+23
+	TB_GETBUTTONTEXTW := WM_USER+75 ; I always get UTF-16 string from the toolbar // ANSI: WM_USER+45
+	TB_GETITEMRECT:=WM_USER+29
+	TB_BUTTONCOUNT:=WM_USER+24
+	SendMessage, %TB_BUTTONCOUNT%,0,0, , ahk_id %ctrlhwnd%
+	buttons := ErrorLevel
+;tooltip, buttons=%buttons%	 ; OK
+	
+	VarSetCapacity( rect, 16, 0 ) 
+	VarSetCapacity( BtnStruct, 32, 0 ) ; Winapi TBBUTTON struct(32 bytes on x64, 20 bytes on x86)
+	/*
+		typedef struct _TBBUTTON {
+		    int       iBitmap; 
+		    int       idCommand; 
+		    BYTE      fsState; 
+		    BYTE      fsStyle; 
+		#ifdef _WIN64
+		    BYTE      bReserved[6]     // padding for alignment
+		#elif defined(_WIN32)
+		    BYTE      bReserved[2]     // padding for alignment
+		#endif
+		    DWORD_PTR dwData; 
+		    INT_PTR   iString; 
+		} TBBUTTON, NEAR* PTBBUTTON, FAR* LPTBBUTTON; 
+	*/
+
+	Loop,%buttons%
+	{
+		; Try to get button text. Two steps: 
+		; 1. get command-id from button-index,
+		; 2. get button text from comand-id
+		SendMessage, %TB_GETBUTTON%, % A_Index-1, remote_buffer, , ahk_id %ctrlhwnd%
+		dev_ReadRemoteBuffer(hpRemote, remote_buffer, BtnStruct, 32)
+		idButton := NumGet(BtnStruct, 4, "int")
+		;
+;		SendMessage, %TB_GETSTATE%, %idButton%, 0, , ahk_id %ctrlhwnd% ; hope that 4KB is enough ; just a test
+		SendMessage, %TB_GETBUTTONTEXTW%, %idButton%, remote_buffer, , ahk_id %ctrlhwnd% ; hope that 4KB is enough
+		btntextchars := ErrorLevel
+		if(btntextchars>0){
+			btntextbytes := A_IsUnicode ? btntextchars*2 : btntextchars
+			VarSetCapacity(BtnTextBuf, btntextbytes+2, 0) ; +2 is for trailing-NUL
+			dev_ReadRemoteBuffer(hpRemote, remote_buffer, BtnTextBuf, btntextbytes)
+			BtnText := StrGet(&BtnTextBuf, "UTF-16")
+		} else {
+			BtnText := ""
+		}
+		;FileAppend, % A_Index . ":" . idButton . "(" . btntextchars . ")" . BtnText . "`n", _emeditor_toolbar_buttons.txt ; debug
+
+		SendMessage,%TB_GETITEMRECT%,% A_Index-1, remote_buffer, , ahk_id %ctrlhwnd%
+
+		dev_ReadRemoteBuffer(hpRemote, remote_buffer, rect, 16)
+		oldx1:=x1
+		oldx2:=x2
+		oldy1:=y1
+		x1 := NumGet(rect, 0, "int") 
+		x2 := NumGet(rect, 8, "int") 
+		y1 := NumGet(rect, 4, "int") 
+		y2 := NumGet(rect, 12, "int")
+		
+		if(is_apply_scale) {
+			scale := Get_DPIScale()
+			x1 /= scale
+			y1 /= scale
+			x2 /= scale
+			y2 /= scale
+		}
+
+		If (x1=oldx1 And y1=oldy1 And x2=oldx2)
+			Continue
+		If (x2-x1<10)
+			Continue
+		If (x1>ctrlw Or y1>ctrlh)
+			Continue
+	
+		arbtn.Insert( {"x":x1, "y":y1, "w":x2-x1, "h":y2-y1, "cmd":idButton, "text":BtnText} )
+		;line:=100000000+Floor((ctrly+y1)/same)*10000+(ctrlx+x1)
+		;lines=%lines%%line%%A_Tab%%ctrlid%%A_Tab%%class%`n
+	}
+	result := DllCall( "VirtualFreeEx" 
+	             , "uint", hpRemote 
+	             , "uint", remote_buffer 
+	             , "uint", 0 
+	             , "uint", 0x8000 )     ; MEM_RELEASE 
+	result := DllCall( "CloseHandle", "uint", hpRemote )
+	return arbtn
+}
+
+
+;##############################################################################
+;##################### General system-wide hotkeys. ###########################
+;##############################################################################
+
+PlaySoundLeftClick()
+{
+	SoundPlay, click.wav
+}
+
+PlaySoundRightClick()
+{
+	SoundPlay, sel.wav
+}
+
+LeftClickWithSound(sound:=true)
+{
+	MouseClick, Left
+	if(sound)
+		PlaySoundLeftClick()
+}
+
+RightClickAndPlaySound(sound:=true)
+{
+	MouseClick, Right
+	if(sound)
+		PlaySoundRightClick()
+}
+
+
+; Win+N to minimize a window, replacing Alt+Space,n
+#n:: WinMinimize, A
++#n:: WinRestore, A
+
+!#Del:: dev_WinHideWithPrompt()
+
+dev_WinHideWithPrompt(Awinid:=0)
+{
+	if(Awinid==0)
+		WinGet, Awinid, ID, A ; cache active window unique id
+
+	WinGetTitle, title, ahk_id %Awinid%
+	
+	ans := dev_MsgBoxYesNo("Hide this window?`n`n" . title)
+	if (ans) {
+		WinHide, ahk_id %Awinid%
+	}
+}
+
+
+AppsKey:: Send {AppsKey} 
+	; Need this because I use AppsKey as a prefix key (in many modules).
+	; Q: Why isn't a $ prefix required?
+
+
+CapsLock & Up:: Click WheelUp
+CapsLock & Down:: Click WheelDown
+/*
+; Define some AppsKey-combo hotkeys
+
+CapsLock & LEFT:: Click WheelLeft
+CapsLock & RIGHT:: Click WheelRight
+*/
+;
+AppsKey & UP:: Click WheelUp
+AppsKey & DOWN:: Click WheelDown
+
+
+MouseNudge(dx, dy, pixels, speed=1)
+{
+	; dx, dy, should be [0, -1, 1], i.e. only direction indication
+	WinGetTitle, title, A
+	if(title==g_MouseNudgeTitleAM) {
+		mult :=  g_MouseNudgeUnitAM 
+	}
+	else {
+		mult := pixels
+		g_MouseNudgeTitleAM := "Mouse-nudge title match not valid now!" ;
+	}
+	rx := dx*mult
+	ry := dy*mult
+	
+	MouseMove, %rx%, %ry%, %speed%, R
+}
+
+ModifyMouseNudgeUnitAM(nudge_unit, wintitle="") ; nudge_unit in pixels
+{
+	g_MouseNudgeUnitAM := nudge_unit
+	
+	if (not wintitle)
+		WinGetTitle, wintitle, A
+	
+	g_MouseNudgeTitleAM := wintitle
+}
+
+
+IsDirectionKey(key)
+{
+	if (key=="Up"||key=="Down"||key=="Left"||key=="Right")
+		return true
+	else {
+		return false
+		}
+}
+
+movewinGetScale()
+{
+	; Note: This function requires a prior RCtrl relative hotkey defnition, such as 
+	;
+	; RCtrl::RCtrl
+	;
+	; ~RCtrl:: ...
+	;
+	; -- any one is ok.
+	
+	static scale = 1
+	matchpos := RegExMatch(A_PriorHotKey, "RCtrl")
+;tooltip, A_PriorHotKeY=%A_PriorHotKey% . A_PriorKeY=%A_PriorKey%  . matchpos=%matchpos%
+	if (matchpos>0 && A_TickCount-gtc_last_RCtrl<g_RCtrl_WinMoveScale_graceticks)
+	{	; A pre RCtrl tap will scale the move step
+		scale := g_winmove_scale
+	}
+	else if ( scale!=1 && not (IsDirectionKey(A_PriorKey)||A_PriorKey=="LShift") ) 
+	{
+		; That means user release Win+Alt and then press them again, so reset the scale.
+		scale = 1
+	}
+	return scale
+}
+
+moveWinRelative(rx, ry)
+{
+	; Move current window by a relative rx, ry value. rx, ry can be positive or negative
+	scale := movewinGetScale()
+	WinGetPos, x, y, width, height, A
+	absx := x + rx*g_winmove_unit*scale
+	absy := y + ry*g_winmove_unit*scale
+	WinMove, A, , %absx%, %absy%
+}
+
+moveWinBorder(whichb, direction)
+{
+	; whichb can be "L", "T", "R", "B" for Left, Top, Right, Bottom respectively
+	
+	scale := movewinGetScale()
+	value := direction * g_winmove_unit*scale
+	WinGetPos, x, y, width, height, A
+	
+	if(whichb=="L") {
+		x := x + value
+		width := width - value
+	}
+	if(whichb=="T") {
+		y := y + value
+		height := height - value
+	}
+	if(whichb=="R") {
+		width := width + value
+	}
+	if(whichb=="B") {
+		height := height + value
+	}
+	WinMove, A ,, %x%, %y%, %width%, %height%
+}
+
+
+; 2014-08-09
+dev_WinMove_with_backup(_newx, _newy, _new_width, _new_height, Awinid:=0, is_force:=false)
+{
+	; Use "" for _newx, _newy, _new_width, _new_height if you don't want to change one of them.
+	; Note: 0 is different with "" .
+
+	if(Awinid==0)
+		WinGet, Awinid, ID, A ; cache active window unique id
+
+	static s_hint_timeout := 8000
+	WinGetPos old_winx, old_winy, old_winwidth, old_winheight, ahk_id %Awinid%
+	; MsgBox New value is new_width, %new_height%
+	
+	if(_newx!="")
+		newx := _newx
+	if(_newy!="")
+		newy := _newy
+	if(_new_width!="")
+		new_width := _new_width
+	if(_new_height!="")
+		new_height := _new_height
+	
+	if( !is_force && newx==old_winx && newy==old_winy && new_width==old_winwidth && new_height==old_winheight ) {
+		return ; already at desired position, no need to move
+	}
+	
+	WinMove, ahk_id %Awinid% ,, %newx%, %newy%, %new_width%, %new_height%
+	WinGetPos winx, winy, winwidth, winheight, ahk_id %Awinid%
+	If( winx==old_winx and winy==old_winy and winwidth==old_winwidth and winheight==old_winheight ){
+		; oldpos==newpos, do nothing 
+	}
+	Else {
+		; backup old position into g_xxx
+		g_winx := old_winx
+		g_winy := old_winy
+		g_winwidth := old_winwidth
+		g_winheight := old_winheight
+		dev_TooltipAutoClear("Press Ctrl+Win+0 to undo window size change.", s_hint_timeout)
+		s_hint_timeout := 1000
+	}
+}
+
+; 2014-08-09: Ctrl+Win+0 toggle last two window positions
+^#0:: dev_UndoChangeWindowSize()
+dev_UndoChangeWindowSize()
+{
+	WinGetPos winx, winy, winwidth, winheight, A
+	If (g_winwidth>0) {
+		WinMove, A, , g_winx, g_winy, g_winwidth, g_winheight
+		g_winx := winx
+		g_winy := winy
+		g_winwidth := winwidth
+		g_winheight := winheight
+	}
+}
+
+; 2014-01-09: Ctrl+Win+<Num> to change current window size
+^#1:: dev_WinMove_with_backup("","", 800, 600)
+^#2:: dev_WinMove_with_backup("","", 1024, 768)
+^#3:: dev_WinMove_with_backup("","",  1200, 900)
+^#4:: dev_WinMove_with_backup("","", 1440, 1000)
+; Alt+Win+(+/-)Make current window transparent ON/OFF
+!#=:: WinSet, Transparent, OFF, A
+!#-:: SetTransparentWithTip(144)
+SetTransparentWithTip(tranparent_level)
+{
+	static s_hint_timeout := 5000
+	WinSet, Transparent, %tranparent_level%, A
+	dev_TooltipAutoClear("Press Alt+Win+= to cancel transparent.", s_hint_timeout)
+	s_hint_timeout := 1000
+}
+
+!#End:: UnsetAlwaysOnTopWithTip()
+UnsetAlwaysOnTopWithTip()
+{
+	WinSet, AlwaysOnTop, Off, A
+	dev_TooltipAutoClear("Always-on-top off for active window.", 1000)
+}
+!#Home:: SetAlwaysOnTopWithTip()
+SetAlwaysOnTopWithTip()
+{
+	static s_hint_timeout := 8000
+	WinSet, AlwaysOnTop, On,  A
+	dev_TooltipAutoClear("Press Alt+Win+End to cancel always-on-top (for active window).", s_hint_timeout)
+	s_hint_timeout := 1000
+}
+
+;
+!#Left::  moveWinRelative(-1, 0)
+!#Right:: moveWinRelative(1, 0)
+!#Up::    moveWinRelative(0, -1)
+!#Down::  moveWinRelative(0, 1)
+
+^#Up::    moveWinBorder("T", -1)
+^#Down::  moveWinBorder("B", 1)
+^#Left::  moveWinBorder("L", -1)
+^#Right:: moveWinBorder("R", 1)
+;
++^#Up::    moveWinBorder("B", -1)
++^#Down::  moveWinBorder("T", 1)
++^#Left::  moveWinBorder("R", -1)
++^#Right:: moveWinBorder("L", 1)
+
+
+^#/:: devui_ChangeWindowPosition()
+devui_ChangeWindowPosition()
+{
+	WinGet, Awinid, ID, A ; cache active window unique id
+	WinGetPos x, y, width, height, A
+	x2 := x + width
+	y2 := y + height
+	textpreset := % "" . x . "," . y . "," . x2 . "," . y2
+	
+	WinGetClass, winclass, A
+	InputBox, size_xy , Autohotkey script prompt, 
+	(
+Assign new position and size for current active window. For example, 
+
+40,20,840,620
+    Set window position to left=40, top=20, right=840, bottom=620.
+    
+40,20,,
+    Set window position to left=40, top=20, not changing size.
+    
+,,840,620
+    Set position to right=840, bottom=620, not changing left-top.
+    
+40,20,=800,=600
+    Set window position to left=40, top=20, width=800, height=600.
+    
+,,=800,=600
+    Set window width=800, height=600, not changing left-top.
+
+Current window(%winclass%) at <%x%,%y%> , size [%width%,%height%]
+	), , 600, 420, , , , , %textpreset%
+	if ErrorLevel
+		return
+	StringSplit, n, size_xy , `,
+	x1_ := n1
+	y1_ := n2
+	x2_ := n3
+	y2_ := n4
+	
+	if (x1_ <> "")
+		newx := x1_
+	else
+		newx := x
+	
+	if (y1_ <> "")
+		newy := y1_
+	else
+		newy := y
+	
+	if (x2_ <> "") 
+	{
+		if(SubStr(x2_, 1, 1)=="=")
+			newwidth := SubStr(x2_, 2)
+		else
+			newwidth := x2_ - newx
+	}
+	else
+		newwidth := width
+	
+	if (y2_ <> "" )
+	{
+		if(SubStr(y2_, 1, 1)=="=")
+			newheight := SubStr(y2_, 2)
+		else
+			newheight := y2_ - newy
+	}
+	else
+		newheight := height
+	
+;	msgbox, zzz %newx%, %newy%, %newwidth%, %newheight% ; debug
+
+	dev_WinMove_with_backup(newx, newy, newwidth, newheight, Awinid)
+	;	WinMove, ahk_id %Awinid% ,, %newx%, %newy%, %newwidth%, %newheight%
+	return
+}
+
+!#/:: ; Interactively change g_winmove_unit
+	InputBox g_winmove_unit, Autohotkey script prompt, Input new window move unit in pixels, , , , , , , , %g_winmove_unit%
+return
+
+
+
+;
+
+; Double-press Left Ctrl to move mouse cursor to the center of current active window. (memo: Press Ctrl twice)
+; I need "up"; otherwise, holding down LCtrl will trigger the double press condition.
+~LCtrl up::
+;	tooltip, % "LLLLLLLLLLLLLLLLctrl-up: A_ThisHotkey=" . A_ThisHotkey . " "
+	if (A_PriorHotkey == "~LCtrl up" and A_TimeSincePriorHotkey < 300) {
+	    ; This is a double-press.
+		MouseMoveInActiveWindow(1/2, 1/2, 7)
+	}
+return
+
+
+NewCoordFromHint(x, width, xhint, omode:=false)
+{
+	; Although function parameters refer to 'x', it can be used by 'y' as well.
+	; omode: outside-mode, the coordinate will be outside the range of [x, x+width]
+	
+	if(not omode)
+	{	; inside-mode
+		if(xhint>=1) ; xhint is offset from left border
+		{
+			if(xhint > width)
+				xhint := width
+			outputx := x + xhint
+		}
+		else if(xhint<=-1) ; xhint is offset from right border
+		{
+			if(xhint <= 0-width)
+				xhint := 0-width
+			outputx := x + width + xhint
+		}
+		else if(xhint>=0) ; xhint is percent from left border
+		{
+			outputx := x + width*xhint
+		}
+		else ; -1<xhint<0 , xhint is percent from right border
+		{
+			outputx := x + width*(1+xhint)
+		}
+	}
+	else  
+	{	; outside-mode
+		if(xhint>=1) ; offset from right border and go further right
+			outputx := x + width + xhint
+		else if(xhint<=-1) ; offset from left border and go further left
+			outputx := x + xhint
+		else ; invalid xhint
+			outputx := x
+	}
+	return outputx
+}
+
+dev_SaveMouseScreenPos()
+{
+	; Note: I use screen coord to save/restore mouse pos because active window
+	; may have changed during the save and the restore.
+	CoordMode, Mouse, Screen
+	MouseGetPos, g_saved_xMouseScreen, g_saved_yMouseScreen
+	CoordMode, Mouse, Window
+}
+dev_RestoreMouseScreenPos()
+{
+	CoordMode, Mouse, Screen
+	MouseMove, %g_saved_xMouseScreen%, %g_saved_yMouseScreen%
+	CoordMode, Mouse, Window
+}
+
+dev_ClickInScreen(xhint, yhint, is_movemouse:=true, is_clicksound:=true)
+{
+	CoordMode, Mouse, Screen    ;sets screen-based coordinates
+
+	MouseGetPos origx, origy
+	
+	clickx := NewCoordFromHint(0, A_ScreenWidth, xhint)
+	clicky := NewCoordFromHint(0, A_ScreenHeight, yhint)
+
+	Click %clickx%, %clicky%
+	
+	if(is_clicksound)
+		PlaySoundLeftClick()
+	
+	if(not is_movemouse)
+		MouseMove %origx%, %origy%
+
+	CoordMode, Mouse, Window  ;restore to active-window-based coordinates
+}
+
+dev_MouseMoveInScreen(newx, newy)
+{
+	CoordMode, Mouse, Screen    ;sets screen-based coordinates
+
+	MouseMove %newx%, %newy%
+	
+	CoordMode, Mouse, Window  ;restore to active-window-based coordinates
+}
+
+
+
+
+MouseMoveInActiveWindow(ux, uy, speed:=3)
+{
+	MouseActInActiveWindow(ux,false, uy,false, true, false, speed)
+}
+MouseMoveInActiveWindowEx(ux,xomode, uy,yomode, speed:=3)
+{
+	MouseActInActiveWindow(ux,xomode, uy,yomode, true, false, speed)
+}
+
+ClickInActiveWindow(ux, uy, is_movemouse:=true, movespeed:=0)
+{
+	; Assume window position is left=100,top=100, right=600,bottom=400
+	; If ux>=1, clickx will be 100+ux, but not go right-hand beyond 600.
+	; If ux<=-1, clickx will be 600+ux, but not go left-hand beyond 100.
+	; If 0<ux<1, clickx will be 100+500*ux .
+	; If -1<ux<0, clickx will be 600+500*ux .
+	;  --same rule for uy.
+	; But if you want to click outside the window area, you should use ClickInActiveWindowEx().
+
+	MouseActInActiveWindow(ux,false, uy,false, is_movemouse, true, movespeed)
+}
+ClickInActiveWindowEx(ux,xomode, uy,yomode, is_movemouse:=true)
+{
+	MouseActInActiveWindow(ux,xomode, uy,yomode, is_movemouse, true)
+}
+
+MouseActInActiveWindow(ux,xomode, uy,yomode, is_movemouse:=true, is_click:=false, movespeed:=0)
+{
+	; If ux>=1, x offset from left border; if ux<0, x offset from right border.
+	; If uy>=1, y offset from top border; if uy<0,  offset from bottom border.
+	; If using a fraction(0.5 etc) for ux or uy, it means x or y percent.
+
+	if (not is_movemouse && not is_click)
+		return
+
+	dev_SaveMouseScreenPos()
+	WinGetPos, _x, _y, width, height, A
+
+	targetx := NewCoordFromHint(0, width, ux, xomode)
+	targety := NewCoordFromHint(0, height, uy, yomode)
+	
+	MouseMove, %targetx%, %targety%, %movespeed%
+
+	if (is_click)
+		Click %targetx%, %targety%
+
+	If (not is_movemouse)
+		dev_RestoreMouseScreenPos()
+	
+	if is_click
+		PlaySoundLeftClick()
+}
+
+ClickInActiveControl(classnn, ux, uy, is_movemouse:=false, is_warn:=true)
+{
+	; Note: ClickInActiveControl(classnn, 0.5, 0.5) can be used as a workaround for 
+	; ControlClick's often losing functionality.
+	; Note: This requires the classnn control be visible on the screen,
+	; -- because I really drive the mouse their and do a real click.
+
+	MouseActInActiveControl(classnn, ux,false, uy,false, is_movemouse, true, is_movemouse?3:0, is_warn)
+}
+ClickInActiveControlEx(classnn, ux,xomode, uy,yomode, is_movemouse:=false, is_warn:=true)
+{
+	MouseActInActiveControl(classnn, ux,xomode, uy,yomode, is_movemouse, true, is_movemouse?3:0, is_warn)
+}
+
+MouseActInActiveControl(classnn, ux,xomode, uy,yomode, is_movemouse:=true, is_click:=false, movespeed:=0, is_warn:=true)
+{
+	; This function does not really operate at the target control, but operate on 
+	; the screen position of that control.
+
+	; When calling, remember to pass quoted-string for classnn
+	ControlGetPos, winx, winy, width, height, %classnn%, A
+	if(!winx and is_warn) {
+		tooltip, [Autohotkey]Unexpected: ControlGetPos returns blank for classnn %classnn%
+		return
+	}
+	if (!is_movemouse && !is_click)
+		return
+
+	dev_SaveMouseScreenPos()
+
+	targetx := NewCoordFromHint(winx, width,  ux, xomode)
+	targety := NewCoordFromHint(winy, height, uy, yomode)
+
+	MouseMove, %targetx%, %targety%, %movespeed%
+	
+	if (is_click)
+		Click %targetx%, %targety%
+
+	If (not is_movemouse)
+		dev_RestoreMouseScreenPos()
+}
+
+
+dev_ListActiveWindowChildren()
+{
+	WinGet, Awinid, ID, A ; cache active window unique id
+	WinGet, ControlList, ControlList, ahk_id %Awinid%
+
+	filepath := "ChildrenList.txt"
+	dev_WriteLogFile(filepath, "", false) ; clear the file
+
+	Loop, parse, ControlList, `n
+	{
+		classnn := A_LoopField
+
+		ControlGet, ctlid, Hwnd,, %classnn%, ahk_id %Awinid%
+		ControlGetText, ctltext, %classnn%, ahk_id %Awinid%
+
+		; msgbox, %classnn% - %ctlid%
+		
+		textline := classnn . A_Tab . ctlid . A_Tab . ctltext . "`n"
+		
+		dev_WriteLogFile(filepath, textline, true)
+	}
+	
+	Run, %filepath%
+
+}
+
+RegexClassnnFindControl(Cregex, Tregex
+	, byref oClassnn, byref ox=0, byref oy=0, byref owidth=0, byref oheight=0, byref Awinid=0)
+{
+	return RegexClassnnFindControlEx("A", Cregex, Tregex, oClassnn, ox,oy,owidth,oheight, Awinid)
+}
+
+RegexClassnnFindControlEx(wintitle, Cregex, Tregex
+	, byref oClassnn, byref ox=0, byref oy=0, byref owidth=0, byref oheight=0, byref Awinid=0)
+{
+	; Cregex should match a classnn.
+	; Example:
+	; If classnn is Afx:400000:8 , you can use match is with "^Afx:"
+	;
+	; Tregex is the control title(window text) regex match condition; you can use this
+	; to distinguish different same-Cregex windows.
+	; If Tregex==false, control title is not considered, i.e. Cregex's match is enough to return ``true``.
+	; To require an empty title match, pass Tregex=="^$" .
+	;
+	; Currently no check for multi-match, only return first match. For multi-mach, use RegexClassnnFindControl()
+	
+	oClassnn := false
+	WinGet, Awinid, ID, %wintitle% ; cache active window unique id
+	WinGet, ControlList, ControlList, ahk_id %Awinid%
+	Loop, parse, ControlList, `n
+	{
+		classnn := A_LoopField
+		Cmatchpos := RegExMatch(classnn, Cregex)
+		
+		if (Cmatchpos>0)
+		{
+			if not Tregex {
+				oClassnn := classnn
+				break 
+			}
+			
+			try {
+				ControlGetText, text, %classnn%, ahk_id %Awinid%
+			} catch e {
+				; Without this catch, a too large child-control text will assert #MaxMem error.
+				text := ""
+			}
+			if ( RegExMatch(text, Tregex)>0 ) {
+				oClassnn := classnn
+				break
+			}
+		}
+	}
+	
+	if (oClassnn)
+	{
+		ControlGetPos, ox, oy, owidth, oheight, %oClassnn%, ahk_id %Awinid%
+		return true
+	}
+	else
+		return false
+}
+
+RegexClassnnFindControls(Cregex, wintitle)
+{
+	; Return an array of dicts, with member .classnn .id .x .y .w .h  .text
+
+	; Cregex should match a classnn.
+	; Example:
+	; If classnn is Afx:400000:8 , you can use match is with "^Afx:"
+	;
+	
+	arctrls := []
+	WinGet, hwnd, ID, %wintitle%
+	WinGet, ControlList, ControlList, ahk_id %hwnd%
+	Loop, parse, ControlList, `n
+	{
+		classnn := A_LoopField
+		if( classnn ~= Cregex )
+		{
+			obj := {}
+			obj.classnn := classnn
+			
+			ControlGet, ctrl_id, HWND, , %classnn%, ahk_id %hwnd%
+			obj.id := ctrl_id
+			
+			try {
+				ControlGetText, text, , ahk_id %ctrl_id%
+			} catch e {
+				; Without this catch, a too large child-control text will assert #MaxMem error.
+				; Example: a EmEditor v10+ "EmEditorView" child window with 300MB text.
+				text := ""
+			}
+			obj.text := text
+
+			ControlGetPos, x, y, w, h, , ahk_id %ctrl_id%
+			obj.x := x
+			obj.y := y
+			obj.w := w
+			obj.h := h
+			
+			arctrls.Insert(obj)
+		}
+	}
+
+	if(arctrls.MaxIndex()>0)
+		return arctrls
+	else
+		return None
+}
+
+ControlFocusViaRegexClassNNXY(Cregex, Tregex, xhint, yhint, is_click=true, is_movemouse=false
+	, is_xomode=false, is_yomode=false)
+{
+/*
+	Do the following operation the active window:
+	1. Find Cregex and Tregex matched child-window(cwin), 
+	2. Get a screen position(target-pos) from xhint and yhint relative to cwin, 
+	3. Set focus to the on-screen window at target-pos (target-window). 
+	   Typically, target-window is another child window of current active window.
+	
+	NOTE: If is_click==false, in quite many case, the target control cannot actually get focus.
+	So, is_click==true is suggested most of the time, especially when you known the contol is visible.
+*/	
+	; 1.
+	found := RegexClassnnFindControl(Cregex, Tregex, input_classnn, x, y, width, height, Awinid)
+		; Awinid is the Active window's ID, not the control's.
+	if not found
+		return false
+	;tooltip, coord: x/y %x% %y% . w/h %width% %height%
+	; 2.
+	targetx := NewCoordFromHint(x, width, xhint, is_xomode)
+	targety := NewCoordFromHint(y, height, yhint, is_yomode)
+	
+	; 3.
+	if (is_click) {
+		;tooltip, targetx/y: %targetx% . %targety%
+		ClickInActiveWindow(targetx, targety, is_movemouse)
+			; hope that active window has not changed.
+	}
+	else {
+		MouseGetPos, origx, origy
+		MouseMove, %targetx%, %targety%
+		MouseGetPos, _mx, _my, _winid, target_classnn
+		ControlFocus, %target_classnn%, ahk_id %Awinid%
+;		tooltip, % "ControlFocusViaRegexClassNNXY() target_classnn=" . target_classnn . " / hctrl=" . Get_HCtrlFromClassNN(target_classnn, "ahk_id " . Awinid)
+		if (not is_movemouse)
+			MouseMove, %xorig%, %yorig%
+	}
+	return true
+}
+
+
+
+; 2015-01-05
+ControlClickClassNN_TitleRegex(classnn, titleregex, delay_millisec=0)
+{
+	; Find a window whose title matches titleregex, and click the control whose classNN is classnn.
+	; If target window is not found, alert with a message box.
+	SetTitleMatchMode, RegEx
+	winfound := WinExist(titleregex) ; Note: must use := . If just = , winfound will always be true.
+	if(winfound)
+	{
+;		WinActivate ahk_id %winfound% ; On my i7-4770K Win7, this is required
+		if (delay_millisec>0)
+			Sleep delay_millisec
+		ControlClick, % classnn, % titleregex, , LEFT
+	}
+	
+	SetTitleMatchMode, 3 ; restore to default exact match
+	
+	return winfound ? true : false
+}
+
+
+CheckControlBool(classnn, prop) 
+{ 
+	; classnn="Edit1" etc
+	ControlGet, OutputVar, %prop%, , %classnn%, A
+	return OutputVar ? true : false
+}
+
+
+WinMove_ClassTitleRegex(regex_cls, regex_title, absx:="", absy:="", width:="", height:="", notfound_msgbox:=false)
+{
+	; Find window(find first) by wndclass regex and wintitle regex, and move it.
+	; * If regex_cls is "", wndclass is not checked. 
+	; * If regex_title is "", window title is not checked. 
+	; * If regex_cls and regex_title both present, they should both match.
+	; Return:
+	; * If target window found, return the moved windows winid.
+	; * If target window not found, return 0
+	
+	WinGet, wnd, List
+	isfound := false
+
+	Loop, %wnd%
+	{
+		winid := wnd%A_Index%
+		WinGetClass, class, ahk_id %winid%
+		WinGetTitle, title, ahk_id %winid%
+		WinGetPos, oldx, oldy, oldwidth, oldheight, ahk_id %winid%
+		
+		; msgbox, % "class=" . class . " , title=" . title ;// debug
+		if( regex_cls && !(class ~= regex_cls) )
+		{
+			continue
+		}
+		
+		if( regex_title && !(title ~= regex_title) )
+		{
+			continue
+		}
+		
+		isfound := true
+		break
+	}
+	
+	;msgbox, % "Found: class=" . class . " , title=" . title . " , winid=" . winid ;// debug
+
+	if(!isfound)
+	{
+		if(notfound_msgbox)
+			MsgBox, Your regex ( "%regex_cls%" , "%regex_title%" )  does not match any existing window.
+		return 0
+	}
+
+	if (absx == "") {
+		absx := oldx
+	}
+	if (absy == "") {
+		absy := oldy
+	}
+	if (width == "") {
+		width := oldwidth
+	}
+	if (height == "") {
+		height := oldheight
+	}
+
+	WinMove, ahk_id %winid% ,, absx, absy, width, height
+	
+	return winid
+}
+
+; Generic function: Move a regex-matched window to a given position, and bring it to front.
+WinMove_MatchTitleRegex(regex, absx:="", absy:="", width:="", height:="")
+{
+	; this is old function. should be implemented with WinMove_ClassTitleRegex()
+
+	SetTitleMatchMode, RegEx ;
+	found_window := WinExist(regex)
+	if found_window 
+	{
+		WinActivate, ahk_id %found_window%
+		WinGetPos oldx, oldy, oldwidth, oldheight, A
+		if (absx == "") {
+			absx = %oldx%
+		}
+		if (absy == "") {
+			absy = %oldy%
+		}
+		if (width == "") {
+			; Note: oldwidth must be wrapped with %
+			width = %oldwidth%
+		}
+		if (height == "") {
+			height = %oldheight%
+		}
+		WinMove, A ,, absx, absy, width, height
+	}
+	else
+	{
+		MsgBox, Your regex "%regex%" does not match any existing window.
+	}
+	SetTitleMatchMode, 3 ; restore to default exact match
+}
+
+
+RegexBlindScrollAControl(sdir, wintitle, regexClassnn, regexControlText)
+{
+	; "Blind" means you don't have to activate or even don't have to see the to-be-scrool window.
+
+	if(sdir!="up" and sdir!="down")
+	{
+		MsgBox, % msgboxoption_IconExclamation, , % "RegexBlindScrollAControl(): Invalid sdir value, sdir=" . sdir
+		return
+	}
+	
+	isok := RegexClassnnFindControlEx(wintitle, regexClassnn, regexControlText, target_classnn)
+	if(not isok)
+	{
+		return
+	}
+
+	ControlClick, %target_classnn%, %wintitle%, , Wheel%sdir%, 1
+}
+
+
+dev_Hex2Num(HX)
+{
+	; https://autohotkey.com/boards/viewtopic.php?t=6434
+    ; Assuming "0x" is always omitted (since in your script the "0x" will never occur anyway)
+    
+    ; Usage Example:
+    ; integer_result := dev_Hex2Num("FF")+100 ;// integer_result will be 355
+    
+	SetFormat, integer, D
+	Dec += "0x" HX
+	return Dec
+}
+
+dev_GuiLabelSetText(GuiName, LabelName, text)
+{
+	GuiControl, %GuiName%:, %LabelName%, % text
+}
+
+dev_IsDictEmpty(dict)
+{
+	for key, value in dict {
+		return false
+	}
+	return true
+}
+
+
+dev_GuiAutoResize(GuiName, rsdict, gui_nowwidth, gui_nowheight, force_redraw:=false, qmargin:="")
+{
+	; gui_nowwidth, gui_nowheight tells the GUI's client area size
+	
+	if(qmargin) ; q implies quad
+	{
+		; Example: qmargin:="10,20,10,20"
+		StringSplit, token, qmargin, `,
+		x0m := token1
+		y0m := token2
+		x1m := token3
+		y1m := token4
+
+		nowwidth := gui_nowwidth - (x0m+x1m)
+		nowheight := gui_nowheight - (y0m+y1m)
+	}
+	else 
+	{
+		x0m := 0
+		y0m := 0
+		x1m := 0
+		y1m := 0
+		nowwidth := gui_nowwidth
+		nowheight := gui_nowheight
+	}
+	
+;	MsgBox, % Format("nowwidth={} nowheight={} x0m={} y0m={}", nowwidth, nowheight, x0m, y0m)
+	
+	if( ! g_devGuiAutoResizeDict[GuiName] )
+	{
+		; It is the first time this GuiName is seen, which means this GUI is just created, 
+		; so we initialize it. The ctrl's positions at this time are considered at their initial positions.
+		
+		gui_rsinfo := {}
+		
+		for ctrlvar, quad in rsdict
+		{
+			; Sample: ctrlvar="g_PvhtmlEdit" , qual="0,0,100,100"
+			
+			gui_rsinfo[ctrlvar] := {} ; a nested dict
+			ctrl_rsinfo := gui_rsinfo[ctrlvar] ; define a label for easier reference
+			
+			StringSplit, token, quad, `,
+			ctrl_rsinfo.pct_left := token1/100
+			ctrl_rsinfo.pct_top := token2/100
+			ctrl_rsinfo.pct_right := token3/100
+			ctrl_rsinfo.pct_bottom := token4/100
+			
+			GuiControlGet, rect, %GuiName%:Pos, %ctrlvar%
+;			MsgBox, % Format("dev_GuiAutoResize({}.{}) Init:  rectX={}, rectY={}, rectW={}, rectH={}", GuiName, ctrlvar, rectX, rectY, rectW, rectH)
+			
+			ctrl_rsinfo.ofs_left := (rectX-x0m) - nowwidth * ctrl_rsinfo.pct_left
+			ctrl_rsinfo.ofs_top  := (rectY-y0m) - nowheight * ctrl_rsinfo.pct_top
+			ctrl_rsinfo.ofs_right := (rectX-x0m + rectW) - nowwidth * ctrl_rsinfo.pct_right
+			ctrl_rsinfo.ofs_bottom := (rectY-y0m + rectH) - nowheight * ctrl_rsinfo.pct_bottom
+
+;			MsgBox, % Format("dev_GuiAutoResize({}.{}) Init:  ofs:{},{},{},{}", GuiName, ctrlvar, ctrl_rsinfo.ofs_left, ctrl_rsinfo.ofs_top, ctrl_rsinfo.ofs_right, ctrl_rsinfo.ofs_bottom)
+		}
+
+		; Mark this GuiName "created".
+		g_devGuiAutoResizeDict[GuiName] := gui_rsinfo ; to modify
+
+	}
+	else
+	{
+;		MsgBox, SecondTimeARS
+		
+		gui_rsinfo := g_devGuiAutoResizeDict[GuiName] ; define a label for easier reference
+		
+		for ctrlvar, ctrl_rsinfo in gui_rsinfo
+		{
+			; Calculate new positions for this ctrl
+			newX := nowwidth * ctrl_rsinfo.pct_left + ctrl_rsinfo.ofs_left +x0m
+			newY := nowheight * ctrl_rsinfo.pct_top + ctrl_rsinfo.ofs_top +y0m
+			newW := nowwidth * ctrl_rsinfo.pct_right + ctrl_rsinfo.ofs_right - newX +x0m
+			newH := nowheight * ctrl_rsinfo.pct_bottom + ctrl_rsinfo.ofs_bottom - newY +y0m
+
+;			MsgBox, % Format("dev_GuiAutoResize Newpos({}:{}) is {},{} | {},{}", GuiName, ctrlvar, newX, newY, newW, newH)
+
+			; Move this ctrl
+			newpos := Format("x{} y{} w{} h{}", newX, newY, newW, newH)
+			
+			RedrawOp := force_redraw ? "MoveDraw" : "Move"
+			
+			GuiControl, %GuiName%:%RedrawOp%, %ctrlvar%, % newpos
+		}
+	}
+}
+
+dev_GuiAutoResizeRemove(GuiName)
+{
+	g_devGuiAutoResizeDict.Delete(GuiName)
+}
+
+
+;############### Zhongwen IME related ################
+IsTypingZhongwen_PinyinJiaJia() 
+{
+	; 获知当前是否处于 拼音加加 中文输入状态。
+	; 若是，意思是敲入的一个英文字母将被输入法浮动窗口吸收。
+	; 若否，敲入的一个英文字母将直接被应用程序获得。
+	
+	; 本函数适用于 拼音加加 5.2 。
+	
+	if WinExist("ahk_class PYJJ_STATUS_WND")
+	{
+		; PYJJ_STATUS_WND 是拼音加加附着在应用程序标题上的状态条。
+		; 接下来检查拼音加加状态条最右侧的那个小格是否是“全”字（全拼状态），
+		; 检查“全”字尖顶的那个粉红像素(x78, y3)，有的话则表示中文输入状态。
+		; 暂不处理双拼。
+		
+		WinGetPos, jjx, jjy, jjw, jjh, ahk_class PYJJ_STATUS_WND
+		CoordMode, Pixel, Screen
+		PixelGetColor, color, jjx+78, jjy+3, RGB
+		CoordMode, Pixel, Window
+		if(color==0xFF0099)
+			return true
+		else
+			return false
+	}
+	else
+	{
+		return false
+	}
+}
+
+ToggleZhongwenStatus_PinyinJiaJia(is_zhongwen_on)
+{
+	zs := IsTypingZhongwen_PinyinJiaJia()
+	if( (zs && !is_zhongwen_on) || (is_zhongwen_on && !zs))
+		SendInput {Shift down}{Shift up}{Ctrl down}{Ctrl up}
+	return zs ; return original status
+}
+
+
+ClipboardGet_HTML( byref Data ) 
+{ ; https://autohotkey.com/board/topic/59058-convert-clipboard-data-to-html/#entry373078
+ If CBID := DllCall( "RegisterClipboardFormat", Str,"HTML Format", UInt )
+  If DllCall( "IsClipboardFormatAvailable", UInt,CBID ) <> 0
+   If DllCall( "OpenClipboard", UInt,0 ) <> 0
+    If hData := DllCall( "GetClipboardData", UInt,CBID, UInt )
+       DataL := DllCall( "GlobalSize", UInt,hData, UInt )
+     , pData := DllCall( "GlobalLock", UInt,hData, UInt )
+     , VarSetCapacity( data, dataL * ( A_IsUnicode ? 2 : 1 ) ), StrGet := "StrGet"
+     , A_IsUnicode ? Data := %StrGet%( pData, dataL, 0 )
+                   : DllCall( "lstrcpyn", Str,Data, UInt,pData, UInt,DataL )
+     , DllCall( "GlobalUnlock", UInt,hData )
+ DllCall( "CloseClipboard" )
+Return dataL ? dataL : 0
+}
+
+dev_ClipboardSetHTML(html, is_paste_now:=false)
+{
+	WinClip.Clear()
+	WinClip.SetHTML(html)
+	
+	if(is_paste_now)
+		WinClip.Paste()
+}
+
+
+
+#Include *i _more_includes_.ahk
+
+
