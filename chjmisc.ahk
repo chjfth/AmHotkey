@@ -373,7 +373,9 @@ MSDN2008_Activate__Focus_IndexPane()
 
 ;===== iPad Reflector recording on my Chji Win7 =====
 
-chji_CheckiPadRecordingReady(request_fps, airplay_window_offset_x:=0, airplay_window_offset_y:=0)
+chji_CheckiPadRecordingReady(request_fps 
+	, airplay_window_offset_x:=0, airplay_window_offset_y:=0
+	, record_width:=600, record_height:=800)
 {
 	; Run this function so that Reflector2 window and Bandicam target-window rest in the "same" position.
 	; Then bandicam screen recording will record the very iPad AirPlay casting screen content.
@@ -410,7 +412,7 @@ chji_CheckiPadRecordingReady(request_fps, airplay_window_offset_x:=0, airplay_wi
 	ofx := airplay_window_offset_x
 	ofy := airplay_window_offset_y
 	
-	dev_WinMove_with_backup(preset_x+4+ofx, preset_y+ofy ,600, 880, hwndReflector) ; (1204, -1002, 600, 880, hwndReflector)
+	dev_WinMove_with_backup(preset_x+4+ofx, preset_y+ofy ,record_width, record_height+80, hwndReflector) ; (1204, -1002, 600, 880, hwndReflector)
 	
 	; Check whether Bandicam is running, if so, move it to the same location of Reflector2.
 	; For Bandicam 3.4.2 .
@@ -421,7 +423,7 @@ chji_CheckiPadRecordingReady(request_fps, airplay_window_offset_x:=0, airplay_wi
 		return
 	}
 	
-	dev_WinMove_with_backup(preset_x+ofx, preset_y+38+ofy, 608, 830, hwndBandicamRec, false) ; (1200, -964, 608, 830, hwndBandicamRec)
+	dev_WinMove_with_backup(preset_x+ofx, preset_y+38+ofy, record_width+8, record_height+30, hwndBandicamRec, false) ; (1200, -964, 608, 830, hwndBandicamRec)
 		; [2019-05-28] Use is_force:=false in hope to workaround a Bandicam 3.4.2 crashing bug(when start REC).
 
 	;
