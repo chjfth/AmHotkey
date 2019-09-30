@@ -17,11 +17,7 @@ global g_MouseNudgeUnitAM = 10 ; AM: Application Match
 global g_MouseNudgeTitleAM = "Non-existing title"
 	; Write ``global`` so that these vars can be referenced in later functions' body.
 
-;g_EvernoteMain_y = 166
-;g_EvernoteSingleNote_y = 170
-	; You can override above global vars in customize.ahk to suit your customized env.
-;g_dirEverjpeg = F:\chj\scripts\everjpeg
-
+global g_AmMute := false
 
 
 global g_RCtrl_WinMoveScale_graceticks = 3000
@@ -34,6 +30,7 @@ global g_func_IMEToggleZhonwen := "ToggleZhongwenStatus_PinyinJiaJia"
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;; ^^^ user configurable globals end ^^^ ;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 
 global g_UntitledNotpad := "Untitled - Notepad"
 
@@ -70,6 +67,36 @@ global msgboxoption_TaskModal := 0x2000
 global msgboxoption_Topmost := 0x40000
 
 global g_devGuiAutoResizeDict := {}
+
+global g_amstrMute := "AM: Mute clicking sound"
+
+;==========;==========;==========;==========;==========;==========;==========;==========;
+; All global vars should be defined above this line, otherwise, they will be null.
+;==========;==========;==========;==========;==========;==========;==========;==========;
+
+
+AmDoInit()
+AmDoInit()
+{
+	Menu, tray, add  ; Creates a separator line.
+	SystrayMenu_AddMuteItem()
+}
+
+SystrayMenu_AddMuteItem()
+{
+	Menu, TRAY, add, %g_amstrMute%, dev_AmMute  ; Creates a new menu item.
+}
+
+dev_AmMute()
+{
+	g_AmMute := !g_AmMute
+	if(g_AmMute) {
+		Menu, TRAY, Check, %g_amstrMute%
+	}
+	else {
+		Menu, TRAY, UnCheck, %g_amstrMute%
+	}
+}
 
 GetFirstNoncommentLine(ahkfname)
 {
@@ -1270,14 +1297,20 @@ EnumToolbarButtons(ctrlhwnd, is_apply_scale:=false)
 ;##################### General system-wide hotkeys. ###########################
 ;##############################################################################
 
+Am_PlaySound(wavfile)
+{
+	if(!g_AmMute)
+		SoundPlay, %wavefile%
+}
+
 PlaySoundLeftClick()
 {
-	SoundPlay, click.wav
+	Am_PlaySound("click.wav")
 }
 
 PlaySoundRightClick()
 {
-	SoundPlay, sel.wav
+	Am_PlaySound("sel.wav")
 }
 
 LeftClickWithSound(sound:=true)

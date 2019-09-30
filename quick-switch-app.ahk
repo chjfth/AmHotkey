@@ -34,7 +34,7 @@ QSA_RecordLastLetterTick(now_key)
 		if(msec_diff <= g_msec_dither_threshold)
 		{
 			dev_TooltipAutoClear("AHK: Dither key detected: " . now_key . " (" . msec_diff  . "ms)", 5300)
-			SoundPlay, ding.wav
+			Am_PlaySound("ding.wav")
 		}
 	}
 

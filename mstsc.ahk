@@ -13,7 +13,7 @@ return ; End of auto-execute section.
 ; Let Alt+PrnSc do the Alt+PrnScr inside the server session and copy the image to client keyboard. 
 !PrintScreen:: 
 	Send ^!{NumpadSub}
-	SoundPlay, sel.wav
+	Am_PlaySound("sel.wav")
 return 
 
 #IfWinActive
