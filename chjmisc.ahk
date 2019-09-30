@@ -9,9 +9,6 @@ AUTOEXEC_chjmisc_ahk: ; Workaround for Autohotkey's ugly auto-exec feature. Don'
 ; Example
 ;g_dirEverpic = D:\chj\scripts\everpic
 
-; Init_MyCustomizedEnv() ; Function can be defined later.
-
-
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 return ; End of auto-execute section.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;

@@ -47,7 +47,7 @@ global g_evtblColorPresets := [ "#f0f0f0,灰白"
 	, "#FFFFFF,Pure White" ]
 
 
-global g_dirEverpic := "F:\chj\scripts\everpic" ; chj's default
+global g_dirEverpic := A_ScriptDir . "\Everpic" ; chj's default
 global g_pyEverpicBatch := "everpic_batch.pyw"
 global g_pyEverpic_w := "everpic_w.pyw"
 ; global g_isEverpicCwdWarn := true ; Retired since Evernote 6.13, and we need a real http server since 6.13

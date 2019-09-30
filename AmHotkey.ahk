@@ -17,10 +17,10 @@ global g_MouseNudgeUnitAM = 10 ; AM: Application Match
 global g_MouseNudgeTitleAM = "Non-existing title"
 	; Write ``global`` so that these vars can be referenced in later functions' body.
 
-g_EvernoteMain_y = 166
-g_EvernoteSingleNote_y = 170
+;g_EvernoteMain_y = 166
+;g_EvernoteSingleNote_y = 170
 	; You can override above global vars in customize.ahk to suit your customized env.
-g_dirEverjpeg = F:\chj\scripts\everjpeg
+;g_dirEverjpeg = F:\chj\scripts\everjpeg
 
 
 
