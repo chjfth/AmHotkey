@@ -1300,7 +1300,7 @@ EnumToolbarButtons(ctrlhwnd, is_apply_scale:=false)
 Am_PlaySound(wavfile)
 {
 	if(!g_AmMute)
-		SoundPlay, %wavefile%
+		SoundPlay, %wavfile%
 }
 
 PlaySoundLeftClick()
