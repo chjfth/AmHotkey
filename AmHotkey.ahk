@@ -796,7 +796,7 @@ Hotkey_Handler_global:
 	fnpr := funs[A_ThisHotkey]
 	if(fnpr)
 	{
-;		tooltip, % "Hotkey_Handler_global() [" . A_ThisHotkey . "] => " . fnpr.fn_name . "()" ; debug
+;		dev_TooltipAutoClear(Format("Hotkey_Handler_global() [{}] => {}()", A_ThisHotkey, fnpr.fn_name)) ; debug
 		fnpr.fn.(fnpr.pr*)
 	}
 	else
