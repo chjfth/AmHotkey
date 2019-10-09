@@ -36,8 +36,11 @@ km_init_arT3obj() ; define the function
 	km_dict_T3obj.Brk := {}
 	o := km_dict_T3obj.Brk
 	o.friendlyname := "Pause"
-	o.ahkname := "Pause"
+	o.ahkname := "SC045" ;"Pause"
 	o.action := ""
+		; [2019-10-08] Memo: On Autohotkey 1.1.24.05, using "Pause" as o.ahkname will cause problem:
+		; Call DefineHotkey with 1st param "$Pause", and Hotkey_Handler_global sees A_ThisHotkey as "Pause",
+		; -- the "$" prefix is lost. Using "SC045" fixes this problem(ahk bug?), and we'll se A_ThisHotkey as "$SC045".
 	
 ;	MsgBox, % km_dict_T3obj.PrnScrn.ahkname . " // " . km_dict_T3obj.ScroLock.ahkname
 }
