@@ -2352,6 +2352,15 @@ dev_ClipboardSetHTML(html, is_paste_now:=false)
 		WinClip.Paste()
 }
 
+dev_IsWinclassExist(classname)
+{
+	if WinExist("ahk_class " . classname) {
+		return true
+	} 
+	else {
+		return false
+	}
+}
 
 
 #Include *i _more_includes_.ahk
