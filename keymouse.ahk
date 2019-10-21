@@ -328,33 +328,47 @@ km_LoadIni()
 km_IniWrite(section, key, value)
 {
 	IniWrite, %value%, %km_cfgfile%, %section%, %key%
+	if ErrorLevel {
+;		dev_TooltipAutoClear("km_IniWrite() fail!")
+		return -1
+	}
+	else {
+;		dev_TooltipAutoClear("km_IniWrite() ok.")
+		return 0
+	}
 }
 
 km_SaveIni()
 {
+	err = 0
 	ar_map := ["Left", "Right", "Middle", ""] ; Map radiosel to .action
 	for index, recname in km_T3recnames
 	{
 		radiosel_varname := "km_radiosel_" . recname
 		strAction := ar_map[%radiosel_varname%]
 		km_dict_T3obj[recname].action := strAction
-		km_IniWrite("T3keymouse", recname, strAction)
+		err += km_IniWrite("T3keymouse", recname, strAction)
 	}
 	
-	km_IniWrite("MouseNudge", "isRShiftArrowNudge", km_isRShiftArrowNudge)
-	km_IniWrite("MouseNudge", "RShiftNudgeUnit", km_RShiftNudgeUnit)
+	err += km_IniWrite("MouseNudge", "isRShiftArrowNudge", km_isRShiftArrowNudge)
+	err += km_IniWrite("MouseNudge", "RShiftNudgeUnit", km_RShiftNudgeUnit)
 	
-	km_IniWrite("MouseNudge", "isKeypadNudge", km_isKeypadNudge)
-	km_IniWrite("MouseNudge", "KeypadNudgeUnit", km_KeypadNudgeUnit)
+	err += km_IniWrite("MouseNudge", "isKeypadNudge", km_isKeypadNudge)
+	err += km_IniWrite("MouseNudge", "KeypadNudgeUnit", km_KeypadNudgeUnit)
 	
-	km_IniWrite("NumpadSpecial", "isNumpadSpecial", km_isNumpadSpecial)
+	err += km_IniWrite("NumpadSpecial", "isNumpadSpecial", km_isNumpadSpecial)
 	
-	km_IniWrite("EasyMouse", "isAppsEasyMouse", km_isAppsEasyMouse)
+	err += km_IniWrite("EasyMouse", "isAppsEasyMouse", km_isAppsEasyMouse)
 
-	km_IniWrite("EasyMouse", "EasymouseWestKey", km_EasymouseLite_sel2keyname("West"))
-	km_IniWrite("EasyMouse", "EasymouseEastKey", km_EasymouseLite_sel2keyname("East"))
-	km_IniWrite("EasyMouse", "EasymouseNorthKey", km_EasymouseLite_sel2keyname("North"))
-	km_IniWrite("EasyMouse", "EasymouseSouthKey", km_EasymouseLite_sel2keyname("South"))
+	err += km_IniWrite("EasyMouse", "EasymouseWestKey", km_EasymouseLite_sel2keyname("West"))
+	err += km_IniWrite("EasyMouse", "EasymouseEastKey", km_EasymouseLite_sel2keyname("East"))
+	err += km_IniWrite("EasyMouse", "EasymouseNorthKey", km_EasymouseLite_sel2keyname("North"))
+	err += km_IniWrite("EasyMouse", "EasymouseSouthKey", km_EasymouseLite_sel2keyname("South"))
+	
+	if(err!=0) {
+		MsgBox, % msgboxoption_IconExclamation, , % "Unexpected: km_IniWrite() fail on " . km_cfgfile
+	}
+	
 	km_DefineEasymouseLiteHotkeys(true, true)
 
 	km_isIniLoaded := true
