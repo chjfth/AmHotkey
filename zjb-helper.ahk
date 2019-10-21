@@ -60,14 +60,14 @@ class CDelayedSendInput {
 
 		; Known limitation: SetTimer requires a plain variable reference.
 		timer := this.timer
-		SetTimer % timer, 1000
+		SetTimer, % timer, 1000
 
-		dev_TooltipAutoClear(Format("zjb_DelaySendInput() counting down {} seconds.", this.count_down))
+		dev_TooltipAutoClear(Format("zjb_DelaySendInput() counting down {} seconds.", this.count_down), 1000)
     }
     Stop() {
         ; To turn off the timer, we must pass the same object as before:
         timer := this.timer
-        SetTimer % timer, Off
+        SetTimer, % timer, Off
     }
     ; In this example, the timer calls this method:
     Tick() {
@@ -79,7 +79,7 @@ class CDelayedSendInput {
 		else {
 			
 			if(this.is_fast_send) {
-				dev_TooltipAutoClear("counting DONE")
+;				dev_TooltipAutoClear("counting DONE")
 				SendInput, % "{Raw}" . this.input_chars
 			}
 			else {
