@@ -1,5 +1,9 @@
 ﻿; Note: This file is saved with UTF8 with BOM, which is the best encoding choice to write Unicode chars here.
 
+; API:
+; zjb_DelaySendInput(delay_sec, input_chars, is_fast_send:=true)
+; Dsi_ShowGui()
+
 AUTOEXEC_zjbhelper_ahk: ; Workaround for Autohotkey's ugly auto-exec feature. Don't delete.
 	; MUST DO: Change the above ahk label to a specific one, such as AUTOEXEC_foobar_ahk
 
