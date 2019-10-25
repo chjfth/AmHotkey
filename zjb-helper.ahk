@@ -14,12 +14,17 @@ AUTOEXEC_zjbhelper_ahk: ; Workaround for Autohotkey's ugly auto-exec feature. Do
 ; Example
 ;g_dirEverpic = D:\chj\scripts\everpic
 
-; Init_MyCustomizedEnv() ; Function can be defined later.
 
 global g_HwndDsi ; Dsi: Delay Send Input
 global g_dsiDelaySec
 global g_dsiDelayText
 global g_dsiIsFastSend
+
+global g_amstr_zjbMonitorKey := "ZJB: Monitor my keys"
+
+; Init_MyCustomizedEnv() ; Function can be defined later.
+
+zjb_InitMonitorCommonKeys()
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 return ; End of auto-execute section.
@@ -147,4 +152,54 @@ DsiGuiEscape()
 }
 
 
+;=========================================================================================
+
+zjb_InitMonitorCommonKeys()
+{
+	Menu, tray, add  ; Creates a separator line.
+	Menu, TRAY, add, %g_amstr_zjbMonitorKey%, zjb_ToggleMonitorKey  ; Creates a new menu item.
+	
+	zjb_ToggleMonitorKey()
+}
+
+zjb_HookCommonKeys(is_hook)
+{
+	commonkeys = abcdefghijklmnopqrstuvwxyz%A_Space%1234567890
+	Loop, parse, commonkeys
+	{
+		if(is_hook)
+		{
+			DefineHotkey("~$" . A_LoopField , "zjb_HintMyKey", A_LoopField)
+				; This comon-key hooking looks something brutal and exclusive. 
+				; Hope others don't do the same thing.
+		}
+		else
+		{
+			UnDefineHotkey("~$" . A_LoopField , "zjb_HintMyKey")
+		}
+	}
+}
+
+zjb_HintMyKey(now_key)
+{
+	dev_TooltipAutoClear(" " . now_key . " ")
+	Am_PlaySound("ding.wav")
+}
+
+zjb_ToggleMonitorKey()
+{
+	static is_monitor := true
+	is_monitor := !is_monitor ; so the first time it is false
+	
+	if(is_monitor) {
+		Menu, TRAY, Check, %g_amstr_zjbMonitorKey%
+		
+		zjb_HookCommonKeys(true)
+	}
+	else {
+		Menu, TRAY, Uncheck, %g_amstr_zjbMonitorKey%
+		
+		zjb_HookCommonKeys(false)
+	}
+}
 

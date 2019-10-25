@@ -727,6 +727,18 @@ GetActiveClassnnFromXY(x, y)
 	return classnn
 }
 
+IsDictEmpty(dict)
+{	
+	; A dict(dictionary) is an associative array.
+	empty := true
+	for k, v in dict {
+		empty := false
+		break
+	}
+	return empty
+}
+
+
 ; [2015-02-07] The great dynamically hotkey defining function. (tested on AHK 1.1.13.01)
 ; BIG Thanks to: http://stackoverflow.com/a/17932358
 ; Usage:
@@ -754,54 +766,77 @@ tooltip, Ooops! you used oooooooold Hotkey_Handle DefineHotkey(). Please use upg
 
 UnDefineHotkey(hk, fun)
 {
-	DefineHotkey(hk, "")
+	dev_DefineHotkey(false, hk, fun, 0)
 }
 
-DefineHotkey(hk, fun, args*) ; will define global hotkey
+DefineHotkey(hk, fun, args*) 
 {
-	; fun  is a function name string, like "DoMyWork", DoMyWork() is defined somewhere else.
-	; If fun=="", the previously registered global hotkey is removed.
+	dev_DefineHotkey(true, hk, fun, args)
+}
+
+dev_DefineHotkey(is_on, hk, fun, args) ; will define global hotkey
+{
+	; Define or Undefine a hotkey, much more powerful than the `Hotkey` keyword.
+	;
+	; hk : the hotkey name recognized by AutoHotkey.
+	; fun : the function name string, like "DoMyWork", DoMyWork() is defined somewhere else.
 	;
 	; Data structure example:
-	; funs["F1"]    => anonther object
-	; funs["F1"].fn => Function object for the hotkey
-	; funs["F1"].pr => function parameters for the .fn function
+	; funs["F1"][fun]    => anonther object
+	; funs["F1"][fun].fn => Function object for the hotkey
+	; funs["F1"][fun].pr => function parameters for the .fn function
 
 	static funs := {}
 	
-	if(fun)
+	if(!fun) {
+		MsgBox, % "Error: DefineHotkey() pass in fun=null"
+		return
+	}
+	
+	if(is_on)
 	{
 		if(not funs[hk])
 			funs[hk] := {}
 		
-		funs[hk].fn_name := fun
-		funs[hk].fn := Func(fun)
-		funs[hk].pr := args
+		if(not funs[hk][fun])
+			funs[hk][fun] := {}
 		
+		funs[hk][fun].fn_name := fun
+		funs[hk][fun].fn := Func(fun)
+		funs[hk][fun].pr := args
+
 		Hotkey, If ; -- use the global context
 		Hotkey, %hk%, Hotkey_Handler_global, On
 	}
 	else 
 	{
-		funs.remove(hk)
+		funs[hk].Delete(fun)
 		
-		Hotkey, If ; -- use the global context
-		Hotkey, %hk%, Off
+		if( IsDictEmpty(funs[hk]) )
+		{
+			Hotkey, If ; -- use the global context
+			Hotkey, %hk%, Off
+		}
 	}
 	
 	return
 
 Hotkey_Handler_global:
 ;tooltip, % "Hotkey_Handler_global() [" . A_ThisHotkey . "] ........"
-	fnpr := funs[A_ThisHotkey]
-	if(fnpr)
+	dict_fnpr := funs[A_ThisHotkey]
+	if(dict_fnpr)
 	{
-;		dev_TooltipAutoClear(Format("Hotkey_Handler_global() [{}] => {}()", A_ThisHotkey, fnpr.fn_name)) ; debug
-		fnpr.fn.(fnpr.pr*)
+		; Call each callbacks registered in dict_fnpr{}.
+		for key, fnpr in dict_fnpr
+		{
+			fnpr.fn.(fnpr.pr*)
+		}
 	}
 	else
+	{
 		tooltip, Bad! funs[%A_ThisHotkey%] is null!!!!!
-	
+	}
+
 	return
 }
 
