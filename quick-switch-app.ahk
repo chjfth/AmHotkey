@@ -31,11 +31,11 @@ QSA_RecordLastLetterTick(now_key)
 	if(now_key==g_last_letter)
 	{
 		msec_diff := now_tick-gtc_last_letter
-		if(msec_diff <= g_msec_dither_threshold)
-		{
-			dev_TooltipAutoClear("AHK: Dither key detected: " . now_key . " (" . msec_diff  . "ms)", 5300)
-			Am_PlaySound("ding.wav")
-		}
+;		if(msec_diff <= g_msec_dither_threshold)
+;		{
+;			dev_TooltipAutoClear("AHK: Dither key detected: " . now_key . " (" . msec_diff  . "ms)", 5300)
+;			Am_PlaySound("ding.wav")
+;		}
 	}
 
 	gtc_last_letter := now_tick
