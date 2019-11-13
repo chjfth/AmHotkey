@@ -161,10 +161,18 @@ MyActivateSingleWindow(suffixkey, winclass, appdesc)
 
 MyActivateGroup(suffixkey, groupname, winclass, wincls_regex, title_regex, appdesc)
 {
-	; All winclass, wincls_regex and title_regex should be matched(unless empty).
+	; All winclass, wincls_regex and title_regex should be matched(unless empty) to make activation.
 	
 	static s_actcount := 0
 	s_actcount += 1
+	
+	if(title_regex=="") 
+	{
+		; Withouth this: when winclass and title_regex are both null, and there is only one matched window
+		; (e.g. Hypersnap 8), pressing CapsLock+j twice would cause "Cannot find any window of Hypersnap 7 or 8"
+		; message box pop out.
+		title_regex := ".*" ; match any
+	}
 	
 	if QSA_IsFastTyping(suffixkey)
 		return
@@ -325,7 +333,8 @@ MyActivateWindowGroupFlex(winclass, wincls_regex, title_regex, appdesc) ; Flex: 
 	;
 	
 	; Auto generate a group-name for GroupActivate
-	groupname := "groupFlex_" . QSA_make_group_name(winclass . title_regex . appdesc)
+	wincls_part := winclass ? winclass : wincls_regex
+	groupname := QSA_make_group_name(Format("groupFlex__{}__{}__{}", wincls_part, title_regex, appdesc))
 
 	MyActivateGroup("", groupname, winclass, wincls_regex, title_regex, appdesc)
 }
@@ -361,7 +370,7 @@ QSA_InitHotkeys()
 	QSA_DefineActivateGroup_Caps("c", "VirtualConsoleClass", "ConEmu")
 	QSA_DefineActivateGroup_Caps("p", "PuTTY", "PuTTY")
 
-	QSA_DefineActivateSingle_Caps("j", "HyperSnap 7 Window Class", "Hypersnap 7")
+	QSA_DefineActivateGroupFlex_Caps("j", QSA_NO_WNDCLASS, "HyperSnap (7|8) Window Class",  "", "Hypersnap 7 or 8")
 
 	QSA_DefineActivateGroupFlex_Caps("6", QSA_NO_WNDCLASS, "^Afx", "Microsoft Visual C\+\+", "The Visual C++ 6 IDE")
 		; VC6 winclass is like Afx:400000:8:10009:0:3ab31345
