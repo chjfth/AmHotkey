@@ -158,6 +158,7 @@ zjb_InitMonitorCommonKeys()
 {
 	Menu, tray, add  ; Creates a separator line.
 	Menu, TRAY, add, %g_amstr_zjbMonitorKey%, zjb_ToggleMonitorKey  ; Creates a new menu item.
+	Menu, TRAY, add, % "ZJB: Show Delay-send-input GUI", Dsi_ShowGui
 	
 	zjb_ToggleMonitorKey()
 }
