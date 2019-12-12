@@ -1560,14 +1560,28 @@ dev_UndoChangeWindowSize()
 ^#2:: dev_WinMove_with_backup("","", 1024, 768)
 ^#3:: dev_WinMove_with_backup("","",  1200, 900)
 ^#4:: dev_WinMove_with_backup("","", 1440, 1000)
+
 ; Alt+Win+(+/-)Make current window transparent ON/OFF
-!#=:: WinSet, Transparent, OFF, A
-!#-:: SetTransparentWithTip(144)
-SetTransparentWithTip(tranparent_level)
+!#=:: Am_SetTransparentWithTip(-1) ; WinSet, Transparent, OFF, A
+!#-:: Am_SetTransparentWithTip(144)
+Am_SetTransparentWithTip(tranparent_level)
 {
 	static s_hint_timeout := 5000
-	WinSet, Transparent, %tranparent_level%, A
-	dev_TooltipAutoClear("Press Alt+Win+= to cancel transparent.", s_hint_timeout)
+	WinGet, Awinid, ID, A ; cache active window unique id
+	
+	if(tranparent_level>=0)
+	{
+		WinSet, Transparent, %tranparent_level%, ahk_id %Awinid%
+		dev_TooltipAutoClear("Press Alt+Win+= to cancel transparent.", s_hint_timeout)
+	}
+	else
+	{
+		WinSet, Transparent, OFF, ahk_id %Awinid%
+
+		; [2019-12-12] Autohotkey 1.1.24.05 Memo: If only execute 
+		;   WinSet, Transparent, OFF, A
+		; The previously Am_SetTransparentWithTip(0) window will not revert to normal, weird.
+	}
 	s_hint_timeout := 1000
 }
 
