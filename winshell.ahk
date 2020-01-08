@@ -52,6 +52,7 @@ CalPPI_Init() ; Define it
 	gar_modelstr := [ "5120,2880,27.0" ; DELL UP2715K (2014)
 		, "3840,2160,27.0"  ; DELL P2715Q 
 		, "3200,1800,13.3"  ; Lenovo Yoga 900
+		, "2560,1440,27.0"  ; DELL U2515H (2014)
 		, "2560,1440,25.0"  ; DELL U2515H (2014)
 		, "1920,1200,24.0"  ; DELL U2412M (2011)
 		, "1920,1080,22.0" 
@@ -538,10 +539,12 @@ CalPPI_RefreshMonitorParams(model)
 		; .cm_w .cm_h .mm_dot .cm_d
 	
 	; When displaying, use only 2 decimal precision
-	SetFormat, float, 0.2 
+	SetFormat, float, 0.2
 	cm_d := physical.cm_d + 0
 	cm_w := physical.cm_w + 0
 	cm_h := physical.cm_h + 0
+
+	SetFormat, float, 0.3
 	mm_dot := physical.mm_dot + 0
 
 	; A note: calculating input should use 8-level precision value(i.e, use physical.cm_w instead of cm_w)
