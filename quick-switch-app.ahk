@@ -385,7 +385,7 @@ QSA_InitHotkeys()
      ; -- CapsLock & 8
 
 	; Visual Studio VS2010+
-	QSA_DefineActivateGroupFlex_Caps("0", QSA_NO_WNDCLASS, "^HwndWrapper", "Microsoft Visual Studio$", "VS2010_or_above")
+	QSA_DefineActivateGroupFlex_Caps("0", QSA_NO_WNDCLASS, "^HwndWrapper", "Microsoft Visual Studio( \(Administrator\))*$", "VS2010_or_above")
 
 	; MS Help Viewer 2.x
 	QSA_DefineActivateGroupFlex_Caps("-", QSA_NO_WNDCLASS, "^HwndWrapper\[HlpViewer", "", "MS Help Viewer 2.x")
