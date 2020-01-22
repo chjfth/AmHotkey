@@ -29,13 +29,13 @@
 
 #Include *i mediaplayer.ahk
 
-#Include *i hypersnap.ahk
-
 #Include *i pdfreader.ahk
 
 #Include *i devmgmt.ahk
 
 ; #Include *i chjmisc.ahk
+; #Include *i hypersnap.ahk
+
 ; #Include *i zjb-helper.ahk
 
 ; #Include *i menus.ahk
