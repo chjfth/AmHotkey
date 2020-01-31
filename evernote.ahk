@@ -1854,9 +1854,12 @@ CapsLock & Right::
 	Evernote_ClickEditingArea()
 return
 ESC:: ; Do not allow ESC to close snippet window
-	if(dev_IsWinclassExist("PYJJ_STATUS_WND") || dev_IsWinclassExist("QQPinyinCompWndTSF"))
+	if(dev_IsWinclassExist("PYJJ_COMPUI_WND") || dev_IsWinclassExist("QQPinyinCompWndTSF"))
 	{
-		; If doing Pinyin JiaJia or QQ pinyin typing(both with IME small window on screen), Esc is allowed.
+		; If doing Pinyin JiaJia or QQ pinyin typing(a floating IME small window on screen), Esc is allowed.
+		; The window class name "PYJJ_COMPUI_WND" can be probed by checking the HWND value under mouse cursor.
+		; 	MouseGetPos, tmpX, tmpY, hwndUnderMouse
+		;	WinGetClass, wndclass, ahk_id %hwndUnderMouse%
 		SendInput {ESC}
 	}
 	; [2019-03-30] If ESC is pressed twice within a short time(e.g. 500ms), one ESC is always sent.
