@@ -159,8 +159,10 @@ cmdwin_ScrollOnePage(is_up)
 +Down:: cmdwin_ScrollOneLine(false)
 
 ; PgUp/PgDn to scroll page by page
-PGUP:: cmdwin_ScrollOnePage(true)
-PGDN:: cmdwin_ScrollOnePage(false)
+;PGUP:: cmdwin_ScrollOnePage(true)
+;PGDN:: cmdwin_ScrollOnePage(false)
+$PgUp:: Send {F8} ; Iterate command history matching starting string.
+
 ;
 ^PGUP:: cmdwin_ScrollOnePage(true)
 ^PGDN:: cmdwin_ScrollOnePage(false)
@@ -168,16 +170,6 @@ PGDN:: cmdwin_ScrollOnePage(false)
 +PGUP:: cmdwin_ScrollOnePage(true)
 +PGDN:: cmdwin_ScrollOnePage(false)
 
-
-; Convert Ctrl+F to Tab for CMD window, but only when regitem CompletionChar=9
-;^f::
-;	if (g_CmdCompletionChar==9)
-;		SendInput {tab}
-;return
-;+^f::
-;	if (g_CmdCompletionChar==9)
-;		SendInput +{tab}
-;return
 
 ; Win+Alt+F to suggest writing CompletionChar=9 to registry
 #!f:: SuggestCmdCompletionCharInRegistry()
@@ -193,18 +185,14 @@ PGDN:: cmdwin_ScrollOnePage(false)
 #IfWinActive ahk_class VirtualConsoleClass
 
 
-; Convert Ctrl+F to Tab for CMD window, but only when regitem CompletionChar=9
-;^f::
-;	if (g_CmdCompletionChar==9)
-;		SendInput {tab}
-;return
-;+^f::
-;	if (g_CmdCompletionChar==9)
-;		SendInput +{tab}
-;return
-
-; Win+Alt+F to suggest writing CompletionChar=9 to registry
 #!f:: SuggestCmdCompletionCharInRegistry()
+
+; use F8/F9 to switch to prev/next Tab
+F8:: Send ^{F8} ; ConEmu should set Ctrl+F8 to be "Switch next console".
+F9:: Send ^{F9} ; ConEmu should set Ctrl+F8 to be "Switch previous console".
+
+; Let PgUp execute CMD's original F8 action: browse history with matching starting string 
+$PgUp:: Send {F8} ; This F8 will not trigger our F8 hotkey, bcz they are defined in the same #InputLevel.
 
 #IfWinActive
 
