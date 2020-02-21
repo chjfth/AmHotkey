@@ -294,7 +294,7 @@ QSA_DefineActivateGroupFlex(hotkey, suffixkey, winclass, wincls_regex, title_reg
 	;
 	; suffixkey is not important; it will be passed to QSA_IsFastTyping() finally. You can just pass QSA_NO_SUFFIXKEY.
 	
-	if(!winclass and !wincls_regex, !title_regex)
+	if(!winclass and !wincls_regex and !title_regex)
 	{
 		MsgBox, % "Error calling QSA_DefineActivateGroupFlex: winclass, wincls_regex and title_regex are all empty!"
 		return 

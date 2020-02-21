@@ -10,7 +10,7 @@ AUTOEXEC_customize_ahk: ; Workaround for Autohotkey's ugly auto-exec feature. Do
 ; Example
 ;g_dirEverpic = D:\chj\scripts\everpic
 
-; Init_MyCustomizedEnv() ; Function can be defined later.
+Init_MyCustomizedEnv() ; This function is defined after the first "return".
 
 
 
@@ -18,6 +18,14 @@ AUTOEXEC_customize_ahk: ; Workaround for Autohotkey's ugly auto-exec feature. Do
 return ; End of auto-execute section.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+Init_MyCustomizedEnv()
+{
+	; Write your initialization action here.
+
+	; Define Hotkey RightAlt+F1 to switch to a VirtualBox VM.
+;	QSA_DefineActivateGroupFlex(">!F1", QSA_NO_SUFFIXKEY, QSA_NO_WNDCLASS, QSA_NO_WNDCLS_REGEX, "^Win7Evernote", "[Win7Evernote] Vbox VM")
+;	QSA_DefineActivateGroupFlex(">!F2", QSA_NO_SUFFIXKEY, QSA_NO_WNDCLASS, QSA_NO_WNDCLS_REGEX, "^Win7vbox-IM", "[Win7vbox-IM] Vbox VM")
+}
 
 
 ^!F8::
