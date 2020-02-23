@@ -363,6 +363,7 @@ QSA_InitHotkeys()
 	QSA_DefineActivateGroup_Caps("v", "VMUIFrame", "VMware Workstation")
 		; Note: On activated, the VM may or may not grabs input immediately, which depends on 
 		; whether you have used Ctrl+Alt to release control from the VM.
+	QSA_DefineActivateGroupFlex_Caps("b", QSA_NO_WNDCLASS, QSA_NO_WNDCLS_REGEX, "VirtualBox Manager$", "VirtualBox Manager") ; virtualbox 6
 
 	QSA_DefineActivateGroup_Caps("w", "CabinetWClass", "Windows Explorer")
 	QSA_DefineActivateGroup_Caps("e", "EmEditorMainFrame3", "EmEditor")
