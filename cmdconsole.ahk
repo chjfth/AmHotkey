@@ -128,16 +128,27 @@ cc_devGMUPATHfront()
 #If ; cc_IsCMDorConEmuActive()
 
 
+cc_IsPreWin10_CMD_Window()
+{
+	if IsWinClassActive("ConsoleWindowClass") and not StrIsStartsWith(A_OSVersion, "10.0")
+		return true
+	else
+		return false
+}
 
+#If cc_IsPreWin10_CMD_Window()
 
-#IfWinActive ahk_class ConsoleWindowClass
 ; Reference: http://stackoverflow.com/questions/131955/keyboard-shortcut-to-paste-clipboard-content-into-command-prompt-window-win-xp
 ; Redefine only when the active window is a console window 
 
-^V::
+^v::
 	Send !{Space}ep
 return
 
+#If
+
+
+#IfWinActive ahk_class ConsoleWindowClass
 
 cmdwin_ScrollOneLine(is_up)
 {
