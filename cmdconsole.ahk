@@ -121,9 +121,6 @@ cc_devGMUPATHfront()
 	
 }
 
-; PgUp/PgDn to scroll page by page
-;PGUP:: cmdwin_ScrollOnePage(true) ; cmdwin_ScrollOneLine seems not work with ConEmu
-;PGDN:: cmdwin_ScrollOnePage(false)
 
 #If ; cc_IsCMDorConEmuActive()
 
@@ -169,10 +166,9 @@ cmdwin_ScrollOnePage(is_up)
 +Up:: cmdwin_ScrollOneLine(true)
 +Down:: cmdwin_ScrollOneLine(false)
 
-; PgUp/PgDn to scroll page by page
-;PGUP:: cmdwin_ScrollOnePage(true)
-;PGDN:: cmdwin_ScrollOnePage(false)
-$PgUp:: Send {F8} ; Iterate command history matching starting string.
+; $PgUp:: Send {F8} ; Windows CMD stock hotkey: Iterate command history matching starting string.
+;	[2020-03-10] PgUp=F8 is abandoned, bcz ConsoleWindowClass can be either a cmd.exe window or a Win10 WSL window.
+;	For WSL window, I'll use tmux inside and prefer using F8 as "Go to left-tab".
 
 ;
 ^PGUP:: cmdwin_ScrollOnePage(true)
@@ -203,7 +199,7 @@ F8:: Send ^{F8} ; ConEmu should set Ctrl+F8 to be "Switch next console".
 F9:: Send ^{F9} ; ConEmu should set Ctrl+F8 to be "Switch previous console".
 
 ; Let PgUp execute CMD's original F8 action: browse history with matching starting string 
-$PgUp:: Send {F8} ; This F8 will not trigger our F8 hotkey, bcz they are defined in the same #InputLevel.
+; $PgUp:: Send {F8} ; This F8 will not trigger our F8 hotkey, bcz they are defined in the same #InputLevel.
 
 #IfWinActive
 
