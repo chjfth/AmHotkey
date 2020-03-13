@@ -42,10 +42,14 @@ global g_pathop_last_numop = 14
 
 RegRead, g_CmdCompletionChar, HKEY_CURRENT_USER, Software\Microsoft\Command Processor, CompletionChar
 
+global g_winx, g_winy, g_winwidth=-1, g_winheight
+	; These four vars tells previous window position before a window-size change, 
+	; so that user can undo the change(if inadvertently changed an undesired window)
+	; g_winwidth = -1 means "these values are invalid now".
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Cope with auto-exec section in sub-ahk. Thanks to:
 ; http://www.autohotkey.com/board/topic/9890-multiple-auto-execute-sections/ with IsLabel() fix
-
 
 global g_arAutoexecLabels := []
 global g_dictAutoexecExistingFname := {} ; for checking duplicate
@@ -74,8 +78,61 @@ global g_amstrMute := "AM: Mute clicking sound"
 ; All global vars should be defined above this line, otherwise, they will be null.
 ;==========;==========;==========;==========;==========;==========;==========;==========;
 
-
 AmDoInit()
+
+Amhotkey_LoadMoreIncludes()
+
+return 
+
+;################################################################################################ 
+;################################### Global-exec section ENDS ################################### 
+;################################################################################################ 
+
+
+; ########## Some debugging hotkeys first ##########
+
+; 2010-03-13 Win+Alt+R to reload current script
+#!r:: Reload
+
+; Win+Alt+C : Check Window class
+!#c:: dev_CheckInfo()
+dev_CheckInfo()
+{
+	tooltip
+	WinGet, Awinid, ID, A ; cache active window unique id
+	WinGetClass, class, ahk_id %Awinid%
+	WinGetTitle, title, ahk_id %Awinid%
+	WinGetPos, x,y,w,h, ahk_id %Awinid%
+	WinGet, pid, PID, ahk_id %Awinid%
+	WinGet, exepath, ProcessPath, ahk_id %Awinid%
+	ControlGetFocus, focusNN, ahk_id %Awinid%
+	ControlGet, focus_hctrl, HWND, , %focusNN%, ahk_id %Awinid%
+	
+	CoordMode, Mouse, Screen
+	MouseGetPos, mxScreen, myScreen
+	
+	CoordMode, Mouse, Window
+	MouseGetPos, mxWindow, myWindow, , classnn
+	
+	MsgBox, % msgboxoption_IconInfo, ,
+	(
+The Active window class is "%class%" (Hwnd=%Awinid%)
+Title is "%title%"
+Position: x=%x% , y=%y% , width=%w% , height=%h%
+
+Current focused classnn: %focusNN%
+Current focused hctrl: ahk_id=%focus_hctrl%
+
+Process ID: %pid%
+Process path: %exepath%
+
+Mouse position: In-window: (%mxWindow%,%myWindow%)  `; In-screen: (%mxScreen%,%myScreen%)
+
+ClassNN under mouse is "%classnn%"
+	)
+}
+
+
 AmDoInit()
 {
 	Menu, tray, add  ; Creates a separator line.
@@ -134,6 +191,13 @@ AddAutoExecAhk(ahkdir, filename)
 	}
 }
 
+Amhotkey_LoadMoreIncludes()
+{
+	; "Call" auto-exec sections collected(for those ahks with AUTOEXEC_xxx: label at start of file)
+	ScanAhkFilesForAutoexecLabel()
+	CallAutoexecLabels()
+}
+
 ScanAhkFilesForAutoexecLabel()
 {
 	; Scan all ahk files in the same folder as the master ahk file.
@@ -170,47 +234,48 @@ ScanAhkFilesForAutoexecLabel()
 ;	msgbox, % "g_arAutoexecLabels maxindex=" . g_arAutoexecLabels.MaxIndex()
 }
 
-ScanAhkFilesForAutoexecLabel() ; call it on master ahk load
-
-; "Call" auto-exec sections collected(for those ahks with AUTOEXEC_xxx: label at start of file)
-global g_tmp := 0
-global g_msglistmodules := ""
-for index, autolabel in g_arAutoexecLabels 
+CallAutoexecLabels()
 {
-	label_varname := autolabel.label
+	module_count := 0
+	msglistmodules := ""
+	
+	for index, autolabel in g_arAutoexecLabels 
+	{
+		label_varname := autolabel.label
 
-	if(IsLabel(label_varname)) 
-	{
-		g_tmp++
-		g_msglistmodules .=  g_tmp . ". " . autolabel.filename . " [" . label_varname . "]`n"
-		GoSub, %label_varname%
+		if(IsLabel(label_varname)) 
+		{
+			module_count++
+			msglistmodules .=  module_count . ". " . autolabel.filename . " [" . label_varname . "]`n"
+			GoSub, %label_varname%
+		}
+		else
+		{
+			; This label_varname is not found, probably because its containing XXX.ahk 
+			; is not included in _more_includes_.ahk .
+		}
 	}
-	else
+	
+	if(module_count==0) ; no modules loaded, probably _more_includes_.ahk not generated yet
 	{
-		; This label_varname is not found, probably because its containing XXX.ahk 
-		; is not included in _more_includes_.ahk .
-	}
-}
-if(g_tmp==0) ; no modules loaded, probably _more_includes_.ahk not generated yet
-{
-	srcfile := A_ScriptDir . "\" . "_more_includes_.ahk.sample"
-	dstfile := A_ScriptDir . "\" . "_more_includes_.ahk"
+		srcfile := A_ScriptDir . "\" . "_more_includes_.ahk.sample"
+		dstfile := A_ScriptDir . "\" . "_more_includes_.ahk"
 
-;	MsgBox, % Format("filecopy {} -- {}", srcfile, dstfile)
-	
-	FileCopy, %srcfile%, %dstfile%
-	
-	if(! (ErrorLevel==0 && A_LastError==0) )
-	{
-;		MsgBox, % Format("{} , {}", ErrorLevel, A_LastError)
-		MsgBox, 0x10, % "AmHotkey.ahk starts error!",  % Format("Cannot find or generate ""{}"" . The program will exit.", dstfile)
-;	no_ahk_modules := "(no modules)`n`nMaybe you should get a copy of _more_includes_.ahk from _more_includes_.ahk.sample"
-		ExitApp, 4
-	}
-	
-	if(1) ;if(ErrorLevel==0) ; success
-	{
-		MsgBox, 0x40, % "AmHotkey.ahk starts", 
+	;	MsgBox, % Format("filecopy {} -- {}", srcfile, dstfile)
+		
+		FileCopy, %srcfile%, %dstfile%
+		
+		if(! (ErrorLevel==0 && A_LastError==0) )
+		{
+	;		MsgBox, % Format("{} , {}", ErrorLevel, A_LastError)
+			MsgBox, 0x10, % "AmHotkey.ahk starts error!",  % Format("Cannot find or generate ""{}"" . The program will exit.", dstfile)
+	;	no_ahk_modules := "(no modules)`n`nMaybe you should get a copy of _more_includes_.ahk from _more_includes_.ahk.sample"
+			ExitApp, 4
+		}
+		
+		if(1) ;if(ErrorLevel==0) ; success
+		{
+			MsgBox, 0x40, % "AmHotkey.ahk starts", 
 (
 This is the first time you run this script. 
 
@@ -222,80 +287,22 @@ to customize what AHK modules to load into this program.
 
 Click OK to continue.
 )
-		Reload
+			Reload
+		}
+		else
+		{
+			MsgBox, 0x10, % "AmHotkey.ahk starts error!",  % Format("Cannot find or generate ""{}"" . The program will exit.", dstfile)
+	;	no_ahk_modules := "(no modules)`n`nMaybe you should get a copy of _more_includes_.ahk from _more_includes_.ahk.sample"
+			ExitApp, 4
+		}
 	}
-	else
-	{
-		MsgBox, 0x10, % "AmHotkey.ahk starts error!",  % Format("Cannot find or generate ""{}"" . The program will exit.", dstfile)
-;	no_ahk_modules := "(no modules)`n`nMaybe you should get a copy of _more_includes_.ahk from _more_includes_.ahk.sample"
-		ExitApp, 4
-	}
-}
-;
-MsgBox, 0x40, Autohotkey script loading info, 
+	;
+	MsgBox, 0x40, Autohotkey script loading info, 
 (
 %A_ScriptDir%\%A_ScriptName% has loaded the following modules:`n
-%g_msglistmodules%
+%msglistmodules%
 )
 
-
-; ########## global vars ##########
-global g_winx, g_winy, g_winwidth=-1, g_winheight
-	; These four vars tells previous window position before a window-size change, 
-	; so that user can undo the change(if inadvertently changed an undesired window)
-	; g_winwidth = -1 means "these values are invalid now".
-	;
-	; 奇怪, 按理说 global 变量定义不能写在 #Include 后头的，
-	; 但去掉 此句后又有影响， Ctrl+Win+0 变得无法恢复窗口大小了。
-
-
-
-
-;################################################################################################ 
-;################################### Global-exec section ENDS ################################### 
-;################################################################################################ 
-
-; ########## Some debugging hotkeys first ##########
-
-; 2010-03-13 Win+Alt+R to reload current script
-#!r:: Reload
-
-; Win+Alt+C : Check Window class
-!#c:: dev_CheckInfo()
-dev_CheckInfo()
-{
-	tooltip
-	WinGet, Awinid, ID, A ; cache active window unique id
-	WinGetClass, class, ahk_id %Awinid%
-	WinGetTitle, title, ahk_id %Awinid%
-	WinGetPos, x,y,w,h, ahk_id %Awinid%
-	WinGet, pid, PID, ahk_id %Awinid%
-	WinGet, exepath, ProcessPath, ahk_id %Awinid%
-	ControlGetFocus, focusNN, ahk_id %Awinid%
-	ControlGet, focus_hctrl, HWND, , %focusNN%, ahk_id %Awinid%
-	
-	CoordMode, Mouse, Screen
-	MouseGetPos, mxScreen, myScreen
-	
-	CoordMode, Mouse, Window
-	MouseGetPos, mxWindow, myWindow, , classnn
-	
-	MsgBox, % msgboxoption_IconInfo, ,
-	(
-The Active window class is "%class%" (Hwnd=%Awinid%)
-Title is "%title%"
-Position: x=%x% , y=%y% , width=%w% , height=%h%
-
-Current focused classnn: %focusNN%
-Current focused hctrl: ahk_id=%focus_hctrl%
-
-Process ID: %pid%
-Process path: %exepath%
-
-Mouse position: In-window: (%mxWindow%,%myWindow%)  `; In-screen: (%mxScreen%,%myScreen%)
-
-ClassNN under mouse is "%classnn%"
-	)
 }
 
 
@@ -2413,5 +2420,3 @@ dev_IsWinclassExist(classname)
 
 
 #Include *i _more_includes_.ahk
-
-
