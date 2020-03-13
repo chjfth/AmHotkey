@@ -1140,12 +1140,17 @@ dev_RunWaitOne(command, is_hidewindow:=false, working_dir:="")
 	}
 }
 
-dev_MsgBoxWarning(text)
+dev_MsgBoxInfo(text) ; with a blue (i) icon
+{
+	MsgBox, 64, % "AHK Info", % text
+}
+
+dev_MsgBoxWarning(text) ; with a yellow (!) icon
 {
 	MsgBox, 48, % "AHK Warning", % text
 }
 
-dev_MsgBoxError(text)
+dev_MsgBoxError(text) ; with a red (x) icon
 {
 	MsgBox, 16, % "AHK Error", % text
 }

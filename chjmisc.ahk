@@ -9,6 +9,8 @@ AUTOEXEC_chjmisc_ahk: ; Workaround for Autohotkey's ugly auto-exec feature. Don'
 ; Example
 ;g_dirEverpic = D:\chj\scripts\everpic
 
+Bcam4_Init()
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 return ; End of auto-execute section.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -543,4 +545,125 @@ chji_CheckSystemHealth()
 	}
 }
 
+
+
+;===== [2020-03-13] Bandicam 4.x Recording Parameter Checking. =====
+; User interaction:
+; When Bandicam is the active window, pressing F1 will bring up a popup menu listing a bunch of 
+; recording scenarios, such as Net-meeting, motion-video grabbing, slide-show grabbing etc.
+; And AHK code will verify the correctness of in-registry Bandicam parameters against the 
+; selected scenario. 
+;
+; [2020-03-13] Limitation: This ahk code does not work well on a hybrid DPI-scaling multi-monitor machine.
+; Workaround, move your bandicam window to the 100% DPI monitor.
+;
+
+#If IsWinClassActive("Bandicam2.x") ; Bandicam 4.x also use this winclass name
+
+Bcam4_Init()
+{
+	menu_title := "== Bandicam4: 选择要校验的场景 =="
+	Menu, Bcam_Scenario, Add, % menu_title, Bcam4_null ; this acts as menu title
+	Menu, Bcam_Scenario, Disable, % menu_title
+	Menu, Bcam_Scenario, Add ; separator
+	
+	Menu, Bcam_Scenario, Add, % "网络会议录屏（同时录制我的声音）", Bcam4_VerifyNetMeeting
+	Menu, Bcam_Scenario, Add, % "单纯录屏（无麦）", Bcam4_VerifyMotionVideo
+}
+
+Bcam4_null()
+{
+}
+
+Bcam4_ReadOption(optname)
+{
+	RegRead, retval, HKEY_CURRENT_USER, Software\BANDISOFT\BANDICAM\OPTION, % optname
+	return retval
+}
+
+F1:: Bcam4_ShowScenarioMenu()
+Bcam4_ShowScenarioMenu()
+{
+	Menu, Bcam_Scenario, Show
+}
+
+Bcam4_FlushRegistry()
+{
+	; Click two buttons of Bandicam main window to force writing in-memory cfg to registry
+	ClickInActiveWindow(130, 74, false, 3)
+	Sleep, 200
+	ClickInActiveWindow( 30, 74, false, 3)
+}
+
+Bcam4_VerifyNetMeeting()
+{
+	; 要求录制麦克风声音，并且与主声道混合
+	;
+	; "sVideoSndDevice2_2"="(非空)" 
+	;   // 如果外部定义了 Bcam4_microphone_uuid 变量，
+	;	// 比如: global Bcam4_microphone_uuid:="{0.0.1.00000000}.{194d03c6-36f5-4020-96fe-9383220ff0d3}"
+	;	// 那么，就要求 sVideoSndDevice2_2 和该值相等
+	; "bVideoSndDeviceMix"=dword:00000001
+
+	Bcam4_verifyRecordingParams(true, 24)
+}
+
+Bcam4_VerifyMotionVideo()
+{
+	Bcam4_verifyRecordingParams(false, 24)
+}
+
+Bcam4_verifyRecordingParams(want_mic, fps:=0)
+{
+
+	Bcam4_FlushRegistry()
+	errmsg := ""
+	
+	if(want_mic)
+	{
+		val := Bcam4_ReadOption("sVideoSndDevice2_2")
+		if(Bcam4_microphone_uuid=="" and val=="")
+		{
+			errmsg .= "'Secondary Sound Device' must be enabled.`n"
+		}
+		else if(Bcam4_microphone_uuid!="" and val!=Bcam4_microphone_uuid)
+		{
+			errmsg .= "'Secondary Sound Device' must be set to a microphone device with uuid=""" . Bcam4_microphone_uuid . """`n"
+		}
+
+		val := Bcam4_ReadOption("bVideoSndDeviceMix")
+		if(val != "1")
+		{
+			errmsg .= "'Two Sound Mixing' must be ticked.`n" 
+		}
+	}
+	else
+	{
+		val := Bcam4_ReadOption("sVideoSndDevice2_2")
+		if(val!="")
+		{
+			errmsg .= "'Secondary Sound Device' must be disabled.`n"
+		}
+	}
+
+	if(fps!=0)
+	{
+		val := Bcam4_ReadOption("VideoFormat.VideoFrameRate")
+		if(val!=fps*1000)
+		{
+			errmsg .= "Video frame rate must be set to " . fps
+		}
+	}
+
+	; ==== Conclusion ===
+
+	if(errmsg) {
+		dev_MsgBoxError("Please fix the following issues:`n`n" . errmsg)
+	} else {
+		dev_MsgBoxInfo("[Bandicam AHK] OK, no problems found.")
+	}
+}
+
+
+#If
 
