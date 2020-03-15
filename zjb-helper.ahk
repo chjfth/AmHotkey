@@ -170,13 +170,13 @@ zjb_HookCommonKeys(is_hook)
 	{
 		if(is_hook)
 		{
-			DefineHotkey("~$" . A_LoopField , "zjb_HintMyKey", A_LoopField)
+			dev_DefineHotkey("~$" . A_LoopField , "zjb_HintMyKey", A_LoopField)
 				; This comon-key hooking looks something brutal and exclusive. 
 				; Hope others don't do the same thing.
 		}
 		else
 		{
-			UnDefineHotkey("~$" . A_LoopField , "zjb_HintMyKey")
+			dev_UnDefineHotkey("~$" . A_LoopField , "zjb_HintMyKey")
 		}
 	}
 }

@@ -50,10 +50,10 @@ QSA_RecordTick_InitHotkeys()
 		return
 	init_done := true
 
-	commonkeys = abcdefghijklmnopqrstuvwxyz%A_Space%1234567890
+	commonkeys = abcdefghijklmnopqrstuvwxyz1234567890
 	Loop, parse, commonkeys
 	{
-		DefineHotkey("~$" . A_LoopField , "QSA_RecordLastLetterTick", A_LoopField)
+		dev_DefineHotkey("~$" . A_LoopField , "QSA_RecordLastLetterTick", A_LoopField)
 			; This comon-key hooking looks something brutal and exclusive. 
 			; Hope others don't do the same thing.
 	}
@@ -142,7 +142,7 @@ MyActivateSingleWindow(suffixkey, winclass, appdesc)
 	;	CapsLock & F10:: MyActivateSingleWindow("F10", "CalcFrame", "Windows Calculator")
 	;
 	; If you have multiple windows of "ahk_class CalcFrame", MyActivateSingleWindow can only switch to
-	; the most recently used one; in order to swtich between two or more of such windows, 
+	; the most recently used one; in order to switch between two or more of such windows, 
 	; use MyActivateWindowClasses instead. Of course, MyActivateSingleWindow and MyActivateWindowClasses
 	; can be used at the same time for the same winclass.
 
@@ -273,7 +273,7 @@ QSA_make_group_name(iname)
 
 QSA_DefineActivateSingle_Caps(suffixkey, winclass, appdesc)
 {
-	DefineHotkey("CapsLock & " . suffixkey, "MyActivateSingleWindow", suffixkey, winclass, appdesc)
+	dev_DefineHotkey("CapsLock & " . suffixkey, "MyActivateSingleWindow", suffixkey, winclass, appdesc)
 }
 
 QSA_DefineActivateGroup_Caps(suffixkey, winclass, appdesc)
@@ -285,7 +285,7 @@ QSA_DefineActivateGroup_Caps(suffixkey, winclass, appdesc)
 	; GroupAdd, %groupname%, ahk_class %winclass%
 		; Note: GroupAdd is postponed to MyActivateGroup.
 	
-	DefineHotkey("CapsLock & " . suffixkey, "MyActivateGroup", suffixkey, groupname, winclass, QSA_NO_WNDCLS_REGEX, "", appdesc)
+	dev_DefineHotkey("CapsLock & " . suffixkey, "MyActivateGroup", suffixkey, groupname, winclass, QSA_NO_WNDCLS_REGEX, "", appdesc)
 }
 
 QSA_DefineActivateGroupFlex(hotkey, suffixkey, winclass, wincls_regex, title_regex, appdesc)
@@ -316,7 +316,7 @@ QSA_DefineActivateGroupFlex(hotkey, suffixkey, winclass, wincls_regex, title_reg
 	groupname := "groupREGEX_" . QSA_make_group_name(winclass . appdesc)
 		; Note: GroupAdd is postponed to the moment the hot key is pressed,
 		; because we intend the regex title-match behavior to take effect just at the time we fire the hotkey.
-	DefineHotkey(hotkey, "MyActivateGroup", suffixkey, groupname, winclass, wincls_regex, title_regex, appdesc)
+	dev_DefineHotkey(hotkey, "MyActivateGroup", suffixkey, groupname, winclass, wincls_regex, title_regex, appdesc)
 }
 
 QSA_DefineActivateGroupFlex_Caps(suffixkey, winclass, wincls_regex, title_regex, appdesc)
@@ -370,6 +370,9 @@ QSA_InitHotkeys()
 	QSA_DefineActivateGroup_Caps("f", "classFoxitReader", "Foxit Reader")
 	QSA_DefineActivateGroup_Caps("c", "VirtualConsoleClass", "ConEmu")
 	QSA_DefineActivateGroup_Caps("p", "PuTTY", "PuTTY")
+
+	QSA_DefineActivateGroupFlex_Caps("u", "ConsoleWindowClass", QSA_NO_WNDCLS_REGEX, "^Ubuntu", "WSL Ubuntu")
+	QSA_DefineActivateGroupFlex_Caps("o", "ConsoleWindowClass", QSA_NO_WNDCLS_REGEX, "^openSUSE", "WSL openSUSE")
 
 	QSA_DefineActivateGroupFlex_Caps("j", QSA_NO_WNDCLASS, "HyperSnap (7|8) Window Class",  "", "Hypersnap 7 or 8")
 

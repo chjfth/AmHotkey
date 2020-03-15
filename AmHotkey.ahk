@@ -1,6 +1,8 @@
-﻿; Tested with Autohotkey v1.1.19.02
+﻿; Tested with Autohotkey v1.1.32.00
 
 #InstallKeybdHook
+
+#Include *i custom_env.ahk ; optional 
 
 global g_winmove_unit := 50 ; window move unit small
 global g_winmove_scale := 5 ; window move 5x larger step if you tap LCtrl just before doing win move
@@ -74,11 +76,14 @@ global g_devGuiAutoResizeDict := {}
 
 global g_amstrMute := "AM: Mute clicking sound"
 
+global g_DefineHotkeyLogfile := "DefineHotkeys.log"
+
 ;==========;==========;==========;==========;==========;==========;==========;==========;
 ; All global vars should be defined above this line, otherwise, they will be null.
 ;==========;==========;==========;==========;==========;==========;==========;==========;
 
 AmDoInit()
+dev_DefineHotkeyLogClear()
 
 Amhotkey_LoadMoreIncludes()
 
@@ -745,58 +750,70 @@ IsDictEmpty(dict)
 	return empty
 }
 
+dev_GetDateTimeStrNow()
+{
+	FormatTime, dt, , % "yyyy-MM-dd.HH:mm:ss"
+	return dt
+}
+
 
 ; [2015-02-07] The great dynamically hotkey defining function. (tested on AHK 1.1.13.01)
 ; BIG Thanks to: http://stackoverflow.com/a/17932358
-; Usage:
-; DefineHotkey("x", "Foo", "Bar1", "Bar2") ; this defines:  x:: Foo("Bar1", "Bar2")
-; [2015-03-16] But due to its lack of support for conditional hotkeys, I have superceded it with 
-; DefineHotkeyWithCondition() and UnDefineHotkeyWithCondition()
-;
-DefineHotkey_old(hk, fun, arg*) {
-;MsgBox, %hk% @ %fun%
-    Static funs := {}, args := {}
-    if(fun) {
-	    funs[hk] := Func(fun), args[hk] := arg
-    	Hotkey, %hk%, Hotkey_Handle, On
-    } else {
-    	Hotkey, %hk%, Off
-    	; [2015-02-26] Chj: Autohotkey 1.19 does not seem to provide a way to remove a hotkey definition, 
-    	; only turn it Off.
-    }
-    Return
-Hotkey_Handle:
-tooltip, Ooops! you used oooooooold Hotkey_Handle DefineHotkey(). Please use upgrade to DefineHotkeyWithCondition()
-    funs[A_ThisHotkey].(args[A_ThisHotkey]*)
-    Return
-}
+; ... above is historical comment.
+; ... [2020-03-15] Now we have more advanced dev_DefineHotkey, dev_UnDefineHotkey, 
+;                  dev_DefineHotkeyWithCondition, dev_UnDefineHotkeyWithCondition .
 
-UnDefineHotkey(hk, fun)
+dev_DefineHotkeyLogClear() 
 {
-	dev_DefineHotkey(false, hk, fun, 0)
+	; [2020-03-15] Autohotkey 1.1.32.00 
+	; If you need this log, please define `global g_isDefineHotkeyLog:=true` in custom_env.ahk .
+	; Default is no log, bcz dev_WriteLogFile seems quit time consuming.
+	if(g_isDefineHotkeyLog) {
+		dev_WriteLogFile(g_DefineHotkeyLogfile, "AmHotkey reload at: " . dev_GetDateTimeStrNow() . "`n", false)
+	} else {
+		FileDelete, % g_DefineHotkeyLogfile
+	}
 }
 
-DefineHotkey(hk, fun, args*) 
+dev_DefineHotkeyLogAppend(prefix, hk, fn_name)
 {
-	dev_DefineHotkey(true, hk, fun, args)
+	if(g_isDefineHotkeyLog) {
+		str := Format("[{1}] '{2}' => '{3}'`n", prefix, hk, fn_name)
+		dev_WriteLogFile(g_DefineHotkeyLogfile, str)
+	}
 }
 
-dev_DefineHotkey(is_on, hk, fun, args) ; will define global hotkey
+dev_UnDefineHotkey(hk, fn_name)
+{
+	dev_DefineHotkeyLogAppend("dev_UnDefineHotkey", hk, fn_name)
+	in_dev_DefineHotkey(false, hk, fn_name, 0)
+}
+
+dev_DefineHotkey(hk, fn_name, args*) 
+{
+	dev_DefineHotkeyLogAppend("dev_DefineHotkey", hk, fn_name)
+	in_dev_DefineHotkey(true, hk, fn_name, args)
+}
+
+in_dev_DefineHotkey(is_on, hk, fn_name, args) ; will define global hotkey
 {
 	; Define or Undefine a hotkey, much more powerful than the `Hotkey` keyword.
 	;
-	; hk : the hotkey name recognized by AutoHotkey.
-	; fun : the function name string, like "DoMyWork", DoMyWork() is defined somewhere else.
+	; hk      : the hotkey name recognized by AutoHotkey.
+	; fn_name : the function name string, like "DoMyWork", DoMyWork() is defined somewhere else.
 	;
 	; Data structure example:
-	; funs["F1"][fun]    => anonther object
-	; funs["F1"][fun].fn => Function object for the hotkey
-	; funs["F1"][fun].pr => function parameters for the .fn function
+	; funs["F1"][fn_name]         => another object
+	; funs["F1"][fn_name].fn_name => name of the function, a string
+	; funs["F1"][fn_name].fn      => Function object for the hotkey
+	; funs["F1"][fn_name].pr      => function parameters for the .fn function
 
 	static funs := {}
+
+;	dev_WriteLogFile("dev_DefineHotkey.txt", fn_name . "`n") ; debug
 	
-	if(!fun) {
-		MsgBox, % "Error: DefineHotkey() pass in fun=null"
+	if(!fn_name) {
+		dev_MsgBoxError("Error: dev_DefineHotkey() pass in fn_name=null !")
 		return
 	}
 	
@@ -805,19 +822,19 @@ dev_DefineHotkey(is_on, hk, fun, args) ; will define global hotkey
 		if(not funs[hk])
 			funs[hk] := {}
 		
-		if(not funs[hk][fun])
-			funs[hk][fun] := {}
+		if(not funs[hk][fn_name])
+			funs[hk][fn_name] := {}
 		
-		funs[hk][fun].fn_name := fun
-		funs[hk][fun].fn := Func(fun)
-		funs[hk][fun].pr := args
+		funs[hk][fn_name].fn_name := fn_name
+		funs[hk][fn_name].fn := Func(fn_name)
+		funs[hk][fn_name].pr := args
 
 		Hotkey, If ; -- use the global context
 		Hotkey, %hk%, Hotkey_Handler_global, On
 	}
 	else 
 	{
-		funs[hk].Delete(fun)
+		funs[hk].Delete(fn_name)
 		
 		if( IsDictEmpty(funs[hk]) )
 		{
@@ -848,20 +865,23 @@ Hotkey_Handler_global:
 }
 
 
-UnDefineHotkeyWithCondition(hk, cond)
+dev_UnDefineHotkeyWithCondition(hk, cond)
 {
-	DefineHotkeyWithCondition(hk, cond, "")
+	dev_DefineHotkeyLogAppend(Format("dev_UnDefineHotkeyWithCondition({})",cond), hk, fn_name)
+	dev_DefineHotkeyWithCondition(hk, cond, "")
 }
 
-DefineHotkeyWithCondition(hk, cond, fun, args*)
+dev_DefineHotkeyWithCondition(hk, cond, fn_name, args*)
 {
-	; fun  is a function name string, like "DoMyWork", DoMyWork() is defined somewhere else.
-	; If fun=="", the previously registered hotkey *for the cond* is removed.
+	dev_DefineHotkeyLogAppend(Format("dev_DefineHotkeyWithCondition({})",cond), hk, fn_name)
+
+	; fn_name  is a function name string, like "DoMyWork", DoMyWork() is defined somewhere else.
+	; If fn_name=="", the previously registered hotkey *for the cond* is removed.
 	;
 	; cond is a function name string, like "Spc_IsActive".
 	;
 	; (Autohotkey 1.1.19.02 MEMO)
-	; ALERT!: User should already have an exact ``#If cond()`` block defined to use with DefineHotkeyWithCondition().
+	; [[IMPORTANT]] User should already have an exact ``#If cond()`` block defined to use with dev_DefineHotkeyWithCondition().
 	; Missing this step will *silently* fail the conditional-hotkey, OR, fail the global hotkey(random from the two).
 	;
 	; This step is easily ignored because there will be no ``Parameter #2 must match an existing #If expression``
@@ -870,7 +890,7 @@ DefineHotkeyWithCondition(hk, cond, fun, args*)
 	;
 	; For example, if you call like this.
 	;
-	;	DefineHotkeyWithCondition("F9", "IsNotepadActive", "mytooltip", "Hit", "notePad")
+	;	dev_DefineHotkeyWithCondition("F9", "IsNotepadActive", "mytooltip", "Hit", "notePad")
 	;
 	; then you must have an #If block with at least two lines(an empty block is enough)
 	;
@@ -888,14 +908,15 @@ DefineHotkeyWithCondition(hk, cond, fun, args*)
 	;
 	;
 	; Data structure example:
-	; condfuns["F1"]                    => anonther object
-	; condfuns["F1"]["Spc_IsActive"]    => yet anonther object
-	; condfuns["F1"]["Spc_IsActive"].fn => Function object for Spc_IsActive() true condition
-	; condfuns["F1"]["Spc_IsActive"].pr => function parameters for the .fn function
+	; condfuns["F1"]                         => another object
+	; condfuns["F1"]["Spc_IsActive"]         => yet another object
+	; condfuns["F1"]["Spc_IsActive"].fn_name => yet another object
+	; condfuns["F1"]["Spc_IsActive"].fn      => Function object for Spc_IsActive() true condition
+	; condfuns["F1"]["Spc_IsActive"].pr      => function parameters for the .fn function
 	
 	if(cond=="")
 	{
-		MsgBox, % msgboxoption_IconStop, , % "BUG! Call with null cond: `n`nDefineHotkeyWithCondition(" . hk . "`, (null)`, " . fun . ")"
+		dev_MsgBoxError("BUG! Call with null cond: `n`ndev_DefineHotkeyWithCondition(" . hk . "`, (null)`, " . fn_name . ")")
 		return 
 	}
 	
@@ -911,12 +932,12 @@ DefineHotkeyWithCondition(hk, cond, fun, args*)
 	if(not condfuns[hk][cond])
 		condfuns[hk][cond] := {}
 
-	if(fun)
+	if(fn_name)
 	{
 		; To improve(maybe): cache cond's function in ``condfuns[hk][cond].condfn`` to improve speed
 
-		condfuns[hk][cond].fn_name := fun
-		condfuns[hk][cond].fn := Func(fun)
+		condfuns[hk][cond].fn_name := fn_name
+		condfuns[hk][cond].fn := Func(fn_name)
 		condfuns[hk][cond].pr := args
 		condfuns[hk][cond].cnt := 0
 		
@@ -1098,7 +1119,7 @@ lb_TooltipAutoClear:
 dev_WriteLogFile(filepath, text, is_append:=true)
 {
 	; memo: Use "`n" in text to represent a new line.
-
+	;
 	if(not filepath)
 		return
 	
@@ -2424,4 +2445,6 @@ dev_IsWinclassExist(classname)
 }
 
 
-#Include *i _more_includes_.ahk
+;==============================================================================
+#Include *i _more_includes_.ahk ;This should be the final statement of this ahk
+;==============================================================================

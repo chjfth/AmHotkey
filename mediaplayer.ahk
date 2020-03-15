@@ -499,25 +499,25 @@ MPC_DefineHotkeysSeekPercents()
 	hotchars := "123456789"
 	Loop, parse, hotchars
 	{
-		DefineHotkeyWithCondition("^" . A_LoopField, "MPC_IsActive", "MPC_ClickToSeek", A_LoopField*10)
+		dev_DefineHotkeyWithCondition("^" . A_LoopField, "MPC_IsActive", "MPC_ClickToSeek", A_LoopField*10)
 		
 		; And F1~F9 to be 10% ~ 90%
-		DefineHotkeyWithCondition("F" . A_LoopField, "MPC_IsActive", "MPC_ClickToSeek_condition", A_LoopField*10, 0, "MPC_cond_F1toF9Seek")
+		dev_DefineHotkeyWithCondition("F" . A_LoopField, "MPC_IsActive", "MPC_ClickToSeek_condition", A_LoopField*10, 0, "MPC_cond_F1toF9Seek")
 	}
-	DefineHotkeyWithCondition("^``", "MPC_IsActive", "MPC_ClickToSeek", "2.5") ; ` is escaped, double typing it
-	DefineHotkeyWithCondition("^0", "MPC_IsActive", "MPC_ClickToSeek", "97.5")
+	dev_DefineHotkeyWithCondition("^``", "MPC_IsActive", "MPC_ClickToSeek", "2.5") ; ` is escaped, double typing it
+	dev_DefineHotkeyWithCondition("^0", "MPC_IsActive", "MPC_ClickToSeek", "97.5")
 
 	; For English keyboard, quick seek to 5pct, 15pct, 25pct, 95pct etc.
-	DefineHotkeyWithCondition("^Tab", "MPC_IsActive", "MPC_ClickToSeek", "5")
-	DefineHotkeyWithCondition("^q", "MPC_IsActive", "MPC_ClickToSeek", "15")
-	DefineHotkeyWithCondition("^w", "MPC_IsActive", "MPC_ClickToSeek", "25")
-	DefineHotkeyWithCondition("^e", "MPC_IsActive", "MPC_ClickToSeek", "35")
-	DefineHotkeyWithCondition("^r", "MPC_IsActive", "MPC_ClickToSeek", "45")
-	DefineHotkeyWithCondition("^t", "MPC_IsActive", "MPC_ClickToSeek", "55")
-	DefineHotkeyWithCondition("^y", "MPC_IsActive", "MPC_ClickToSeek", "65")
-	DefineHotkeyWithCondition("^u", "MPC_IsActive", "MPC_ClickToSeek", "75")
-	DefineHotkeyWithCondition("^i", "MPC_IsActive", "MPC_ClickToSeek", "85")
-	DefineHotkeyWithCondition("^o", "MPC_IsActive", "MPC_ClickToSeek", "95")
+	dev_DefineHotkeyWithCondition("^Tab", "MPC_IsActive", "MPC_ClickToSeek", "5")
+	dev_DefineHotkeyWithCondition("^q", "MPC_IsActive", "MPC_ClickToSeek", "15")
+	dev_DefineHotkeyWithCondition("^w", "MPC_IsActive", "MPC_ClickToSeek", "25")
+	dev_DefineHotkeyWithCondition("^e", "MPC_IsActive", "MPC_ClickToSeek", "35")
+	dev_DefineHotkeyWithCondition("^r", "MPC_IsActive", "MPC_ClickToSeek", "45")
+	dev_DefineHotkeyWithCondition("^t", "MPC_IsActive", "MPC_ClickToSeek", "55")
+	dev_DefineHotkeyWithCondition("^y", "MPC_IsActive", "MPC_ClickToSeek", "65")
+	dev_DefineHotkeyWithCondition("^u", "MPC_IsActive", "MPC_ClickToSeek", "75")
+	dev_DefineHotkeyWithCondition("^i", "MPC_IsActive", "MPC_ClickToSeek", "85")
+	dev_DefineHotkeyWithCondition("^o", "MPC_IsActive", "MPC_ClickToSeek", "95")
 }
 
 

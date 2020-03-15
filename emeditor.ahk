@@ -251,13 +251,13 @@ Eme_QuickTabSelect_InitHotkeys()
 	hotchars := "123456789abcdefghijklmnopqrstuvwxyz"
 	Loop, parse, hotchars
 	{
-		DefineHotkeyWithCondition("Esc & " . A_LoopField, "Eme_IsActive", "Eme_SelectDoctab_Mode1", A_LoopField)
+		dev_DefineHotkeyWithCondition("Esc & " . A_LoopField, "Eme_IsActive", "Eme_SelectDoctab_Mode1", A_LoopField)
 		
-		DefineHotkeyWithCondition("F1 & " . A_LoopField, "Eme_IsActive", "Eme_CycleDoctabByChar", A_LoopField)
-		DefineHotkeyWithCondition("F1 & " . Eme_HotcharDot, "Eme_IsActive", "Eme_CycleDoctabByChar", Eme_HotcharDot)
+		dev_DefineHotkeyWithCondition("F1 & " . A_LoopField, "Eme_IsActive", "Eme_CycleDoctabByChar", A_LoopField)
+		dev_DefineHotkeyWithCondition("F1 & " . Eme_HotcharDot, "Eme_IsActive", "Eme_CycleDoctabByChar", Eme_HotcharDot)
 			; Use dot(.) to match any non alphanumeric filenames.
 
-		DefineHotkeyWithCondition("F1 & Esc", "Eme_IsActive", "Eme_CycleDoctabCancel", A_LoopField)
+		dev_DefineHotkeyWithCondition("F1 & Esc", "Eme_IsActive", "Eme_CycleDoctabCancel", A_LoopField)
 	}
 
 }

@@ -208,14 +208,14 @@ Spc_FolderGoto_InitHotkeys()
 	init_done := true
 	
 	; Now do:
-	; DefineHotkeyWithCondition("~$a", "Spc_FolderGoto_AppendBSlash", "a")
-	; DefineHotkeyWithCondition("~$b", "Spc_FolderGoto_AppendBSlash", "b")
+	; dev_DefineHotkeyWithCondition("~$a", "Spc_FolderGoto_AppendBSlash", "a")
+	; dev_DefineHotkeyWithCondition("~$b", "Spc_FolderGoto_AppendBSlash", "b")
 	; ...
 	letters = abcdefghijklmnopqrstuvwxyz
 	Loop, parse, letters
 	{
 ;		Hotkey, If, IsSpeedCommanderActive()
-		DefineHotkeyWithCondition("~$" . A_LoopField, "IsSpeedCommanderActive", "Spc_FolderGoto_AppendBSlash", A_LoopField)
+		dev_DefineHotkeyWithCondition("~$" . A_LoopField, "IsSpeedCommanderActive", "Spc_FolderGoto_AppendBSlash", A_LoopField)
 	}
 	
 }

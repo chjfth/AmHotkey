@@ -313,7 +313,7 @@ MSHV22_DefineHotkeys()
 	hotchars := "123456789"
 	Loop, parse, hotchars
 	{
-		DefineHotkeyWithCondition("F" . A_LoopField, "MSHV22_IsActive", "MSHV22_FN_send_CtrlN", A_LoopField)
+		dev_DefineHotkeyWithCondition("F" . A_LoopField, "MSHV22_IsActive", "MSHV22_FN_send_CtrlN", A_LoopField)
 	}
 
 }

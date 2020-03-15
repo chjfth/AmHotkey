@@ -407,20 +407,20 @@ putty_SimuMouseMove(sdir, count:=1)
 
 putty_InitHotkeys()
 {
-	DefineHotkeyWithCondition("CapsLock & Up", "putty_IsActive", "putty_SimuMouseMove", "up")
-	DefineHotkeyWithCondition("CapsLock & Down", "putty_IsActive", "putty_SimuMouseMove", "down")
-	DefineHotkeyWithCondition("CapsLock & Left", "putty_IsActive", "putty_SimuMouseMove", "left")
-	DefineHotkeyWithCondition("CapsLock & Right", "putty_IsActive", "putty_SimuMouseMove", "right")
+	dev_DefineHotkeyWithCondition("CapsLock & Up", "putty_IsActive", "putty_SimuMouseMove", "up")
+	dev_DefineHotkeyWithCondition("CapsLock & Down", "putty_IsActive", "putty_SimuMouseMove", "down")
+	dev_DefineHotkeyWithCondition("CapsLock & Left", "putty_IsActive", "putty_SimuMouseMove", "left")
+	dev_DefineHotkeyWithCondition("CapsLock & Right", "putty_IsActive", "putty_SimuMouseMove", "right")
 
-	DefineHotkeyWithCondition("Esc & Up", "putty_IsActive", "putty_SimuMouseMove", "up")
-	DefineHotkeyWithCondition("Esc & Down", "putty_IsActive", "putty_SimuMouseMove", "down")
-	DefineHotkeyWithCondition("Esc & Left", "putty_IsActive", "putty_SimuMouseMove", "left")
-	DefineHotkeyWithCondition("Esc & Right", "putty_IsActive", "putty_SimuMouseMove", "right")
+	dev_DefineHotkeyWithCondition("Esc & Up", "putty_IsActive", "putty_SimuMouseMove", "up")
+	dev_DefineHotkeyWithCondition("Esc & Down", "putty_IsActive", "putty_SimuMouseMove", "down")
+	dev_DefineHotkeyWithCondition("Esc & Left", "putty_IsActive", "putty_SimuMouseMove", "left")
+	dev_DefineHotkeyWithCondition("Esc & Right", "putty_IsActive", "putty_SimuMouseMove", "right")
 
-	DefineHotkeyWithCondition("!Up", "putty_IsActive", "putty_SimuMouseMove", "up", 5)
-	DefineHotkeyWithCondition("!Down", "putty_IsActive", "putty_SimuMouseMove", "down", 5)
-	DefineHotkeyWithCondition("!Left", "putty_IsActive", "putty_SimuMouseMove", "left", 5)
-	DefineHotkeyWithCondition("!Right", "putty_IsActive", "putty_SimuMouseMove", "right", 5)
+	dev_DefineHotkeyWithCondition("!Up", "putty_IsActive", "putty_SimuMouseMove", "up", 5)
+	dev_DefineHotkeyWithCondition("!Down", "putty_IsActive", "putty_SimuMouseMove", "down", 5)
+	dev_DefineHotkeyWithCondition("!Left", "putty_IsActive", "putty_SimuMouseMove", "left", 5)
+	dev_DefineHotkeyWithCondition("!Right", "putty_IsActive", "putty_SimuMouseMove", "right", 5)
 		; [2015-03-28] Strange: Using "<!Up" here will invalidate emeditor.ahk's ``!UP:: Send {UP 10}``
 }
 

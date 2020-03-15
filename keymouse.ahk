@@ -39,7 +39,7 @@ km_init_arT3obj() ; define the function
 	o.ahkname := "SC045" ;"Pause"
 	o.action := ""
 		; [2019-10-08] Memo: On Autohotkey 1.1.24.05, using "Pause" as o.ahkname will cause problem:
-		; Call DefineHotkey with 1st param "$Pause", and Hotkey_Handler_global sees A_ThisHotkey as "Pause",
+		; Call dev_DefineHotkey with 1st param "$Pause", and Hotkey_Handler_global sees A_ThisHotkey as "Pause",
 		; -- the "$" prefix is lost. Using "SC045" fixes this problem(ahk bug?), and we'll se A_ThisHotkey as "$SC045".
 	
 ;	MsgBox, % km_dict_T3obj.PrnScrn.ahkname . " // " . km_dict_T3obj.ScroLock.ahkname
@@ -168,7 +168,7 @@ km_DefineEasymouseLiteHotkeys(is_save_ini:=false, is_disable_old_hotkey:=false)
 		for index, hot in apphots
 		{
 			try {
-				DefineHotkey("AppsKey & " . hot, "")
+				dev_DefineHotkey("AppsKey & " . hot, "")
 			}
 			catch {
 				;If, for example "AppsKey & Home" is not defined as hotkey yet, executing
@@ -202,9 +202,9 @@ km_DefineEasymouseLiteHotkeys(is_save_ini:=false, is_disable_old_hotkey:=false)
 		{
 ;XX MsgBox, % "3333 vHotname=" . vHotname . " / " . %vHotname% . " / " . %vFraction%
 			if(dxn=="West" or dxn=="East")
-				DefineHotkey("AppsKey & " . %vHotname%, "km_EasyMouseLite", %vFraction%, 1/2)
+				dev_DefineHotkey("AppsKey & " . %vHotname%, "km_EasyMouseLite", %vFraction%, 1/2)
 			else ; North or South
-				DefineHotkey("AppsKey & " . %vHotname%, "km_EasyMouseLite", 1/2, %vFraction%)
+				dev_DefineHotkey("AppsKey & " . %vHotname%, "km_EasyMouseLite", 1/2, %vFraction%)
 ;XX MsgBox, 4444 vHotname=%vHotname% (%dxn%)
 		}
 		
@@ -242,14 +242,14 @@ km_LoadIni()
 		o.action := strAction
 	
 		if(strAction) ; if not ""
-			DefineHotkey("$" . o.ahkname, "Km_T3key_do_action", o.ahkname, strAction)
+			dev_DefineHotkey("$" . o.ahkname, "Km_T3key_do_action", o.ahkname, strAction)
 		
 		; For the key(s) that acts as left mouse click, we define Shift+Ctrl+<key> and Shift+<key>
 		; as [save current mouse position] and [restore mouse to the saved position]
 		if(strAction=="Left")
 		{
-			DefineHotkey("+^" . o.ahkname, "km_RememberPinPos")
-			DefineHotkey("+" . o.ahkname, "km_RestorePinPos")
+			dev_DefineHotkey("+^" . o.ahkname, "km_RememberPinPos")
+			dev_DefineHotkey("+" . o.ahkname, "km_RestorePinPos")
 		}
 	}
 
@@ -259,10 +259,10 @@ km_LoadIni()
 	km_RShiftNudgeUnit := km_IniRead("MouseNudge", "RShiftNudgeUnit", 10)
 	if(km_isRShiftArrowNudge)
 	{
-		DefineHotkey("$>+Up", "km_RShiftNudge_do", "Up", 0, -1)
-		DefineHotkey("$>+Down", "km_RShiftNudge_do", "Down", 0, 1)
-		DefineHotkey("$>+Left", "km_RShiftNudge_do", "Left", -1, 0)
-		DefineHotkey("$>+Right", "km_RShiftNudge_do", "Right", 1, 0)
+		dev_DefineHotkey("$>+Up", "km_RShiftNudge_do", "Up", 0, -1)
+		dev_DefineHotkey("$>+Down", "km_RShiftNudge_do", "Down", 0, 1)
+		dev_DefineHotkey("$>+Left", "km_RShiftNudge_do", "Left", -1, 0)
+		dev_DefineHotkey("$>+Right", "km_RShiftNudge_do", "Right", 1, 0)
 	}
 	
 	;;;;
@@ -271,14 +271,14 @@ km_LoadIni()
 	km_KeypadNudgeUnit := km_IniRead("MouseNudge", "KeypadNudgeUnit", 10)
 	if(km_isKeypadNudge)
 	{
-		DefineHotkey("$NumpadHome", "km_KeypadNudge_do", "NumpadHome", -1, -1)
-		DefineHotkey("$NumpadUp", "km_KeypadNudge_do", "NumpadUp", 0, -1)
-		DefineHotkey("$NumpadPgUp", "km_KeypadNudge_do", "NumpadPgUp", 1, -1)
-		DefineHotkey("$NumpadLeft", "km_KeypadNudge_do", "NumpadLeft", -1, 0)
-		DefineHotkey("$NumpadRight", "km_KeypadNudge_do", "NumpadRight", 1, 0)
-		DefineHotkey("$NumpadEnd", "km_KeypadNudge_do", "NumpadEnd", -1, 1)
-		DefineHotkey("$NumpadDown", "km_KeypadNudge_do", "NumpadDown", 0, 1)
-		DefineHotkey("$NumpadPgDn", "km_KeypadNudge_do", "NumpadPgDn", 1, 1)
+		dev_DefineHotkey("$NumpadHome", "km_KeypadNudge_do", "NumpadHome", -1, -1)
+		dev_DefineHotkey("$NumpadUp", "km_KeypadNudge_do", "NumpadUp", 0, -1)
+		dev_DefineHotkey("$NumpadPgUp", "km_KeypadNudge_do", "NumpadPgUp", 1, -1)
+		dev_DefineHotkey("$NumpadLeft", "km_KeypadNudge_do", "NumpadLeft", -1, 0)
+		dev_DefineHotkey("$NumpadRight", "km_KeypadNudge_do", "NumpadRight", 1, 0)
+		dev_DefineHotkey("$NumpadEnd", "km_KeypadNudge_do", "NumpadEnd", -1, 1)
+		dev_DefineHotkey("$NumpadDown", "km_KeypadNudge_do", "NumpadDown", 0, 1)
+		dev_DefineHotkey("$NumpadPgDn", "km_KeypadNudge_do", "NumpadPgDn", 1, 1)
 	}
 
 	;;;;
@@ -286,11 +286,11 @@ km_LoadIni()
 	km_isNumpadSpecial := km_IniRead("NumpadSpecial", "isNumpadSpecial", 0) ; 0=false
 	if(km_isNumpadSpecial)
 	{
-		DefineHotkey("$NumpadDiv", "km_NumpadSpecial_do", "NumpadDiv")
-		DefineHotkey("$NumpadMult", "km_NumpadSpecial_do", "NumpadMult")
-		DefineHotkey("$NumpadSub", "km_NumpadSpecial_do", "NumpadSub")
-		DefineHotkey("$NumpadAdd", "km_NumpadSpecial_do", "NumpadAdd")
-		DefineHotkey("$NumpadIns", "km_NumpadSpecial_do", "NumpadIns")
+		dev_DefineHotkey("$NumpadDiv", "km_NumpadSpecial_do", "NumpadDiv")
+		dev_DefineHotkey("$NumpadMult", "km_NumpadSpecial_do", "NumpadMult")
+		dev_DefineHotkey("$NumpadSub", "km_NumpadSpecial_do", "NumpadSub")
+		dev_DefineHotkey("$NumpadAdd", "km_NumpadSpecial_do", "NumpadAdd")
+		dev_DefineHotkey("$NumpadIns", "km_NumpadSpecial_do", "NumpadIns")
 	}
 	
 	;;;;
@@ -298,15 +298,15 @@ km_LoadIni()
 	km_isAppsEasyMouse := km_IniRead("EasyMouse", "isAppsEasyMouse", 0) ; 0=false
 	if(km_isAppsEasyMouse)
 	{
-		DefineHotkey("AppsKey & NumpadHome" , "km_EasyMouseNumpad", 1/6, 1/4)
-		DefineHotkey("AppsKey & NumpadUp"   , "km_EasyMouseNumpad", 1/2, 1/4)
-		DefineHotkey("AppsKey & NumpadPgUp" , "km_EasyMouseNumpad", 5/6, 1/4)
-		DefineHotkey("AppsKey & NumpadLeft" , "km_EasyMouseNumpad", 1/6, 1/2)
-		DefineHotkey("AppsKey & NumpadClear" , "km_EasyMouseNumpad", 1/2, 1/2)
-		DefineHotkey("AppsKey & NumpadRight" , "km_EasyMouseNumpad", 5/6, 1/2)
-		DefineHotkey("AppsKey & NumpadEnd"  , "km_EasyMouseNumpad", 1/6, 3/4)
-		DefineHotkey("AppsKey & NumpadDown" , "km_EasyMouseNumpad", 1/2, 3/4)
-		DefineHotkey("AppsKey & NumpadPgDn" , "km_EasyMouseNumpad", 5/6, 3/4)
+		dev_DefineHotkey("AppsKey & NumpadHome" , "km_EasyMouseNumpad", 1/6, 1/4)
+		dev_DefineHotkey("AppsKey & NumpadUp"   , "km_EasyMouseNumpad", 1/2, 1/4)
+		dev_DefineHotkey("AppsKey & NumpadPgUp" , "km_EasyMouseNumpad", 5/6, 1/4)
+		dev_DefineHotkey("AppsKey & NumpadLeft" , "km_EasyMouseNumpad", 1/6, 1/2)
+		dev_DefineHotkey("AppsKey & NumpadClear" , "km_EasyMouseNumpad", 1/2, 1/2)
+		dev_DefineHotkey("AppsKey & NumpadRight" , "km_EasyMouseNumpad", 5/6, 1/2)
+		dev_DefineHotkey("AppsKey & NumpadEnd"  , "km_EasyMouseNumpad", 1/6, 3/4)
+		dev_DefineHotkey("AppsKey & NumpadDown" , "km_EasyMouseNumpad", 1/2, 3/4)
+		dev_DefineHotkey("AppsKey & NumpadPgDn" , "km_EasyMouseNumpad", 5/6, 3/4)
 	}
 
 	km_EasymouseWestKey := km_IniRead("EasyMouse", "EasymouseWestKey", "")
