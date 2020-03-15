@@ -165,7 +165,7 @@ zjb_InitMonitorCommonKeys()
 
 zjb_HookCommonKeys(is_hook)
 {
-	commonkeys = abcdefghijklmnopqrstuvwxyz%A_Space%1234567890
+	commonkeys = abcdefghijklmnopqrstuvwxyz1234567890
 	Loop, parse, commonkeys
 	{
 		if(is_hook)
