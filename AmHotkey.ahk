@@ -778,7 +778,7 @@ dev_DefineHotkeyLogClear()
 dev_DefineHotkeyLogAppend(prefix, hk, fn_name)
 {
 	if(g_isDefineHotkeyLog) {
-		str := Format("[{1}] '{2}' => '{3}'`n", prefix, hk, fn_name)
+		str := Format("[{1}] {2}： '{3}' => '{4}'`n",dev_GetDateTimeStrNow(), prefix, hk, fn_name)
 		dev_WriteLogFile(g_DefineHotkeyLogfile, str)
 	}
 }

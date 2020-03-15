@@ -15,52 +15,45 @@ global QSA_NO_WNDCLASS := ""
 global QSA_NO_WNDCLS_REGEX := ""
 global qsa_dbgfile := "qsa_dbgfile.txt"
 
-QSA_InitHotkeys()
+QSA_ModuleInit()
+
+; sample_DefineQuickSwitchApps() ; This is too personal, so don't do it here.
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 return ; End of auto-execute section.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
-; Hook "common" keys to get their last press tick(in gtc_last_letter)
-QSA_RecordLastLetterTick(now_key)
+QSA_ModuleInit()
 {
-	now_tick := A_TickCount
-
-;	dev_TooltipAutoClear("now:" . now_key . " // last: " . g_last_letter )
-	if(now_key==g_last_letter)
-	{
-		msec_diff := now_tick-gtc_last_letter
-;		if(msec_diff <= g_msec_dither_threshold)
-;		{
-;			dev_TooltipAutoClear("AHK: Dither key detected: " . now_key . " (" . msec_diff  . "ms)", 5300)
-;			Am_PlaySound("ding.wav")
-;		}
-	}
-
-	gtc_last_letter := now_tick
-	g_last_letter := now_key
-	
-;	Send {Blind}%now_key%
+	QSA_MonitorLiteralKeyTick()
 }
-QSA_RecordTick_InitHotkeys()
+
+
+QSA_RecordLastLiteralTick(now_key)
+{
+	; now_key is not used yet, just for debugging
+	g_last_letter := now_key
+
+	gtc_last_letter := A_TickCount
+}
+
+QSA_MonitorLiteralKeyTick()
 {
 	static init_done := false
 	if init_done
 		return
 	init_done := true
 
-	commonkeys = abcdefghijklmnopqrstuvwxyz1234567890
-	Loop, parse, commonkeys
+	literal_keys = abcdefghijklmnopqrstuvwxyz1234567890
+	Loop, parse, literal_keys
 	{
-		dev_DefineHotkey("~$" . A_LoopField , "QSA_RecordLastLetterTick", A_LoopField)
-			; This comon-key hooking looks something brutal and exclusive. 
-			; Hope others don't do the same thing.
+		dev_DefineHotkey("~$" . A_LoopField , "QSA_RecordLastLiteralTick", A_LoopField)
 	}
 }
 
 QSA_IsFastTyping(suffixkey)
 {
+	;
 	; Note: I just can't implement it with A_TimeIdlePhysical, because it will always be 0
 	; when QSA_IsFastTyping() is executing. That's true because user did really just pressed a key
 	; to trigger this.
@@ -72,16 +65,21 @@ QSA_IsFastTyping(suffixkey)
 
 	timegap := A_TickCount - gtc_last_letter
 	;tooltip, prior=%A_PriorKey% / prioHot=%A_PriorHotKey% / timegap=%timegap%
-	if (timegap<g_qsa_grace_ticks)
+	if (timegap < g_qsa_grace_ticks)
 	{
 		Send %suffixkey% ;seem no need of {Blind}
 		gtc_last_letter := A_TickCount
+
+;		dev_TooltipAutoClear("Fast typing!")
+
 		return true
 		; Side effect here: If you press a second key while CapsLock is still holding down,
 		; that second key may (sometimes) not be in desired case. 
 	}
-	else 
+	else {
+;		dev_TooltipAutoClear("Not Fast typing.")
 		return false
+	}
 }
 
 ArrayHasValue(ar, chkval)
@@ -340,10 +338,8 @@ MyActivateWindowGroupFlex(winclass, wincls_regex, title_regex, appdesc) ; Flex: 
 }
 
 
-QSA_InitHotkeys()
+sample_DefineQuickSwitchApps() ; as template for actual users
 {
-	QSA_RecordTick_InitHotkeys()
-	
 	QSA_DefineActivateGroup_Caps("/", "Notepad", "Notepad")
 ;	QSA_DefineActivateGroup_Caps("1", "Chrome_WidgetWin_1", "Chrome")
 ;	[2018-07-25] I have to use this bcz Skype 8.x UI is using the Chromium framework.
