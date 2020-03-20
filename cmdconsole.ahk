@@ -91,15 +91,15 @@ return
 !m:: cc_LoadChjMacros()
 cc_LoadChjMacros()
 {
-	mpath := ":\chj\software_configs\Win2kCmd\ChjMacro.txt"
-	drive_letters := "defgh"
-	Loop, parse, drive_letters
-	{
-		path := A_LoopField . mpath
-		if FileExist(path) {
-			SendInput doskey /macrofile=%path%{enter}
-			break
-		}
+	exedir := dev_GetActiveEXE_PathName()[1]
+	filename := "ChjMacro.txt"
+	
+	mpath := exedir . "\" . filename
+	if FileExist(mpath) {
+		SendInput doskey /macrofile=%mpath%{enter}
+	} 
+	else {
+		Msgbox, % "Macro file not found: " . mpath
 	}
 	
 }

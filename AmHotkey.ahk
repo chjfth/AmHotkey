@@ -2444,6 +2444,14 @@ dev_IsWinclassExist(classname)
 	}
 }
 
+dev_GetActiveEXE_PathName()
+{
+	WinGet, exepath, ProcessPath, A
+	SplitPath, exepath, filename, dirpath
+	return [dirpath, filename]
+	; retarray[1] is dirpath, retarray[2] is filename .
+}
+
 
 ;==============================================================================
 #Include *i _more_includes_.ahk ;This should be the final statement of this ahk
