@@ -1,0 +1,3 @@
+[submodule "Everpic/pyutils"]
+	path = Everpic/pyutils
+	url = https://github.com/chjfth/pyutils.git
