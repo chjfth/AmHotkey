@@ -22,6 +22,13 @@ global g_dsiIsFastSend
 
 global g_amstr_zjbMonitorKey := "ZJB: Monitor my keys"
 
+
+; You can override these two values in customize.ahk 
+global g_zjbLoginName := "g_zjbLoginName"
+global g_zjbLoginPwd := "g_zjbLoginPwd"
+
+
+
 ; Init_MyCustomizedEnv() ; Function can be defined later.
 
 zjb_InitMonitorCommonKeys()
@@ -202,5 +209,27 @@ zjb_ToggleMonitorKey()
 		
 		zjb_HookCommonKeys(false)
 	}
+}
+
+#If IsWinTitleMatchRegex("资金保登录")
+
+F1:: zjb_FillLoginNamePwd()
+zjb_FillLoginNamePwd()
+{
+;	dev_TooltipAutoClear("hhhhhhhhh")
+	ControlSetText, % "WindowsForms10.EDIT.app.0.202c6663", % g_zjbLoginName, A
+	ControlSetText, % "WindowsForms10.EDIT.app.0.202c6662", % g_zjbLoginPwd,  A
+
+;	g_zjbLoginName
+}
+
+#If
+
+^!F1:: testF1()
+testF1() 
+{
+	dev_TooltipAutoClear("testF1()")
+;	ControlSend, Edit1, 200, A
+	ControlSetText, Edit1, 300, A
 }
 
