@@ -22,14 +22,13 @@ global g_dsiIsFastSend
 
 global g_amstr_zjbMonitorKey := "ZJB: Monitor my keys"
 
+global _g_zjb_UsrPwdMap := {} ; internal use
 
-; You can override these two values in customize.ahk 
-global g_zjbLoginName := "g_zjbLoginName"
-global g_zjbLoginPwd := "g_zjbLoginPwd"
+; User can override this mapping in customize.ahk
+global g_zjb_UsrPwdMap_input := { "13800012345" : "123" 
+	, "13800054321" : "123456"
+	, "g_zjb_UsrPwdMap_input := { usr : pwd }" : "123456789" } 
 
-
-
-; Init_MyCustomizedEnv() ; Function can be defined later.
 
 zjb_InitMonitorCommonKeys()
 
@@ -213,14 +212,90 @@ zjb_ToggleMonitorKey()
 
 #If IsWinTitleMatchRegex("资金保登录")
 
-F1:: zjb_FillLoginNamePwd()
-zjb_FillLoginNamePwd()
+zjb_mapping_count(map)
 {
-;	dev_TooltipAutoClear("hhhhhhhhh")
-	ControlSetText, % "WindowsForms10.EDIT.app.0.202c6663", % g_zjbLoginName, A
-	ControlSetText, % "WindowsForms10.EDIT.app.0.202c6662", % g_zjbLoginPwd,  A
+	count := 0
+	for key, val in map
+		count++
+	return count
+}
 
-;	g_zjbLoginName
+_zjb_LoginFillerInit()
+{
+	menu_title := "== 资金保登录自动填充 =="
+	Menu, ZJB_LoginFiller, Add, % menu_title, zjb_menu_null ; this acts as menu title
+	Menu, ZJB_LoginFiller, Disable, % menu_title
+	Menu, ZJB_LoginFiller, Add ; separator
+	
+	for usr, pwd in g_zjb_UsrPwdMap_input
+	{
+		_g_zjb_UsrPwdMap[usr] := pwd
+		
+		Menu, ZJB_LoginFiller, Add, % usr, zjb_FillLoginNamePwd
+		
+;		MsgBox, % usr . " | " . pwd
+;		MsgBox, % usr . " | " . _g_zjb_UsrPwdMap[usr]
+	}
+	
+}
+
+zjb_menu_null()
+{
+}
+
+F1:: zjb_LoginFiller_Launch()
+zjb_LoginFiller_Launch()
+{
+	static is_init_done := false
+	if(!is_init_done) {
+		_zjb_LoginFillerInit() ; Late init so that customize.ahk can override g_zjb_UsrPwdMap_input 
+		is_init_done := true
+	}
+
+	; If only one user is present, just fill it.
+	; If 2+ users are present, pop up a menu to have user select one.
+
+	first_usr := ""
+	count := 0
+	for usr, pwd in g_zjb_UsrPwdMap_input ; [2020-03-30] Weird, using _g_zjb_UsrPwdMap will result wrong
+	{
+		if(not first_usr) {
+			first_usr := usr
+		}
+		count++
+	}
+
+	if(count==0) {
+		MsgBox, % "g_zjb_UsrPwdMap_input is empty. Nothing to fill for you."
+	}
+	else if(count==1) {
+		zjb_FillLoginNamePwd(first_usr, 0, 0)
+	}
+	else {
+		Menu, ZJB_LoginFiller, Show
+	}
+}
+
+
+zjb_FillLoginNamePwd(ItemName, ItemPos, MenuName)
+{
+	username := ItemName
+	password := _g_zjb_UsrPwdMap[username]
+	
+;	MsgBox, % username . " | " . password 
+	
+;	dev_TooltipAutoClear("hhhhhhhhh")
+	classnn_usr := "WindowsForms10.EDIT.app.0.202c6663"
+	classnn_pwd := "WindowsForms10.EDIT.app.0.202c6662"
+	classnn_humancode := "WindowsForms10.EDIT.app.0.202c6661"
+	
+	ControlFocus, % classnn_usr, A
+	ControlSetText, % classnn_usr, % username, A
+	
+	ControlFocus, % classnn_pwd, A
+	ControlSetText, % classnn_pwd, % password,  A
+
+	ControlFocus, % classnn_humancode, A
 }
 
 #If
