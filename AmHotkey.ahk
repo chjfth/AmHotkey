@@ -2452,6 +2452,16 @@ dev_GetActiveEXE_PathName()
 	; retarray[1] is dirpath, retarray[2] is filename .
 }
 
+dev_mapping_count(map)
+{
+	; Count how many keys are in a map(dict)
+	count := 0
+	for key, val in map
+		count++
+	return count
+}
+
+
 
 ;==============================================================================
 #Include *i _more_includes_.ahk ;This should be the final statement of this ahk

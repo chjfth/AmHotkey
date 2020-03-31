@@ -25,8 +25,8 @@ global g_amstr_zjbMonitorKey := "ZJB: Monitor my keys"
 global _g_zjb_UsrPwdMap := {} ; internal use
 
 ; User can override this mapping in customize.ahk
-global g_zjb_UsrPwdMap_input := { "13800012345" : "123" 
-	, "13800054321" : "123456"
+global g_zjb_UsrPwdMap_input := { "13800012345" : "123456" 
+	, "13800054321" : "" ; Leave password empty, then the Ahk will prompt you for password.
 	, "g_zjb_UsrPwdMap_input := { usr : pwd }" : "123456789" } 
 
 
@@ -210,15 +210,7 @@ zjb_ToggleMonitorKey()
 	}
 }
 
-#If IsWinTitleMatchRegex("资金保登录")
-
-zjb_mapping_count(map)
-{
-	count := 0
-	for key, val in map
-		count++
-	return count
-}
+#If IsWinTitleMatchRegex("资金保登录") ; 资金保 PC 登录窗口
 
 _zjb_LoginFillerInit()
 {
@@ -282,9 +274,21 @@ zjb_FillLoginNamePwd(ItemName, ItemPos, MenuName)
 	username := ItemName
 	password := _g_zjb_UsrPwdMap[username]
 	
+	if(!password) 
+	{
+		text := Format("请告知资金保帐号 {1} 的密码。此处输入的密码将只存放于内存中。", username)
+		InputBox, password, % "请设置密码", % text
+		
+		if(password) {
+			_g_zjb_UsrPwdMap[username] := password
+		} 
+		else {
+			return ; do nothing
+		}
+	}
+	
 ;	MsgBox, % username . " | " . password 
 	
-;	dev_TooltipAutoClear("hhhhhhhhh")
 	classnn_usr := "WindowsForms10.EDIT.app.0.202c6663"
 	classnn_pwd := "WindowsForms10.EDIT.app.0.202c6662"
 	classnn_humancode := "WindowsForms10.EDIT.app.0.202c6661"
@@ -299,12 +303,3 @@ zjb_FillLoginNamePwd(ItemName, ItemPos, MenuName)
 }
 
 #If
-
-^!F1:: testF1()
-testF1() 
-{
-	dev_TooltipAutoClear("testF1()")
-;	ControlSend, Edit1, 200, A
-	ControlSetText, Edit1, 300, A
-}
-
