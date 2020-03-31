@@ -630,8 +630,10 @@ Bcam4_Init()
 	Menu, Bcam_Scenario, Disable, % menu_title
 	Menu, Bcam_Scenario, Add ; separator
 	
-	Menu, Bcam_Scenario, Add, % "网络会议录屏（同时录制我的声音）", Bcam4_VerifyNetMeeting
-	Menu, Bcam_Scenario, Add, % "单纯录屏（无麦）", Bcam4_VerifyMotionVideo
+	Menu, Bcam_Scenario, Add, % "网络会议录屏（同时录制我的声音） 24fps", Bcam4_VerifyNetMeeting_24fps
+	Menu, Bcam_Scenario, Add, % "软件演示录屏（同时录制我的声音） 12fps", Bcam4_VerifyNetMeeting_12fps
+	Menu, Bcam_Scenario, Add, % "单纯录屏（无麦） 24fps", Bcam4_VerifyMotionVideo_24fps
+	Menu, Bcam_Scenario, Add, % "单纯录屏（无麦） 12fps", Bcam4_VerifyMotionVideo_12fps
 }
 
 Bcam4_null()
@@ -658,7 +660,7 @@ Bcam4_FlushRegistry()
 	ClickInActiveWindow( 30, 74, false, 3)
 }
 
-Bcam4_VerifyNetMeeting()
+Bcam4_VerifyNetMeeting_24fps()
 {
 	; 要求录制麦克风声音，并且与主声道混合
 	;
@@ -670,10 +672,18 @@ Bcam4_VerifyNetMeeting()
 
 	Bcam4_verifyRecordingParams(true, 24)
 }
+Bcam4_VerifyNetMeeting_12fps()
+{
+	Bcam4_verifyRecordingParams(true, 12)
+}
 
-Bcam4_VerifyMotionVideo()
+Bcam4_VerifyMotionVideo_24fps()
 {
 	Bcam4_verifyRecordingParams(false, 24)
+}
+Bcam4_VerifyMotionVideo_12fps()
+{
+	Bcam4_verifyRecordingParams(false, 12)
 }
 
 Bcam4_verifyRecordingParams(want_mic, fps:=0)
