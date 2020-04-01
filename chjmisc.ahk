@@ -664,7 +664,7 @@ Bcam4_VerifyNetMeeting_24fps()
 {
 	; 要求录制麦克风声音，并且与主声道混合
 	;
-	; "sVideoSndDevice2_2"="(非空)" 
+	; "sVideoSndDevice2_2"="(某个非空值)" 
 	;   // 如果外部定义了 Bcam4_microphone_uuid 变量，
 	;	// 比如: global Bcam4_microphone_uuid:="{0.0.1.00000000}.{194d03c6-36f5-4020-96fe-9383220ff0d3}"
 	;	// 那么，就要求 sVideoSndDevice2_2 和该值相等
