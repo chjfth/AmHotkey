@@ -79,7 +79,7 @@ global g_amstrMute := "AM: Mute clicking sound"
 global g_DefineHotkeyLogfile := "DefineHotkeys.log"
 
 ;==========;==========;==========;==========;==========;==========;==========;==========;
-; All global vars should be defined above this line, otherwise, they will be null.
+; All global vars should be defined ABOVE this line, otherwise, they will be null.
 ;==========;==========;==========;==========;==========;==========;==========;==========;
 
 AmDoInit()
@@ -1972,7 +1972,7 @@ RegexClassnnFindControlEx(wintitle, Cregex, Tregex
 	; If Tregex==false, control title is not considered, i.e. Cregex's match is enough to return ``true``.
 	; To require an empty title match, pass Tregex=="^$" .
 	;
-	; Currently no check for multi-match, only return first match. For multi-mach, use RegexClassnnFindControl()
+	; Currently no check for multi-match, only return first match. For multi-match, use RegexClassnnFindControls()
 	
 	oClassnn := false
 	WinGet, Awinid, ID, %wintitle% ; cache active window unique id
@@ -2017,7 +2017,7 @@ RegexClassnnFindControls(Cregex, wintitle)
 
 	; Cregex should match a classnn.
 	; Example:
-	; If classnn is Afx:400000:8 , you can use match is with "^Afx:"
+	; If classnn is "Afx:400000:8" , you can use match pattern "^Afx:"
 	;
 	
 	arctrls := []
