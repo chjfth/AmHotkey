@@ -165,7 +165,6 @@ zjb_InitMonitorCommonKeys()
 	Menu, tray, add  ; Creates a separator line.
 	Menu, TRAY, add, %g_amstr_zjbMonitorKey%, zjb_ToggleMonitorKey  ; Creates a new menu item.
 	Menu, TRAY, add, % "ZJB: Show Delay-send-input GUI", Dsi_ShowGui
-	
 	zjb_ToggleMonitorKey()
 }
 
@@ -210,7 +209,7 @@ zjb_ToggleMonitorKey()
 	}
 }
 
-#If IsWinTitleMatchRegex("资金保登录") ; 资金保 PC 登录窗口
+#If IsWinTitleMatchRegex("^(资金保)?登录$") ; 资金保 PC 登录窗口, "资金保登录" since 3.4.0+
 
 _zjb_LoginFillerInit()
 {
@@ -287,19 +286,57 @@ zjb_FillLoginNamePwd(ItemName, ItemPos, MenuName)
 		}
 	}
 	
+	WinGet, Awinid, ID, A 
+	wintitle := "ahk_id " . Awinid
+	
 ;	MsgBox, % username . " | " . password 
+	
+/*
+	; Sample classNN for the (only) three editbox:
 	
 	classnn_usr := "WindowsForms10.EDIT.app.0.202c6663"
 	classnn_pwd := "WindowsForms10.EDIT.app.0.202c6662"
 	classnn_humancode := "WindowsForms10.EDIT.app.0.202c6661"
 	
-	ControlFocus, % classnn_usr, A
-	ControlSetText, % classnn_usr, % username, A
+	But the actual trailing numbers may not be 202c666x, so I need to enumerate them.
+*/	
+	arctls := RegexClassnnFindControls("^WindowsForms10\.EDIT\.app.+")
+	nctls := arctls.Length()
 	
-	ControlFocus, % classnn_pwd, A
-	ControlSetText, % classnn_pwd, % password,  A
+	; As observed, Autohotkey will return editbox-classNN in the order of small suffix number to big suffix number.
+	; So arctls[1].classnn=...202c6661 , arctls[2].classnn=...202c6662 , arctls[3].classnn=...202c6663 .
 
-	ControlFocus, % classnn_humancode, A
+	if(nctls!=3) {
+		MsgBox, % Format("zjb-helper.ahk : Fail to detect EDIT controls on this UI. nctls={1}", nctls)
+		return
+	}
+
+	classnn_usr := arctls[3].classnn
+	ControlFocus, % classnn_usr, % wintitle
+	ControlSetText, % classnn_usr, % username, % wintitle
+	
+	classnn_pwd := arctls[2].classnn
+	ControlFocus, % classnn_pwd, % wintitle
+	ControlSetText, % classnn_pwd, % password,  % wintitle
+	
+	classnn_humancode := arctls[1].classnn
+	ControlFocus, % classnn_humancode, % wintitle
 }
+
+^F1:: zjb_ProbeEditClassnn() ; for debugging purpose
+zjb_ProbeEditClassnn()
+{
+	; Enumerate all EDIT controls, fill them with their respective classnn-s.
+	arctls := RegexClassnnFindControls("^WindowsForms10\.EDIT\.app.+")
+	nctls := arctls.Length()
+	Loop, % nctls
+	{
+		classnn := arctls[A_Index].classnn
+		text := RegExReplace(classnn, "^WindowsForms10\.", "")
+		ControlSetText, % classnn, % text, A
+;		dev_WriteLogFile("nctls.txt",  . "`n")
+	}
+}
+
 
 #If

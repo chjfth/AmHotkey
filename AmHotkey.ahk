@@ -2011,7 +2011,7 @@ RegexClassnnFindControlEx(wintitle, Cregex, Tregex
 		return false
 }
 
-RegexClassnnFindControls(Cregex, wintitle)
+RegexClassnnFindControls(Cregex:=".+", wintitle:="A")
 {
 	; Return an array of dicts, with member .classnn .id .x .y .w .h  .text
 
@@ -2019,6 +2019,7 @@ RegexClassnnFindControls(Cregex, wintitle)
 	; Example:
 	; If classnn is "Afx:400000:8" , you can use match pattern "^Afx:"
 	;
+	; Hint: Substring match is OK, so no need to always contain ^ for start-flag and $ for end-flag.
 	
 	arctrls := []
 	WinGet, hwnd, ID, %wintitle%
