@@ -23,6 +23,8 @@ global g_amstr_zjbMonitorKey := "ZJB: Monitor my keys"
 
 global _g_zjb_UsrPwdMap := {} ; internal use
 
+global zjb_OCR := Func("OCR")
+; -- The function OCR() is available when you `#include <Vis2>` in _more_includes_.ahk
 
 zjb_InitMonitorCommonKeys()
 
@@ -345,11 +347,14 @@ zjb_FillLoginNamePwd(ItemName, ItemPos, MenuName)
 ;Msgbox, % "classnn_ocrimage = " . classnn_ocrimage
 	ControlGet, hwnd_ocrimage, HWND, , % classnn_ocrimage, % wintitle ; output: hwnd_ocrimage
 ;Msgbox, % "ahkid_ocrimage = " . hwnd_ocrimage
-	ocrtext := OCR("ahk_id " . hwnd_ocrimage)
-;Msgbox, % "ocrtext = " . ocrtext	
+	if(zjb_OCR) {
+		ocrtext := zjb_OCR.Call("ahk_id " . hwnd_ocrimage)
+;Msgbox, % "ocrtext = " . ocrtext
+	}
 	classnn_humancode := arctls[1].classnn
 	ControlFocus, % classnn_humancode, % wintitle
 	ControlSetText, % classnn_humancode, % ocrtext, % wintitle
+	;
 }
 
 /* Dead code
