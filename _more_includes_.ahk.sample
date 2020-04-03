@@ -11,13 +11,9 @@
 
 #Include *i keymouse.ahk
 
-#Include *i hotstrings.ahk
-
 #Include *i winshell.ahk
 
 #Include *i cmdconsole.ahk
-
-#Include *i webbrowsers.ahk
 
 #Include *i windev.ahk
 
@@ -33,10 +29,13 @@
 
 #Include *i devmgmt.ahk
 
-; #Include *i chjmisc.ahk
 ; #Include *i hypersnap.ahk
+; #Include *i hotstrings.ahk
+; #Include *i webbrowsers.ahk
 
 ; #Include *i zjb-helper.ahk
+
+; #Include *i chjmisc.ahk
 
 ; #Include *i menus.ahk
 ; #Include *i mstsc.ahk ; Microsoft terminal service client
