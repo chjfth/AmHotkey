@@ -7,12 +7,11 @@
 AUTOEXEC_zjbhelper_ahk: ; Workaround for Autohotkey's ugly auto-exec feature. Don't delete.
 	; MUST DO: Change the above ahk label to a specific one, such as AUTOEXEC_foobar_ahk
 
-; Something to place here.
-; * Customize these global vars according to your running machine:
-; * Call the run-once functions.
-
-; Example
-;g_dirEverpic = D:\chj\scripts\everpic
+; User can override this mapping in customize.ahk . Each element has three fields:
+; [ "资金保登录帐号" , "登录密码" , "助记提示文字" ]
+global g_zjb_UsrPwd_list := [ ["13800012345" , "123456" , "公共测试帐号" ]
+	, ["13700054321" , "" , "我的手机号" ]   ; If you leave password empty, then the Ahk will prompt you for password.
+	, [ "" ] ]
 
 
 global g_HwndDsi ; Dsi: Delay Send Input
@@ -23,12 +22,6 @@ global g_dsiIsFastSend
 global g_amstr_zjbMonitorKey := "ZJB: Monitor my keys"
 
 global _g_zjb_UsrPwdMap := {} ; internal use
-
-; User can override this mapping in customize.ahk . Each element has three fields:
-; [ "资金保登录帐号" , "登录密码" , "助记提示文字" ]
-global g_zjb_UsrPwd_list := [ ["13800012345" , "123456" , "公共测试帐号" ]
-	, ["13700054321" , "" , "我的手机号" ]   ; If you leave password empty, then the Ahk will prompt you for password.
-	, [ "", "" ] ]
 
 
 zjb_InitMonitorCommonKeys()
@@ -322,9 +315,10 @@ zjb_FillLoginNamePwd(ItemName, ItemPos, MenuName)
 /*
 	; Sample classNN for the (only) three editbox:
 	
-	classnn_usr := "WindowsForms10.EDIT.app.0.202c6663"
-	classnn_pwd := "WindowsForms10.EDIT.app.0.202c6662"
+	classnn_usr :=       "WindowsForms10.EDIT.app.0.202c6663"
+	classnn_pwd :=       "WindowsForms10.EDIT.app.0.202c6662"
 	classnn_humancode := "WindowsForms10.EDIT.app.0.202c6661"
+	classnn_ocrimage :=  "WindowsForms10.Window.8.app.0.202c6663" 
 	
 	But the actual trailing numbers may not be 202c666x, so I need to enumerate them.
 */	
@@ -347,9 +341,28 @@ zjb_FillLoginNamePwd(ItemName, ItemPos, MenuName)
 	ControlFocus, % classnn_pwd, % wintitle
 	ControlSetText, % classnn_pwd, % password,  % wintitle
 	
+	classnn_ocrimage := StrReplace(classnn_usr, "EDIT.app", "Window.8.app")
+;Msgbox, % "classnn_ocrimage = " . classnn_ocrimage
+	ControlGet, hwnd_ocrimage, HWND, , % classnn_ocrimage, % wintitle ; output: hwnd_ocrimage
+;Msgbox, % "ahkid_ocrimage = " . hwnd_ocrimage
+	ocrtext := OCR("ahk_id " . hwnd_ocrimage)
+;Msgbox, % "ocrtext = " . ocrtext	
 	classnn_humancode := arctls[1].classnn
 	ControlFocus, % classnn_humancode, % wintitle
+	ControlSetText, % classnn_humancode, % ocrtext, % wintitle
 }
+
+/* Dead code
+zjb_LoginOCR(input_spec)
+{
+	; input_spec: "ahk_id 0x12345678"
+	fp_image := "ocr.bmp"
+	fp_screenshot := Vis2.stdlib.toFile(input_spec, fp_image)
+	this.convert_best(this.file, this.fileConvertedText)
+
+	text := this.getText(this.fileConvertedText)
+}
+*/
 
 ^F1:: zjb_ProbeEditClassnn() ; for debugging purpose
 zjb_ProbeEditClassnn()

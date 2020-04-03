@@ -29,18 +29,18 @@
 
 #Include *i devmgmt.ahk
 
-; #Include *i hypersnap.ahk
-; #Include *i hotstrings.ahk
-; #Include *i webbrowsers.ahk
+; #Include hypersnap.ahk
+; #Include hotstrings.ahk
+; #Include webbrowsers.ahk
 
-; #Include *i zjb-helper.ahk
+; #Include zjb-helper.ahk
+; #include <Vis2> ; Equivalent to #include .\lib\Vis2.ahk
 
-; #Include *i chjmisc.ahk
-
-; #Include *i menus.ahk
-; #Include *i mstsc.ahk ; Microsoft terminal service client
-; #Include *i Teclast_X98.ahk
-; #Include *i numpad_tweak_as_R7.ahk
+; #Include chjmisc.ahk
+; #Include menus.ahk
+; #Include mstsc.ahk ; Microsoft terminal service client
+; #Include Teclast_X98.ahk
+; #Include numpad_tweak_as_R7.ahk
 
 #Include *i customize.ahk
 
