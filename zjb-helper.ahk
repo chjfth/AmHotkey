@@ -24,10 +24,11 @@ global g_amstr_zjbMonitorKey := "ZJB: Monitor my keys"
 
 global _g_zjb_UsrPwdMap := {} ; internal use
 
-; User can override this mapping in customize.ahk
-global g_zjb_UsrPwdMap_input := { "13800012345" : "123456" 
-	, "13800054321" : "" ; Leave password empty, then the Ahk will prompt you for password.
-	, "g_zjb_UsrPwdMap_input := { usr : pwd }" : "123456789" } 
+; User can override this mapping in customize.ahk . Each element has three fields:
+; [ "资金保登录帐号" , "登录密码" , "助记提示文字" ]
+global g_zjb_UsrPwd_list := [ ["13800012345" , "123456" , "公共测试帐号" ]
+	, ["13700054321" , "" , "我的手机号" ]   ; If you leave password empty, then the Ahk will prompt you for password.
+	, [ "", "" ] ]
 
 
 zjb_InitMonitorCommonKeys()
@@ -218,14 +219,30 @@ _zjb_LoginFillerInit()
 	Menu, ZJB_LoginFiller, Disable, % menu_title
 	Menu, ZJB_LoginFiller, Add ; separator
 	
-	for usr, pwd in g_zjb_UsrPwdMap_input
+	n := g_zjb_UsrPwd_list.Length()
+	Loop, % n
 	{
-		_g_zjb_UsrPwdMap[usr] := pwd
+		usr := g_zjb_UsrPwd_list[A_Index][1]
+		pwd := g_zjb_UsrPwd_list[A_Index][2]
+		memo := g_zjb_UsrPwd_list[A_Index][3]
 		
-		Menu, ZJB_LoginFiller, Add, % usr, zjb_FillLoginNamePwd
+		if(usr=="")
+			continue
+		
+		menutext := Format("[ &{1} ] {2}", A_Index, usr)
+		if(memo) {
+			menutext .= Format("( {1} )", memo)
+		}
+		
+		Menu, ZJB_LoginFiller, Add, % menutext, zjb_FillLoginNamePwd
+		
+		obj := {}
+		obj.usr := usr
+		obj.pwd := pwd
+		_g_zjb_UsrPwdMap[menutext] := obj
 		
 ;		MsgBox, % usr . " | " . pwd
-;		MsgBox, % usr . " | " . _g_zjb_UsrPwdMap[usr]
+;		MsgBox, % _g_zjb_UsrPwdMap[menutext].usr . " | " . _g_zjb_UsrPwdMap[menutext].pwd
 	}
 	
 }
@@ -239,28 +256,33 @@ zjb_LoginFiller_Launch()
 {
 	static is_init_done := false
 	if(!is_init_done) {
-		_zjb_LoginFillerInit() ; Late init so that customize.ahk can override g_zjb_UsrPwdMap_input 
+		_zjb_LoginFillerInit() ; Late init so that customize.ahk can override g_zjb_UsrPwd_list 
 		is_init_done := true
 	}
 
 	; If only one user is present, just fill it.
 	; If 2+ users are present, pop up a menu to have user select one.
 
-	first_usr := ""
+	first_menutext := ""
 	count := 0
-	for usr, pwd in g_zjb_UsrPwdMap_input ; [2020-03-30] Weird, using _g_zjb_UsrPwdMap will result wrong
+
+	for key, obj in _g_zjb_UsrPwdMap
 	{
-		if(not first_usr) {
-			first_usr := usr
+		if(not first_menutext) {
+			first_menutext := key
 		}
 		count++
 	}
 
+
 	if(count==0) {
-		MsgBox, % "g_zjb_UsrPwdMap_input is empty. Nothing to fill for you."
+		MsgBox, % "g_zjb_UsrPwd_list is empty. Nothing to fill for you."
 	}
 	else if(count==1) {
-		zjb_FillLoginNamePwd(first_usr, 0, 0)
+		zjb_FillLoginNamePwd(first_menutext, 0, 0)
+		
+		usr := _g_zjb_UsrPwdMap[first_menutext].usr
+		dev_TooltipAutoClear(Format("{1} 的帐号密码已自动填充", usr))
 	}
 	else {
 		Menu, ZJB_LoginFiller, Show
@@ -270,26 +292,32 @@ zjb_LoginFiller_Launch()
 
 zjb_FillLoginNamePwd(ItemName, ItemPos, MenuName)
 {
-	username := ItemName
-	password := _g_zjb_UsrPwdMap[username]
+	WinGet, Awinid, ID, A ; Get ZJB login UI hwnd first.
+	wintitle := "ahk_id " . Awinid 
+
+	menutext := ItemName
+	username := _g_zjb_UsrPwdMap[menutext].usr
+	password := _g_zjb_UsrPwdMap[menutext].pwd
 	
 	if(!password) 
 	{
 		text := Format("请告知资金保帐号 {1} 的密码。此处输入的密码将只存放于内存中。", username)
-		InputBox, password, % "请设置密码", % text
+		InputBox, password, % "请设置密码", % text, HIDE
 		
 		if(password) {
-			_g_zjb_UsrPwdMap[username] := password
+			_g_zjb_UsrPwdMap[menutext].pwd := password
 		} 
 		else {
 			return ; do nothing
 		}
 	}
 	
-	WinGet, Awinid, ID, A 
-	wintitle := "ahk_id " . Awinid
+	; To make it solid, we need to wait until ZJB login UI becomes the active window again.
+	; This usually takes some or tens of milliseconds.
+	WinWaitActive, % wintitle, , 500
 	
-;	MsgBox, % username . " | " . password 
+	; But strange, I still need to sleep for some seconds, otherwise, arctls[] below will be empty.
+	Sleep, 100 
 	
 /*
 	; Sample classNN for the (only) three editbox:
