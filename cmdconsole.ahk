@@ -196,7 +196,7 @@ cmdwin_ScrollOnePage(is_up)
 
 ; use F8/F9 to switch to prev/next Tab
 F8:: Send ^{F8} ; ConEmu should set Ctrl+F8 to be "Switch next console".
-F9:: Send ^{F9} ; ConEmu should set Ctrl+F8 to be "Switch previous console".
+F9:: Send ^{F9} ; ConEmu should set Ctrl+F9 to be "Switch previous console".
 
 ; Let PgUp execute CMD's original F8 action: browse history with matching starting string 
 ; $PgUp:: Send {F8} ; This F8 will not trigger our F8 hotkey, bcz they are defined in the same #InputLevel.
