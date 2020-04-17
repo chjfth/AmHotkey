@@ -117,7 +117,8 @@ dev_CheckInfo()
 	MouseGetPos, mxScreen, myScreen
 	
 	CoordMode, Mouse, Window
-	MouseGetPos, mxWindow, myWindow, , classnn
+	MouseGetPos, mxWindow, myWindow, tophwnd_undermouse, classnn
+	ControlGet, hctrl_undermouse, HWND, , %classnn%, ahk_id %tophwnd_undermouse%
 	
 	MsgBox, % msgboxoption_IconInfo, ,
 	(
@@ -134,6 +135,7 @@ Process path: %exepath%
 Mouse position: In-window: (%mxWindow%,%myWindow%)  `; In-screen: (%mxScreen%,%myScreen%)
 
 ClassNN under mouse is "%classnn%"
+hwndCtrl under mouse is "%hctrl_undermouse%"
 	)
 }
 
