@@ -15,6 +15,8 @@ global FOXIT_TOOL_SelectText := "SelectText"
 
 global g_foxit_last_tool := "none" ; compare it with FOXIT_TOOL_Hand, FOXIT_TOOL_SelectText or FOXIT_TOOL_SelectAnnotation
 
+global g_is_phantom := False 
+
 ; Init_MyCustomizedEnv() ; Function can be defined later.
 
 
@@ -59,15 +61,20 @@ foxit_IsWinExist()
 
 foxit_IsWinActive()
 {
-	IfWinActive, ahk_class classFoxitReader
+	if( IsWinClassActive("classFoxitReader") )
 	{
+		g_is_phantom := False
+		return true
+	}
+	else if( IsWinClassActive("classFoxitPhantom") )
+	{
+		g_is_phantom := True
 		return true
 	}
 	else 
 	{
 		return false
 	}
-	
 }
 
 foxit_IsAnnoationPropertyWindowActive()
@@ -76,7 +83,7 @@ foxit_IsAnnoationPropertyWindowActive()
 ;	WinGetClass, class, ahk_id %Awinid%
 	WinGetTitle, title, ahk_id %Awinid%
 	
-	if( title ~= ".+Properties$" )
+	if( title ~= ".+ Properties$" || title ~= ".+ 属性$" )
 		return true
 	else
 		return false
@@ -162,14 +169,20 @@ foxit_ClickColorProperty()
 RETRY:
 	; Click in Color Property button(Property-window pre-open required), so to select a color by keyboard.
 	; But sometimes the color box does not popup, the workaround is to press space after F12 .
-	titleregex := ".+Properties$"
-	found := ControlClickClassNN_TitleRegex("Button3", titleregex)
+	titleregex := ".+ (Properties|属性)$"
+	found := ControlClickClassNN_TitleRegex("Button3", titleregex, 100)
 	if(found)
 	{
 		; wait for the "Properties" dialog to appear
 		WinWaitActive, % "ahk_class #32770", , 0.2
-		if(ErrorLevel==1)
-			Send {space}
+		
+		WinGetTitle, popup_title, A
+		if(popup_title ~= titleregex) 
+		{
+			; If current active window title is still "xxx Properties", it means Foxit's color palette
+			;  has not popped up, so we press {space} to have it popup.
+			Send {space} 
+		} 
 	}
 	else
 	{
