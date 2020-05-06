@@ -631,9 +631,9 @@ Bcam4_Init()
 	Menu, Bcam_Scenario, Add ; separator
 	
 	Menu, Bcam_Scenario, Add, % "网络会议录屏（同时录制我的声音） 24fps", Bcam4_VerifyNetMeeting_24fps
-	Menu, Bcam_Scenario, Add, % "软件演示录屏（同时录制我的声音） 12fps", Bcam4_VerifyNetMeeting_12fps
+	Menu, Bcam_Scenario, Add, % "软件演示录屏（同时录制我的声音） 10 or 12fps", Bcam4_VerifyNetMeeting_10or12fps
 	Menu, Bcam_Scenario, Add, % "单纯录屏（无麦） 24fps", Bcam4_VerifyMotionVideo_24fps
-	Menu, Bcam_Scenario, Add, % "单纯录屏（无麦） 12fps", Bcam4_VerifyMotionVideo_12fps
+	Menu, Bcam_Scenario, Add, % "单纯录屏（无麦） 10 or 12fps", Bcam4_VerifyMotionVideo_10or12fps
 }
 
 Bcam4_null()
@@ -672,42 +672,43 @@ Bcam4_VerifyNetMeeting_24fps()
 
 	Bcam4_verifyRecordingParams(true, 24)
 }
-Bcam4_VerifyNetMeeting_12fps()
+Bcam4_VerifyNetMeeting_10or12fps()
 {
-	Bcam4_verifyRecordingParams(true, 12)
+	Bcam4_verifyRecordingParams(true, [10,12])
 }
 
 Bcam4_VerifyMotionVideo_24fps()
 {
 	Bcam4_verifyRecordingParams(false, 24)
 }
-Bcam4_VerifyMotionVideo_12fps()
+Bcam4_VerifyMotionVideo_10or12fps()
 {
-	Bcam4_verifyRecordingParams(false, 12)
+	Bcam4_verifyRecordingParams(false, [10,12])
 }
 
 Bcam4_verifyRecordingParams(want_mic, fps:=0)
 {
+	; fps can be an integer or and 'array of integers'
 
 	Bcam4_FlushRegistry()
-	errmsg := ""
+	errmsg_all := ""
 	
 	if(want_mic)
 	{
 		val := Bcam4_ReadOption("sVideoSndDevice2_2")
 		if(Bcam4_microphone_uuid=="" and val=="")
 		{
-			errmsg .= "'Secondary Sound Device' must be enabled.`n"
+			errmsg_all .= "'Secondary Sound Device' must be enabled.`n"
 		}
 		else if(Bcam4_microphone_uuid!="" and val!=Bcam4_microphone_uuid)
 		{
-			errmsg .= "'Secondary Sound Device' must be set to a microphone device with uuid=""" . Bcam4_microphone_uuid . """`n"
+			errmsg_all .= "'Secondary Sound Device' must be set to a microphone device with uuid=""" . Bcam4_microphone_uuid . """`n"
 		}
 
 		val := Bcam4_ReadOption("bVideoSndDeviceMix")
 		if(val != "1")
 		{
-			errmsg .= "'Two Sound Mixing' must be ticked.`n" 
+			errmsg_all .= "'Two Sound Mixing' must be ticked.`n" 
 		}
 	}
 	else
@@ -715,23 +716,50 @@ Bcam4_verifyRecordingParams(want_mic, fps:=0)
 		val := Bcam4_ReadOption("sVideoSndDevice2_2")
 		if(val!="")
 		{
-			errmsg .= "'Secondary Sound Device' must be disabled.`n"
+			errmsg_all .= "'Secondary Sound Device' must be disabled.`n"
 		}
 	}
 
 	if(fps!=0)
 	{
-		val := Bcam4_ReadOption("VideoFormat.VideoFrameRate")
-		if(val!=fps*1000)
+		if(fps is Integer)
+			ar_fps := [fps] ; make it an array
+		else
+			ar_fps := fps
+		
+		fps_count := ar_fps.Length()
+		
+		if(fps_count==1)
+			errmsg1 := "Video frame rate must be set to " ; assume error message
+		else
+			errmsg1 := "Video frame rate must be set to one of " ; assume error message
+		
+		Loop, % fps_count
 		{
-			errmsg .= "Video frame rate must be set to " . fps
+			fps := ar_fps[A_Index]
+			val := Bcam4_ReadOption("VideoFormat.VideoFrameRate")
+			if(val==fps*1000)
+			{
+				errmsg1 := ""
+				break
+			}
+			else
+			{
+				errmsg1 .= "" . fps . ", "
+			}
+		}
+		
+		if(errmsg1)
+		{	
+			; Replace the trailing ", " with ".", then append it to overall errmsg_all .
+			errmsg_all .= SubStr(errmsg1, 1, StrLen(errmsg1)-2) . "."
 		}
 	}
 
 	; ==== Conclusion ===
 
-	if(errmsg) {
-		dev_MsgBoxError("Please fix the following issues:`n`n" . errmsg)
+	if(errmsg_all) {
+		dev_MsgBoxError("Please fix the following issues:`n`n" . errmsg_all)
 	} else {
 		dev_MsgBoxInfo("[Bandicam AHK] OK, no problems found.")
 	}
