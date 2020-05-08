@@ -118,7 +118,10 @@ dev_CheckInfo()
 	
 	CoordMode, Mouse, Window
 	MouseGetPos, mxWindow, myWindow, tophwnd_undermouse, classnn
-	ControlGet, hctrl_undermouse, HWND, , %classnn%, ahk_id %tophwnd_undermouse%
+	if(classnn)
+		ControlGet, hctrl_undermouse, HWND, , %classnn%, ahk_id %tophwnd_undermouse%
+	else
+		classnn := ""
 	
 	MsgBox, % msgboxoption_IconInfo, ,
 	(
