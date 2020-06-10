@@ -13,7 +13,10 @@ global g_mpc_txc_string := ""
 
 global g_mpc_hwndWebcam ; The MPC window showing live webcam
 
+global g_mpc_text_AlwaysOnTop := "MPC-HC always on top"
+
 MPC_InitHotkeys()
+MPC_AOT_InitTrayicon()
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 return ; End of auto-execute section.
@@ -757,4 +760,38 @@ MPC_Bg_PausePlay_front(showtip=false)
 }
 
 
+;==================================================================
+; 2020-06-10
+; Add AHK tray icon menu to Enable/Disable MPC-HC always on top. 
+; We start a timer to ensure its always-on-top(AOT), for example,
+;  on top of a full-screen VMware Workstation VM window.
+;==================================================================
 
+MPC_AOT_InitTrayicon()
+{
+	Menu, tray, add  ; Creates a separator line.
+	Menu, TRAY, add, %g_mpc_text_AlwaysOnTop%, MPC_ToggleAlwaysOnTop  ; Creates a new menu item.
+}
+
+MPC_ToggleAlwaysOnTop()
+{
+	static is_aot := false
+	
+	is_aot := !is_aot
+	
+	if(is_aot) {
+		Menu, TRAY, Check, %g_mpc_text_AlwaysOnTop%
+		WinSet, AlwaysOnTop, On,  ahk_class MediaPlayerClassicW
+		SetTimer, MPC_timer_EnableAOT, 500
+	}
+	else {
+		Menu, TRAY, UnCheck, %g_mpc_text_AlwaysOnTop%
+		SetTimer, MPC_timer_EnableAOT, Off
+		WinSet, AlwaysOnTop, Off, ahk_class MediaPlayerClassicW
+	}
+}
+
+MPC_timer_EnableAOT()
+{
+	WinSet, AlwaysOnTop, On,  ahk_class MediaPlayerClassicW
+}
