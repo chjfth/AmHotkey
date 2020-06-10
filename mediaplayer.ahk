@@ -13,7 +13,9 @@ global g_mpc_txc_string := ""
 
 global g_mpc_hwndWebcam ; The MPC window showing live webcam
 
+global g_mpc_isNowAlwaysOnTop := false
 global g_mpc_text_AlwaysOnTop := "MPC-HC always on top"
+global g_mpc_text_SetSmallWindow := "MPC-HC set small window"
 
 MPC_InitHotkeys()
 MPC_AOT_InitTrayicon()
@@ -767,31 +769,117 @@ MPC_Bg_PausePlay_front(showtip=false)
 ;  on top of a full-screen VMware Workstation VM window.
 ;==================================================================
 
+MPC_CheckWinExist()
+{
+	if WinExist("ahk_class MediaPlayerClassicW") {
+		return true
+	}
+	else {
+		MsgBox, % "MPC-HC window not exist. Do nothing."
+		return false
+	}
+}
+
 MPC_AOT_InitTrayicon()
 {
-	Menu, tray, add  ; Creates a separator line.
+	Menu, TRAY, add  ; Creates a separator line.
 	Menu, TRAY, add, %g_mpc_text_AlwaysOnTop%, MPC_ToggleAlwaysOnTop  ; Creates a new menu item.
+	Menu, TRAY, add, %g_mpc_text_SetSmallWindow%, MPC_SetSmallWindow 
+}
+
+mpc_SetAlwaysOnTop(isset)
+{
+	if(isset)
+	{
+		g_mpc_isNowAlwaysOnTop := true
+		WinSet, AlwaysOnTop, On, ahk_class MediaPlayerClassicW
+		Menu, TRAY, Check, %g_mpc_text_AlwaysOnTop%
+	
+	}
+	else
+	{
+		g_mpc_isNowAlwaysOnTop := false
+		WinSet, AlwaysOnTop, Off, ahk_class MediaPlayerClassicW
+		Menu, TRAY, UnCheck, %g_mpc_text_AlwaysOnTop%
+	}
 }
 
 MPC_ToggleAlwaysOnTop()
 {
 	static is_aot := false
+
+	if(!MPC_CheckWinExist()) {
+		is_aot := false
+		return
+	}
 	
 	is_aot := !is_aot
 	
 	if(is_aot) {
-		Menu, TRAY, Check, %g_mpc_text_AlwaysOnTop%
-		WinSet, AlwaysOnTop, On,  ahk_class MediaPlayerClassicW
-		SetTimer, MPC_timer_EnableAOT, 500
+		mpc_SetAlwaysOnTop(true)
+		SetTimer, _MPC_timer_EnableAOT, 500
 	}
 	else {
-		Menu, TRAY, UnCheck, %g_mpc_text_AlwaysOnTop%
-		SetTimer, MPC_timer_EnableAOT, Off
-		WinSet, AlwaysOnTop, Off, ahk_class MediaPlayerClassicW
+		mpc_SetAlwaysOnTop(false)
+		SetTimer, _MPC_timer_EnableAOT, Off
 	}
 }
 
-MPC_timer_EnableAOT()
+_MPC_timer_EnableAOT()
 {
 	WinSet, AlwaysOnTop, On,  ahk_class MediaPlayerClassicW
 }
+
+#If MPC_IsActive()
+ESC:: MPC_BlockEscIfAOT()
+MPC_BlockEscIfAOT()
+{
+	if(g_mpc_isNowAlwaysOnTop) {
+		; Do nothing. 
+		; Reason: When MPC-HC is in borderless mode(press Ctrl+0 several times), ESC will bring back the border.
+		; When AOT displaying a webcam content in borderless mode, we probably don't want to see the border.
+		dev_TooltipAutoClear("AHK: ESC key is blocked when MPC-HC is always on top")
+	}
+	else {
+		Send {ESC}
+	}
+}
+#If
+
+MPC_SetSmallWindow()
+{
+	static s_width := 200, s_height := 154
+	s2 := Format("{},{}", s_width, s_height)
+
+	if(!MPC_CheckWinExist()) {
+		return
+	}
+
+	isshift := GetKeyState("Shift")
+	isctrl := GetKeyState("Ctrl")
+;	msgbox, % Format("shift: {} , ctrl: {}", isshift, isctrl)
+
+	if(isshift or isctrl)
+	{
+		; Pop-up a message box for new width,height value
+		InputBox, s2, % "mediaplayer.ahk", % "Input new width,height for MPC-HC window", , 300, 150, , , , , % s2
+		If ErrorLevel
+			return
+		
+		StringSplit, n, s2 , `,
+		w := n1
+		h := n2
+		if(! (w>=100 and h>=100) ) {
+			MsgBox, % "Invalid input! Two values should both >= 100"
+			return
+		}
+		s_width := w
+		s_height := h
+	}
+	
+	dev_TooltipAutoClear(Format("Set MPC-HC window size to {},{}", s_width, s_height))
+	
+	WinGet, winid, ID, % "ahk_class MediaPlayerClassicW"
+	dev_WinMove_with_backup("", "", s_width, s_height, winid)
+}
+
