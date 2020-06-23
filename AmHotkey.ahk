@@ -2467,7 +2467,20 @@ dev_mapping_count(map)
 	return count
 }
 
-
+dev_GetHwndByExepath(exepath)
+{
+	WinGet topwnd, List
+	Loop %topwnd%
+	{
+		hwnd := topwnd%A_Index%
+		WinGet, tmppath, ProcessPath, ahk_id %hwnd%
+		if(exepath==tmppath) 
+		{
+			return hwnd
+		}
+	}
+	return None
+}
 
 ;==============================================================================
 #Include *i _more_includes_.ahk ;This should be the final statement of this ahk

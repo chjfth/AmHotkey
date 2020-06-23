@@ -13,12 +13,15 @@ global g_mpc_txc_string := ""
 
 global g_mpc_hwndWebcam ; The MPC window showing live webcam
 
-global g_mpc_isNowAlwaysOnTop := false
-global g_mpc_text_AlwaysOnTop := "MPC-HC always on top"
-global g_mpc_text_SetSmallWindow := "MPC-HC set small window"
+global g_mpcaot_exepath := "D:\portableapps\MPC-HC-Portable\App\MPC-HC\mpc-hc.exe"
+	; // User should customize this exepath to match their own environment.
+global g_mpcaot_isNowAlwaysOnTop := false
+global g_mpcaot_text_LaunchExe := "Launch MPC-HC (AOT-able)"
+global g_mpcaot_text_AlwaysOnTop := "MPC-HC always on top"
+global g_mpcaot_text_SetSmallWindow := "MPC-HC set small window"
 
 MPC_InitHotkeys()
-MPC_AOT_InitTrayicon()
+MpcAot_InitTrayicon()
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 return ; End of auto-execute section.
@@ -769,91 +772,146 @@ MPC_Bg_PausePlay_front(showtip=false)
 ;  on top of a full-screen VMware Workstation VM window.
 ;==================================================================
 
-MPC_CheckWinExist()
+MpcAot_GetHwnd(is_offer_launch:=false)
 {
-	if WinExist("ahk_class MediaPlayerClassicW") {
-		return true
+	; Would return (first-matching) MPC-HC's hwnd
+	hwnd_mpc := dev_GetHwndByExepath(g_mpcaot_exepath)
+	
+	if (hwnd_mpc) 
+	{
+		return hwnd_mpc
 	}
-	else {
-		MsgBox, % "MPC-HC window not exist. Do nothing."
-		return false
+	else 
+	{
+		if(is_offer_launch) 
+		{
+			Run, % g_mpcaot_exepath, , UseErrorLevel
+			if not ErrorLevel
+			{
+				Loop, 10
+				{
+					hwnd_mpc := MpcAot_GetHwnd(false)
+					if (hwnd_mpc)
+						return hwnd_mpc
+					else
+						Sleep, 500
+				}
+				MsgBox, % Format("Unexpected! Tried to launch  MPC-HC exe at path {} , but failed to see its window.", g_mpcaot_exepath)
+				return None
+			}
+			else 
+			{
+				MsgBox, % Format("Cannot launch MPC-HC exe at path {}.", g_mpcaot_exepath)
+				return None
+			}
+		}
+		else 
+		{
+			return None
+		}
 	}
+	return None
 }
 
-MPC_AOT_InitTrayicon()
+MpcAot_InitTrayicon()
 {
 	Menu, TRAY, add  ; Creates a separator line.
-	Menu, TRAY, add, %g_mpc_text_AlwaysOnTop%, MPC_ToggleAlwaysOnTop  ; Creates a new menu item.
-	Menu, TRAY, add, %g_mpc_text_SetSmallWindow%, MPC_SetSmallWindow 
+	Menu, TRAY, add, %g_mpcaot_text_LaunchExe%, MpcAot_LaunchExe  ; Creates a new menu item.
+	Menu, TRAY, add, %g_mpcaot_text_AlwaysOnTop%, MpcAot_ToggleAlwaysOnTop
+	Menu, TRAY, add, %g_mpcaot_text_SetSmallWindow%, MpcAot_SetSmallWindow
 }
 
-mpc_SetAlwaysOnTop(isset)
+MpcAot_LaunchExe()
 {
+	hwnd_mpc := MpcAot_GetHwnd(true)
+
+	WinActivate, % "ahk_id " . hwnd_mpc
+	
+	MpcAot_SetAlwaysOnTop(true)
+}
+
+MpcAot_SetAlwaysOnTop(isset)
+{
+	hwnd := MpcAot_GetHwnd()
+
 	if(isset)
 	{
-		g_mpc_isNowAlwaysOnTop := true
-		WinSet, AlwaysOnTop, On, ahk_class MediaPlayerClassicW
-		Menu, TRAY, Check, %g_mpc_text_AlwaysOnTop%
-	
+;		g_mpcaot_isNowAlwaysOnTop := true
+		WinSet, AlwaysOnTop, On, % "ahk_id " . hwnd
+		
+		Menu, TRAY, Check, %g_mpcaot_text_AlwaysOnTop%
+		SetTimer, _MPC_timer_EnableAOT, 500
 	}
 	else
 	{
-		g_mpc_isNowAlwaysOnTop := false
-		WinSet, AlwaysOnTop, Off, ahk_class MediaPlayerClassicW
-		Menu, TRAY, UnCheck, %g_mpc_text_AlwaysOnTop%
-	}
-}
-
-MPC_ToggleAlwaysOnTop()
-{
-	static is_aot := false
-
-	if(!MPC_CheckWinExist()) {
-		is_aot := false
-		return
-	}
-	
-	is_aot := !is_aot
-	
-	if(is_aot) {
-		mpc_SetAlwaysOnTop(true)
-		SetTimer, _MPC_timer_EnableAOT, 500
-	}
-	else {
-		mpc_SetAlwaysOnTop(false)
+;		g_mpcaot_isNowAlwaysOnTop := false
+		WinSet, AlwaysOnTop, Off, % "ahk_id " . hwnd
+		
+		Menu, TRAY, UnCheck, %g_mpcaot_text_AlwaysOnTop%
 		SetTimer, _MPC_timer_EnableAOT, Off
 	}
 }
 
-_MPC_timer_EnableAOT()
+MpcAot_PromptNotLaunched()
 {
-	WinSet, AlwaysOnTop, On,  ahk_class MediaPlayerClassicW
+	MsgBox, % Format("MPC-HC at {} has not launched yet.", g_mpcaot_exepath)
 }
 
-#If MPC_IsActive()
+MpcAot_ToggleAlwaysOnTop()
+{
+	g_mpcaot_isNowAlwaysOnTop := !g_mpcaot_isNowAlwaysOnTop
+	
+	if(!MpcAot_GetHwnd()) {
+		g_mpcaot_isNowAlwaysOnTop := false
+		MpcAot_PromptNotLaunched()
+	}
+	
+	MpcAot_SetAlwaysOnTop(g_mpcaot_isNowAlwaysOnTop)
+	
+}
+
+_MPC_timer_EnableAOT()
+{
+	hwnd_mpc := dev_GetHwndByExepath(g_mpcaot_exepath)
+	if(hwnd_mpc)
+	{
+		WinSet, AlwaysOnTop, On, % "ahk_id " . hwnd_mpc
+	}
+}
+
+MpcAot_IsActive()
+{
+	WinGet, Awinid, ID, A ; cache active window unique id
+	WinGet, exepath, ProcessPath, ahk_id %Awinid%
+	
+	if(exepath==g_mpcaot_exepath)
+		return true
+	else
+		return false
+}
+
+#If MpcAot_IsActive()
 ESC:: MPC_BlockEscIfAOT()
 MPC_BlockEscIfAOT()
 {
-	if(g_mpc_isNowAlwaysOnTop) {
-		; Do nothing. 
-		; Reason: When MPC-HC is in borderless mode(press Ctrl+0 several times), ESC will bring back the border.
-		; When AOT displaying a webcam content in borderless mode, we probably don't want to see the border.
-		dev_TooltipAutoClear("AHK: ESC key is blocked when MPC-HC is always on top")
-	}
-	else {
-		Send {ESC}
-	}
+	; Do nothing. 
+	; Reason: When MPC-HC is in borderless mode(press Ctrl+0 several times), ESC will bring back the border.
+	; When AOT displaying a webcam content in borderless mode, we probably don't want to see the border.
+	dev_TooltipAutoClear("AHK: ESC key is blocked for this MPC-HC window.")
 }
 #If
 
-MPC_SetSmallWindow()
+MpcAot_SetSmallWindow()
 {
-	static s_width := 200, s_height := 154
-	s2 := Format("{},{}", s_width, s_height)
-
-	if(!MPC_CheckWinExist()) {
+	hwnd_mpc := dev_GetHwndByExepath(g_mpcaot_exepath)
+	if(!hwnd_mpc)
+	{
+		MpcAot_PromptNotLaunched()
 		return
 	}
+
+	static s_width := 200, s_height := 154
+	s2 := Format("{},{}", s_width, s_height)
 
 	isshift := GetKeyState("Shift")
 	isctrl := GetKeyState("Ctrl")
@@ -879,7 +937,7 @@ MPC_SetSmallWindow()
 	
 	dev_TooltipAutoClear(Format("Set MPC-HC window size to {},{}", s_width, s_height))
 	
-	WinGet, winid, ID, % "ahk_class MediaPlayerClassicW"
+	WinGet, winid, ID, % "ahk_id " . hwnd_mpc
 	dev_WinMove_with_backup("", "", s_width, s_height, winid)
 }
 
