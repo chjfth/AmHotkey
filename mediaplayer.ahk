@@ -19,6 +19,8 @@ global g_mpcaot_isNowAlwaysOnTop := false
 global g_mpcaot_text_LaunchExe := "Launch MPC-HC (AOT-able)"
 global g_mpcaot_text_AlwaysOnTop := "MPC-HC always on top"
 global g_mpcaot_text_SetSmallWindow := "MPC-HC set small window"
+global g_mpcaot_smallwndsize := { w:200 , h:154 } ; Other: { w:160 , h:122 }
+	; // User can override this in customize.ahk .
 
 MPC_InitHotkeys()
 MpcAot_InitTrayicon()
@@ -910,8 +912,8 @@ MpcAot_SetSmallWindow()
 		return
 	}
 
-	static s_width := 200, s_height := 154
-	s2 := Format("{},{}", s_width, s_height)
+	sm := g_mpcaot_smallwndsize
+	s2 := Format("{},{}", sm.w, sm.h)
 
 	isshift := GetKeyState("Shift")
 	isctrl := GetKeyState("Ctrl")
@@ -931,13 +933,13 @@ MpcAot_SetSmallWindow()
 			MsgBox, % "Invalid input! Two values should both >= 100"
 			return
 		}
-		s_width := w
-		s_height := h
+		sm.w := w
+		sm.h := h
 	}
 	
-	dev_TooltipAutoClear(Format("Set MPC-HC window size to {},{}", s_width, s_height))
+	dev_TooltipAutoClear(Format("Set MPC-HC window size to {},{}", sm.w, sm.h))
 	
 	WinGet, winid, ID, % "ahk_id " . hwnd_mpc
-	dev_WinMove_with_backup("", "", s_width, s_height, winid)
+	dev_WinMove_with_backup("", "", sm.w, sm.h, winid)
 }
 
