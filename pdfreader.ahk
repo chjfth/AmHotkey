@@ -366,8 +366,8 @@ foxit_SwitchTo_SelectAnnotation_mode()
 #If foxit_IsWinExist()
 
 
-NumpadUp:: foxit_ScrollView("up")
-NumpadDown:: foxit_ScrollView("down")
+; NumpadUp:: foxit_ScrollView("up")
+; NumpadDown:: foxit_ScrollView("down")
 
 CapsLock & [:: foxit_ScrollView("up")
 CapsLock & ]:: foxit_ScrollView("down")
