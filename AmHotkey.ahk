@@ -2235,21 +2235,23 @@ WinMove_MatchTitleRegex(regex, absx:="", absy:="", width:="", height:="")
 
 RegexBlindScrollAControl(sdir, wintitle, regexClassnn, regexControlText)
 {
-	; "Blind" means you don't have to activate or even don't have to see the to-be-scrool window.
+	; "Blind" means you don't have to activate or even don't have to see the to-be-scroll window.
 
 	if(sdir!="up" and sdir!="down")
 	{
 		MsgBox, % msgboxoption_IconExclamation, , % "RegexBlindScrollAControl(): Invalid sdir value, sdir=" . sdir
-		return
+		return false
 	}
 	
 	isok := RegexClassnnFindControlEx(wintitle, regexClassnn, regexControlText, target_classnn)
 	if(not isok)
 	{
-		return
+		return false
 	}
 
 	ControlClick, %target_classnn%, %wintitle%, , Wheel%sdir%, 1
+	
+	return true
 }
 
 

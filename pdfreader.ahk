@@ -377,14 +377,19 @@ foxit_ScrollView(sdir)
 	WinGetClass, class, A
 	if(class=="classFoxitReader")
 	{
-		; [2018-01-20] A workaround for a weird symtom:
+		; [2018-01-20] A workaround for a weird symptom:
 		; If FoxitReader itself is the active windows, RegexBlindScrollAControl will scroll *EmEditor* windows.
 		; So, for this case, I simply send 
 		Send {%sdir%}
 	}
 	else
 	{
-		RegexBlindScrollAControl(sdir, "ahk_class classFoxitReader", "^AfxWnd100su", "^Reader$")
+		isFoxit7 := RegexBlindScrollAControl(sdir, "ahk_class classFoxitReader", "^AfxWnd100su", "^Reader$")
+
+		if(not isFoxit7) {
+			; tested on Foxit9
+			RegexBlindScrollAControl(sdir, "ahk_class classFoxitReader", "^FoxitDocWnd1$", "")
+		}
 	}
 }
 
