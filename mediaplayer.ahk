@@ -438,10 +438,10 @@ MPC_ClickToSeek_condition(xpct, uy, proc_condition)
 			return
 	}
 
+	; Check if right-Ctrl or left-Ctrl is pressed.
+	; Only right-Ctrl will fire the click-to-seek behavior.
 	isLCtrl := GetKeyState("LCtrl") 
 	isRCtrl := GetKeyState("RCtrl") 
-		; Check if right-Ctrl or left-Ctrl is used to trigger this.
-		; Only righ-Ctrl will fire the click-to-seek behavior.
 	
 	if(isLCtrl) {
 		; left-Ctrl pressed, just fire the default Ctrl+[?] function and return
@@ -896,7 +896,7 @@ MpcAot_IsActive()
 ESC:: MPC_BlockEscIfAOT()
 MPC_BlockEscIfAOT()
 {
-	; Do nothing. 
+	; Do nothing. (=Disable ESC key)
 	; Reason: When MPC-HC is in borderless mode(press Ctrl+0 several times), ESC will bring back the border.
 	; When AOT displaying a webcam content in borderless mode, we probably don't want to see the border.
 	dev_TooltipAutoClear("AHK: ESC key is blocked for this MPC-HC window.")
