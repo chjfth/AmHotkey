@@ -2484,6 +2484,14 @@ dev_GetHwndByExepath(exepath)
 	return None
 }
 
+dev_StrRepeat(string, times)
+{
+    loop % times
+        output .= string
+    return output
+}
+
+
 ;==============================================================================
 #Include *i _more_includes_.ahk ;This should be the final statement of this ahk
 ;==============================================================================

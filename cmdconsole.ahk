@@ -1,4 +1,4 @@
-
+﻿
 AUTOEXEC_cmdconsole_ahk: ; Workaround for Autohotkey's ugly auto-exec feature. Don't delete.
 
 
@@ -9,8 +9,11 @@ global g_putty_is_esc_comboing := false
 global g_putty_hwnd2termsize := {} 
 	; element value is a string, like "9,15", cell is 9 pixels wide, 15 pixels high
 
+global g_cmdc_text_cmdconsole := "CMD Console"
+	global g_cmdc_text_Cmd100Prompt := "Cmd width 100 Prompt"
+	global g_cmdc_text_Cmd120Prompt := "Cmd width 120 Prompt"
 
-putty_InitHotkeys()
+cmdconsole_InitHotkeys()
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 return ; End of auto-execute section.
@@ -405,8 +408,10 @@ putty_SimuMouseMove(sdir, count:=1)
 	g_putty_is_esc_comboing := true
 }
 
-putty_InitHotkeys()
+cmdconsole_InitHotkeys()
 {
+	; PuTTY use
+	;
 	dev_DefineHotkeyWithCondition("CapsLock & Up", "putty_IsActive", "putty_SimuMouseMove", "up")
 	dev_DefineHotkeyWithCondition("CapsLock & Down", "putty_IsActive", "putty_SimuMouseMove", "down")
 	dev_DefineHotkeyWithCondition("CapsLock & Left", "putty_IsActive", "putty_SimuMouseMove", "left")
@@ -422,8 +427,50 @@ putty_InitHotkeys()
 	dev_DefineHotkeyWithCondition("!Left", "putty_IsActive", "putty_SimuMouseMove", "left", 5)
 	dev_DefineHotkeyWithCondition("!Right", "putty_IsActive", "putty_SimuMouseMove", "right", 5)
 		; [2015-03-28] Strange: Using "<!Up" here will invalidate emeditor.ahk's ``!UP:: Send {UP 10}``
+		
+	
+	; CMD use
+	;
+	; Define submenu item list:
+	Menu, CmdconsoleSubmenu, add, %g_cmdc_text_Cmd100Prompt%, cmdc_Prompt100
+	Menu, CmdconsoleSubmenu, add, %g_cmdc_text_Cmd120Prompt%, cmdc_Prompt120
+	
+	; Attach submenu to main menu
+	Menu, tray, add, %g_cmdc_text_cmdconsole%, :CmdconsoleSubmenu
 }
 
+cmdc_Prompt100()
+{ 
+	cmdc_SetNewPrompt(100)
+}
+
+cmdc_Prompt120() 
+{ 
+	cmdc_SetNewPrompt(120)
+}
+
+cmdc_SetNewPrompt(cmd_width)
+{
+	; Activate the most recent CMD window, and then send new `prompt` command to it.
+	
+	cmdwin := "ahk_class ConsoleWindowClass"
+	WinActivate, % cmdwin
+
+	WinWaitActive, %cmdwin%, , 1
+	if ErrorLevel
+	{
+	    MsgBox, % "No CMD windows can be activated, so nothing to do."
+	    return
+	}
+	else
+	{
+		diamond_count := (cmd_width-14)/2
+		cmd := Format("PROMPT {1}[$t] $p$g", dev_StrRepeat("◆", diamond_count))
+		
+		dev_TooltipAutoClear("Sending new PROMPT command to recent CMD window...")
+		SendInput %cmd%{enter}
+	}
+}
 
 #If putty_IsActive()
 
