@@ -78,6 +78,8 @@ global g_amstrMute := "AM: Mute clicking sound"
 
 global g_DefineHotkeyLogfile := "DefineHotkeys.log"
 
+global g_tmpMonitorsLayout := {}
+
 ;==========;==========;==========;==========;==========;==========;==========;==========;
 ; All global vars should be defined ABOVE this line, otherwise, they will be null.
 ;==========;==========;==========;==========;==========;==========;==========;==========;
@@ -2490,6 +2492,71 @@ dev_StrRepeat(string, times)
         output .= string
     return output
 }
+
+dev_EnumDisplayMonitors()
+{
+	mlo := g_tmpMonitorsLayout ; create a short-name reference to the global var 
+		; this global var is required to communicate with the callback function devcb_EnumDisplayMonitors()
+	mlo.count := 0
+	mlo.monitor_rects := []
+
+	CoordMode, Mouse, Screen
+	hCB := RegisterCallback("devcb_EnumDisplayMonitors", "F", 4, 0)
+	MouseGetPos, x, y
+	if DllCall("user32\EnumDisplayMonitors", "Ptr", 0, "Ptr", 0, "Ptr", hCB, "UInt", 0)
+	{
+		dbgstr := "Monitor layout (L,T , R,B):`n`n"
+		Loop, % mlo.monitor_rects.Length()
+		{
+			rect := mlo.monitor_rects[A_Index]
+			width := rect.right - rect.left
+			height := rect.bottom - rect.top
+			dbgstr .= Format("[{1}] {2},{3} , {4},{5}   ({6}x{7})`n", A_Index, rect.left, rect.top, rect.right, rect.bottom, width, height)
+		}
+		; MsgBox, % dbgstr ; debug
+	}
+	else 
+	{
+		MsgBox, % "Unexpected! Calling WinAPI EnumDisplayMonitors() failed!"
+	}
+
+	return mlo.Clone()
+}
+
+devcb_EnumDisplayMonitors(hMonitor, hDC, pRect, arg)
+{
+	if !hMonitor
+	    return False
+
+	static sizeof_GetMonitorInfo := 40
+;	typedef struct tagMONITORINFO {
+;	  DWORD  cbSize; 
+;	  RECT   rcMonitor; 
+;	  RECT   rcWork; 
+;	  DWORD  dwFlags; 
+;	} MONITORINFO, *LPMONITORINFO; 
+
+	VarSetCapacity(mi, sizeof_GetMonitorInfo) ; mi: MonitorInfo
+	NumPut(sizeof_GetMonitorInfo, mi, 0, Int) ; init cbSize with struct size
+
+	DllCall("GetMonitorInfo", Ptr, hMonitor, Ptr, &mi)
+;	MsgBox, % Format("Monitor L/T/R/B: {1},{2},{3},{4}", NumGet(mi, 4, Int), NumGet(mi, 8, Int), NumGet(mi, 12, Int), NumGet(mi, 16, Int))
+
+	rect := {}
+	rect.left := NumGet(mi, 4, Int)
+	rect.top := NumGet(mi, 8, Int)
+	rect.right := NumGet(mi, 12, Int)
+	rect.bottom := NumGet(mi, 16, Int)
+
+;	MsgBox, % ">>> g_tmpMonitorsLayout.monitor_rects.length() = " . g_tmpMonitorsLayout.monitor_rects.length() ; debug
+
+	mlo := g_tmpMonitorsLayout ; create a short-name reference to the global var
+	mlo.monitor_rects.Push(rect)
+	mlo.count += 1
+
+	return True
+}
+
 
 
 ;==============================================================================

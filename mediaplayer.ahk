@@ -17,9 +17,10 @@ global g_mpcaot_exepath := "D:\portableapps\MPC-HC-Portable\App\MPC-HC\mpc-hc.ex
 	; // User should customize this exepath to match their own environment.
 global g_mpcaot_isNowAlwaysOnTop := false
 global g_mpcaot_text_LaunchExe := "Launch MPC-HC (AOT-able)"
-global g_mpcaot_text_AlwaysOnTop := "MPC-HC always on top"
-global g_mpcaot_text_SetSmallWindow := "MPC-HC set small window"
-global g_mpcaot_smallwndsize := { w:200 , h:154 } ; Other: { w:160 , h:122 }
+global g_mpcaot_text_AlwaysOnTop := "MPC-AOT always on top"
+global g_mpcaot_text_SetWindowSize := "MPC-AOT set window size"
+; global g_mpcaot_subtext_CustomSize := "200 x 150 (Ctrl+click to customize)" ; change later
+global g_mpcaot_custwndsize := { w:160 , h:120 }
 	; // User can override this in customize.ahk .
 
 MPC_InitHotkeys()
@@ -815,13 +816,30 @@ MpcAot_GetHwnd(is_offer_launch:=false)
 	return None
 }
 
+MpcAot_CustomMenuSize_MakeText(width, height)
+{
+	return Format("{} x {} (Ctrl+click to customize)", width, height)
+}
+
 MpcAot_InitTrayicon()
 {
 	Menu, TRAY, add  ; Creates a separator line.
 	Menu, TRAY, add, %g_mpcaot_text_LaunchExe%, MpcAot_LaunchExe  ; Creates a new menu item.
 	Menu, TRAY, add, %g_mpcaot_text_AlwaysOnTop%, MpcAot_ToggleAlwaysOnTop
-	Menu, TRAY, add, %g_mpcaot_text_SetSmallWindow%, MpcAot_SetSmallWindow
+
+	;
+	; Set window size menu/submenu items
+	;
+	; Define submenu item list:
+	custtext := MpcAot_CustomMenuSize_MakeText(g_mpcaot_custwndsize.w, g_mpcaot_custwndsize.h)
+	Menu, mpcpop_SetWindowSize, add, % custtext, MpcAot_SetCustomWindowSize
+	Menu, mpcpop_SetWindowSize, add, % "200 x 150", MpcAot_Set200x150
+	Menu, mpcpop_SetWindowSize, add, % "320 x 240", MpcAot_Set320x240
+	Menu, mpcpop_SetWindowSize, add, % "640 x 480", MpcAot_Set640x480
+	; Attach submenu to main menu
+	Menu, tray, add, % g_mpcaot_text_SetWindowSize, :mpcpop_SetWindowSize
 }
+	
 
 MpcAot_LaunchExe()
 {
@@ -903,7 +921,35 @@ MPC_BlockEscIfAOT()
 }
 #If
 
-MpcAot_SetSmallWindow()
+
+MpcAot_Set200x150()
+{
+	MpcAot_SetWindowSize(200, 150)
+}
+MpcAot_Set320x240()
+{
+	MpcAot_SetWindowSize(320, 240)
+}
+MpcAot_Set640x480()
+{
+	MpcAot_SetWindowSize(640, 480)
+}
+
+MpcAot_SetWindowSize(width, height)
+{
+	hwnd_mpc := dev_GetHwndByExepath(g_mpcaot_exepath)
+	if(!hwnd_mpc)
+	{
+		MpcAot_PromptNotLaunched()
+		return
+	}
+	
+	dev_TooltipAutoClear(Format("Set MPC-AOT window size to {},{}", width, height))
+	
+	chj_SetWindowSize_StickCorner(hwnd_mpc, width, height)
+}
+
+MpcAot_SetCustomWindowSize()
 {
 	hwnd_mpc := dev_GetHwndByExepath(g_mpcaot_exepath)
 	if(!hwnd_mpc)
@@ -912,14 +958,16 @@ MpcAot_SetSmallWindow()
 		return
 	}
 
-	sm := g_mpcaot_smallwndsize
-	s2 := Format("{},{}", sm.w, sm.h)
+	cs := g_mpcaot_custwndsize ; create a short-name reference to the global var
+	cs_oldmenutext := MpcAot_CustomMenuSize_MakeText(cs.w, cs.h)
+
+	s2 := Format("{},{}", cs.w, cs.h)
 
 	isshift := GetKeyState("Shift")
 	isctrl := GetKeyState("Ctrl")
 ;	msgbox, % Format("shift: {} , ctrl: {}", isshift, isctrl)
 
-	if(isshift or isctrl)
+	if(isctrl)
 	{
 		; Pop-up a message box for new width,height value
 		InputBox, s2, % "mediaplayer.ahk", % "Input new width,height for MPC-HC window", , 300, 150, , , , , % s2
@@ -933,13 +981,89 @@ MpcAot_SetSmallWindow()
 			MsgBox, % "Invalid input! Two values should both >= 100"
 			return
 		}
-		sm.w := w
-		sm.h := h
+		cs.w := w
+		cs.h := h
 	}
 	
-	dev_TooltipAutoClear(Format("Set MPC-HC window size to {},{}", sm.w, sm.h))
+	cs_newtext := MpcAot_CustomMenuSize_MakeText(cs.w, cs.h)
 	
-	WinGet, winid, ID, % "ahk_id " . hwnd_mpc
-	dev_WinMove_with_backup("", "", sm.w, sm.h, winid)
+	Menu, mpcpop_SetWindowSize, Rename, % cs_oldmenutext, % cs_newtext
+	
+;	WinGet, winid, ID, % "ahk_id " . hwnd_mpc
+;	dev_WinMove_with_backup("", "", cs.w, cs.h, winid)
+	MpcAot_SetWindowSize(cs.w, cs.h)
+}
+
+
+chj_SetWindowSize_StickCorner(hwnd, newwidth, newheight)
+{
+	; "StickCorner" means: 
+	; * If the window is near left/top corner of a specific monitor, it will extend/shrink its right/bottom.
+	; * If the window is near right/bottom corner of a specific monitor, it will extend/shrink its left/top.
+	; -- as if the window is stick to its original corner when changing size.
+
+	use_hwnd := "ahk_id " . hwnd
+	
+	WinGetPos, x,y,w,h, % use_hwnd
+	
+	mrect := {}
+	idx_monitor := 0 ; to be set
+	
+	;
+	; Check whether the hwnd totally resides in a specific monitor(no straddle)
+	;
+	mlo := dev_EnumDisplayMonitors() ; mlo: monitor layout
+	Loop, % mlo.count
+	{
+		mrect := mlo.monitor_rects[A_Index]
+		if (x>=mrect.left && y>=mrect.top && x+w<mrect.right && y+h<mrect.bottom)
+		{
+			idx_monitor := A_Index
+			break
+		}
+	}
+	
+;	MsgBox, % "idx_monitor = " . idx_monitor ; debug
+
+	if(idx_monitor==0)
+	{
+		MsgBox, % "Sorry. chj_SetWindowSize_StickCorner() cannot operate on this window, because it straddles across multiple monitors."
+		return
+	}
+	
+	mwidth := mrect.right-mrect.left
+	mheight := mrect.bottom-mrect.top
+	if(newwidth > mwidth) {
+		MsgBox, % Format("Sorry. New window width({1}) should not exceed its current monitor width({2}) .", newwidth, mwidth)
+		return
+	}
+	if(newheight > mheight) {
+		MsgBox, % Format("Sorry. New window height({1}) should not exceed its current monitor height({2}) .", newheight, mheight)
+		return
+	}
+
+	winleft := x
+	winright := x+w
+	wintop := y
+	winbottom := y+h
+	
+	; Check whether we should adjust left border or right border.
+	leftgap := winleft - mrect.left
+	rightgap := mrect.right - winright
+	if(leftgap < rightgap)
+		winright := winleft + newwidth
+	else
+		winleft := winright - newwidth
+
+	; Check whether we should adjust top border or bottom border.
+	topgap := wintop - mrect.top
+	bottomgap := mrect.bottom - winbottom
+	if(topgap < bottomgap)
+		winbottom := wintop + newheight
+	else
+		wintop := winbottom - newheight
+
+	; Finally, move window and change window size
+	WinMove, % use_hwnd, , % winleft , % wintop , % winright-winleft , % winbottom-wintop
 }
 
