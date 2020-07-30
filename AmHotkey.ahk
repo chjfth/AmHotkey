@@ -407,6 +407,7 @@ hilightScreenGuiEscape:
 HighlightRectInActiveWindow(hx, hy, hwidth, hheight, duration_msec:=2000) ; old code, use DoHilightRectInTopwin instead
 {
 	; hx, hy relative to current active window
+	
 	WinGetPos, Ax, Ay, Awidth, Aheight, A 
 
 	Gui, hilightwin:New
@@ -802,12 +803,12 @@ dev_DefineHotkey(hk, fn_name, args*)
 	in_dev_DefineHotkey(true, hk, fn_name, args)
 }
 
-in_dev_DefineHotkey(is_on, hk, fn_name, args) ; will define global hotkey
+in_dev_DefineHotkey(is_on, hk_userform, fn_name, args) ; will define global hotkey
 {
 	; Define or Undefine a hotkey, much more powerful than the `Hotkey` keyword.
 	;
-	; hk      : the hotkey name recognized by AutoHotkey.
-	; fn_name : the function name string, like "DoMyWork", DoMyWork() is defined somewhere else.
+	; hk_userform : the hotkey name recognized by AutoHotkey.
+	; fn_name     : the function name string, like "DoMyWork", DoMyWork() is defined somewhere else.
 	;
 	; Data structure example:
 	; funs["F1"][fn_name]         => another object
@@ -824,6 +825,13 @@ in_dev_DefineHotkey(is_on, hk, fn_name, args) ; will define global hotkey
 		return
 	}
 	
+	hk := hk_userform
+	; 
+	if(StrIsStartsWith(hk_userform, "~")) {
+		; We need to strip off the "~" because later A_ThisHotkey *sometimes* does not contain that "~".
+		hk := SubStr(hk_userform, 2)
+	}
+	
 	if(is_on)
 	{
 		if(not funs[hk])
@@ -837,7 +845,7 @@ in_dev_DefineHotkey(is_on, hk, fn_name, args) ; will define global hotkey
 		funs[hk][fn_name].pr := args
 
 		Hotkey, If ; -- use the global context
-		Hotkey, %hk%, Hotkey_Handler_global, On
+		Hotkey, %hk_userform%, Hotkey_Handler_global, On
 	}
 	else 
 	{
@@ -854,7 +862,15 @@ in_dev_DefineHotkey(is_on, hk, fn_name, args) ; will define global hotkey
 
 Hotkey_Handler_global:
 ;tooltip, % "Hotkey_Handler_global() [" . A_ThisHotkey . "] ........"
-	dict_fnpr := funs[A_ThisHotkey]
+
+	ThisHotkey_fix := A_ThisHotkey
+	;
+	if(StrIsStartsWith(A_ThisHotkey, "~")) {
+		; We need to strip off the "~" because later A_ThisHotkey *sometimes* does not contain that "~".
+		ThisHotkey_fix := SubStr(A_ThisHotkey, 2)
+	}
+
+	dict_fnpr := funs[ThisHotkey_fix]
 	if(dict_fnpr)
 	{
 		; Call each callbacks registered in dict_fnpr{}.
@@ -865,7 +881,7 @@ Hotkey_Handler_global:
 	}
 	else
 	{
-		tooltip, Bad! funs[%A_ThisHotkey%] is null!!!!!
+		tooltip, Bad! funs[%ThisHotkey_fix%] is null!!!!!
 	}
 
 	return
@@ -2500,9 +2516,7 @@ dev_EnumDisplayMonitors()
 	mlo.count := 0
 	mlo.monitor_rects := []
 
-	CoordMode, Mouse, Screen
 	hCB := RegisterCallback("devcb_EnumDisplayMonitors", "F", 4, 0)
-	MouseGetPos, x, y
 	if DllCall("user32\EnumDisplayMonitors", "Ptr", 0, "Ptr", 0, "Ptr", hCB, "UInt", 0)
 	{
 		dbgstr := "Monitor layout (L,T , R,B):`n`n"
@@ -2526,7 +2540,7 @@ dev_EnumDisplayMonitors()
 devcb_EnumDisplayMonitors(hMonitor, hDC, pRect, arg)
 {
 	if !hMonitor
-	    return False
+	    return false
 
 	static sizeof_GetMonitorInfo := 40
 ;	typedef struct tagMONITORINFO {
@@ -2554,9 +2568,16 @@ devcb_EnumDisplayMonitors(hMonitor, hDC, pRect, arg)
 	mlo.monitor_rects.Push(rect)
 	mlo.count += 1
 
-	return True
+	return true
 }
 
+dev_XYinRect(x, y, rect_)
+{
+	if(x>=rect_.left && x<rect_.right && y>=rect_.top && y<rect_.bottom)
+		return true
+	else
+		return false
+}
 
 
 ;==============================================================================

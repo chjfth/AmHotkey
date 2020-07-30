@@ -489,6 +489,9 @@ MPC_ClickToSeek_condition(xpct, uy, proc_condition)
 MPC_InitHotkeys()
 {
 	MPC_DefineHotkeysSeekPercents()
+	
+	dev_DefineHotkey("~^LButton", "MpcAot_ShowSizingMenu_LButton")
+
 }
 
 MPC_cond_F1toF9Seek()
@@ -816,6 +819,18 @@ MpcAot_GetHwnd(is_offer_launch:=false)
 	return None
 }
 
+MpcAot_GetRect()
+{
+	hwnd := MpcAot_GetHwnd()
+	if(!hwnd)
+		return false
+	
+	WinGetPos, x, y, width, height, ahk_id %hwnd%
+	
+	mpcrect := { left:x, top:y, right:x+width, bottom:y+height }
+	return mpcrect
+}
+
 MpcAot_CustomMenuSize_MakeText(width, height)
 {
 	return Format("{} x {} (Ctrl+click to customize)", width, height)
@@ -911,6 +926,7 @@ MpcAot_IsActive()
 }
 
 #If MpcAot_IsActive()
+
 ESC:: MPC_BlockEscIfAOT()
 MPC_BlockEscIfAOT()
 {
@@ -919,8 +935,8 @@ MPC_BlockEscIfAOT()
 	; When AOT displaying a webcam content in borderless mode, we probably don't want to see the border.
 	dev_TooltipAutoClear("AHK: ESC key is blocked for this MPC-HC window.")
 }
-#If
 
+#If
 
 MpcAot_Set200x150()
 {
@@ -1065,5 +1081,47 @@ chj_SetWindowSize_StickCorner(hwnd, newwidth, newheight)
 
 	; Finally, move window and change window size
 	WinMove, % use_hwnd, , % winleft , % wintop , % winright-winleft , % winbottom-wintop
+}
+
+MpcAot_ShowSizingMenu_LButton()
+{
+	isok := MpcAot_ShowSizingMenu()
+	
+;	if(!isok) {
+;		[2020-07-30] Well, I just don't know how to relay Ctrl+click to non-MPC-AOT programs transparently.
+;		So I just used "~^LButton" when calling dev_DefineHotkey()
+;	
+;		dev_TooltipAutoClear("Sendddd.... Click")
+;		Send ^Click
+;	}
+}
+
+MpcAot_ShowSizingMenu()
+{
+	CoordMode, Mouse, Screen
+	MouseGetPos, mx, my
+
+	mpcrect := MpcAot_GetRect()
+	if(!mpcrect)
+		return false
+
+	if( dev_XYinRect(mx, my, mpcrect) )
+	{
+		Menu, mpcpop_SetWindowSize, show
+		
+		return true
+	}
+	else
+	{
+		; [2020-07-30] AHK 1.1.32 on Win10.1909: 
+		; Memo: If we right-click MPC to bring up its context menu and trigger this function, 
+		; the mpcrect will be the Rect of the popped-up context menu, not the MPC's real window.
+		; That is not a problem.
+
+;		dev_TooltipAutoClear(Format("Ctrl+click not in MPC-AOT window. mx={} , my={} , rect={}/{}/{}/{}"
+;			, mx, my, mpcrect.left, mpcrect.top, mpcrect.right, mpcrect.bottom)) ; debug
+
+		return false
+	}
 }
 
