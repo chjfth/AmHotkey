@@ -1043,7 +1043,12 @@ chj_SetWindowSize_StickCorner(hwnd, newwidth, newheight)
 
 	if(idx_monitor==0)
 	{
-		MsgBox, % "Sorry. chj_SetWindowSize_StickCorner() cannot operate on this window, because it straddles across multiple monitors."
+		MsgBox, 
+(
+Sorry. chj_SetWindowSize_StickCorner() cannot operate on this window, because it straddles across multiple monitors.
+
+Please manually move/resize this window to fit into a single monitor, and try again.
+)
 		return
 	}
 	
