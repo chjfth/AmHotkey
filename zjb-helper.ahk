@@ -9,7 +9,7 @@ AUTOEXEC_zjbhelper_ahk: ; Workaround for Autohotkey's ugly auto-exec feature. Do
 
 ; User can override this mapping in customize.ahk . Each element has three fields:
 ; [ "资金保登录帐号" , "登录密码" , "助记提示文字" ]
-global g_zjb_UsrPwd_list := [ ["13800012345" , "123456" , "公共测试帐号" ]
+global g_zjb_UsrPwd_list := [ ["16688886666" , "123456" , "共享体验帐号" ]
 	, ["13700054321" , "" , "我的手机号" ]   ; If you leave password empty, then the Ahk will prompt you for password.
 	, [ "" ] ]
 
