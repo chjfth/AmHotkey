@@ -710,3 +710,25 @@ NumpadMult:: Send ^{PgDn}   ; TabsStudio.Connect.NavigateToNextTab
 
 #If
 
+; ################ JetBrains IDE #################
+
+JetBrainsIDE_IsActive() 
+{
+	WinGet, Awinid, ID, A ; cache active window unique id
+	WinGetClass, class, ahk_id %Awinid%
+	WinGet, exepath, ProcessPath, ahk_id %Awinid%
+
+	if( StrIsEndsWith(exepath, "pycharm64.exe") )
+		return true
+	else
+		return false
+}
+
+#If JetBrainsIDE_IsActive()
+
+NumpadDiv::  Send ^![   ; Select previous tab
+NumpadMult:: Send ^!]   ; Select next tab
+
+
+#If ;JetBrainsIDE_IsActive
+
