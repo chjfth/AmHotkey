@@ -765,6 +765,36 @@ Bcam4_verifyRecordingParams(want_mic, fps:=0)
 	}
 }
 
+#If ; Bandicam
 
-#If
+;==========================================================================
+; FastStone Capture App hotkey redefinition.
+;==========================================================================
+
+FSCapture_IsWinActive()
+{
+	WinGet, Awinid, ID, A ; cache active window unique id
+	WinGet, exepath, ProcessPath, ahk_id %Awinid%
+
+	if( StrIsEndsWith(exepath, "FSCapture.exe") )
+		return true
+	else
+		return false
+}
+
+
+#If FSCapture_IsWinActive()
+
+PasteImageToFastStone()
+{
+	delay_msec := 200
+	dev_TooltipAutoClear(Format("Will send Ctrl+Shift+V to FSCapture.exe in {}ms...", delay_msec), 2000)
+	Sleep, %delay_msec%
+	ControlSend, ahk_parent, {Ctrl down}{Shift down}v{Ctrl up}{Shift up}, A ; ahk_parent is optional
+}
+
+; I use Ctrl+Alt+V to execute File -> Import from Clipboard(default to Ctrl+Shift+V)
+^!v:: PasteImageToFastStone()
+
+#If ; FSCapture_IsWinActive()
 
