@@ -73,6 +73,14 @@ type_python_shebang()
 ; R means raw, no re-interpreting # : etc, otherwise, a # causes Win key to be sent.
 :*R:````u::#-*- coding: utf-8 -*-
 
+
+; 2014-01-09: Ctrl+Win+<Num> to change current window size
+^#1:: dev_WinMove_with_backup("","", 800, 600)
+^#2:: dev_WinMove_with_backup("","", 1024, 768)
+^#3:: dev_WinMove_with_backup("","",  1200, 900)
+^#4:: dev_WinMove_with_backup("","", 1440, 1000)
+
+
 chj_DefineQuickSwitchApps() ; as template for actual users
 {
 	QSA_DefineActivateGroup_Caps("/", "Notepad", "Notepad")
@@ -449,7 +457,7 @@ chji_CheckiPadRecordingReady(request_fps
 	; Its window class is sth like:
 	;	HwndWrapper[Reflector2.exe;;534cdb1d-82b1-462a-8391-0c90eeaaf301]
 	;
-	; Title is exactly "Reflector 2"
+	; Title is sth like "Reflector 2 - Juns mini4w"
 	; Process path: C:\Program Files\Reflector 2\Reflector2.exe
 
 	
@@ -473,7 +481,11 @@ chji_CheckiPadRecordingReady(request_fps
 	ofx := airplay_window_offset_x
 	ofy := airplay_window_offset_y
 	
-	dev_WinMove_with_backup(preset_x+4+ofx, preset_y+ofy ,record_width, record_height+80, hwndReflector) ; (1204, -1002, 600, 880, hwndReflector)
+;	dev_WinMove_with_backup(preset_x+4+ofx, preset_y+ofy ,record_width, record_height+80, hwndReflector) ; (1204, -1002, 600, 880, hwndReflector)
+	succ := dev_SetWindowSize_StickCorner(hwndReflector, record_width, record_height+80)
+	if(!succ) {
+		return
+	}
 	
 	; Check whether Bandicam is running, if so, move it to the same location of Reflector2.
 	; For Bandicam 3.4.2 .
@@ -484,8 +496,9 @@ chji_CheckiPadRecordingReady(request_fps
 		return
 	}
 	
-	dev_WinMove_with_backup(preset_x+ofx, preset_y+38+ofy, record_width+8, record_height+30, hwndBandicamRec, false) ; (1200, -964, 608, 830, hwndBandicamRec)
-		; [2019-05-28] Use is_force:=false in hope to workaround a Bandicam 3.4.2 crashing bug(when start REC).
+	WinGetPos, ix,iy,iw,ih, ahk_id %hwndReflector% ; `i` implies the inner-window
+;	dev_WinMove_with_backup(preset_x+ofx, preset_y+38+ofy, record_width+8, record_height+30, hwndBandicamRec, false) ; (1200, -964, 608, 830, hwndBandicamRec)
+	dev_WinMove_with_backup(ix-2, iy+37, iw+4, ih-50, hwndBandicamRec, false)
 
 	;
 	; Check whether Bandicam's current recording cfg is the desired one. If not, MsgBox warn.
