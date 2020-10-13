@@ -962,7 +962,7 @@ MpcAot_SetWindowSize(width, height)
 	
 	dev_TooltipAutoClear(Format("Set MPC-AOT window size to {},{}", width, height))
 	
-	chj_SetWindowSize_StickCorner(hwnd_mpc, width, height)
+	dev_SetWindowSize_StickCorner(hwnd_mpc, width, height)
 }
 
 MpcAot_SetCustomWindowSize()
@@ -1010,83 +1010,6 @@ MpcAot_SetCustomWindowSize()
 	MpcAot_SetWindowSize(cs.w, cs.h)
 }
 
-
-chj_SetWindowSize_StickCorner(hwnd, newwidth, newheight)
-{
-	; "StickCorner" means: 
-	; * If the window is near left/top corner of a specific monitor, it will extend/shrink its right/bottom.
-	; * If the window is near right/bottom corner of a specific monitor, it will extend/shrink its left/top.
-	; -- as if the window is stick to its original corner when changing size.
-
-	use_hwnd := "ahk_id " . hwnd
-	
-	WinGetPos, x,y,w,h, % use_hwnd
-	
-	mrect := {}
-	idx_monitor := 0 ; to be set
-	
-	;
-	; Check whether the hwnd totally resides in a specific monitor(no straddle)
-	;
-	mlo := dev_EnumDisplayMonitors() ; mlo: monitor layout
-	Loop, % mlo.count
-	{
-		mrect := mlo.monitor_rects[A_Index]
-		if (x>=mrect.left && y>=mrect.top && x+w<mrect.right && y+h<mrect.bottom)
-		{
-			idx_monitor := A_Index
-			break
-		}
-	}
-	
-;	MsgBox, % "idx_monitor = " . idx_monitor ; debug
-
-	if(idx_monitor==0)
-	{
-		MsgBox, 
-(
-Sorry. chj_SetWindowSize_StickCorner() cannot operate on this window, because it straddles across multiple monitors.
-
-Please manually move/resize this window to fit into a single monitor, and try again.
-)
-		return
-	}
-	
-	mwidth := mrect.right-mrect.left
-	mheight := mrect.bottom-mrect.top
-	if(newwidth > mwidth) {
-		MsgBox, % Format("Sorry. New window width({1}) should not exceed its current monitor width({2}) .", newwidth, mwidth)
-		return
-	}
-	if(newheight > mheight) {
-		MsgBox, % Format("Sorry. New window height({1}) should not exceed its current monitor height({2}) .", newheight, mheight)
-		return
-	}
-
-	winleft := x
-	winright := x+w
-	wintop := y
-	winbottom := y+h
-	
-	; Check whether we should adjust left border or right border.
-	leftgap := winleft - mrect.left
-	rightgap := mrect.right - winright
-	if(leftgap < rightgap)
-		winright := winleft + newwidth
-	else
-		winleft := winright - newwidth
-
-	; Check whether we should adjust top border or bottom border.
-	topgap := wintop - mrect.top
-	bottomgap := mrect.bottom - winbottom
-	if(topgap < bottomgap)
-		winbottom := wintop + newheight
-	else
-		wintop := winbottom - newheight
-
-	; Finally, move window and change window size
-	WinMove, % use_hwnd, , % winleft , % wintop , % winright-winleft , % winbottom-wintop
-}
 
 MpcAot_ShowSizingMenu_LButton()
 {
