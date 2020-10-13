@@ -1611,6 +1611,32 @@ dev_UndoChangeWindowSize()
 	}
 }
 
+dev_SortIntArray(ar)
+{
+	; https://www.autohotkey.com/boards/viewtopic.php?t=12054
+	For i, v in ar
+		list .=	v ","
+	list :=	Trim(list,",")
+	Sort, list, N D`,
+	out :=	[]
+	Loop, parse, list, `,
+		out.Push(A_LoopField)
+	Return	out
+}
+
+_Lineseg_IntersectLen(a0,b0_, a1,b1_)
+{
+	; Calculate intersect length of two line-segments [a0, b0_) and [a1, b1_)
+	
+	; First check whether the two lineseg are separated.
+	if( b0_<=a1 || a0>=b1_ )
+		return 0 ; two lineseg does not intersect
+	
+	; Find the middle two numbers of a0,b0_,a1,b1_ , those two constitute the intersecting lineseg.
+	arout := dev_SortIntArray([a0, b0_, a1,b1_])
+	return arout[3] - arout[2]
+}
+
 dev_SetWindowSize_StickCorner(hwnd, newwidth, newheight)
 {
 	; "StickCorner" means: 
@@ -1623,7 +1649,14 @@ dev_SetWindowSize_StickCorner(hwnd, newwidth, newheight)
 	WinGetPos, x,y,w,h, % use_hwnd
 	
 	mrect := {}
-	idx_monitor := 0 ; to be set
+	
+	; The monitor that totally accommodates the whole hwnd. To be set later. 0 is invalid value.
+	idx_best_monitor := 0 
+	
+	; If the hwnd straddles across multiple monitors, we'll pick the monitor with the most occupied area
+	; as the "good monitor"
+	idx_good_monitor := 1
+	area_goodr_monitor := 0
 	
 	;
 	; Check whether the hwnd totally resides in a specific monitor(no straddle)
@@ -1634,32 +1667,71 @@ dev_SetWindowSize_StickCorner(hwnd, newwidth, newheight)
 		mrect := mlo.monitor_rects[A_Index]
 		if (x>=mrect.left && y>=mrect.top && x+w<mrect.right && y+h<mrect.bottom)
 		{
-			idx_monitor := A_Index
+			idx_best_monitor := A_Index
 			break
+		}
+		
+		; hwnd does not fit into a single monitor, so we need to resort to the good one
+		interx := _Lineseg_IntersectLen(x, x+w, mrect.left, mrect.right)
+		intery := _Lineseg_IntersectLen(y, y+h, mrect.top, mrect.bottom)
+		intersect_area := interx * intery
+		if(intersect_area>area_goodr_monitor)
+		{
+			area_goodr_monitor := intersect_area
+			idx_good_monitor := A_Index
 		}
 	}
 	
-;	MsgBox, % "idx_monitor = " . idx_monitor ; debug
+;	MsgBox, % "idx_best_monitor = " . idx_best_monitor ; debug
 
-	if(idx_monitor==0)
+	mwidth := mrect.right - mrect.left
+	mheight := mrect.bottom - mrect.top
+
+	if(idx_best_monitor==0)
 	{
-		MsgBox, 
-(
-Sorry. dev_SetWindowSize_StickCorner() cannot operate on this window, because it straddles across multiple monitors.
+		; resort to the good one
+		
+		mrect := mlo.monitor_rects[idx_good_monitor] ; we'll stick to this monitor
+		
+		; new width & height must be shrunk to fit into the newly select monitor
 
-Please manually move/resize this window to fit into a single monitor, and try again.
-)
-		return false
+		if(newwidth>mwidth) 
+			newwidth := mwidth
+		if(newheight>mheight) 
+			newheight := mheight
+
+		if(w>mwidth)
+			w := mwidth
+		if(h>mheight)
+			h := mheight
+		
+		; adjust hwnd's Right border
+		Rofs := x+w - mrect.right
+		if(Rofs>0)
+			x -= Rofs
+		
+		; adjust hwnd's Bottom border
+		Bofs := y+h - mrect.bottom
+		if(Bofs>0)
+			y -= Bofs
+		
+		; adjust hwnd's Left border
+		if(x < mrect.left)
+			x := mrect.left
+			
+		; adjust hwnd's Top border
+		if(y < mrect.top)
+			y := mrect.top
+		
+		; Now, x,y,w,h is a rectangle that fits into mrect.
 	}
 	
-	mwidth := mrect.right-mrect.left
-	mheight := mrect.bottom-mrect.top
 	if(newwidth > mwidth) {
-		MsgBox, % Format("Sorry. New window width({1}) should not exceed its current monitor width({2}) .", newwidth, mwidth)
+		MsgBox, % Format("BUG! New window width({1}) should not exceed its current monitor width({2}) .", newwidth, mwidth)
 		return
 	}
 	if(newheight > mheight) {
-		MsgBox, % Format("Sorry. New window height({1}) should not exceed its current monitor height({2}) .", newheight, mheight)
+		MsgBox, % Format("BUG! New window height({1}) should not exceed its current monitor height({2}) .", newheight, mheight)
 		return
 	}
 
@@ -1686,7 +1758,7 @@ Please manually move/resize this window to fit into a single monitor, and try ag
 
 	; Finally, move window and change window size
 	WinMove, % use_hwnd, , % winleft , % wintop , % winright-winleft , % winbottom-wintop
-	
+
 	return true
 }
 
