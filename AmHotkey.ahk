@@ -1637,12 +1637,14 @@ _Lineseg_IntersectLen(a0,b0_, a1,b1_)
 	return arout[3] - arout[2]
 }
 
-dev_SetWindowSize_StickCorner(hwnd, newwidth, newheight)
+dev_SetWindowSize_StickCorner(hwnd, newwidth, newheight, escape_taskbar:=false)
 {
 	; "StickCorner" means: 
 	; * If the window is near left/top corner of a specific monitor, it will extend/shrink its right/bottom.
 	; * If the window is near right/bottom corner of a specific monitor, it will extend/shrink its left/top.
 	; -- as if the window is stick to its original corner when changing size.
+	;
+	; If escape_taskbar==true, the adjusted window position will not overlap Windows taskbar.
 
 	use_hwnd := "ahk_id " . hwnd
 	
@@ -1664,7 +1666,8 @@ dev_SetWindowSize_StickCorner(hwnd, newwidth, newheight)
 	mlo := dev_EnumDisplayMonitors() ; mlo: monitor layout
 	Loop, % mlo.count
 	{
-		mrect := mlo.monitor_rects[A_Index]
+		mrect := escape_taskbar ? mlo.workarea_rects[A_Index] : mlo.monitor_rects[A_Index]
+		
 		if (x>=mrect.left && y>=mrect.top && x+w<mrect.right && y+h<mrect.bottom)
 		{
 			idx_best_monitor := A_Index
@@ -1689,9 +1692,8 @@ dev_SetWindowSize_StickCorner(hwnd, newwidth, newheight)
 
 	if(idx_best_monitor==0)
 	{
-		; resort to the good one
-		
-		mrect := mlo.monitor_rects[idx_good_monitor] ; we'll stick to this monitor
+		; fallback to the good one
+		mrect := escape_taskbar ? mlo.workarea_rects[idx_good_monitor] : mlo.monitor_rects[idx_good_monitor]
 		
 		; new width & height must be shrunk to fit into the newly select monitor
 
@@ -2661,6 +2663,7 @@ dev_EnumDisplayMonitors()
 		; this global var is required to communicate with the callback function devcb_EnumDisplayMonitors()
 	mlo.count := 0
 	mlo.monitor_rects := []
+	mlo.workarea_rects := []
 
 	hCB := RegisterCallback("devcb_EnumDisplayMonitors", "F", 4, 0)
 	if DllCall("user32\EnumDisplayMonitors", "Ptr", 0, "Ptr", 0, "Ptr", hCB, "UInt", 0)
@@ -2707,13 +2710,21 @@ devcb_EnumDisplayMonitors(hMonitor, hDC, pRect, arg)
 	rect.top := NumGet(mi, 8, Int)
 	rect.right := NumGet(mi, 12, Int)
 	rect.bottom := NumGet(mi, 16, Int)
-
-;	MsgBox, % ">>> g_tmpMonitorsLayout.monitor_rects.length() = " . g_tmpMonitorsLayout.monitor_rects.length() ; debug
+	;
+	rect_workarea := {}
+	rect_workarea.left := NumGet(mi, 20, Int)
+	rect_workarea.top := NumGet(mi, 24, Int)
+	rect_workarea.right := NumGet(mi, 28, Int)
+	rect_workarea.bottom := NumGet(mi, 32, Int)
 
 	mlo := g_tmpMonitorsLayout ; create a short-name reference to the global var
 	mlo.monitor_rects.Push(rect)
+	mlo.workarea_rects.Push(rect_workarea)
 	mlo.count += 1
 
+;	MsgBox, % Format("devcb_EnumDisplayMonitors [{1}]`nL={2} T={3} R={4} B={5} , W={6} H={7} `nL={8} T={9} R={10} B={11} , W={12} H={13}", mlo.count
+;		, rect.left, rect.top, rect.right, rect.bottom, (rect.right-rect.left), (rect.bottom-rect.top)
+;		, rect_workarea.left, rect_workarea.top, rect_workarea.right, rect_workarea.bottom, (rect_workarea.right-rect_workarea.left), (rect_workarea.bottom-rect_workarea.top)) ; debug
 	return true
 }
 
