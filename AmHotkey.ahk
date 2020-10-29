@@ -1564,7 +1564,6 @@ dev_WinMove_with_backup(_newx, _newy, _new_width, _new_height, Awinid:=0, is_for
 	if(Awinid==0)
 		WinGet, Awinid, ID, A ; cache active window unique id
 
-	static s_hint_timeout := 8000
 	WinGetPos old_winx, old_winy, old_winwidth, old_winheight, ahk_id %Awinid%
 	; MsgBox New value is new_width, %new_height%
 	
@@ -1592,13 +1591,10 @@ dev_WinMove_with_backup(_newx, _newy, _new_width, _new_height, Awinid:=0, is_for
 		g_winy := old_winy
 		g_winwidth := old_winwidth
 		g_winheight := old_winheight
-		dev_TooltipAutoClear("Press Ctrl+Win+0 to undo window size change.", s_hint_timeout)
-		s_hint_timeout := 1000
 	}
 }
 
-; 2014-08-09: Ctrl+Win+0 toggle last two window positions
-^#0:: dev_UndoChangeWindowSize()
+; 2014-08-09:
 dev_UndoChangeWindowSize()
 {
 	WinGetPos winx, winy, winwidth, winheight, A

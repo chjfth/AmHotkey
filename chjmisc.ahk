@@ -73,12 +73,25 @@ type_python_shebang()
 ; R means raw, no re-interpreting # : etc, otherwise, a # causes Win key to be sent.
 :*R:````u::#-*- coding: utf-8 -*-
 
+!#0:: dev_WinMove_with_backup_with_prompt(0, 0, "", "") ; move window to (0,0) in case you can't see that window
 
 ; 2014-01-09: Ctrl+Win+<Num> to change current window size
-^#1:: dev_WinMove_with_backup("","", 800, 600)
-^#2:: dev_WinMove_with_backup("","", 1024, 768)
-^#3:: dev_WinMove_with_backup("","",  1200, 900)
-^#4:: dev_WinMove_with_backup("","", 1440, 1000)
+^#1:: dev_WinMove_with_backup_with_prompt("","", 800, 600)
+^#2:: dev_WinMove_with_backup_with_prompt("","", 1024, 768)
+^#3:: dev_WinMove_with_backup_with_prompt("","",  1200, 900)
+^#4:: dev_WinMove_with_backup_with_prompt("","", 1440, 1000)
+; Ctrl+Win+0 toggle last two window positions
+^#0:: dev_UndoChangeWindowSize()
+
+dev_WinMove_with_backup_with_prompt(_newx, _newy, _new_width, _new_height, Awinid:=0, is_force:=false)
+{
+	static s_hint_timeout := 8000
+
+	dev_WinMove_with_backup(_newx, _newy, _new_width, _new_height, Awinid, is_force)
+
+	dev_TooltipAutoClear("Press Ctrl+Win+0 to undo window location/size change.", s_hint_timeout)
+	s_hint_timeout := 1000
+}
 
 
 chj_DefineQuickSwitchApps() ; as template for actual users
