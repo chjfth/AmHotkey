@@ -35,6 +35,15 @@ return ; End of auto-execute section.
 ;Media Player Classic (MPC) 1.7 
 ;==============================================================
 
+MPC_IsRunning()
+{
+	winfound := WinExist("ahk_class MediaPlayerClassicW")
+	if(winfound)
+		return true
+	else
+		return false
+}
+
 MPC_IsActive()
 {
 	if(IsWinClassActive("MediaPlayerClassicW"))

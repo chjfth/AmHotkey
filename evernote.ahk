@@ -2072,13 +2072,22 @@ AppsKey & t:: EverTable_Start()
 F3::        MPC_Bg_PausePlay(true)
 F1::        MPC_Bg_PausePlay_front(true)
 ; NumpadSub:: MPC_Bg_PausePlay_front(true)
-F2::         MPC_PasteCurrentPlaytime()
-; NumpadAdd::  MPC_PasteCurrentPlaytime()
+F2::         Evernote_MPC_PasteCurrentPlaytime("{F2}") ; F2 defaults to Evernote clip rename
+; NumpadAdd::  Evernote_MPC_PasteCurrentPlaytime()
 F4::        MPC_Bg_Back5sec(true)
 NumpadDiv:: MPC_Bg_Back5sec(true)
 F5::         MPC_Bg_Forward5sec(true)
 NumpadMult:: MPC_Bg_Forward5sec(true)
 
+Evernote_MPC_PasteCurrentPlaytime(bypass_hotkey="")
+{
+	if(MPC_IsRunning()) 
+		MPC_PasteCurrentPlaytime()
+	else if(bypass_hotkey) {
+;		dev_TooltipAutoClear("bypass_hotkey=" . bypass_hotkey) ; debug
+		Send % bypass_hotkey
+	}
+}
 
 
 NumpadSub:: Evernote_MoveYClick(-24) ; in hope to click onto prev table Row
