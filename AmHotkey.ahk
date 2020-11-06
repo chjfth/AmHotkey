@@ -676,6 +676,16 @@ IsWinClassActive(winclass, wintext="") ; Check against active window
 	return false
 }
 
+IsWinClassExist(winclass, wintext="") ; Check existing window
+{
+	IfWinExist, ahk_class %winclass%, %wintext%
+	{
+	    return true
+	}
+	return false
+}
+
+
 IsWinClassMatchRegex(regex) ; Check against active window class
 {
 	WinGetClass, class, A

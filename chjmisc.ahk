@@ -455,9 +455,7 @@ MSDN2008_Activate__Focus_IndexPane()
 
 ;===== iPad Reflector recording on my Chji Win7 =====
 
-chji_CheckiPadRecordingReady(request_fps 
-	, airplay_window_offset_x:=0, airplay_window_offset_y:=0
-	, record_width:=600, record_height:=800)
+chji_CheckiOSRecordingReady(record_width:=600, record_height:=800, request_fps:=10)
 {
 	; Run this function so that Reflector2 window and Bandicam target-window rest in the "same" position.
 	; Then bandicam screen recording will record the very iPad AirPlay casting screen content.
@@ -491,10 +489,7 @@ chji_CheckiPadRecordingReady(request_fps
 	
 	preset_x := 20
 	preset_y := 20
-	ofx := airplay_window_offset_x
-	ofy := airplay_window_offset_y
 	
-;	dev_WinMove_with_backup(preset_x+4+ofx, preset_y+ofy ,record_width, record_height+80, hwndReflector) ; (1204, -1002, 600, 880, hwndReflector)
 	succ := dev_SetWindowSize_StickCorner(hwndReflector, record_width, record_height+80)
 	if(!succ) {
 		return
@@ -510,7 +505,6 @@ chji_CheckiPadRecordingReady(request_fps
 	}
 	
 	WinGetPos, ix,iy,iw,ih, ahk_id %hwndReflector% ; `i` implies the inner-window
-;	dev_WinMove_with_backup(preset_x+ofx, preset_y+38+ofy, record_width+8, record_height+30, hwndBandicamRec, false) ; (1200, -964, 608, 830, hwndBandicamRec)
 	dev_WinMove_with_backup(ix-2, iy+37, iw+4, ih-50, hwndBandicamRec, false)
 
 	;
@@ -544,7 +538,7 @@ chji_CheckiPadRecordingReady(request_fps
 		return
 	}
 	
-	dev_TooltipAutoClear(Format("chji_CheckiPadRecordingReady OK."))
+	dev_TooltipAutoClear(Format("chji_CheckiOSRecordingReady OK."))
 
 }
 
@@ -645,9 +639,14 @@ chji_CheckSystemHealth()
 ;
 ; [2020-03-13] Limitation: This ahk code does not work well on a hybrid DPI-scaling multi-monitor machine.
 ; Workaround, move your bandicam window to the 100% DPI monitor.
-;
+
+#If IsWinClassExist("Bandicam2.x") ; Bandicam 4.x also use this winclass name
+^F1:: Bcam4_ShowScenarioMenu()
+#If ; IsWinClassExist("Bandicam2.x")
 
 #If IsWinClassActive("Bandicam2.x") ; Bandicam 4.x also use this winclass name
+
+F1:: Bcam4_ShowScenarioMenu()
 
 Bcam4_Init()
 {
@@ -660,10 +659,23 @@ Bcam4_Init()
 	Menu, Bcam_Scenario, Add, % "软件演示录屏（同时录制我的声音） 10 or 12fps", Bcam4_VerifyNetMeeting_10or12fps
 	Menu, Bcam_Scenario, Add, % "单纯录屏（无麦） 24fps", Bcam4_VerifyMotionVideo_24fps
 	Menu, Bcam_Scenario, Add, % "单纯录屏（无麦） 10 or 12fps", Bcam4_VerifyMotionVideo_10or12fps
+	
+	Menu, Bcam_Scenario, Add ;separator
+	Menu, Bcam_Scenario, Add, % "Reflector 2 录屏布局, iPhone 6s (375*672) 10fps", Bcam4_ReflectorLayout_iPhone6s_10fps
+	Menu, Bcam_Scenario, Add, % "Reflector 2 录屏布局, iPad 竖屏 (600*800) 10fps", Bcam4_ReflectorLayout_iPad_10fps
 }
 
 Bcam4_null()
 {
+}
+
+Bcam4_ReflectorLayout_iPhone6s_10fps()
+{
+	chji_CheckiOSRecordingReady(375, 672, 10)
+}
+Bcam4_ReflectorLayout_iPad_10fps()
+{
+	chji_CheckiOSRecordingReady(600, 800, 10)
 }
 
 Bcam4_ReadOption(optname)
@@ -672,7 +684,6 @@ Bcam4_ReadOption(optname)
 	return retval
 }
 
-F1:: Bcam4_ShowScenarioMenu()
 Bcam4_ShowScenarioMenu()
 {
 	Menu, Bcam_Scenario, Show
