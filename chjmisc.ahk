@@ -824,3 +824,20 @@ PasteImageToFastStone()
 
 #If ; dev_IsExeActive("FSCapture.exe")
 
+
+
+;==========================================================================
+; Navicat (no custom hotkey feature)
+;==========================================================================
+#If dev_IsExeActive("navicat.exe")
+
+^w:: DisableCtrlW()
++^w:: DisableCtrlW()
+DisableCtrlW()
+{
+	; Ctrl+W would close current floating window, not good, so disable it.
+	dev_TooltipAutoClear("Ctrl+W closing Navicat window disabled by AutoHotkey.")
+}
+
+#If ;  dev_IsExeActive("navicat.exe")
+
