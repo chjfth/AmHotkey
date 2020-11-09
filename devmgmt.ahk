@@ -14,14 +14,7 @@ return ; End of auto-execute section.
 
 Is_mmc_window()
 {
-	WinGet, Awinid, ID, A ; cache active window unique id
-	WinGet, exepath, ProcessPath, ahk_id %Awinid%
-		; typically, C:\Windows\System32\mmc.exe
-	
-	if(StrIsEndsWith(exepath, "mmc.exe"))
-		return true
-	else
-		return false
+	return dev_IsExeActive("mmc.exe")
 }
 
 

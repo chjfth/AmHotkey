@@ -2656,6 +2656,34 @@ dev_GetHwndByExepath(exepath)
 	return None
 }
 
+dev_IsExeActive(exefile)
+{
+	; exefilename sample :
+	; 	"notepad.exe"
+	; or 
+	;   "D:\portableapps\MPC-HC-Portable\App\MPC-HC\mpc-hc.exe"
+	
+	WinGet, Awinid, ID, A ; cache active window unique id
+	WinGet, exepath, ProcessPath, ahk_id %Awinid%
+
+	if(InStr(exefile, "\"))
+	{
+		; consider exefile as fullpath, need exact match
+		if(exepath==exefile)
+			return true
+		else
+			return false
+	}
+	else
+	{
+		; consider exefile as filenam only, match only final component.
+		if( StrIsEndsWith(exepath, "\" . exefilenam) )
+			return true
+		else
+			return false
+	}
+}
+
 dev_StrRepeat(string, times)
 {
     loop % times

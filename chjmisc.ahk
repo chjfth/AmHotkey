@@ -808,19 +808,8 @@ Bcam4_verifyRecordingParams(want_mic, fps:=0)
 ; FastStone Capture App hotkey redefinition.
 ;==========================================================================
 
-FSCapture_IsWinActive()
-{
-	WinGet, Awinid, ID, A ; cache active window unique id
-	WinGet, exepath, ProcessPath, ahk_id %Awinid%
 
-	if( StrIsEndsWith(exepath, "FSCapture.exe") )
-		return true
-	else
-		return false
-}
-
-
-#If FSCapture_IsWinActive()
+#If dev_IsExeActive("FSCapture.exe")
 
 PasteImageToFastStone()
 {
@@ -833,5 +822,5 @@ PasteImageToFastStone()
 ; I use Ctrl+Alt+V to execute File -> Import from Clipboard(default to Ctrl+Shift+V)
 ^!v:: PasteImageToFastStone()
 
-#If ; FSCapture_IsWinActive()
+#If ; dev_IsExeActive("FSCapture.exe")
 

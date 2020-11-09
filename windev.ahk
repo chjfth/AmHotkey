@@ -94,10 +94,10 @@ VS2010_IsActive()
 	WinGet, Awinid, ID, A ; cache active window unique id
 	WinGetClass, class, ahk_id %Awinid%
 	WinGetTitle, title, ahk_id %Awinid%
-	WinGet, exepath, ProcessPath, ahk_id %Awinid%
+;	WinGet, exepath, ProcessPath, ahk_id %Awinid%
 	
 	; ~= means regex match(can be used as substring match)
-	if( class~="^HwndWrapper" and title~="Microsoft Visual Studio" and exepath~="devenv.exe$")
+	if( class~="^HwndWrapper" and title~="Microsoft Visual Studio" and dev_IsExeActive("devenv.exe"))
 		return true
 	else
 		return false
@@ -712,23 +712,23 @@ NumpadMult:: Send ^{PgDn}   ; TabsStudio.Connect.NavigateToNextTab
 
 ; ################ JetBrains IDE #################
 
-JetBrainsIDE_IsActive() 
-{
-	WinGet, Awinid, ID, A ; cache active window unique id
-	WinGetClass, class, ahk_id %Awinid%
-	WinGet, exepath, ProcessPath, ahk_id %Awinid%
-
-	if( StrIsEndsWith(exepath, "pycharm64.exe") )
-		return true
-	else
-		return false
-}
-
-#If JetBrainsIDE_IsActive()
+;JetBrainsIDE_IsActive() 
+;{
+;	WinGet, Awinid, ID, A ; cache active window unique id
+;	WinGetClass, class, ahk_id %Awinid%
+;	WinGet, exepath, ProcessPath, ahk_id %Awinid%
+;
+;	if( StrIsEndsWith(exepath, "pycharm64.exe") )
+;		return true
+;	else
+;		return false
+;}
+;
+#If dev_IsExeActive("pycharm64.exe")
 
 NumpadDiv::  Send ^![   ; Select previous tab
 NumpadMult:: Send ^!]   ; Select next tab
 
 
-#If ;JetBrainsIDE_IsActive
+#If ;dev_IsExeActive("pycharm64.exe")
 

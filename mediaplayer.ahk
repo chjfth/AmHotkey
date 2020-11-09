@@ -925,13 +925,15 @@ _MPC_timer_EnableAOT()
 
 MpcAot_IsActive()
 {
-	WinGet, Awinid, ID, A ; cache active window unique id
-	WinGet, exepath, ProcessPath, ahk_id %Awinid%
-	
-	if(exepath==g_mpcaot_exepath)
-		return true
-	else
-		return false
+	return dev_IsExeActive(g_mpcaot_exepath)
+
+;	WinGet, Awinid, ID, A ; cache active window unique id
+;	WinGet, exepath, ProcessPath, ahk_id %Awinid%
+;	
+;	if(exepath==g_mpcaot_exepath)
+;		return true
+;	else
+;		return false
 }
 
 #If MpcAot_IsActive()
