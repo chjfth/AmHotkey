@@ -2677,7 +2677,7 @@ dev_IsExeActive(exefile)
 	else
 	{
 		; consider exefile as filenam only, match only final component.
-		if( StrIsEndsWith(exepath, "\" . exefilenam) )
+		if( StrIsEndsWith(exepath, "\" . exefile) )
 			return true
 		else
 			return false
