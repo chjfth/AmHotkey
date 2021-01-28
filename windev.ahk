@@ -7,6 +7,8 @@ global g_isNavibackTriggered := false
 
 MSHV22_DefineHotkeys()
 
+chj_LINQPadInit()
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 return ; End of auto-execute section.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -732,3 +734,21 @@ NumpadMult:: Send ^!]   ; Select next tab
 
 #If ;dev_IsExeActive("pycharm64.exe")
 
+
+;==============================================================
+; LINQPad 5 & 6
+;==============================================================
+
+
+#If IsWinTitleMatchRegex("^LINQPad (5|6)")
+
+^p:: Send ^+{space} ; List parameters
+^l:: Send ^kl       ; List members
+
+#If
+
+
+chj_LINQPadInit()
+{
+	QSA_DefineActivateGroupFlex_Caps("l", QSA_NO_WNDCLASS, QSA_NO_WNDCLS_REGEX, "^LINQPad (5|6)", "LINQPad")
+}

@@ -12,6 +12,7 @@ global PREFIX_REGEX := "REGEX_" ; const // No longer needed.
 
 global QSA_NO_SUFFIXKEY := ""
 global QSA_NO_WNDCLASS := ""
+global QSA_NO_WNDCLS := ""
 global QSA_NO_WNDCLS_REGEX := ""
 global qsa_dbgfile := "qsa_dbgfile.txt"
 
