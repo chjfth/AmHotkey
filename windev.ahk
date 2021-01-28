@@ -744,6 +744,11 @@ NumpadMult:: Send ^!]   ; Select next tab
 
 ^p:: Send ^+{space} ; List parameters
 ^l:: Send ^kl       ; List members
+^m:: Send ^kl       ; List members
+
+NumpadDiv::  Send ^{Pgup}    ; Previous Tab
+NumpadMult:: Send ^{Pgdn}    ; Next Tab
+
 
 #If
 
