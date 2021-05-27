@@ -115,6 +115,19 @@ dev_CheckInfo()
 	ControlGetFocus, focusNN, ahk_id %Awinid%
 	ControlGet, focus_hctrl, HWND, , %focusNN%, ahk_id %Awinid%
 	
+	x_end_ := x + w
+	y_end_ := y + h
+	
+	caRect := dev_WinGetClientAreaPos(Awinid)
+	; if (caRect==null) ...
+	;	MsgBox, % "caRect==null"
+	caLeft := caRect.Left
+	caTop := caRect.top
+	caRight := caRect.right
+	caBottom := caRect.bottom
+	caWidth := caRight - caLeft
+	caHeight := caBottom - caTop
+	
 	CoordMode, Mouse, Screen
 	MouseGetPos, mxScreen, myScreen
 	
@@ -129,7 +142,9 @@ dev_CheckInfo()
 	(
 The Active window class is "%class%" (Hwnd=%Awinid%)
 Title is "%title%"
-Position: x=%x% , y=%y% , width=%w% , height=%h%
+Position  : X ( %x% ~ %x_end_% ), Y ( %y% ~ %y_end_% ), size( %w% , %h% )
+
+Client area: X ( %caLeft% ~ %caRight% ), Y ( %caTop% ~ %caBottom% ), size( %caWidth% , %caHeight% )
 
 Current focused classnn: %focusNN%
 Current focused hctrl: ahk_id=%focus_hctrl%
@@ -337,6 +352,30 @@ Launch_AU3Spy()
 		WinActivate, %winspy_class%
 		WinWaitActive, %winspy_class%
 	}
+}
+
+dev_WinGetClientAreaPos(WinId)
+{
+	; https://www.autohotkey.com/boards/viewtopic.php?p=257561&sid=d2327857875a0de35c9281ab43c6a868#p257561
+	
+	VarSetCapacity(RECT, 16, 0)
+	if !DllCall("user32\GetClientRect", Ptr,WinId, Ptr,&RECT)
+		return null
+	if !DllCall("user32\ClientToScreen", Ptr,WinId, Ptr,&RECT)
+		return null
+	
+	Win_Client_X := NumGet(&RECT, 0, "Int")
+	Win_Client_Y := NumGet(&RECT, 4, "Int")
+	Win_Client_W := NumGet(&RECT, 8, "Int")
+	Win_Client_H := NumGet(&RECT, 12, "Int")
+
+	r := {}
+	r.left := Win_Client_X
+	r.right := Win_Client_X + Win_Client_W
+	r.top := Win_Client_Y
+	r.bottom := Win_Client_Y + Win_Client_H
+	
+	return r
 }
 
 Get_HCtrlFromClassNN(classnn, wintitle)
