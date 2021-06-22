@@ -106,6 +106,21 @@ return
 dev_CheckActiveWindowInfo()
 {
 	tooltip
+	Awinid := dev_ActivateLastSeenWindow()
+	if(!Awinid)
+	{
+		dev_MsgBoxInfo( "No active window can be found. Use hotkey Win+Alt+C instead." )
+	}
+	dev_CheckWindowInfo(Awinid)
+}
+
+dev_ActivateLastSeenWindow()
+{
+	; Usage scenario: 
+	; When a Systray Autohotkey menu item wants to operate current active window, 
+	; there may not be a active window(``WinGet, Awinid, ID, A`` reports Awinid==null),
+	; so we can use this function to bring up the last seen active window.
+
 	WinGet, Awinid, ID, A ; cache active window unique id
 	
 	if(!Awinid)
@@ -119,14 +134,9 @@ dev_CheckActiveWindowInfo()
 				break
 			Sleep, 100
 		}
-		
-		if(!Awinid)
-		{
-			dev_MsgBoxInfo( "No active window can be found. Use hotkey Win+Alt+C instead." )
-		}
 	}
-
-	dev_CheckWindowInfo(Awinid)
+	
+	return Awinid
 }
 
 dev_CheckWindowInfo(Awinid)

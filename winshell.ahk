@@ -47,18 +47,16 @@ CalPPI_Init() ; Call it
 ; Calculate monitor PPI globals <<<
 
 ; Systray menu-items
-global winshell_menu_WindowOp := "Daily window op"
-	global winshell_menuitem_CheckActiveWindowInfo := "Check active window info"
+global winshell_menutext_WindowOp := "Daily window op"
+	global winshell_menutext_CheckActiveWindowInfo := "Check active window info"
+	global winshell_menutext_ActiveWindowDwmOff := "Active-window DWM rendering off"
+	global winshell_menutext_ActiveWindowDwmOn  := "Active-window DWM rendering on"
 
-Winshell_WindowOp_Init()
+winshell_WindowOp_Init()
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 return ; End of auto-execute section.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-
-
-
 
 
 
@@ -803,20 +801,70 @@ ctlmove_Border(whichb, direction)
 	ControlMove, %g_ctlmove_classnn%, %x%, %y%, %w%, %h%, %g_ctlmove_hwndtop%
 }
 
+
+
+winshell_SetDwmNcRendering(winid, on_or_off)
+{
+	DWMWA_NCRENDERING_POLICY := 2
+	
+	; enum DWMNCRENDERINGPOLICY
+	DWMNCRP_DISABLED := 1
+	DWMNCRP_ENABLED := 2
+	set_value := on_or_off ? DWMNCRP_ENABLED : DWMNCRP_DISABLED
+	
+	ret := DllCall("DwmApi.dll\DwmSetWindowAttribute"
+		, "Ptr", winid
+		, "Uint", DWMWA_NCRENDERING_POLICY
+		, "Uint*", set_value
+		, "Uint", 4)
+	
+	if(ret==0)
+	{
+		info := Format("DwmSetWindowAttribute({}, DWMWA_NCRENDERING_POLICY, ...) turned {}"
+			, winid
+			, on_or_off ? "ON" : "OFF")
+		dev_TooltipAutoClear(info, 5000)
+	}
+	else
+	{
+		dev_MsgBoxError("DwmSetWindowAttribute() execution error.")
+	}
+}
+
+winshell_SetDwmNcRendering_ActiveWindow(on_or_off)
+{
+	Awinid := dev_ActivateLastSeenWindow()
+	
+	if(Awinid)
+		winshell_SetDwmNcRendering(Awinid, on_or_off)
+	else
+		dev_MsgBoxInfo( "No active window can be found. Nothing to do." )
+}
+
 ;==============================================================
 ; Daily Window operations
 ;==============================================================
 
-Winshell_WindowOp_Init()
+winshell_WindowOp_Init()
 {
 	;
 	; Define a set of AHK systray menu items:
 	;
 
 	; Define submenu item list:
-	Menu, Winshell_Submenu, add, %winshell_menuitem_CheckActiveWindowInfo%, dev_CheckActiveWindowInfo
+	Menu, winshell_menuvar_WindowOp, add, %winshell_menutext_CheckActiveWindowInfo%, dev_CheckActiveWindowInfo
+	;
+	fn := Func("winshell_SetDwmNcRendering_ActiveWindow").Bind(false)
+	Menu, winshell_menuvar_WindowOp, add, %winshell_menutext_ActiveWindowDwmOff%, %fn%
+	;
+	fn := Func("winshell_SetDwmNcRendering_ActiveWindow").Bind(true)
+	Menu, winshell_menuvar_WindowOp, add, %winshell_menutext_ActiveWindowDwmOn%, %fn%
+
+	; Finally, Attach submenu to main menu
+	Menu, tray, add, %winshell_menutext_WindowOp%, :winshell_menuvar_WindowOp
 	
-	; Attach submenu to main menu
-	Menu, tray, add, %winshell_menu_WindowOp%, :Winshell_Submenu
-	
+}
+winshell_popup_WindowOpMenu()
+{
+	Menu, winshell_menuvar_WindowOp, Show
 }
