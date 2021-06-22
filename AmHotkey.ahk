@@ -102,11 +102,35 @@ return
 #!r:: Reload
 
 ; Win+Alt+C : Check Window class
-!#c:: dev_CheckInfo()
-dev_CheckInfo()
+!#c:: dev_CheckActiveWindowInfo()
+dev_CheckActiveWindowInfo()
 {
 	tooltip
 	WinGet, Awinid, ID, A ; cache active window unique id
+	
+	if(!Awinid)
+	{
+		SendInput !{TAB} 
+		
+		Loop, 10
+		{
+			WinGet, Awinid, ID, A
+			if(Awinid)
+				break
+			Sleep, 100
+		}
+		
+		if(!Awinid)
+		{
+			dev_MsgBoxInfo( "No active window can be found. Use hotkey Win+Alt+C instead." )
+		}
+	}
+
+	dev_CheckWindowInfo(Awinid)
+}
+
+dev_CheckWindowInfo(Awinid)
+{
 	WinGetClass, class, ahk_id %Awinid%
 	WinGetTitle, title, ahk_id %Awinid%
 	WinGetPos, x,y,w,h, ahk_id %Awinid%
@@ -142,9 +166,9 @@ dev_CheckInfo()
 	(
 The Active window class is "%class%" (Hwnd=%Awinid%)
 Title is "%title%"
-Position  : X ( %x% ~ %x_end_% ), Y ( %y% ~ %y_end_% ), size( %w% , %h% )
+Position  : X ( %x% ~ %x_end_% ), Y ( %y% ~ %y_end_% ), size ( %w% x %h% )
 
-Client area: X ( %caLeft% ~ %caRight% ), Y ( %caTop% ~ %caBottom% ), size( %caWidth% , %caHeight% )
+Client area: X ( %caLeft% ~ %caRight% ), Y ( %caTop% ~ %caBottom% ), size ( %caWidth% x %caHeight% )
 
 Current focused classnn: %focusNN%
 Current focused hctrl: ahk_id=%focus_hctrl%

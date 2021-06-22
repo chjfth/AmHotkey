@@ -46,6 +46,12 @@ global g_ppi_LogiX, g_ppi_LogiY ; Gui-assoc
 CalPPI_Init() ; Call it
 ; Calculate monitor PPI globals <<<
 
+; Systray menu-items
+global winshell_menu_WindowOp := "Daily window op"
+	global winshell_menuitem_CheckActiveWindowInfo := "Check active window info"
+
+Winshell_WindowOp_Init()
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 return ; End of auto-execute section.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -797,4 +803,20 @@ ctlmove_Border(whichb, direction)
 	ControlMove, %g_ctlmove_classnn%, %x%, %y%, %w%, %h%, %g_ctlmove_hwndtop%
 }
 
+;==============================================================
+; Daily Window operations
+;==============================================================
 
+Winshell_WindowOp_Init()
+{
+	;
+	; Define a set of AHK systray menu items:
+	;
+
+	; Define submenu item list:
+	Menu, Winshell_Submenu, add, %winshell_menuitem_CheckActiveWindowInfo%, dev_CheckActiveWindowInfo
+	
+	; Attach submenu to main menu
+	Menu, tray, add, %winshell_menu_WindowOp%, :Winshell_Submenu
+	
+}
