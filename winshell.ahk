@@ -44,48 +44,6 @@ global g_ppi_LogiX, g_ppi_LogiY ; Gui-assoc
 
 
 CalPPI_Init() ; Call it
-CalPPI_Init() ; Define it
-{
-	SetFormat, float, 0.8
-
-	; Predefined monitor params array 
-	gar_modelstr := [ "5120,2880,27.0" ; DELL UP2715K (2014)
-		, "3840,2160,27.0"  ; DELL P2715Q 
-		, "3200,1800,13.3"  ; Lenovo Yoga 900
-		, "2560,1440,27.0"  ; DELL U2515H (2014)
-		, "2560,1440,25.0"  ; DELL U2515H (2014)
-		, "1920,1200,24.0"  ; DELL U2412M (2011)
-		, "1920,1080,22.0" 
-		, "1680,1050,20.0"  ; DELL 2007WFP (2006)
-		, "1600,1200,20.1"  ; DELL 2007FP (2006)
-		, "1600,900,19.0" 
-		, "1366,768,15.6" 
-		, "1280,1024,17.0" 
-		, "1280,800,14.0" 
-		, "1024,768,13.0" 
-		, "800,600,12.8" 
-		, "960,640,3.5" ] ; iPhone 4
-
-	gar_models := Object()
-	g_CalppiListlist := ""
-	for index, str in gar_modelstr
-	{
-		StringSplit, num, str , `, ; split comma delimited value
-		w := num1
-		h := num2
-		inch := num3
-		gar_models.Insert({"w":w, "h":h, "inch":inch})
-
-		listitem := w . "x" h . " , " . inch . " inch"
-		g_CalppiListlist .= listitem . "|"
-		
-		if(A_ScreenWidth==w and A_ScreenHeight==h)
-		{
-			g_CalppiDropboxSel := index
-		}
-	}
-}
-
 ; Calculate monitor PPI globals <<<
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -136,6 +94,50 @@ AppsKey & e::
 		Run rundll32 sysdm.cpl`,EditEnvironmentVariables
 	}
 return
+
+
+CalPPI_Init() ; Define it
+{
+	SetFormat, float, 0.8
+
+	; Predefined monitor params array 
+	gar_modelstr := [ "5120,2880,27.0" ; DELL UP2715K (2014)
+		, "3840,2160,27.0"  ; DELL P2715Q 
+		, "3200,1800,13.3"  ; Lenovo Yoga 900
+		, "2560,1440,27.0"  ; DELL U2515H (2014)
+		, "2560,1440,25.0"  ; DELL U2515H (2014)
+		, "1920,1200,24.0"  ; DELL U2412M (2011)
+		, "1920,1080,22.0" 
+		, "1680,1050,20.0"  ; DELL 2007WFP (2006)
+		, "1600,1200,20.1"  ; DELL 2007FP (2006)
+		, "1600,900,19.0" 
+		, "1366,768,15.6" 
+		, "1280,1024,17.0" 
+		, "1280,800,14.0" 
+		, "1024,768,13.0" 
+		, "800,600,12.8" 
+		, "960,640,3.5" ] ; iPhone 4
+
+	gar_models := Object()
+	g_CalppiListlist := ""
+	for index, str in gar_modelstr
+	{
+		StringSplit, num, str , `, ; split comma delimited value
+		w := num1
+		h := num2
+		inch := num3
+		gar_models.Insert({"w":w, "h":h, "inch":inch})
+
+		listitem := w . "x" h . " , " . inch . " inch"
+		g_CalppiListlist .= listitem . "|"
+		
+		if(A_ScreenWidth==w and A_ScreenHeight==h)
+		{
+			g_CalppiDropboxSel := index
+		}
+	}
+}
+
 
 
 ;==============================================================
