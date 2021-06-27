@@ -1910,7 +1910,7 @@ devui_ChangeWindowPosition()
 	textpreset := % "" . x . "," . y . "," . x2 . "," . y2
 	
 	WinGetClass, winclass, A
-	InputBox, size_xy , Autohotkey script prompt, 
+	InputBox, size_xy , % "Autohotkey move window", 
 	(
 Assign new position and size for current active window. For example, 
 
@@ -1977,7 +1977,7 @@ Current window(%winclass%) at <%x%,%y%> , size [%width%,%height%]
 }
 
 !#/:: ; Interactively change g_winmove_unit
-	InputBox g_winmove_unit, Autohotkey script prompt, Input new window move unit in pixels, , , , , , , , %g_winmove_unit%
+	InputBox g_winmove_unit, Autohotkey move step, Input new window move unit in pixels, , , , , , , , %g_winmove_unit%
 return
 
 
