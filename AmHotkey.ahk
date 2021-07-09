@@ -57,7 +57,7 @@ global g_arAutoexecLabels := []
 global g_dictAutoexecExistingFname := {} ; for checking duplicate
 global g_customize_ahk := "customize.ahk"
 
-
+; Constant used in dev_MsgBoxYesNo() etc.
 global msgboxoption_Ok := 0
 global msgboxoption_OkCancel := 1
 global msgboxoption_YesNo := 4
@@ -172,7 +172,7 @@ dev_CheckWindowInfo(Awinid)
 	else
 		classnn := ""
 	
-	MsgBox, % msgboxoption_IconInfo, ,
+	info =
 	(
 The Active window class is "%class%" (Hwnd=%Awinid%)
 Title is "%title%"
@@ -191,6 +191,7 @@ Mouse position: In-window: (%mxWindow%,%myWindow%)  `; In-screen: (%mxScreen%,%m
 ClassNN under mouse is "%classnn%"
 hwndCtrl under mouse is "%hctrl_undermouse%"
 	)
+	MsgBox, % msgboxoption_IconInfo, , %info%
 }
 
 

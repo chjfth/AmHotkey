@@ -82,6 +82,9 @@ global km_EasymouseSouthKey := "End"
 global km_EasymouseSouth_radiosel
 global km_EasymouseSouth_fraction := "0.7"
 
+; Systray menu-items
+global km_menutext_MouseWiggle := "Mouse wiggle"
+
 km_AddSystryMenuItem()
 
 km_LoadIni()
@@ -682,8 +685,78 @@ km_RestorePinPos(speed:=3)
 
 ; ^NumLock::  km_RestorePinPos() ; strange! ^NumLock does not response, but +NumLock is ok.
 
+;===========================================================================
+; Mouse wiggle.
+; Once started, the mouse will wiggle back and forth every one second.
+; Purpose: Wiggling your mouse will make Youtube online player keep showing playback progress bar.
+;===========================================================================
+
+km_Start_MouseWiggle()
+{
+    dev_TooltipAutoClear("Start mouse wiggle ...")
+    SetTimer, km_MouseWiggleTimer, 1000
+    km_MouseWiggleTimer()
+}
+
+km_Stop_MouseWiggle()
+{
+    dev_TooltipAutoClear("Stop mouse wiggle.")
+    SetTimer, km_MouseWiggleTimer, Off
+}
+
+km_MouseWiggleTimer()
+{
+    static xoff := -2
+    xoff := 0 - xoff
+    MouseMove, xoff, 0, ,R
+}
+
+km_menu_ToggleMouseWiggle()
+{
+	static s_prompted := false
+	static s_on_or_off := false
+	
+	if(s_on_or_off==false)
+	{
+		s_on_or_off := true
+	
+		Menu, tray, check, %km_menutext_MouseWiggle%
+		
+		km_Start_MouseWiggle()
+	
+		if(!s_prompted)
+		{
+			s_prompted := true
+			info = 
+			(
+The mouse will wiggle back and forth every one second from now on.
+
+If you want to simulate constant mouse moving activity from a human user, you can use this feature.
+
+You can Start/Stop this behavior from AmHotkey tray menu item.
+			)
+			dev_MsgBoxInfo(info)
+		}
+	}
+	else
+	{
+		s_on_or_off := false
+		
+		Menu, tray, check, %km_menutext_MouseWiggle%
+		
+		km_Stop_MouseWiggle()
+	}
+}
+
+
+; ============== Final Init ===============
 km_AddSystryMenuItem()
 {
 	Menu, tray, add  ; Creates a separator line.
 	Menu, tray, add, Configure Keymouse, km_DoGuiConfig  ; Creates a new menu item.
+	
+	; ; ;
+	
+	Menu, tray, add, %km_menutext_MouseWiggle%, km_menu_ToggleMouseWiggle
 }
+
