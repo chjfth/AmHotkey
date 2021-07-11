@@ -83,9 +83,9 @@ global km_EasymouseSouth_radiosel
 global km_EasymouseSouth_fraction := "0.7"
 
 ; Systray menu-items
-global km_menutext_MouseWiggle := "Mouse wiggle"
+global km_menutext_MouseWiggle := "Mouse wiggle enabled"
 
-km_AddSystryMenuItem()
+km_AddSystrayMenuItem()
 
 km_LoadIni()
 
@@ -744,7 +744,7 @@ Note on high-DPI monitor: If you tell Windows to set monitor-DPI-scaling >100`%,
 	{
 		s_on_or_off := false
 		
-		Menu, tray, check, %km_menutext_MouseWiggle%
+		Menu, tray, uncheck, %km_menutext_MouseWiggle%
 		
 		km_Stop_MouseWiggle()
 	}
@@ -752,7 +752,7 @@ Note on high-DPI monitor: If you tell Windows to set monitor-DPI-scaling >100`%,
 
 
 ; ============== Final Init ===============
-km_AddSystryMenuItem()
+km_AddSystrayMenuItem()
 {
 	Menu, tray, add  ; Creates a separator line.
 	Menu, tray, add, Configure Keymouse, km_DoGuiConfig  ; Creates a new menu item.
