@@ -38,7 +38,5 @@ NumpadLeft::PgDn
 NumpadDel::NumLock
 NumpadDot::NumLock
 
-;Home::Del
-
 
 
