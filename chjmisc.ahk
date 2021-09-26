@@ -518,9 +518,9 @@ chji_CheckiOSRecordingReady(record_width:=600, record_height:=800, request_fps:=
 	}
 	
 	WinActivate, ahk_id %hwndBandicamMain%
-	WinWaitActive, ahk_id %hwndBandicamMain%
 	
-	if ErrorLevel {
+	isok := dev_WinWaitActive_with_timeout("ahk_id " . hwndBandicamMain)
+	if(!isok) {
 		dev_MsgBoxError("Unexpect: Bandicam main-window can not be activated.")
 		return
 	}

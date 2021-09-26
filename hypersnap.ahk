@@ -45,8 +45,8 @@ Hs7_EditText_DropdownColorPicker()
 	; So, I have to use mouse(driven by my ahk script) for color selection; and not so bad,
 	; you can use Numpad keys to navigate cell-by-cell then click to select.
 	; (todo) -- g_MouseNudgeUnitAM
-	WinWaitActive, %color_picker_title%, , 1
-	If ErrorLevel {
+	isok := dev_WinWaitActive_with_timeout(color_picker_title)
+	If(!isok) {
 		MsgBox, Unexpected! Color palette pop-up not detected.
 		return false
 	}
@@ -165,8 +165,8 @@ Hs7_Main_DropdownColorPicker(is_foreground)
 	else 
 		Hs7_ClickDrawbarCell(2.8, 12.6)
 	
-	WinWaitActive, %color_picker_title%, , 1
-	if ErrorLevel {
+	isok := dev_WinWaitActive_with_timeout(color_picker_title)
+	if(!isok) {
 		MsgBox, Unexpected! Color picker pop-up not detected.
 		return false
 	}

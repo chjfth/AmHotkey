@@ -79,25 +79,34 @@ AppsKey & y:: Run control.exe sysdm.cpl
 AppsKey & x:: run rundll32.exe shell32.dll`,Control_RunDLL hotplug.dll
 
 ; Edit Env-var dialog
-AppsKey & e:: 
+AppsKey & e:: winshell_BringUpEnvvarEditor()
+winshell_BringUpEnvvarEditor()
+{
 	if IsWin5x() ; A_OSVersion in WIN_2003, WIN_XP, WIN_2000
 	{
+		dlgbox_title := "System properties"
 		Run rundll32 shell32.dll`,Control_RunDLL sysdm.cpl`,`,3
-		WinWaitActive, System Properties,, 2
-		if not ErrorLevel
-		{
-			SendInput n
-		}
-		else
-		{
-			MsgBox, Note: Autohotkey cannot bring up "System properties" dialog box.
-		}
 	}
 	else 
 	{
+		dlgbox_title := "Environment Variables"
 		Run rundll32 sysdm.cpl`,EditEnvironmentVariables
 	}
-return
+
+	isok := dev_WinWaitActive_with_timeout(dlgbox_title, "", 2) ;WinWaitActive, % dlgbox_title,, 2
+	if(!isok)
+	{
+		MsgBox, % "Error: Autohotkey cannot bring up Envvar-editing dialog box."
+		return
+	}
+	
+	if IsWin5x()
+	{
+		; We have just brought up the "System Properties" dialog box.
+		; We need to further click [Environment Variables] button.
+		SendInput n
+	}
+}
 
 
 CalPPI_Init() ; Define it

@@ -456,8 +456,8 @@ cmdc_SetNewPrompt(cmd_width)
 	cmdwin := "ahk_class ConsoleWindowClass"
 	WinActivate, % cmdwin
 
-	WinWaitActive, %cmdwin%, , 1
-	if ErrorLevel
+	isok := dev_WinWaitActive_with_timeout(cmdwin)
+	if(!isok)
 	{
 	    MsgBox, % "No CMD windows can be activated, so nothing to do."
 	    return

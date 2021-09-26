@@ -389,6 +389,19 @@ Launch_AU3Spy()
 	}
 }
 
+dev_WinWaitActive_with_timeout(wintitle, wintext:="", timeout_sec:=1)
+{
+	WinWaitActive, %wintitle%, %wintext%, %timeout_sec%
+	if not ErrorLevel
+	{
+		return true
+	}
+	else
+	{
+		return false
+	}
+}
+
 dev_WinGetClientAreaPos(WinId)
 {
 	; https://www.autohotkey.com/boards/viewtopic.php?p=257561&sid=d2327857875a0de35c9281ab43c6a868#p257561
