@@ -159,6 +159,101 @@ chj_DefineQuickSwitchApps() ; as template for actual users
 }
 
 
+get_dirfilecount(file_pattern)
+{
+	count := 0
+	Loop, Files, %file_pattern%
+	{
+		count += 1
+	}
+	;MsgBox, %count%
+	return count
+}
+
+chj_StartMultiPageScreenGrabber(screenshot_hotkey, pgdn_hotkey, image_dir, pages, pgdn_wait_millisec:=500)
+{
+	; PURPOSE:
+	; Grab screen content of each page of a ebook/doc, and save each screen shot to an image file.
+	; So that, we steal the ebook/doc for offline viewing. After the page images are saved
+	; (e.g. as png files), we can then merge them into a PDF file and OCR it for later convenient 
+	; reading.
+	;
+	; For the above process to work, we need two additional tool/software:
+	; (1) a ebook/doc reading software(e.g. Foxit PDF reader 9.7).
+	; (2) a screen grabbing software(e.g. FastStone Capture 9.7). On pressing a global hotkey,
+	;     it should grab a specific screen region and save it to file with auto-naming.
+	;
+	; PARAMETERS:
+	; screenshot_hotkey : 
+	;		This function will `Send` this hotkey to trigger screen grabbing. 
+	;		This is a string, for example, "{F11}" .
+	; pgdn_hotkey :
+	;		The hotkey to trigger ebook reader page down.
+	; image_dir :
+	;		This function need to know where does screen-grabbing software store grabbed images,
+	;		bcz this function will check this dir to know whether a new image file is generated.
+	; pages :
+	;		How many pages would you like to turn.
+	;		Hint: You can pass in some more pages, to workaround casual "pgdn not responding"
+	;		cases. Redundant tail pages is not a problem, bcz we can easily delete them.
+	; pgdn_wait_millisec :
+	;		How many millisec to wait for ebook reader's page-down action.
+	;		Normally, 500ms should be enough.
+	;
+	; USAGE NOTE:
+	; User should try to keep ebook reader software as foreground window, so that pgdn_hotkey 
+	; works normally.
+	;
+	; To break a freezing run, try AHK reload (Win+Alt+R).
+	;
+	; TODO:
+	; * We cannot know whether ebook reader has successfully respond to pgdn_hotkey.
+	;	Maybe we should add screen content comparing or image file content comparing to know that.
+
+	WinGet, winid, ID, A
+
+	pattern := image_dir . "\*.*"
+	count_base := get_dirfilecount(pattern)
+	count_prev := count_base
+	
+	Loop, % pages
+	{
+		dev_TooltipAutoClear("Done grabbing pages: " . count_prev-count_base)
+
+		Send %screenshot_hotkey% ; Let FSCapture repeat last capture
+		
+		; wait until a new file appears
+		Loop
+		{
+			Sleep, 500 
+			count := get_dirfilecount(pattern)
+			if(count!=count_prev)
+			{
+				count_prev := count
+				break ; a new file appears
+			}
+
+			dev_TooltipAutoClear(Format("Retrying {1} for page #{2}", A_Index, count_prev-count_base+1))
+		}
+
+		; FSCapture can steal foreground window state, so we have to 
+		; wait for ebook-reader software regaining foreground state.
+		;
+		isok := dev_WinWaitActive_with_timeout("ahk_id " . winid, "", 1)
+		if(!isok)
+		{
+			MsgBox, % "Lost Foxit foreground window. Stop."
+			return
+		}
+		
+		Send %pgdn_hotkey%
+		Sleep, %pgdn_wait_millisec% ; wait for ebook-reader doing page-down/scrolling.
+	}
+	
+	MsgBox, % "chj_StartMultiPageScreenGrabber() done!"
+}
+
+
 ;==============================================================================
 ; Clipcache 3.4
 ;==============================================================================
