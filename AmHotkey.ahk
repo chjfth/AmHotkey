@@ -2845,6 +2845,15 @@ dev_XYinRect(x, y, rect_)
 }
 
 
+dev_TooltipDisableCloseWindow(msg_prefix)
+{
+	; In many applications, Ctrl+W etc would close current window/tab, and I hate it. 
+	; So call this function to hint that.
+	; msg_prefix is some hotkey names like "Ctrl+W" or "Ctrl+Shift+W".
+	dev_TooltipAutoClear(msg_prefix . " closing window/tab is disabled by AmHotkey.")
+}
+
+
 ;==============================================================================
 #Include *i _more_includes_.ahk ;This should be the final statement of this ahk
 ;==============================================================================

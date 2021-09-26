@@ -366,6 +366,10 @@ foxit_SwitchTo_SelectAnnotation_mode()
 #If foxit_IsWinExist()
 
 
+
+^w:: dev_TooltipDisableCloseWindow("Ctrl+W")
+^q:: dev_TooltipDisableCloseWindow("Ctrl+Q")
+
 ; NumpadUp:: foxit_ScrollView("up")
 ; NumpadDown:: foxit_ScrollView("down")
 

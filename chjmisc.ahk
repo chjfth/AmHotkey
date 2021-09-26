@@ -831,13 +831,9 @@ PasteImageToFastStone()
 ;==========================================================================
 #If dev_IsExeActive("navicat.exe")
 
-^w:: DisableCtrlW()
-+^w:: DisableCtrlW()
-DisableCtrlW()
-{
-	; Ctrl+W would close current floating window, not good, so disable it.
-	dev_TooltipAutoClear("Ctrl+W closing Navicat window disabled by AutoHotkey.")
-}
+^w:: dev_TooltipDisableCloseWindow("Ctrl+W")
++^w:: dev_TooltipDisableCloseWindow("Ctrl+Shift+W")
+
 
 #If ;  dev_IsExeActive("navicat.exe")
 

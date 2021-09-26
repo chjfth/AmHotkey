@@ -44,6 +44,15 @@ IsChromeWindowActive()
 
 #If IsChromeWindowActive()
 
+^w:: dev_TooltipDisableCloseWindow("Ctrl+W")
++^w:: dev_TooltipDisableCloseWindow("Ctrl+Shift+W")
+;
+;^+w:: Chrome_Disable_CtrlShiftW_ClosingWindow()
+;Chrome_Disable_CtrlShiftW_ClosingWindow()
+;{
+;	dev_TooltipAutoClear("AHK: Ctrl+Shift+W is disabled to prevent closing whole Chrome window.")
+;}
+
 F8:: Send ^{PgUp}
 F9:: Send ^{PgDn}
 
@@ -58,11 +67,6 @@ $+^Tab:: Send, % Chrome_kbd_MRUTab_r ? Chrome_kbd_MRUTab_r : "+^{Tab}"
 
 !End:: ClickInActiveWindow(0.5, -60, false) ; try to click into DevTool console so to input new command
 
-^+w:: Chrome_Disable_CtrlShiftW_ClosingWindow()
-Chrome_Disable_CtrlShiftW_ClosingWindow()
-{
-	dev_TooltipAutoClear("AHK: Ctrl+Shift+W is disabled to prevent closing whole Chrome window.")
-}
 
 ; Define a hotkey to "fix" prettify.js generated CF_HTML clipboard content,
 ; so that colored-code pasting into Evernote 5.x have correct line breaks.
