@@ -48,7 +48,11 @@ foxit_ScrollReader(sdir)
 
 foxit_IsWinExist()
 {
-	IfWinExist, ahk_class classFoxitReader
+	if( IsWinClassExist("classFoxitReader") )
+	{
+		return true
+	}
+	else if( IsWinClassExist("classFoxitPhantom") )
 	{
 		return true
 	}
@@ -56,7 +60,6 @@ foxit_IsWinExist()
 	{
 		return false
 	}
-	
 }
 
 foxit_IsWinActive()
@@ -363,9 +366,8 @@ foxit_SwitchTo_SelectAnnotation_mode()
 #If ; foxit_IsAnnoationPropertyWindowActive()
 
 
+
 #If foxit_IsWinExist()
-
-
 
 ^w:: dev_TooltipDisableCloseWindow("Ctrl+W")
 ^q:: dev_TooltipDisableCloseWindow("Ctrl+Q")
@@ -396,7 +398,6 @@ foxit_ScrollView(sdir)
 		}
 	}
 }
-
 
 #If
 
