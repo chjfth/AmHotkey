@@ -150,7 +150,7 @@ MyActivateSingleWindow(suffixkey, winclass, appdesc)
 
 	WinActivate, ahk_class %winclass%
 	isok := dev_WinWaitActive_with_timeout("ahk_class " . winclass, "", 1)
-	If(!ok)
+	If(!isok)
 	{
 		MsgBox, Cannot find a window of %appdesc%
 		return
