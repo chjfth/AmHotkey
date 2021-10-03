@@ -92,7 +92,7 @@ foxit_IsAnnoationPropertyWindowActive()
 		return false
 }
 
-foxit_IsVersion7(wintitle)
+foxit_IsVersion7(wintitle="A")
 {
 	isfound := RegexClassnnFindControlEx(wintitle, "^AfxWnd100su", "", target_classnn)
 	if(isfound)
@@ -169,7 +169,7 @@ foxit_FocusBookmarkPane()
 CapsLock & Right:: foxit_FocusReaderPane()
 foxit_FocusReaderPane()
 {
-	if(foxit_IsVersion7)
+	if(foxit_IsVersion7())
 	{
 		ControlFocusViaRegexClassNNXY("^AfxWnd100su", "^Reader$", 24, 0.5, true, true) 
 			; true, true: will move mouse and click into the pane
