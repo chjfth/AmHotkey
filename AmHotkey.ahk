@@ -2328,13 +2328,13 @@ ControlFocusViaRegexClassNNXY(Cregex, Tregex, xhint, yhint, is_click=true, is_mo
 	, is_xomode=false, is_yomode=false)
 {
 /*
-	Do the following operation the active window:
+	Do the following operation in the active window:
 	1. Find Cregex and Tregex matched child-window(cwin), 
 	2. Get a screen position(target-pos) from xhint and yhint relative to cwin, 
 	3. Set focus to the on-screen window at target-pos (target-window). 
 	   Typically, target-window is another child window of current active window.
 	
-	NOTE: If is_click==false, in quite many case, the target control cannot actually get focus.
+	NOTE: If is_click==false, in quite many cases, the target control cannot actually get focus.
 	So, is_click==true is suggested most of the time, especially when you known the contol is visible.
 */	
 	; 1.

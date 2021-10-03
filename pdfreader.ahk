@@ -31,7 +31,7 @@ return ; End of auto-execute section.
 
 
 ;==============================================================
-; 2015-01-05: Foxit Reader 7 shortcuts
+; 2015-01-05: Foxit Reader 7, 9 shortcuts
 ;==============================================================
 
 foxit_ScrollReader(sdir)
@@ -91,6 +91,16 @@ foxit_IsAnnoationPropertyWindowActive()
 	else
 		return false
 }
+
+foxit_IsVersion7(wintitle)
+{
+	isfound := RegexClassnnFindControlEx(wintitle, "^AfxWnd100su", "", target_classnn)
+	if(isfound)
+		return true
+	else
+		return false
+}
+
 
 #If foxit_IsWinActive()
 
@@ -159,8 +169,15 @@ foxit_FocusBookmarkPane()
 CapsLock & Right:: foxit_FocusReaderPane()
 foxit_FocusReaderPane()
 {
-	ControlFocusViaRegexClassNNXY("^AfxWnd100su", "^Reader$", 24, 0.5, true, true) 
-		; true, true: will move mouse and click into the pane
+	if(foxit_IsVersion7)
+	{
+		ControlFocusViaRegexClassNNXY("^AfxWnd100su", "^Reader$", 24, 0.5, true, true) 
+			; true, true: will move mouse and click into the pane
+	}
+	else
+	{
+		ControlFocusViaRegexClassNNXY("^AfxMDIFrame140su", "", 24, 0.5, true, true) 
+	}
 }
 
 
