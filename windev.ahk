@@ -546,7 +546,7 @@ windbg_CommandInput_hctrl(Awinid:=0)
 	; Note: This is rough. 
 	; Only when input focus is on command-input or command-output, command-input is RICHEDIT50W2 ;
 	; when focus is on some other pane(source window etc), RICHEDIT50W2 is command-output.
-	; This is tricky, but happend to work most of the time, at least on WinDBG 10.0.10240.
+	; This is tricky, but happened to work most of the time, at least on WinDBG 10.0.10240.
 
 	ControlGet, hctrl, HWND, , % "RICHEDIT50W2", ahk_id %Awinid%
 	return hctrl
@@ -582,7 +582,7 @@ windbg_SendCommandAppendTimestamp()
 {
 	WinGet, Awinid, ID, A ; cache active window unique id
 	hCommandInput := windbg_CommandInput_hctrl(Awinid)
-	
+
 	ControlGetFocus, classnn_focus, ahk_id %Awinid%
 	ControlGet, hFocus, HWND, , %classnn_focus% , ahk_id %Awinid%
 	if(!windbg_IsCommandInputFocused(Awinid))
@@ -602,13 +602,36 @@ windbg_SendCommandAppendTimestamp()
 		send {enter} ; relay enter key(windbg will repeat last command)
 		return
 	}
-	; User pressed enter with some command typed in.
-	Send ^{Home}^+{End}{Del} 
-		; using Ctrl+Home, Ctrl+Shift+End so that we can select multiple lines
-;	dev_TooltipAutoClear(">>>" . existing_cmd)
 	
+	
+	; Send current cmd to clipboard, will paste later soon.
+	WinClip.SetText(existing_cmd) 
+	
+	Send ^{Home}^+{End}{Del}
+		; using Ctrl+Home, Ctrl+Shift+End so that we can select multiple lines
+
 	windbg_SendCommentLine()
-	; ControlSetText, ahk_id %hCommandInput%, % existing_cmd ; // ControlSetText does not work with a RichEdit control, sigh
+	
+	; wait until clipboard has our text 
+	Loop, 20
+	{
+		clipped_text := WinClip.GetText()
+		;dev_TooltipAutoClear("clippped: " . clipped_text)
+		
+		if(clipped_text==existing_cmd)
+			break
+		
+		Sleep, 50
+	}
+	
+	if(clipped_text!=existing_cmd)
+	{
+		MsgBox, % "Windev.ahk: Something went wrong! Your just typed windbg command cannot be fetched from clipboard.`n`n" . existing_cmd
+		return
+	}
+	
+	; ControlSetText, ahk_id %hCommandInput%, % existing_cmd ; 
+	; -- ControlSetText does not work with a RichEdit control, sigh. So we have to rely on clipboard.
 	if(WinClip.Paste) {
 		WinClip.Paste(existing_cmd)
 		SendInput {enter}
