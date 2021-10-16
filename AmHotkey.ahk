@@ -1918,12 +1918,12 @@ SetAlwaysOnTopWithTip()
 devui_ChangeWindowPosition()
 {
 	WinGet, Awinid, ID, A ; cache active window unique id
-	WinGetPos x, y, width, height, A
+	WinGetPos x, y, width, height, ahk_id %Awinid%
 	x2 := x + width
 	y2 := y + height
 	textpreset := % "" . x . "," . y . "," . x2 . "," . y2
 	
-	WinGetClass, winclass, A
+	WinGetClass, winclass, ahk_id %Awinid%
 	InputBox, size_xy , % "Autohotkey move window", 
 	(
 Assign new position and size for current active window. For example, 
