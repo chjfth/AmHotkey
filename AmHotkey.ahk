@@ -2771,6 +2771,18 @@ dev_IsExeActive(exefile)
 	}
 }
 
+dev_IsExePathMatchRegex(regex)
+{
+	WinGet, Awinid, ID, A ; cache active window unique id
+	WinGet, exepath, ProcessPath, ahk_id %Awinid%
+
+	foundpos := RegExMatch(exepath, regex)
+	if (foundpos>0)
+		return true
+	else 
+		return false
+}
+
 dev_StrRepeat(string, times)
 {
     loop % times
