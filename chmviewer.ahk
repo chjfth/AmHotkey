@@ -1,6 +1,12 @@
 
 AUTOEXEC_chmviewer: ; Workaround for Autohotkey's ugly auto-exec feature. Don't delete.
 
+global chmedt_ToolbarX0 := 300 ; change this to the same width of UI's left pane
+global chmedt_ToolbarY := 104
+global chmedt_Xcolor := chmedt_ToolbarX0 + 268
+
+Init_ChmEditor()
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 return ; End of auto-execute section.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -11,6 +17,7 @@ return ; End of auto-execute section.
 ;==============================================================
 ; For CHM viewer: F9 - Content Tab, F10 - Index Tab, F11 - Search Tab,
 ; so that you can use keyboard to scroll the webpage. 
+
 #IfWinActive ahk_class HH Parent
 F9:: Send !c
 F10:: 
@@ -95,3 +102,105 @@ return
 #IfWinActive
 
 
+;==============================================================
+; CHMEditor v3
+; Hardcoded mouse clicking coord, only suitable on my chja20 Win10.
+;==============================================================
+
+#If dev_IsExePathMatchRegex("chmeditor.*\.exe")
+
+Init_ChmEditor()
+{
+
+;	fn := Func("ChmEditor_SetTextColor").Bind(228, 160, 50)
+;	Menu, ChmedtMenu_SelectColor, Add, % "Brown", %fn%
+
+	ChmEditor_ColorMenuAddItem("Grey",         128, 128, 128)
+	ChmEditor_ColorMenuAddItem("Dim Purple",   180, 100, 255)
+	ChmEditor_ColorMenuAddItem("Blue",           0,   0, 255)
+	ChmEditor_ColorMenuAddItem("Dark Purple",  128, 100, 128)
+	ChmEditor_ColorMenuAddItem("Brown",        228, 160,  50)
+	ChmEditor_ColorMenuAddItem("Dark Green",     0, 128, 128)
+}
+
+ChmEditor_ColorMenuAddItem(colorname, red, green, blue)
+{
+	fn := Func("ChmEditor_SetTextColor").Bind(red, green, blue)
+	Menu, ChmedtMenu_SelectColor, Add, %colorname%, %fn%
+}
+
+ChmEditor_PopupColorCombo()
+{
+	ClickInActiveWindow(chmedt_Xcolor, chmedt_ToolbarY, true) ; Popup the color selection combobox
+}
+
+^F12:: ChmEditor_TextGray()
+ChmEditor_TextGray()
+{
+	ChmEditor_PopupColorCombo()
+	MouseMove, 0, 122, 4, R
+	Send {Enter}
+}
+
+F10:: ChmEditor_ApplyCodeFont()
+ChmEditor_ApplyCodeFont()
+{
+	ClickInActiveWindow(433, chmedt_ToolbarY, true)
+	Send c
+}
+
+^F10:: ClickInActiveWindow(chmedt_ToolbarX0+660, 100, false) ; Unordered list
+^F11:: ClickInActiveWindow(chmedt_ToolbarX0+630, 100, false) ; Ordered list
+
+^]:: ClickInActiveWindow(870, 100, false) ; Indent (blockquote)
+
+NumpadSub:: Send ^u
+NumpadMult:: Send ^b
+
+^p:: ChmEditor_SetTextColor(180, 100, 255)
+
+F12:: ChmEditor_PopupTextColorMenu()
+ChmEditor_PopupTextColorMenu()
+{
+	Menu, ChmedtMenu_SelectColor, Show
+}
+
+
+ChmEditor_SetTextColor(red, green, blue)
+{
+	ChmEditor_PopupColorCombo()
+
+	; Hint: First move mouse pointer to dropdown listbox area,
+	; Then issue WheelUp command, and we DON'T have to Sleep before 
+	; we can click on its first item(named "Custom...").
+	;
+	MouseMove, 0, 12, , R
+
+	Loop, 5
+		Send {WheelUp}
+	
+;	Sleep, 200
+
+	Send {Click}
+	
+	; Wait for system's ChooseColor dialogbox to popup.
+	if(! dev_WinWaitActive_with_timeout("Color") )
+	{
+		Msgbox, % "AHK miss! Not seeing ChooseColor dialogbox."
+		return
+	}
+	
+;	dev_TooltipAutoClear("OooK")
+
+	Send !d ; [button] Define Custom Colors
+
+	ControlSetText, Edit4, %red%, A ; [edit] Red
+	ControlSetText, Edit5, %green%, A ; [edit] Green
+	ControlSetText, Edit6, %blue%, A ; [edit] Blue
+	
+	Send {enter} ; [button] OK
+}
+
+
+
+#If ; ChmEditor END
