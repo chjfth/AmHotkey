@@ -735,7 +735,7 @@ If you want to simulate constant mouse moving activity from a human user, you ca
 
 You can Start/Stop this behavior from AmHotkey tray menu item.
 
-Note on high-DPI monitor: If you tell Windows to set monitor-DPI-scaling >100`%, this AHK script may position your mouse pointer erroneously. To work around, bring up Property dialog of this exe/lnk -> [Compatibility] -> [High-DPI setting] -> Let this application scale the UI by itself, instead of by System.
+Note on high-DPI monitor: If you tell Windows to set monitor-DPI-scaling >100`%, this AHK script may position your mouse pointer erroneously. To work around, bring up Property dialog of this exe/lnk -> [Compatibility] -> [High-DPI setting] -> Let this application`(Autohotkey itself`) scale the UI by itself, instead of by System.
 			)
 			dev_MsgBoxInfo(info)
 		}

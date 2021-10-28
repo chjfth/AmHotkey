@@ -134,13 +134,8 @@ ChmEditor_PopupColorCombo()
 	ClickInActiveWindow(chmedt_Xcolor, chmedt_ToolbarY, true) ; Popup the color selection combobox
 }
 
-^F12:: ChmEditor_TextGray()
-ChmEditor_TextGray()
-{
-	ChmEditor_PopupColorCombo()
-	MouseMove, 0, 122, 4, R
-	Send {Enter}
-}
+^F12:: ChmEditor_SetTextColor(128, 128, 128) ;grey
+^p::   ChmEditor_SetTextColor(180, 100, 255) ;purple
 
 F10:: ChmEditor_ApplyCodeFont()
 ChmEditor_ApplyCodeFont()
@@ -149,15 +144,14 @@ ChmEditor_ApplyCodeFont()
 	Send c
 }
 
-^F10:: ClickInActiveWindow(chmedt_ToolbarX0+660, 100, false) ; Unordered list
-^F11:: ClickInActiveWindow(chmedt_ToolbarX0+630, 100, false) ; Ordered list
+^F10:: ClickInActiveWindow(chmedt_ToolbarX0+660, chmedt_ToolbarY, false) ; Unordered list
+^F11:: ClickInActiveWindow(chmedt_ToolbarX0+630, chmedt_ToolbarY, false) ; Ordered list
 
-^]:: ClickInActiveWindow(870, 100, false) ; Indent (blockquote)
+^]:: ClickInActiveWindow(chmedt_ToolbarX0+588, chmedt_ToolbarY, false) ; Indent (blockquote)
 
 NumpadSub:: Send ^u
 NumpadMult:: Send ^b
 
-^p:: ChmEditor_SetTextColor(180, 100, 255)
 
 F12:: ChmEditor_PopupTextColorMenu()
 ChmEditor_PopupTextColorMenu()
@@ -168,18 +162,21 @@ ChmEditor_PopupTextColorMenu()
 
 ChmEditor_SetTextColor(red, green, blue)
 {
+
+	dev_SaveMouseScreenPos()
+
 	ChmEditor_PopupColorCombo()
 
 	; Hint: First move mouse pointer to dropdown listbox area,
-	; Then issue WheelUp command, and we DON'T have to Sleep before 
-	; we can click on its first item(named "Custom...").
+	; Then issue WheelUp command, and (most of the time) we DON'T have to Sleep 
+	; before we can click on its first item(named "Custom...").
 	;
 	MouseMove, 0, 12, , R
 
 	Loop, 5
 		Send {WheelUp}
 	
-;	Sleep, 200
+	Sleep, 100 ; just play it safe
 
 	Send {Click}
 	
@@ -199,6 +196,8 @@ ChmEditor_SetTextColor(red, green, blue)
 	ControlSetText, Edit6, %blue%, A ; [edit] Blue
 	
 	Send {enter} ; [button] OK
+	
+	dev_RestoreMouseScreenPos()
 }
 
 
