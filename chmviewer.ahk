@@ -115,12 +115,26 @@ Init_ChmEditor()
 ;	fn := Func("ChmEditor_SetTextColor").Bind(228, 160, 50)
 ;	Menu, ChmedtMenu_SelectColor, Add, % "Brown", %fn%
 
-	ChmEditor_ColorMenuAddItem("Grey",         128, 128, 128)
-	ChmEditor_ColorMenuAddItem("Dim Purple",   180, 100, 255)
-	ChmEditor_ColorMenuAddItem("Blue",           0,   0, 255)
-	ChmEditor_ColorMenuAddItem("Dark Purple",  128, 100, 128)
-	ChmEditor_ColorMenuAddItem("Brown",        228, 160,  50)
-	ChmEditor_ColorMenuAddItem("Dark Green",     0, 128, 128)
+	; Add a bunch of text-color menu items (call out by F12)
+
+	arItems := [ ["Grey",  128, 128, 128]
+		, ["Dim Purple",   180, 100, 255]
+		, ["Blue",           0, 128, 255] 
+		, ["Dark Blue",      0,  60, 160]
+		, ["Magenta",      255,   0, 255]
+		, ["Dark Purple",  128,  40, 128]
+		, ["Brown",        228, 160,  50]
+		, ["Dark Green",     0, 128, 128]
+		, ["Orange",       255, 128, 64] ]
+
+	nItems := arItems.Length()
+	
+	Loop, %nItems%
+	{
+		item := arItems[A_Index]
+		menutext := Format("&{1}. {2}", A_Index, item[1])
+		ChmEditor_ColorMenuAddItem(menutext, item[2], item[3], item[4])
+	}
 }
 
 ChmEditor_ColorMenuAddItem(colorname, red, green, blue)
