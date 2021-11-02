@@ -125,14 +125,15 @@ Init_ChmEditor()
 		, ["Dark Purple",  128,  40, 128]
 		, ["Brown",        228, 160,  50]
 		, ["Dark Green",     0, 128, 128]
-		, ["Orange",       255, 128, 64] ]
+		, ["Orange",       255, 128, 64] 
+		, ["Dark Yellow",  128, 128, 0] ]
 
 	nItems := arItems.Length()
 	
 	Loop, %nItems%
 	{
 		item := arItems[A_Index]
-		menutext := Format("&{1}. {2}", A_Index, item[1])
+		menutext := Format("&{1:X}. {2}", A_Index, item[1])
 		ChmEditor_ColorMenuAddItem(menutext, item[2], item[3], item[4])
 	}
 }
