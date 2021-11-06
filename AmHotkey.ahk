@@ -2790,6 +2790,12 @@ dev_StrRepeat(string, times)
     return output
 }
 
+test_EnumDisplayMonitors()
+{
+	mlo := dev_EnumDisplayMonitors()
+	MsgBox, % mlo.desctext
+}
+
 dev_EnumDisplayMonitors()
 {
 	mlo := g_tmpMonitorsLayout ; create a short-name reference to the global var 
@@ -2797,19 +2803,20 @@ dev_EnumDisplayMonitors()
 	mlo.count := 0
 	mlo.monitor_rects := []
 	mlo.workarea_rects := []
+	mlo.desctext := ""
 
 	hCB := RegisterCallback("devcb_EnumDisplayMonitors", "F", 4, 0)
 	if DllCall("user32\EnumDisplayMonitors", "Ptr", 0, "Ptr", 0, "Ptr", hCB, "UInt", 0)
 	{
-		dbgstr := "Monitor layout (L,T , R,B):`n`n"
+		mlo.desctext := "Monitor layout (L,T , R,B):`n`n"
 		Loop, % mlo.monitor_rects.Length()
 		{
 			rect := mlo.monitor_rects[A_Index]
 			width := rect.right - rect.left
 			height := rect.bottom - rect.top
-			dbgstr .= Format("[{1}] {2},{3} , {4},{5}   ({6}x{7})`n", A_Index, rect.left, rect.top, rect.right, rect.bottom, width, height)
+			mlo.desctext .= Format("[{1}] {2},{3} , {4},{5}   ({6}x{7})`n", A_Index, rect.left, rect.top, rect.right, rect.bottom, width, height)
 		}
-		; MsgBox, % dbgstr ; debug
+		; MsgBox, % mlo.desctext ; debug
 	}
 	else 
 	{
