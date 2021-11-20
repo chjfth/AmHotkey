@@ -141,10 +141,15 @@ global g_evtblBtnColorMatrix2
 
 global g_evtblIsDiv
 global g_evtblIsTable
+global g_evtblIsCssTable         ; This is for CssTable
 global Evtbl_OnTableDivSwitch
+;
+global g_evtblEdtCsstableRows
+global g_evtblLblCsstableRows
 
 global lbl_TableColumnSpec, lbl_TableCellPadding, lbl_TableBorderPx
 global g_evtblTableColumnSpec
+global g_evtblCssTableColumnSpec ; This is for CssTable
 global g_evtblIsFirstColumnColor
 global g_evtblBorder1px
 global g_evtblBorder2px
@@ -697,12 +702,17 @@ Evtbl_CreateGui()
 	Gui, EVTBL:Add, Text, xm Y+15 , % "HTML content:"
 	Gui, EVTBL:Add, Radio, X+10 Group Checked vg_evtblIsTable gEvtbl_OnTableDivSwitch, % "<&TABLE>"
 	Gui, EVTBL:Add, Radio, X+10                 vg_evtblIsDiv gEvtbl_OnTableDivSwitch, % "<&DIV>"
+	Gui, EVTBL:Add, Radio, X+10            vg_evtblIsCsstable gEvtbl_OnTableDivSwitch, % "CSS-t&able"
+	; // set CSS-table rows //
+	Gui, EVTBL:Add, Edit, x+10 yp-3 w30 Hidden vg_evtblEdtCsstableRows, % "3"
+	Gui, EVTBL:Add, Text, x+5 yp+3      Hidden vg_evtblLblCsstableRows, % "rows"
 
 	;
 	; Table Columns: ____24,360,540____  [x] First column in color
 	;
 	Gui, EVTBL:Add, Text, xm y+15 vlbl_TableColumnSpec, % "Table Column&s:"
 	Gui, EVTBL:Add, Edit, x+10 yp-2 w240 vg_evtblTableColumnSpec, % "24:#,360:Brief,540:Detail"
+	Gui, EVTBL:Add, Edit, xp yp wp Hidden vg_evtblCssTableColumnSpec, % "30%,30%,30%" ; yes, overlap with previous
 	Gui, EVTBL:Add, Checkbox, x+20 yp+4 vg_evtblIsFirstColumnColor, % "&First column in color"
 ;	Gui, EVTBL:Add, Text, x+10 yp+2,      % "Table width(%):"
 ;	Gui, EVTBL:Add, Edit, x+10 yp-2 w40,  % "100"
@@ -748,18 +758,39 @@ Evtbl_CreateGui()
 
 Evtbl_OnTableDivSwitch()
 {
-	tablectls := [ "lbl_TableColumnSpec", "g_evtblTableColumnSpec", "g_evtblIsFirstColumnColor",
+	tablectls_share := [ "lbl_TableColumnSpec", "g_evtblIsFirstColumnColor",
 		, "lbl_TableCellPadding", "g_evtblIsPaddingSparse", "g_evtblIsPaddingDense"
 		, "lbl_TableBorderPx", "g_evtblBorder1px", "g_evtblBorder2px" ]
+		; share by traditional <TABLE> and CssTable
 
 	GuiControlGet, g_evtblIsTable, EVTBL:
+	GuiControlGet, g_evtblIsCssTable, EVTBL:
+	
+	hideORshow := (g_evtblIsTable || g_evtblIsCssTable) ? "Show" : "Hide"
+	;
+	Loop, % tablectls_share.Length()
+	{
+		ctlvar := tablectls_share[A_Index]
+		GuiControl, EVTBL:%hideORshow%, %ctlvar%
+	}
 	
 	hideORshow := g_evtblIsTable ? "Show" : "Hide"
-
-	Loop, % tablectls.Length()
+	GuiControl, EVTBL:%hideORshow%, g_evtblTableColumnSpec
+	
+	hideORshow := g_evtblIsCssTable ? "Show" : "Hide"
+	GuiControl, EVTBL:%hideORshow%, g_evtblCssTableColumnSpec
+	GuiControl, EVTBL:%hideORshow%, g_evtblEdtCsstableRows
+	GuiControl, EVTBL:%hideORshow%, g_evtblLblCsstableRows
+	;
+	if(g_evtblIsCssTable)
 	{
-		ctlvar := tablectls[A_Index]
-		GuiControl, EVTBL:%hideORshow%, %ctlvar%
+		hide_more_ctls := [ "lbl_TableCellPadding", "g_evtblIsPaddingSparse", "g_evtblIsPaddingDense"
+			, "lbl_TableBorderPx", "g_evtblBorder1px", "g_evtblBorder2px" ]
+		Loop, % hide_more_ctls.Length()
+		{
+			GuiControl, EVTBL:Hide, % hide_more_ctls[A_Index]
+		}
+		
 	}
 }
 
@@ -776,7 +807,7 @@ Evtbl_ParseTableColumnWidth(ColumnSpec)
 	ar_colinfo := []
 	Loop, PARSE, ColumnSpec, `,
 	{
-		; A_LoopField will be "24" or "360:Q" etc
+		; A_LoopField will be "24" or "360:Brief" etc
 		
 		tkn1 := ""
 		tkn2 := "#" . A_Index ; set default column header text #1, #2, #3 ...
@@ -949,9 +980,123 @@ Evtbl_GenHtml()
 	{
 		html := Evtbl_GenHtml_Div(hexcolor1, hexcolor2)
 	}
+	else if(g_evtblIsCssTable)
+	{
+		rows := g_evtblEdtCsstableRows + 0
+		html := Evtbl_GenHtml_CssTable(rows, hexcolor1, hexcolor2) ;PENDING
+	}
 	
 	return html
 }
+
+Evtbl_GenHtml_CssTable(rows, hexcolor1, hexcolor2)
+{
+/* This function enables embedding nesting "tables" into an Evernote <table>. Great idea!
+
+But since CSS-table in Evernote is a tweak, so it has limitations:
+* We cannot add or delete rows and columns.
+* We cannot drag CSS-table cell border to adjust their width.
+
+So plan carefully before you insert one. If you find the layout unsatisfied, you have to re-insert the
+whole csstable and fill its content from the beginning.
+*/
+	ColumnSpec := g_evtblCssTableColumnSpec
+	
+	if( Instr(ColumnSpec, ",") ) 
+	{
+		ar_colinfo := Evtbl_ParseTableColumnWidth(ColumnSpec)
+		if(!ar_colinfo) {
+			MsgBox, % "Wrong input: Empty table columns assignment."
+			return
+		}
+	}
+	else
+	{
+		; No separator in ColumnSpec, so we think it a column count.
+		; In this case we do not set "width:30%" as table-cell style, so we have "auto fit-width" effect, 
+		; i.e. column width ajusted automatically  according to text amount in cell.
+		
+		columns := ColumnSpec + 0
+		
+		if(columns<=0) {
+			MsgBox, % "Wrong input: Empty table columns assignment. If no comma, should be a integer."
+			return
+		}
+		
+		ar_colinfo := {}
+		Loop, %columns% {
+			ar_colinfo.Push({ "width_px":"any", "text":"any" })
+		}
+	}
+
+/*
+	html_csstable_complete_sample = 
+(
++<div style="display:table; border:1px solid lightgray;">
+  <div style="display:table-row">
+    <div style="display:table-cell; padding:3px; border:1px solid lightgray; width:50%; background-color:#fefe8c;">Cell</div>
+    <div style="display:table-cell; padding:3px; border:1px solid lightgray; width:50%; background-color:#fefe8c;">Cell</div>
+  </div>
+  <div style="display:table-row">
+    <div style="display:table-cell; padding:3px; border:1px solid lightgray; background-color:#fefe8c;">Cell</div>
+    <div style="display:table-cell; padding:3px; border:1px solid lightgray;">-</div>
+  </div>
+</div>~
+) 
+*/
+	css_bg_rule := make_css_bg_rule(hexcolor1, hexcolor2) ; maybe pure color or color gradient
+
+	html_tablerows := ""
+	Loop, %rows%
+	{
+		html_onerow := Evtbl_GenHtml_CssTable_OneRow(ar_colinfo, css_bg_rule, A_Index==1)
+		
+		html_tablerows .= html_onerow
+	}
+	
+	fmt_html = 
+(
++<div style="display:table; border:1px solid lightgray;">
+{1}
+</div>~
+)
+	html := Format(fmt_html, html_tablerows)
+	return html
+}
+;
+Evtbl_GenHtml_CssTable_OneRow(ar_colinfo, css_bg_rule, is_first_line)
+{
+	fmt_tablecell = 
+(
+
+    <div style="display:table-cell; padding:3px; border:1px solid lightgray; width:{1}; {2};">{3}</div>
+)
+
+	colwidth_count := ar_colinfo.Length()
+	
+	tablecells_onerow := ""
+	
+	Loop, %colwidth_count%
+	{
+		bg_rule := (is_first_line || (A_Index==1 && g_evtblIsFirstColumnColor)) ? css_bg_rule : ""
+		
+		tablecells_onerow .= Format(fmt_tablecell
+			, ar_colinfo[A_Index].width_px
+			, bg_rule
+			, is_first_line ? "Cell" : "-")
+	}
+	
+	fmt_tablerow = 
+(
+
+  <div style="display:table-row">
+{1}
+  </div>
+)
+	tablerow := Format(fmt_tablerow, tablecells_onerow)
+	return tablerow
+}
+
 
 Evtbl_BtnOK()
 {
