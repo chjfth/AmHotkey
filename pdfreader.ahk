@@ -80,8 +80,24 @@ foxit_IsWinActive()
 	}
 }
 
+foxit_IsForegroundProcess()
+{
+	WinGet, Awinid, ID, A ; cache active window unique id
+	WinGet, exepath, ProcessPath, ahk_id %Awinid%
+
+	if(StrIsEndsWith(exepath, "FoxitReader.exe"))
+		return true
+	if(StrIsEndsWith(exepath, "FoxitPhantomPDF.exe"))
+		return true
+	
+	return false
+}
+
 foxit_IsAnnoationPropertyWindowActive()
 {
+	if(! foxit_IsForegroundProcess())
+		return false
+
 	WinGet, Awinid, ID, A ; cache active window unique id
 ;	WinGetClass, class, ahk_id %Awinid%
 	WinGetTitle, title, ahk_id %Awinid%
@@ -189,6 +205,10 @@ foxit_ClickColorProperty()
 RETRY:
 	; Click in Color Property button(Property-window pre-open required), so to select a color by keyboard.
 	; But sometimes the color box does not popup, the workaround is to press space after F12 .
+	;
+	; Small flaw: In order for this to work, we should NOT have any opened File property dialogs(from Explorer),
+	; bcz those dialogs also have title text like "XXX Properties".
+	
 	titleregex := ".+ (Properties|属性)$"
 	found := ControlClickClassNN_TitleRegex("Button3", titleregex, 100)
 	if(found)
