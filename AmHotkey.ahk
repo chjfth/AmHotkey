@@ -2171,7 +2171,11 @@ MouseActInActiveControl(classnn, ux,xomode, uy,yomode, is_movemouse:=true, is_cl
 	; When calling, remember to pass quoted-string for classnn
 	ControlGetPos, winx, winy, width, height, %classnn%, A
 	if(!winx and is_warn) {
-		tooltip, [Autohotkey]Unexpected: ControlGetPos returns blank for classnn %classnn%
+		
+		errmsg = [AmHotkey]Unexpected in MouseActInActiveControl(): ControlGetPos returns blank for classnn %classnn%
+		
+		MsgBox, % errmsg . "`n`nCallstack below:`n`n" . dev_getCallStack()
+		
 		return
 	}
 	if (!is_movemouse && !is_click)
@@ -2883,6 +2887,33 @@ dev_TooltipDisableCloseWindow(msg_prefix)
 	; So call this function to hint that.
 	; msg_prefix is some hotkey names like "Ctrl+W" or "Ctrl+Shift+W".
 	dev_TooltipAutoClear(msg_prefix . " closing window/tab is disabled by AmHotkey.")
+}
+
+
+dev_getCallStack(deepness = 20, is_print_code = true)
+{
+	; Call this function to get current callstack.
+	; Usage: If we want to report an error to user(MsgBox etc), showing a full callstack helps greatly.
+	;
+	; Thanks to: https://www.autohotkey.com/board/topic/76062-ahk-l-how-to-get-callstack-solution/
+	
+	lv_first_print := -1
+	
+	loop % deepness
+	{
+		lvl := -1 - deepness + A_Index
+		oEx := Exception("", lvl)
+		oExPrev := Exception("", lvl - 1)
+		FileReadLine, line, % oEx.file, % oEx.line
+		if(oEx.What = lvl)
+			continue
+			
+		if(lv_first_print==-1) 
+			lv_first_print := A_Index
+		
+		stack .= (stack ? "`n" : "") . Format("#{1}： ",A_Index-lv_first_print+1) . "File '" oEx.file "', Line " oEx.line (oExPrev.What = lvl-1 ? "" : ", in " oExPrev.What) (is_print_code ? ":`n" line : "") "`n"
+	}
+	return stack
 }
 
 
