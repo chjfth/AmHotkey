@@ -1000,6 +1000,10 @@ But since CSS-table in Evernote is a tweak, so it has limitations:
 So plan carefully before you insert one. If you find the layout unsatisfied, you have to re-insert the
 whole csstable and fill its content from the beginning.
 */
+	
+	; Parsing ColumnSpec. If logic changes here, 
+	; tooltip for `g_evtblCssTableColumnSpec` in Evtbl_WM_MOUSEMOVE() should be updated accordingly.
+
 	ColumnSpec := g_evtblCssTableColumnSpec
 	
 	if( Instr(ColumnSpec, ",") ) 
@@ -1080,10 +1084,14 @@ Evtbl_GenHtml_CssTable_OneRow(ar_colinfo, css_bg_rule, is_first_line)
 	{
 		bg_rule := (is_first_line || (A_Index==1 && g_evtblIsFirstColumnColor)) ? css_bg_rule : ""
 		
+		width_value := ar_colinfo[A_Index].width_px
+		if(!StrIsEndsWith(width_value, "%"))
+			width_value .= "%" ; turn 30 into 30%, etc
+		
 		tablecells_onerow .= Format(fmt_tablecell
-			, ar_colinfo[A_Index].width_px
+			, width_value
 			, bg_rule
-			, is_first_line ? "Cell" : "-")
+			, is_first_line ? Format("Column{1}", A_Index) : "-")
 	}
 	
 	fmt_tablerow = 
@@ -1482,6 +1490,44 @@ Evtbl_WM_MOUSEMOVE()
 				, A_Index, ar_colinfo[A_Index].width_px, ar_colinfo[A_Index].text)
 		}
 		tooltip, % tipstr
+	}
+	else if(A_GuiControl=="g_evtblCssTableColumnSpec")
+	{
+		GuiControlGet, g_evtblCssTableColumnSpec, EVTBL:
+		ColumnSpec := g_evtblCssTableColumnSpec
+		
+		if( Instr(ColumnSpec, ",") )
+		{
+			ar_colinfo := Evtbl_ParseTableColumnWidth(ColumnSpec)
+			if(!ar_colinfo) {
+				tooltip, % "Wrong input! Should be a single integer(column count), or comma separated values(column width proportions)."
+				return
+			}
+			
+			; Show proportion of each column 
+			tipstr := "Will insert CSS-table:`n"
+			Loop, % ar_colinfo.Length()
+			{
+				width_value := ar_colinfo[A_Index].width_px
+				tipstr .= Format("Column {1}: width {2}{3}`n", A_Index, width_value
+					, StrIsEndsWith(width_value, "%") ? "" : "%")
+			}
+			tooltip, % tipstr
+			return
+		}
+		else
+		{
+			columns := ColumnSpec + 0
+			
+			if(columns<=0) {
+				tooltip, % "Wrong input value, should be a positive integer: 2, 3, 4 etc."
+				return
+			}
+			
+			tipstr := Format("Will insert CSS-table, {1} columns. `nColumn widths will be adjusted by cell content automatically.", columns)
+			tooltip, % tipstr
+			return
+		}
 	}
 	else if(A_GuiControl=="g_evtblBtnOK")
 	{
