@@ -8,7 +8,7 @@ AUTOEXEC_customize_ahk: ; Workaround for Autohotkey's ugly auto-exec feature. Do
 ; * Call the run-once functions.
 
 ; Example
-;g_dirEverpic = D:\chj\scripts\everpic
+;global g_dirEverpic := "D:\chj\scripts\everpic"
 
 Init_MyCustomizedEnv() ; This function is defined after the first "return".
 
