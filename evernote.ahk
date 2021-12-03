@@ -2211,7 +2211,7 @@ SupsubGuiEscape()
 }
 
 
-^!\:: Evernote_InsertSideBySideDivs()
+; ^!\:: Evernote_InsertSideBySideDivs() ; [2021-12-03] Having Evtbl_GenHtml_CssTable(), this is outdated.
 Evernote_InsertSideBySideDivs()
 {
 	; Evernote 6.5 does not allow table inside table. In case you want to have a simple 
@@ -2252,6 +2252,9 @@ Evernote_InsertSideBySideDivs()
 	html := Format(html_fmt, divs)
 	dev_ClipboardSetHTML(html, true)
 }
+
+
+
 
 ; App+T to bring up DIV/TABLE html generating dialog.
 AppsKey & t:: EverTable_Start()
@@ -2308,7 +2311,7 @@ return
 
 
 
-; CapsLock & ,:: Evernote_BringupMyShortcut()
+; CapsLock & ,:: Evernote_BringupMyShortcut() ; [2021-12-03] This is outdated, after I have EverTable.
 Evernote_BringupMyShortcut()
 {
 	; [2017-11-18] Evernote 6.5.4:
@@ -2320,4 +2323,7 @@ Evernote_BringupMyShortcut()
 	MyActivateWindowGroupFlex("ENSingleNoteView", QSA_NO_WNDCLS_REGEX, "^#ENS", "Evernote ENS# quick note")
 ;	DetectHiddenWindows, Off
 }
+
+
+
 
