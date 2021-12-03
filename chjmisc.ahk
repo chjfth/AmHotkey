@@ -91,19 +91,19 @@ type_python_shebang()
 ; Ctrl+Alt+[Numpad /], click in left-hand portion of a window.
 ; Ctrl+Alt+[Numpad *], click in right-hand portion of a window.
 ; [2021-12-02] Avoid Alt+*, bcz Visual Studio IDE use Alt+* as "Show Next Statement".
-; [2021-12-03] Avoid Ctrl+Shift, bcz Shift+click can cause "range selection" hehavior.
-!^NumpadDiv::  chj_ClickLeftSide()
+; [2021-12-03] Avoid Ctrl or Shift, bcz Ctrl+click or Shift+click can cause "multi/range selection" hehavior.
+#NumpadDiv::  chj_ClickLeftSide()
 chj_ClickLeftSide()
 {
-	dev_TooltipAutoClear(Format("ClickInActiveWindow({1}, {2})", g_LeftsideClickPct, g_MiddleFloorClickPct))
 	ClickInActiveWindow(g_LeftsideClickPct, g_MiddleFloorClickPct)
+	dev_TooltipAutoClear(Format("ClickInActiveWindow({1}, {2})", g_LeftsideClickPct, g_MiddleFloorClickPct))
 }
 ;
-!^NumpadMult:: chj_ClickRightSide()
+#NumpadMult:: chj_ClickRightSide()
 chj_ClickRightSide()
 {
-	dev_TooltipAutoClear(Format("ClickInActiveWindow({1}, {2})", g_RightsideClickPct, g_MiddleFloorClickPct))
 	ClickInActiveWindow(g_RightsideClickPct, g_MiddleFloorClickPct)
+	dev_TooltipAutoClear(Format("ClickInActiveWindow({1}, {2})", g_RightsideClickPct, g_MiddleFloorClickPct))
 }
 
 dev_WinMove_with_backup_with_prompt(_newx, _newy, _new_width, _new_height, Awinid:=0, is_force:=false)
