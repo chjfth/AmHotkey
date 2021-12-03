@@ -83,6 +83,11 @@ type_python_shebang()
 ; Ctrl+Win+0 toggle last two window positions
 ^#0:: dev_UndoChangeWindowSize()
 
+; Alt+[Numpad /], click in left-hand portion of a window.
+; Alt+[Numpad *], click in right-hand portion of a window.
+!NumpadDiv::  ClickInActiveWindow(0.3, 0.5)
+!NumpadMult:: ClickInActiveWindow(-0.3, 0.5)
+
 dev_WinMove_with_backup_with_prompt(_newx, _newy, _new_width, _new_height, Awinid:=0, is_force:=false)
 {
 	static s_hint_timeout := 8000
