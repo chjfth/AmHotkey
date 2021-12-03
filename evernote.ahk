@@ -157,6 +157,7 @@ global g_evtblIsPaddingSparse
 global g_evtblIsPaddingDense
 
 global g_evtblBtnOK
+global g_evtblChkboxTSV
 
 global g_HwndPreviewHtml ; GuiName: PvHtml
 global g_PvhtmlEdit
@@ -613,6 +614,9 @@ Evtbl_ShowGui()
 	GuiControl, EVTBL:Focus, g_evtblComboColor
 	Evtbl_SyncUserInputToColorPreview()
 	
+	; Initially turn off these checkbox:
+	GuiControl, EVTBL:, g_evtblChkboxTSV, 0
+	
 ;	SetTimer, timer_EvtblSyncColor, 200
 	
 	OnMessage(0x200, Func("Evtbl_WM_MOUSEMOVE")) ; add message hook
@@ -730,7 +734,8 @@ Evtbl_CreateGui()
 
 	; [ Paste HTML ] ... [ Preview HTML ]
 	Gui, EVTBL:Add, Button, xm Y+10 Default vg_evtblBtnOK gEvtbl_BtnOK, % "Paste HTML (Enter)"
-	Gui, EVTBL:Add, Button, x420 yp gEvtbl_BtnPreviewHtml, % "Preview &HTML"
+	Gui, EVTBL:Add, Checkbox, x+10 yp+6     vg_evtblChkboxTSV, % "fro&m TSV/CSV"
+	Gui, EVTBL:Add, Button, x420 yp-6        gEvtbl_BtnPreviewHtml, % "Preview &HTML"
 
 	Evtbl_ComboboxFillColorPresets("g_evtblComboColor", g_evtblIdxDefaultColor1)
 	Evtbl_ComboboxFillColorPresets("g_evtblComboColor2", g_evtblIdxDefaultColor2)
@@ -974,7 +979,10 @@ Evtbl_GenHtml()
 
 	if(g_evtblIsTable)
 	{
-		html := Evtbl_GenHtml_Table(hexcolor1, hexcolor2)
+		if(!g_evtblChkboxTSV)
+			html := Evtbl_GenHtml_Table(hexcolor1, hexcolor2)
+		else
+			html := Evtbl_GenHtml_FromTSV(hexcolor1, hexcolor2)
 	}
 	else if(g_evtblIsDiv)
 	{
@@ -2254,6 +2262,99 @@ Evernote_InsertSideBySideDivs()
 }
 
 
+Evtbl_GenHtml_FromTSV(hexcolor1, hexcolor2)
+{
+	html := Evernote_TSVtoHtml(Clipboard, "", hexcolor1, hexcolor2)
+	return html
+}
+;
+Evernote_TSVtoHtml(input_string, sepchar:="", hexcolor1="", hexcolor2="")
+{
+	; Result will be sent to clipboard
+	; If sepchar==",", this do CSV converting.
+	
+	; Check input_string length first, if too big, it may be a user misoperation.
+	warn_size := 128*1024
+	inputlen := StrLen(input_string)
+	if(inputlen>warn_size)
+	{
+		msg := Format("Text to convert exceeds {1} KB, which is {2}. Sure?", Floor(warn_size/1024), inputlen)
+		goon := dev_MsgBoxYesNo(msg, false)
+		if(!goon)
+			return ""
+	}
+	
+	if(!sepchar)
+	{
+		; If sepchar is empty, try to search for a Tab or a space.
+		tabpos := InStr(input_string, "`t")
+		commapos := InStr(input_string, ",")
+		
+		if(tabpos>0)
+			sepchar := "`t"
+		else if(commapos>0)
+			sepchar := ","
+		else {
+			dev_MsgBoxWarning("No Tab or Comma found in your input(Clipboard). Nothing to do.")
+			return ""
+		}
+	}
+
+	omitchars := A_Space ; . A_Tab
+
+	Loop, PARSE, % input_string , `n, `r
+	{
+;		MsgBox, % ">>" . A_LoopField
+		fields := StrSplit(A_LoopField, sepchar, omitchars)
+		break
+	}
+
+	totcols := fields.Length()
+
+	css_bg_rule := make_css_bg_rule(hexcolor1, hexcolor2) ; maybe pure color or color gradient
+
+	theadline := ""
+	Loop, % totcols
+	{
+		td_ptn = 
+(
+<td style="text-align:center; font-weight:bold; {1}">#{2}</td>
+)
+		theadline .= Format(td_ptn, css_bg_rule, A_Index-1)
+	}
+	theadline := "<tr>" theadline "</tr>`n"
+	
+	tbodylines := ""
+	
+	Loop, PARSE, % input_string, `n, `r
+	{
+		tds := ""
+
+		tsv_line := A_LoopField
+		fields := StrSplit(A_LoopField, sepchar, omitchars)
+		
+		Loop, % fields.Length()
+		{
+			 tds .= Format("<td>{1}</td>", fields[A_Index])
+		}
+		
+		if(tds)
+		{	; only add <tr> if this line is not empty
+			tbodylines .= "<tr>" tds "</tr>`n"
+		}
+	}
+	
+	html_ptn =
+(
++<table border="1" style="border-collapse:collapse; border-color:{1}; width:100`%;">
+  {2}
+  {3}
+</table>~
+) ; memo: The leading + and trailing ~ is for Evernote 6.13's sane purpose.
+	
+	html := Format(html_ptn, hexcolor1, theadline, tbodylines)
+	return html
+}
 
 
 ; App+T to bring up DIV/TABLE html generating dialog.
