@@ -2,3 +2,7 @@ https://www.evernote.com/shard/s21/nl/2425275/b541de60-735a-475f-be07-715f550787
 https://www.evernote.com/shard/s21/nl/2425275/47874f88-fdcf-4eca-84fe-2cb0ef05a4a0 , Autohotkey
 https://www.evernote.com/shard/s21/nl/2425275/4586fb5e-4414-4e81-8ea8-75bf28d9d666 , WinGUI
 https://www.evernote.com/shard/s21/nl/2425275/850c9be2-7b91-4d85-965e-646923bc22c1 , VSIDE , Visual Studio IDE
+https://www.evernote.com/shard/s21/nl/2425275/c07f9c0a-b536-4ecb-9254-2d422564da11 , MSBuild
+https://www.evernote.com/shard/s21/nl/2425275/b49be72e-4bbe-4949-b95b-a777b7ed23a0 , BATCMD
+https://www.evernote.com/shard/s21/nl/2425275/35e458a1-d25e-45bb-83ab-b7358c4af4f5 , CSharp , C# language
+;https://www.evernote.com/shard/s21/nl/2425275/51824870-0471-4f73-999c-8d396ae0e8b5 , DPI Scaling

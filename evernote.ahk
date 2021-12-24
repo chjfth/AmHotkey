@@ -2439,6 +2439,9 @@ Evernote_PopLinkShowMenu()
 	
 	Loop, read, % g_evernotePopLinksFile
 	{
+		if(SubStr(A_LoopReadLine, 1, 1)==";")
+			continue ; this is a comment line, skip it.
+		
 	    fields := StrSplit(A_LoopReadLine, ",", " `t")
 	    url := fields[1] ; sth like: https://www.evernote.com/shard/s21/nl/2425275/4586fb5e-4414-4e81-8ea8-75bf28d9d666
 	    menutext := fields[2]
@@ -2452,7 +2455,12 @@ Evernote_PopLinkShowMenu()
 	
 	arlen := armap.Length()
 
-	menuhead := Format("==== {} Links ====", arlen, g_evernotePopLinksFile)
+	try {
+		Menu, EvernotePoplinksMenu, DeleteAll ; Delete old items first
+	} catch {
+	}
+	
+	menuhead := Format("== {} Links ==", arlen, g_evernotePopLinksFile)
 	Menu, EvernotePoplinksMenu, Add, %menuhead%, Evernote_OpenPopLinkFile
 	
 	Loop, %arlen%
@@ -2476,5 +2484,25 @@ Evernote_PopLinkPaste(text, url)
 Evernote_OpenPopLinkFile()
 {
 	Run, open "%g_evernotePopLinksFile%"
+	
+	Sleep, 500
+	
+	; Try to see whether current clipboard contains an Evernote link. If so, extract that link
+	; and report it to user.
+	
+	html := WinClip.GetHtml()
+	
+	ptn := "<a href=""(https://www.evernote.com/shard/s21/nl/[0-9a-z-/]+)"">"
+
+	foundpos := RegExMatch(html, ptn, outfound)
+	if( foundpos>0 )
+	{
+		; Msgbox, % "outfound1=" outfound1 ; debug
+		url := outfound1
+		
+		Clipboard := url
+		
+		MsgBox, % "Found Evernote in-clip url, and copied to clipboard:`n`n" url
+	}
 }
 
