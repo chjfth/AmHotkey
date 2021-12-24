@@ -7,6 +7,8 @@ Evp_ImagePreviewCreateGui()
 EverTable_Start()
 PreviewHtml_ShowGui(html)
 ColorMatrix_ShowGui()
+
+Evernote_PopLinkShowMenu()
 */
 
 ; User can define g_evtblColorCustoms[] to append custom colors to g_evtblColorPresets
@@ -52,7 +54,6 @@ global g_evtblColorPresets := [ "#f0f0f0,灰白"
 global g_dirEverpic := A_ScriptDir . "\Everpic" ; chj's default
 global g_pyEverpicBatch := "everpic_batch.pyw"
 global g_pyEverpic_w := "everpic_w.pyw"
-; global g_isEverpicCwdWarn := true ; Retired since Evernote 6.13, and we need a real http server since 6.13
 
 ; Q: How to debug everpic.py program?
 ; A: Step 1
@@ -200,6 +201,10 @@ global g_HwndSupsub
 global g_SupsubBaseText
 global g_SupsubSupText
 global g_SupsubSubText
+
+; ======
+
+global g_evernotePopLinksFile := "EvernotePopupLinks.csv.txt"
 
 
 QSA_DefineActivateSingle_Caps("m", "ENMainFrame", "Evernote")
@@ -531,13 +536,6 @@ lb_evpBtnOK:
 	
 Evp_BtnOK()
 {
-;	if(!g_isEverpicCwdWarn) 
-;		g_isEverpicCwdWarn := true
-;		
-;	if(not Evp_CheckEvernoteCurrentWorkingDir()) { 
-;		return
-;	}
-
 	GuiControlGet, g_evpImageList
 	cur_imagefile := g_evp_arImageStore[g_evpImageList].path
 	hint := g_evp_arImageStore[g_evpImageList].hint
@@ -2425,6 +2423,58 @@ Evernote_BringupMyShortcut()
 ;	DetectHiddenWindows, Off
 }
 
+;
+; [2021-12-24] Load EvernotePopupLinks.csv.txt and popup a live menu for user to select a shortcut link,
+; then send the corresponding html snippet to clipboard so to paste into Evernote, the final result is: 
+; we get a real Evernote link in our Evernote clip(n.). I find myself need to frequently insert topic-link 
+; like [WinGUI] [AutoHotkey] [MSBuild] etc in my clip, and this becomes a great time saver.
+;
+#If Evernote_IsMainFrameOrSingleActive()
+AppsKey & k:: Evernote_PopLinkShowMenu()
+#If
+;
+Evernote_PopLinkShowMenu()
+{
+	armap := []
+	
+	Loop, read, % g_evernotePopLinksFile
+	{
+	    fields := StrSplit(A_LoopReadLine, ",", " `t")
+	    url := fields[1] ; sth like: https://www.evernote.com/shard/s21/nl/2425275/4586fb5e-4414-4e81-8ea8-75bf28d9d666
+	    menutext := fields[2]
+	    desctext := fields[3]
+	    
+	    if (!url)
+	    	continue
+	    
+	    armap.Push({"url":url, "menutext":menutext, "desctext":desctext})
+	}
+	
+	arlen := armap.Length()
 
+	menuhead := Format("==== {} Links ====", arlen, g_evernotePopLinksFile)
+	Menu, EvernotePoplinksMenu, Add, %menuhead%, Evernote_OpenPopLinkFile
+	
+	Loop, %arlen%
+	{
+		map := armap[A_Index]
+		menutextfull := Format("&{1}`t{2}", map.menutext, map.desctext)
 
+		fn := Func("Evernote_PopLinkPaste").Bind(map.menutext, map.url)
+		Menu, EvernotePoplinksMenu, Add, %menutextfull%, %fn%
+	}
+	
+	Menu, EvernotePoplinksMenu, Show
+}
+
+Evernote_PopLinkPaste(text, url)
+{
+	html := Format("<span>[<a href='{1}'>{2}</a>]&nbsp;</span>", url, text)
+	dev_ClipboardSetHTML(html, true)
+}
+
+Evernote_OpenPopLinkFile()
+{
+	Run, open "%g_evernotePopLinksFile%"
+}
 
