@@ -2491,7 +2491,7 @@ Evernote_OpenPopLinkFile()
 	; Try to see whether current clipboard contains an Evernote link. If so, extract that link
 	; and report it to user.
 	
-	html := WinClip.GetHtml()
+	html := WinClip.GetHtml("UTF-8")
 	
 	ptn := "<a href=""(https://www.evernote.com/shard/s21/nl/[0-9a-z-/]+)""[^>]*>(.+?)</a>"
 

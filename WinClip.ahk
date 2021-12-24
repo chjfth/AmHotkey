@@ -861,23 +861,23 @@ _BITMAPtoDIB_cleanup:
     return strget( &out_data, out_size, "UTF-16" )
   }
   
-  GetHtml()
+  GetHtml(encoding="CP0")
   {
     if !( clipSize := this._fromclipboard( clipData ) )
       return ""
     if !( out_size := this._getFormatData( out_data, clipData, clipSize, "HTML Format" ) )
       return ""
-    return strget( &out_data, out_size, "CP0" )
+    return strget( &out_data, out_size, encoding )
   }
   
-  iGetHtml()
+  iGetHtml(encoding="CP0")
   {
     this._IsInstance( A_ThisFunc )
     if !( clipSize := this._getClipData( clipData ) )
       return ""
     if !( out_size := this._getFormatData( out_data, clipData, clipSize, "HTML Format" ) )
       return ""
-    return strget( &out_data, out_size, "CP0" )
+    return strget( &out_data, out_size, encoding )
   }
   
   _getFormatName( iformat )
