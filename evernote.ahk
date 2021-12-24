@@ -205,6 +205,7 @@ global g_SupsubSubText
 ; ======
 
 global g_evernotePopLinksFile := "EvernotePopupLinks.csv.txt"
+; -- In customize.ahk, you can override this global var to point to your own file.
 
 
 QSA_DefineActivateSingle_Caps("m", "ENMainFrame", "Evernote")
@@ -2492,17 +2493,18 @@ Evernote_OpenPopLinkFile()
 	
 	html := WinClip.GetHtml()
 	
-	ptn := "<a href=""(https://www.evernote.com/shard/s21/nl/[0-9a-z-/]+)"">"
+	ptn := "<a href=""(https://www.evernote.com/shard/s21/nl/[0-9a-z-/]+)""[^>]*>(.+?)</a>"
 
 	foundpos := RegExMatch(html, ptn, outfound)
 	if( foundpos>0 )
 	{
 		; Msgbox, % "outfound1=" outfound1 ; debug
 		url := outfound1
+		linktext := outfound2
 		
 		Clipboard := url
 		
-		MsgBox, % "Found Evernote in-clip url, and copied to clipboard:`n`n" url
+		MsgBox, % "Found Evernote in-clip url, and copied to clipboard:`n`n" url "`n`n" linktext
 	}
 }
 
