@@ -1,8 +1,21 @@
+https://www.evernote.com/shard/s21/nl/2425275/c07f9c0a-b536-4ecb-9254-2d422564da11 , MSBuild
+https://www.evernote.com/shard/s21/nl/2425275/2f0287be-ce65-4e1f-bf5e-3ecf488e4a73 , Toaster
+https://www.evernote.com/shard/s21/nl/2425275/5dd911c7-6bae-44e0-8726-05f1a5644e61 , WinDrv
+
+https://www.evernote.com/shard/s21/nl/2425275/b49be72e-4bbe-4949-b95b-a777b7ed23a0 , BATCMD
+https://www.evernote.com/shard/s21/nl/2425275/850c9be2-7b91-4d85-965e-646923bc22c1 , VSIDE , Visual Studio IDE
+
 https://www.evernote.com/shard/s21/nl/2425275/b541de60-735a-475f-be07-715f55078704 , Evernote
 https://www.evernote.com/shard/s21/nl/2425275/47874f88-fdcf-4eca-84fe-2cb0ef05a4a0 , Autohotkey
 https://www.evernote.com/shard/s21/nl/2425275/4586fb5e-4414-4e81-8ea8-75bf28d9d666 , WinGUI
-https://www.evernote.com/shard/s21/nl/2425275/850c9be2-7b91-4d85-965e-646923bc22c1 , VSIDE , Visual Studio IDE
-https://www.evernote.com/shard/s21/nl/2425275/c07f9c0a-b536-4ecb-9254-2d422564da11 , MSBuild
-https://www.evernote.com/shard/s21/nl/2425275/b49be72e-4bbe-4949-b95b-a777b7ed23a0 , BATCMD
 https://www.evernote.com/shard/s21/nl/2425275/35e458a1-d25e-45bb-83ab-b7358c4af4f5 , CSharp , C# language
 ;https://www.evernote.com/shard/s21/nl/2425275/51824870-0471-4f73-999c-8d396ae0e8b5 , DPI Scaling
+
+https://www.evernote.com/shard/s21/nl/2425275/5622a161-f0dd-40c4-a048-4bc10f13b9e2 , WINSDV
+
+; Books below
+https://www.evernote.com/shard/s21/nl/2425275/3287cab7-94d9-4b3c-a530-0be9421ac1ae , Books:PRWIN5, Programming Windows 5th-ed, Charles Petzold 1998
+https://www.evernote.com/shard/s21/nl/2425275/0fef82b4-a55b-4d91-96f3-1d8debc4206b , Books:PAWIN4, Programming Applications for MSWin, Jeffrey Ritchter 1999
+https://www.evernote.com/shard/s21/nl/2425275/6de5b4e8-0915-48b9-bbd3-d1d295c0ccaf , Books:FENGYUANG, Windows Graphics Programming, Win32 GDI and DirectDraw - Feng Yuan 2000
+https://www.evernote.com/shard/s21/nl/2425275/803cee5a-6ffb-443a-8840-f0de9805b4ba , Books:INSCOM, Inside COM, Dale Rogerson 1997
+https://www.evernote.com/shard/s21/nl/2425275/d62cf3aa-cad3-4c93-9bec-f89d8ac3b15c , Books:MSBUILD2, Inside.the.Microsoft.Build.Engine.2nd.Edition.Dec.2010

@@ -2437,6 +2437,13 @@ AppsKey & k:: Evernote_PopLinkShowMenu()
 Evernote_PopLinkShowMenu()
 {
 	armap := []
+
+	try {
+		Menu, EvernotePoplinksMenu, DeleteAll ; Delete old items first
+	} catch {
+	}
+	menuhead := Format("== {} ==",  g_evernotePopLinksFile)
+	Menu, EvernotePoplinksMenu, Add, %menuhead%, Evernote_OpenPopLinkFile
 	
 	Loop, read, % g_evernotePopLinksFile
 	{
@@ -2444,33 +2451,45 @@ Evernote_PopLinkShowMenu()
 			continue ; this is a comment line, skip it.
 		
 	    fields := StrSplit(A_LoopReadLine, ",", " `t")
+
 	    url := fields[1] ; sth like: https://www.evernote.com/shard/s21/nl/2425275/4586fb5e-4414-4e81-8ea8-75bf28d9d666
-	    menutext := fields[2]
-	    desctext := fields[3]
+	    menutext := fields[2] ; e.g: MSBuild, WinGUI, Books:PRWIN5
+	    desctext := fields[3] 
+	    if(fields[4]) 
+	    	desctext .= ", " . fields[4]
+	    if(fields[5]) 
+	    	desctext .= ", " . fields[5] 
 	    
 	    if (!url)
 	    	continue
 	    
-	    armap.Push({"url":url, "menutext":menutext, "desctext":desctext})
-	}
-	
-	arlen := armap.Length()
+	    ; If menutext has a colon in it, then I will create a submenu for it.
+	    ; Word before the colon becomes the submenu name, word after the colon becomes menutext beneath the submenu.
+	    
+	    colonpos := InStr(menutext, ":")
+	    ;
+	    if(colonpos==0) ; no colon
+	    {
+			menutextfull := Format("&{1}`t{2}", menutext, desctext)
 
-	try {
-		Menu, EvernotePoplinksMenu, DeleteAll ; Delete old items first
-	} catch {
-	}
-	
-	menuhead := Format("== {} Links ==", arlen, g_evernotePopLinksFile)
-	Menu, EvernotePoplinksMenu, Add, %menuhead%, Evernote_OpenPopLinkFile
-	
-	Loop, %arlen%
-	{
-		map := armap[A_Index]
-		menutextfull := Format("&{1}`t{2}", map.menutext, map.desctext)
-
-		fn := Func("Evernote_PopLinkPaste").Bind(map.menutext, map.url)
-		Menu, EvernotePoplinksMenu, Add, %menutextfull%, %fn%
+			fn := Func("Evernote_PopLinkPaste").Bind(menutext, url)
+			Menu, EvernotePoplinksMenu, Add, %menutextfull%, %fn%
+	    
+	    }
+	    else
+	    {
+	    	submenuname := SubStr(menutext, 1, colonpos-1)
+	    	menutext := SubStr(menutext, colonpos+1)
+			
+			menutextfull := Format("&{1}`t{2}", menutext, desctext)
+	    	
+	    	; Create submenu
+	    	fn := Func("Evernote_PopLinkPaste").Bind(menutext, url)
+	    	Menu, %submenuname%, Add, %menutextfull%, %fn%
+	    	
+	    	; Create and add to parent menu
+	    	Menu, EvernotePoplinksMenu, Add, &%submenuname%, :%submenuname%
+	    }
 	}
 	
 	Menu, EvernotePoplinksMenu, Show
