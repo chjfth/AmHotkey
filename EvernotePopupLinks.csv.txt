@@ -1,21 +1,38 @@
-https://www.evernote.com/shard/s21/nl/2425275/c07f9c0a-b536-4ecb-9254-2d422564da11 , MSBuild
-https://www.evernote.com/shard/s21/nl/2425275/2f0287be-ce65-4e1f-bf5e-3ecf488e4a73 , Toaster
-https://www.evernote.com/shard/s21/nl/2425275/5dd911c7-6bae-44e0-8726-05f1a5644e61 , WinDrv
+﻿https://www.evernote.com/shard/s21/nl/2425275/c07f9c0a-b536-4ecb-9254-2d422564da11 , MSBuild
 
-https://www.evernote.com/shard/s21/nl/2425275/b49be72e-4bbe-4949-b95b-a777b7ed23a0 , BATCMD
+https://www.evernote.com/shard/s21/nl/2425275/5dd911c7-6bae-44e0-8726-05f1a5644e61 , WinDrv:WinDrv, Windows Driver 主帖
+https://www.evernote.com/shard/s21/nl/2425275/1863e49d-1936-4628-97e9-85fc75ca317e , WinDrv:SetupDi 
+https://www.evernote.com/shard/s21/nl/2425275/5f94596d-8bf3-4a8b-9565-ee13361b62c0 , WinDrv:WHQL
+https://www.evernote.com/shard/s21/nl/2425275/2f0287be-ce65-4e1f-bf5e-3ecf488e4a73 , WinDrv:Toaster, WDK Toaster 示例
+
+https://www.evernote.com/shard/s21/nl/2425275/b49be72e-4bbe-4949-b95b-a777b7ed23a0 , BATCMD , Windows batch script
 https://www.evernote.com/shard/s21/nl/2425275/850c9be2-7b91-4d85-965e-646923bc22c1 , VSIDE , Visual Studio IDE
 
 https://www.evernote.com/shard/s21/nl/2425275/b541de60-735a-475f-be07-715f55078704 , Evernote
 https://www.evernote.com/shard/s21/nl/2425275/47874f88-fdcf-4eca-84fe-2cb0ef05a4a0 , Autohotkey
 https://www.evernote.com/shard/s21/nl/2425275/4586fb5e-4414-4e81-8ea8-75bf28d9d666 , WinGUI
 https://www.evernote.com/shard/s21/nl/2425275/35e458a1-d25e-45bb-83ab-b7358c4af4f5 , CSharp , C# language
+https://www.evernote.com/shard/s21/nl/2425275/b1c9e992-0c29-45a1-a0d9-1f6eb91677ac , Git
 ;https://www.evernote.com/shard/s21/nl/2425275/51824870-0471-4f73-999c-8d396ae0e8b5 , DPI Scaling
+https://www.evernote.com/shard/s21/nl/2425275/b86653d1-f665-48db-a87e-f651ab52f009 , WinMgt ,Windows 系统管理
 
 https://www.evernote.com/shard/s21/nl/2425275/5622a161-f0dd-40c4-a048-4bc10f13b9e2 , WINSDV
 
+https://www.evernote.com/shard/s21/nl/2425275/68f18a8e-d3af-47d4-8a24-69579b8d02fe , 零碎:CORPUP , 开办公司
+https://www.evernote.com/shard/s21/nl/2425275/78d5ee72-4ae9-4d05-8fbb-3549d4b653cf , 零碎:MSDNview
+https://www.evernote.com/shard/s21/nl/2425275/a6d83ecc-9248-4452-a254-65d8de2252f7 , 零碎:ISO , ISO 国际标准
+
+https://www.evernote.com/shard/s21/nl/2425275/15efd366-1488-49a4-928b-d13a66f1feab , 小工具:showargs, 显示命令行拆解结果
+
+https://www.evernote.com/shard/s21/nl/2425275/8c1a47a1-5577-4cec-86d0-06a48ef2193e , 自创主题:VSPG, Visual Studio 构建前后批处理通用框架
+https://www.evernote.com/shard/s21/nl/2425275/ee552f1d-8e4b-4051-8039-9ab7ee52c8f9 , 自创主题:WINFONTC, Windows Fonts and Charset
+
 ; Books below
-https://www.evernote.com/shard/s21/nl/2425275/3287cab7-94d9-4b3c-a530-0be9421ac1ae , Books:PRWIN5, Programming Windows 5th-ed, Charles Petzold 1998
-https://www.evernote.com/shard/s21/nl/2425275/0fef82b4-a55b-4d91-96f3-1d8debc4206b , Books:PAWIN4, Programming Applications for MSWin, Jeffrey Ritchter 1999
-https://www.evernote.com/shard/s21/nl/2425275/6de5b4e8-0915-48b9-bbd3-d1d295c0ccaf , Books:FENGYUANG, Windows Graphics Programming, Win32 GDI and DirectDraw - Feng Yuan 2000
-https://www.evernote.com/shard/s21/nl/2425275/803cee5a-6ffb-443a-8840-f0de9805b4ba , Books:INSCOM, Inside COM, Dale Rogerson 1997
-https://www.evernote.com/shard/s21/nl/2425275/d62cf3aa-cad3-4c93-9bec-f89d8ac3b15c , Books:MSBUILD2, Inside.the.Microsoft.Build.Engine.2nd.Edition.Dec.2010
+;
+https://www.evernote.com/shard/s21/nl/2425275/3287cab7-94d9-4b3c-a530-0be9421ac1ae , WinBooks:PRWIN5, Programming Windows 5th-ed, Charles Petzold 1998
+https://www.evernote.com/shard/s21/nl/2425275/0fef82b4-a55b-4d91-96f3-1d8debc4206b , WinBooks:PAWIN4, Programming Applications for MSWin, Jeffrey Ritchter 1999
+https://www.evernote.com/shard/s21/nl/2425275/6de5b4e8-0915-48b9-bbd3-d1d295c0ccaf , WinBooks:FENGYUANG, Windows Graphics Programming, Win32 GDI and DirectDraw - Feng Yuan 2000
+https://www.evernote.com/shard/s21/nl/2425275/803cee5a-6ffb-443a-8840-f0de9805b4ba , WinBooks:INSCOM, Inside COM, Dale Rogerson 1997
+https://www.evernote.com/shard/s21/nl/2425275/d62cf3aa-cad3-4c93-9bec-f89d8ac3b15c , WinBooks:MSBUILD2, Inside.the.Microsoft.Build.Engine.2nd.Edition.Dec.2010
+https://www.evernote.com/shard/s21/nl/2425275/7f6cc57e-acf7-4bc1-bcbb-24911753eb71 , WinBooks:PWDM2, MSPress - Programming WDM 2nd-ed, by Walter Oney (2003)
+https://www.evernote.com/shard/s21/nl/2425275/f1cc9f41-9edd-4699-8397-13788748b470 , WinBooks:LDCOM, OReilly - Learning DCOM (1999)

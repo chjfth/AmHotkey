@@ -2916,6 +2916,21 @@ dev_getCallStack(deepness = 20, is_print_code = true)
 	return stack
 }
 
+dev_hasValue(haystack, needle) 
+{
+	; Check if needle is in the haystack array.
+	; https://stackoverflow.com/a/33593563/151453
+    
+    if(!isObject(haystack))
+        return false
+    if(haystack.Length()==0)
+        return false
+    for k,v in haystack
+        if(v==needle)
+            return true
+    return false
+}
+
 
 ;==============================================================================
 #Include *i _more_includes_.ahk ;This should be the final statement of this ahk

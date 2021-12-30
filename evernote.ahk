@@ -2436,7 +2436,7 @@ AppsKey & k:: Evernote_PopLinkShowMenu()
 ;
 Evernote_PopLinkShowMenu()
 {
-	armap := []
+	submenus_seen := []
 
 	try {
 		Menu, EvernotePoplinksMenu, DeleteAll ; Delete old items first
@@ -2480,6 +2480,15 @@ Evernote_PopLinkShowMenu()
 	    {
 	    	submenuname := SubStr(menutext, 1, colonpos-1)
 	    	menutext := SubStr(menutext, colonpos+1)
+	    	
+	    	if(!dev_hasValue(submenus_seen, submenuname))
+	    	{
+	    		try {
+					Menu, %submenuname%, DeleteAll ; Delete old submenu-items first
+				} catch {
+				}
+				submenus_seen.Push(submenuname)
+			}
 			
 			menutextfull := Format("&{1}`t{2}", menutext, desctext)
 	    	
