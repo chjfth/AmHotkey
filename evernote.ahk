@@ -147,6 +147,7 @@ global Evtbl_OnTableDivSwitch
 ;
 global g_evtblEdtCsstableRows
 global g_evtblLblCsstableRows
+global g_evtblChkboxCsstableHead
 
 global lbl_TableColumnSpec, lbl_TableCellPadding, lbl_TableBorderPx
 global g_evtblTableColumnSpec
@@ -705,10 +706,11 @@ Evtbl_CreateGui()
 	Gui, EVTBL:Add, Text, xm Y+15 , % "HTML content:"
 	Gui, EVTBL:Add, Radio, X+10 Group Checked vg_evtblIsTable gEvtbl_OnTableDivSwitch, % "<&TABLE>"
 	Gui, EVTBL:Add, Radio, X+10                 vg_evtblIsDiv gEvtbl_OnTableDivSwitch, % "<&DIV>"
-	Gui, EVTBL:Add, Radio, X+10            vg_evtblIsCsstable gEvtbl_OnTableDivSwitch, % "CSS-t&able"
+	Gui, EVTBL:Add, Radio, X+25            vg_evtblIsCsstable gEvtbl_OnTableDivSwitch, % "CSS-t&able"
 	; // set CSS-table rows //
 	Gui, EVTBL:Add, Edit, x+10 yp-3 w30 Hidden vg_evtblEdtCsstableRows, % "3"
 	Gui, EVTBL:Add, Text, x+5 yp+3      Hidden vg_evtblLblCsstableRows, % "rows"
+	Gui, EVTBL:Add, CheckBox, x+5  Checked Hidden vg_evtblChkboxCsstableHead, % "Has head"
 
 	;
 	; Table Columns: ____24,360,540____  [x] First column in color
@@ -785,6 +787,7 @@ Evtbl_OnTableDivSwitch()
 	GuiControl, EVTBL:%hideORshow%, g_evtblCssTableColumnSpec
 	GuiControl, EVTBL:%hideORshow%, g_evtblEdtCsstableRows
 	GuiControl, EVTBL:%hideORshow%, g_evtblLblCsstableRows
+	GuiControl, EVTBL:%hideORshow%, g_evtblChkboxCsstableHead
 	;
 	if(g_evtblIsCssTable)
 	{
@@ -990,13 +993,17 @@ Evtbl_GenHtml()
 	else if(g_evtblIsCssTable)
 	{
 		rows := g_evtblEdtCsstableRows + 0
-		html := Evtbl_GenHtml_CssTable(rows, hexcolor1, hexcolor2) ;PENDING
+		
+		GuiControlGet, g_evtblChkboxCsstableHead, EVTBL:
+		isAddHead := g_evtblChkboxCsstableHead ? 1 : 0
+		
+		html := Evtbl_GenHtml_CssTable(rows, isAddHead, hexcolor1, hexcolor2)
 	}
 	
 	return html
 }
 
-Evtbl_GenHtml_CssTable(rows, hexcolor1, hexcolor2)
+Evtbl_GenHtml_CssTable(rows, isAddHead, hexcolor1, hexcolor2)
 {
 /* This function enables embedding nesting "tables" into an Evernote <table>. Great idea!
 
@@ -1058,9 +1065,12 @@ whole csstable and fill its content from the beginning.
 	css_bg_rule := make_css_bg_rule(hexcolor1, hexcolor2) ; maybe pure color or color gradient
 
 	html_tablerows := ""
-	Loop, %rows%
+	Loop, % rows+isAddHead
 	{
-		html_onerow := Evtbl_GenHtml_CssTable_OneRow(ar_colinfo, css_bg_rule, A_Index==1)
+		is_first_line := A_Index==1
+		is_color_row := is_first_line && isAddHead
+		
+		html_onerow := Evtbl_GenHtml_CssTable_OneRow(ar_colinfo, css_bg_rule, is_first_line, is_color_row)
 		
 		html_tablerows .= html_onerow
 	}
@@ -1075,7 +1085,7 @@ whole csstable and fill its content from the beginning.
 	return html
 }
 ;
-Evtbl_GenHtml_CssTable_OneRow(ar_colinfo, css_bg_rule, is_first_line)
+Evtbl_GenHtml_CssTable_OneRow(ar_colinfo, css_bg_rule, is_first_line, is_color_row)
 {
 	fmt_tablecell = 
 (
@@ -1089,7 +1099,7 @@ Evtbl_GenHtml_CssTable_OneRow(ar_colinfo, css_bg_rule, is_first_line)
 	
 	Loop, %colwidth_count%
 	{
-		bg_rule := (is_first_line || (A_Index==1 && g_evtblIsFirstColumnColor)) ? css_bg_rule : ""
+		bg_rule := (is_color_row || (A_Index==1 && g_evtblIsFirstColumnColor)) ? css_bg_rule : ""
 		
 		width_value := ar_colinfo[A_Index].width_px
 		if(!StrIsEndsWith(width_value, "%"))
