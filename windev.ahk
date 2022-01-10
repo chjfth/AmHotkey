@@ -493,6 +493,22 @@ VSIDEPP_FocusRightPane()
 
 #If ; VSIDE_IsPropertyPageActive()
 
+; Ins:: VAX_SurroundStringWith_T()
+VAX_SurroundStringWith_T()
+{
+	; For VS2010 + VisualAssist environment, quickly wrap a string with _T("...") .
+	; Place caret at starting or ending double-quotes, then use this hotkey.
+	
+	dev_TooltipAutoClear("SurroundWith_T...")
+	Send +^]     ; Let VSIDE highlight the string under caret
+	Sleep, 200   ; Give VAX some response time
+	Send (       ; This makes VAX surround the string with brackets.
+	Send {Left}  ; Move caret to left side of the just-inserted brackets.
+	Send _T      ; Type in _T
+	
+	Send {Esc}   ; Dismiss VAX's suggestion due to our typing _T above.
+}
+
 
 
 
