@@ -710,7 +710,7 @@ Evtbl_CreateGui()
 	; // set CSS-table rows //
 	Gui, EVTBL:Add, Edit, x+10 yp-3 w30 Hidden vg_evtblEdtCsstableRows, % "3"
 	Gui, EVTBL:Add, Text, x+5 yp+3      Hidden vg_evtblLblCsstableRows, % "rows"
-	Gui, EVTBL:Add, CheckBox, x+5  Checked Hidden vg_evtblChkboxCsstableHead, % "Has head"
+	Gui, EVTBL:Add, CheckBox, x+5  Checked Hidden vg_evtblChkboxCsstableHead, % "Add header"
 
 	;
 	; Table Columns: ____24,360,540____  [x] First column in color

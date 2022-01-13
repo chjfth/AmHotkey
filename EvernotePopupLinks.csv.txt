@@ -1,16 +1,23 @@
 ﻿https://www.evernote.com/shard/s21/nl/2425275/c07f9c0a-b536-4ecb-9254-2d422564da11 , MSBuild
 
+https://www.evernote.com/shard/s21/nl/2425275/08cea251-4484-4a3d-afd0-22ae81f0bc47 , WinDev:WinAPI , Windows API 相关
+https://www.evernote.com/shard/s21/nl/2425275/4586fb5e-4414-4e81-8ea8-75bf28d9d666 , WinDev:WinGUI , Windows UI 编程
+https://www.evernote.com/shard/s21/nl/2425275/718144a8-3879-4a58-bddd-b689b2866e2e , WinDev:MSCOM , 微软组件对象模型
+https://www.evernote.com/shard/s21/nl/2425275/a56322fb-1dc6-4f88-b939-f5c5a90e51ff , WinDev:WinMisc , 杂类 Windows 编程
+
 https://www.evernote.com/shard/s21/nl/2425275/5dd911c7-6bae-44e0-8726-05f1a5644e61 , WinDrv:WinDrv, Windows Driver 主帖
 https://www.evernote.com/shard/s21/nl/2425275/1863e49d-1936-4628-97e9-85fc75ca317e , WinDrv:SetupDi 
 https://www.evernote.com/shard/s21/nl/2425275/5f94596d-8bf3-4a8b-9565-ee13361b62c0 , WinDrv:WHQL
+https://www.evernote.com/shard/s21/nl/2425275/75c2ea1d-e961-49a2-a417-3e359be85c99 , WinDrv:WinDBG
+https://www.evernote.com/shard/s21/nl/2425275/72790fe5-27f9-4b76-baa3-0a4a80754c65 , WinDrv:UFCOM
+https://www.evernote.com/shard/s21/nl/2425275/482e794b-7dde-4653-bd68-f16c100e3b60 , WinDrv:VisualDDK
 https://www.evernote.com/shard/s21/nl/2425275/2f0287be-ce65-4e1f-bf5e-3ecf488e4a73 , WinDrv:Toaster, WDK Toaster 示例
+https://www.evernote.com/shard/s21/nl/2425275/f297ca74-4311-4fa2-a1e0-ec18964ab169 , WinDrv:Toaster2022
 
 https://www.evernote.com/shard/s21/nl/2425275/b49be72e-4bbe-4949-b95b-a777b7ed23a0 , BATCMD , Windows batch script
 https://www.evernote.com/shard/s21/nl/2425275/850c9be2-7b91-4d85-965e-646923bc22c1 , VSIDE , Visual Studio IDE
 
-https://www.evernote.com/shard/s21/nl/2425275/b541de60-735a-475f-be07-715f55078704 , Evernote
 https://www.evernote.com/shard/s21/nl/2425275/47874f88-fdcf-4eca-84fe-2cb0ef05a4a0 , Autohotkey
-https://www.evernote.com/shard/s21/nl/2425275/4586fb5e-4414-4e81-8ea8-75bf28d9d666 , WinGUI
 https://www.evernote.com/shard/s21/nl/2425275/35e458a1-d25e-45bb-83ab-b7358c4af4f5 , CSharp , C# language
 https://www.evernote.com/shard/s21/nl/2425275/b1c9e992-0c29-45a1-a0d9-1f6eb91677ac , Git
 ;https://www.evernote.com/shard/s21/nl/2425275/51824870-0471-4f73-999c-8d396ae0e8b5 , DPI Scaling
@@ -21,11 +28,22 @@ https://www.evernote.com/shard/s21/nl/2425275/5622a161-f0dd-40c4-a048-4bc10f13b9
 https://www.evernote.com/shard/s21/nl/2425275/68f18a8e-d3af-47d4-8a24-69579b8d02fe , 零碎:CORPUP , 开办公司
 https://www.evernote.com/shard/s21/nl/2425275/78d5ee72-4ae9-4d05-8fbb-3549d4b653cf , 零碎:MSDNview
 https://www.evernote.com/shard/s21/nl/2425275/a6d83ecc-9248-4452-a254-65d8de2252f7 , 零碎:ISO , ISO 国际标准
+https://www.evernote.com/shard/s21/nl/2425275/6f3a3c9a-c6c8-4c67-abe8-ba5567b4a995 , 零碎:hdisk , 硬盘相关
+
+https://www.evernote.com/shard/s21/nl/2425275/7b769e8c-0fd6-4342-9147-8738e9188196 , 软件主题:VMwks , VMware Workstation
+https://www.evernote.com/shard/s21/nl/2425275/66a2acec-5d85-4be7-a714-f9d85fa11679 , 软件主题:VirtualBox
+https://www.evernote.com/shard/s21/nl/2425275/b541de60-735a-475f-be07-715f55078704 , 软件主题:Evernote
+https://www.evernote.com/shard/s21/nl/2425275/a130bbdb-7d4e-498a-b4f4-84f712a62dc9 , 软件主题:MPC-HC , Media Player Classic
+https://www.evernote.com/shard/s21/nl/2425275/86ba9db5-f49b-4f9f-a2e0-6e8c12b09563 , 软件主题:SpaceDesk , 多显示器扩展软件
 
 https://www.evernote.com/shard/s21/nl/2425275/15efd366-1488-49a4-928b-d13a66f1feab , 小工具:showargs, 显示命令行拆解结果
 
 https://www.evernote.com/shard/s21/nl/2425275/8c1a47a1-5577-4cec-86d0-06a48ef2193e , 自创主题:VSPG, Visual Studio 构建前后批处理通用框架
 https://www.evernote.com/shard/s21/nl/2425275/ee552f1d-8e4b-4051-8039-9ab7ee52c8f9 , 自创主题:WINFONTC, Windows Fonts and Charset
+https://www.evernote.com/shard/s21/nl/2425275/61d348e1-8ab7-4bec-93f4-48e248d89a6c , 自创主题:chja20 ,我的 3950X 台式机
+https://www.evernote.com/shard/s21/nl/2425275/a9416fe2-72d2-44ab-9e59-b297f2276ce4 , 自创主题:ThingRela , 信息分类关系
+https://www.evernote.com/shard/s21/nl/2425275/5cfb0da8-4f25-4300-9749-fa1c196c9ad3 , 自创主题:AMBIG , 歧义收集帖
+https://www.evernote.com/shard/s21/nl/2425275/5cfb0da8-4f25-4300-9749-fa1c196c9ad3 , 自创主题:歧义  , 歧义收集帖
 
 ; Books below
 ;
