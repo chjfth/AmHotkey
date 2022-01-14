@@ -347,8 +347,10 @@ NumpadAdd:: Send ^!{Pgdn}     ; TabsStudio.Connect.MarkerNextTabHighlightingColo
 ;!NumpadMult:: Send ^!]    ; TabsStudio.Connect.MoveTabRight // this is defaultly used as Debug.ShowNextStatement
 
 
-!Up:: Send {Up 10}
-!Down:: Send {Down 10}
+; [2022-01-14] Almost not using these for many years, using PgUp/PgDn is more natural
+; And I think Alt+Up/Alt+Down should be reserved for more advanced C++ code navigation.
+; !Up:: Send {Up 10}
+; !Down:: Send {Down 10}
 
 :*?:irpc``::Irp->CurrentLocation
 :*?:irps``::Irp->Tail.Overlay.CurrentStackLocation
