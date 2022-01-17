@@ -1090,7 +1090,7 @@ Evtbl_GenHtml_CssTable_OneRow(ar_colinfo, css_bg_rule, is_first_line, is_color_r
 	fmt_tablecell = 
 (
 
-    <div style="display:table-cell; padding:3px; border:1px solid lightgray; width:{1}; {2};">{3}</div>
+    <div style="display:table-cell; padding:3px; border:1px solid lightgray; width:{1}; vertical-align:top; {2}; {3}">{4}</div>
 )
 
 	colwidth_count := ar_colinfo.Length()
@@ -1107,6 +1107,7 @@ Evtbl_GenHtml_CssTable_OneRow(ar_colinfo, css_bg_rule, is_first_line, is_color_r
 		
 		tablecells_onerow .= Format(fmt_tablecell
 			, width_value
+			, is_first_line ? "text-align:center" : ""
 			, bg_rule
 			, is_first_line ? Format("Column{1}", A_Index) : "-")
 	}
