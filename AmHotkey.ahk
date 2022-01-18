@@ -531,7 +531,7 @@ DoHilightRectInTopwin(wintitle, x, y, w, h, duration_msec:=1000, rgb:="FFE0BE")
 	DoHilightBlocksInTopwin(wintitle, arRects, duration_msec)
 }
 
-DoHilightBlocksInTopwin_rs(wintitle, arRectStrs, msec_step:=1000)
+not_used___DoHilightBlocksInTopwin_rs(wintitle, arRectStrs, msec_step:=1000)
 {
 	; arRects sample:
 	;
@@ -541,8 +541,8 @@ DoHilightBlocksInTopwin_rs(wintitle, arRectStrs, msec_step:=1000)
 	for index, rectstr in arRectStrs
 	{
 		inputvar := arRectStrs[index]
-		StringSplit, num, inputvar , `,
-		arRects.Insert( { "x":num1 , "y":num2 , "w":num3 , "h":num4 } )
+		num := StrSplit(inputvar, ",")
+		arRects.Insert( { "x":num[1] , "y":num[2] , "w":num[3] , "h":num[4] } )
 	}
 	DoHilightBlocksInTopwin(wintitle, arRects, msec_step)
 
@@ -1950,11 +1950,12 @@ Current window(%winclass%) at <%x%,%y%> , size [%width%,%height%]
 	), , 600, 420, , , , , %textpreset%
 	if ErrorLevel
 		return
-	StringSplit, n, size_xy , `,
-	x1_ := n1
-	y1_ := n2
-	x2_ := n3
-	y2_ := n4
+	
+	n := StrSplit(size_xy, ",", " ")
+	x1_ := n[1]
+	y1_ := n[2]
+	x2_ := n[3]
+	y2_ := n[4]
 	
 	if (x1_ <> "")
 		newx := x1_
@@ -2555,11 +2556,11 @@ dev_GuiAutoResize(GuiName, rsdict, gui_nowwidth, gui_nowheight, force_redraw:=fa
 	if(qmargin) ; q implies quad
 	{
 		; Example: qmargin:="10,20,10,20"
-		StringSplit, token, qmargin, `,
-		x0m := token1
-		y0m := token2
-		x1m := token3
-		y1m := token4
+		token := StrSplit(qmargin, ",")
+		x0m := token[1]
+		y0m := token[2]
+		x1m := token[3]
+		y1m := token[4]
 
 		nowwidth := gui_nowwidth - (x0m+x1m)
 		nowheight := gui_nowheight - (y0m+y1m)
@@ -2590,11 +2591,11 @@ dev_GuiAutoResize(GuiName, rsdict, gui_nowwidth, gui_nowheight, force_redraw:=fa
 			gui_rsinfo[ctrlvar] := {} ; a nested dict
 			ctrl_rsinfo := gui_rsinfo[ctrlvar] ; define a label for easier reference
 			
-			StringSplit, token, quad, `,
-			ctrl_rsinfo.pct_left := token1/100
-			ctrl_rsinfo.pct_top := token2/100
-			ctrl_rsinfo.pct_right := token3/100
-			ctrl_rsinfo.pct_bottom := token4/100
+			token := StrSplit(quad, ",")
+			ctrl_rsinfo.pct_left := token[1]/100
+			ctrl_rsinfo.pct_top := token[2]/100
+			ctrl_rsinfo.pct_right := token[3]/100
+			ctrl_rsinfo.pct_bottom := token[4]/100
 			
 			GuiControlGet, rect, %GuiName%:Pos, %ctrlvar%
 ;			MsgBox, % Format("dev_GuiAutoResize({}.{}) Init:  rectX={}, rectY={}, rectW={}, rectH={}", GuiName, ctrlvar, rectX, rectY, rectW, rectH)

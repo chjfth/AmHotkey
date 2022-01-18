@@ -1001,9 +1001,9 @@ MpcAot_SetCustomWindowSize()
 		If ErrorLevel
 			return
 		
-		StringSplit, n, s2 , `,
-		w := n1
-		h := n2
+		n := StrSplit(s2, ",")
+		w := n[1]
+		h := n[2]
 		if(! (w>=100 and h>=100) ) {
 			MsgBox, % "Invalid input! Two values should both >= 100"
 			return

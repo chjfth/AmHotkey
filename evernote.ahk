@@ -492,10 +492,10 @@ Evp_RefreshPreviewAllGui()
 	
 	Loop, Read, % g_evpImglistTxtPath
 	{
-		StringSplit, field, A_LoopReadLine, |
-		desc := field1
+		field := StrSplit(A_LoopReadLine, "|")
+		desc := field[1]
 			; Example: "PNG(32-bit), 80KB"
-		imgfile := field2
+		imgfile := field[2]
 		
 		RegExMatch(desc, "^([^,]+)", subpat)
 		hint := subpat1
@@ -805,9 +805,9 @@ Evtbl_ParseTableColumnWidth(ColumnSpec)
 {
 	; ColumnSpec is like: "24,360,540" or "24:#,360:Brief,540:Detail"
 
-	StringSplit, token, ColumnSpec, `,
+	token := StrSplit(ColumnSpec, ",")
 	
-	if (token0 == 0) {
+	if (token.Length() == 0) {
 		return
 	}
 	
@@ -816,10 +816,11 @@ Evtbl_ParseTableColumnWidth(ColumnSpec)
 	{
 		; A_LoopField will be "24" or "360:Brief" etc
 		
-		tkn1 := ""
-		tkn2 := "#" . A_Index ; set default column header text #1, #2, #3 ...
-		StringSplit, tkn, A_LoopField, :
-		ar_colinfo.Push({ "width_px" : tkn1, "text" : tkn2 })
+		tkn := [ "" , "#" . A_Index ]
+		; -- tkn[2] : set default column header text #1, #2, #3 ...
+		
+		tkn := StrSplit(A_LoopField, ":")
+		ar_colinfo.Push({ "width_px" : tkn[1], "text" : tkn[2] })
 	}
 	return ar_colinfo
 }
@@ -1255,13 +1256,12 @@ Evtbl_GetColorDicts()
 		if(itemstr=="")
 			continue
 		
-		token1:= "", token2 := "" ; reset stale value
-		StringSplit, token, itemstr , `,
-		; -- token1="#f0f0ff" , token2="灰蓝"
+		token := StrSplit(itemstr , ",")
+		; -- token[1]="#f0f0ff" , token[2]="灰蓝"
 		
-		ctriple := util_GetRgbTripleFromStr(token1)
+		ctriple := util_GetRgbTripleFromStr(token[1])
 		
-		if(!StrIsStartsWith(token1, "#") || !ctriple)
+		if(!StrIsStartsWith(token[1], "#") || !ctriple)
 		{
 			if(A_Index<=presets)
 			{
@@ -1279,7 +1279,7 @@ Evtbl_GetColorDicts()
 		dict := {}
 		dict.hexcode := util_ColorTripleToHex(ctriple, true)
 		dict.rgbcode := util_ColorTripleToRGB(ctriple)
-		dict.desc := token2
+		dict.desc := token[2]
 		ar_colordict.Push(dict)
 	}
 	
@@ -2229,20 +2229,22 @@ SupsubGuiEscape()
 }
 
 
-; ^!\:: Evernote_InsertSideBySideDivs() ; [2021-12-03] Having Evtbl_GenHtml_CssTable(), this is outdated.
+; ^!\:: Evernote_InsertSideBySideDivs() ; old function
 Evernote_InsertSideBySideDivs()
 {
 	; Evernote 6.5 does not allow table inside table. In case you want to have a simple 
 	; one-row table inside a table, you can create a one-row table using this function.
+	;
+	; [2021-12-03] This has been superseded by Evtbl_GenHtml_CssTable().
+	
 	InputBox, cellwidths, % "Insert a side-by-side DIVs row", % "Input widths of your DIV cells, separated by commas.",, 384, 144, , , , , 100`,200
 	
 	if ErrorLevel {
 		return
 	}
 	
-	StringSplit, w, cellwidths , `,
-
-	if (w0 == 0) {
+	w := StrSplit(cellwidths, ",")
+	if (w.Length() == 0) {
 		return
 	}
 	

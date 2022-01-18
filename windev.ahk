@@ -45,8 +45,8 @@ VC6_FocusCodeArea()
 	; each of them on every call of this function. 
 
 	nowpos := arpos[s_flip+1] ; Ahk array index is 1-based
-	StringSplit, p, nowpos, `,
-	ControlFocusViaRegexClassNNXY("^MDIClient[0-9]+$", false, p1, p2, true, true)
+	p := StrSplit(nowpos, ",")
+	ControlFocusViaRegexClassNNXY("^MDIClient[0-9]+$", false, p[1], p[2], true, true)
 }
 
 CapsLock & Left UP:: VC6_FocusLeftPane()
@@ -368,9 +368,9 @@ VS2010_FocusCodeArea()
 	arpos := [ "0.6,0.3" , "0.6,0.7" ]
 	s_flip := not s_flip
 	nowpos := arpos[s_flip+1] ; Ahk array index is 1-based
-	StringSplit, p, nowpos, `,
+	p := StrSplit(nowpos, ",")
 	;ControlFocusViaRegexClassNNXY("^MDIClient[0-9]+$", false, p1, p2, true, true)
-	ClickInActiveWindow(p1, p2, false) ; false=not moving mouse
+	ClickInActiveWindow(p[1], p[2], false) ; false=not moving mouse
 }
 
 

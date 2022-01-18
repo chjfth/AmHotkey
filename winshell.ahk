@@ -135,10 +135,10 @@ CalPPI_Init() ; Define it
 	g_CalppiListlist := ""
 	for index, str in gar_modelstr
 	{
-		StringSplit, num, str , `, ; split comma delimited value
-		w := num1
-		h := num2
-		inch := num3
+		num := StrSplit(str, ",") ; split comma delimited value
+		w := num[1]
+		h := num[2]
+		inch := num[3]
 		gar_models.Insert({"w":w, "h":h, "inch":inch})
 
 		listitem := w . "x" h . " , " . inch . " inch"

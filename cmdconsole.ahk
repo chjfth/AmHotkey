@@ -291,9 +291,9 @@ putty_GetXYUnit(byRef xunit, byRef yunit)
 		
 		if(xy_termsize)
 		{
-			StringSplit, outvar, xy_termsize, x
-			xunit := floor( cw/outvar1 )
-			yunit := floor( ch/outvar2 )
+			outvar := StrSplit(xy_termsize, "x")
+			xunit := floor( cw/outvar[1] )
+			yunit := floor( ch/outvar[2] )
 
 			cellsize := xunit . "," . yunit
 			g_putty_hwnd2termsize[hwnd] := cellsize
@@ -302,10 +302,10 @@ putty_GetXYUnit(byRef xunit, byRef yunit)
 	
 	if(cellsize)
 	{
-		StringSplit, outvar, cellsize , `,
+		outvar := StrSplit(cellsize, ",")
 		
-		xunit := outvar1
-		yunit := outvar2
+		xunit := outvar[1]
+		yunit := outvar[2]
 ;		tooltip, % "xunit=" . xunit . " / yunit=" . yunit
 		return true
 	}
