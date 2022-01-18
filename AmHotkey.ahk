@@ -1,4 +1,7 @@
-﻿; Tested with Autohotkey v1.1.32.00
+﻿; AmHotkey is the Modularized Autohotkey framework, created by Jimm Chen since 2010,
+; based on the fantastic Autohotkey script engine.
+;
+; Tested with Autohotkey v1.1.32.00
 
 #InstallKeybdHook
 
