@@ -1329,11 +1329,11 @@ dev_MsgBoxError(text) ; with a red (x) icon
 	MsgBox, 16, % "AHK Error", % text
 }
 
-dev_MsgBoxYesNo(text, default_yes:=true, parent_winid:=0)
+dev_MsgBoxYesNo(text, default_yes:=true, parent_winid:=0, icon:=64)
 {
 	; hope to display the message box at the center of parent_winid window...(pending)
 
-	opt := msgboxoption_YesNo + (default_yes ? 0 : msgboxoption_2nddefault)
+	opt := icon + msgboxoption_YesNo + (default_yes ? 0 : msgboxoption_2nddefault)
 	MsgBox, % opt, , %text%, 1000
 		; [2016-02-09] I can't use ``%opt%`` for ``% opt`` here(dialogbox would display 260), don't know why.
 	
@@ -1342,6 +1342,12 @@ dev_MsgBoxYesNo(text, default_yes:=true, parent_winid:=0)
 	Else
 		return false
 }
+
+dev_MsgBoxYesNo_Warning(text, default_yes:=true, parent_winid:=0)
+{
+	return dev_MsgBoxYesNo(text, default_yes, parent_winid, 48)
+}
+
 
 dev_IsClassnnFocused_regex(regex)
 {
@@ -2985,6 +2991,42 @@ dev_Menu_DoNone()
 {
 }
 
+dev_GetCurrentDatetime(format)
+{
+	FormatTime, outvar, , %format%
+	return outvar
+}
+
+dev_SplitPath(input, byref Filename:="")
+{
+	SplitPath, input, Filename, OutDir
+	return OutDir
+}
+
+dev_FindVacantFilename(path_ptn, start_seq:=1, max_seq:=10000)
+{
+	; If path_ptn=="d:\test\foo{}.txt", we'll search for 
+	;	d:\test\foo1.txt
+	;	d:\test\foo2.txt
+	;	d:\test\foo3.txt
+	; until the first non-existing filename/dirname is found.
+
+	if(!InStr(path_ptn, "{}"))
+		return ""
+	
+	now_seq := start_seq
+	Loop
+	{
+		if(now_seq>max_seq)
+			return ""
+	
+		nowpath := Format(path_ptn, now_seq)
+		if(!FileExist(nowpath))
+			return nowpath
+
+		now_seq += 1
+	}
+}
 
 
 ;==============================================================================

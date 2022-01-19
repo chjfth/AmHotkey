@@ -14,7 +14,8 @@ global g_dirsAmTemplates := [ A_ScriptDir "\AmTemplates" ]
 ; -- Templates will be searched inside these dirs. User can override or append to this array.
 
 ; global constant use by this module
-global g_amtIniFilename := "AmTemplate.cfg.ini"
+global g_amtIniCfgFilename := "AmTemplate.cfg.ini"
+global g_amtIniResultFileName := "AmTemplate.result.ini"
 global g_amtRootMenu := "AmtMenu"
 
 global AMT_FOUND_IMMEDIATE_TEMPLATE := -1
@@ -22,6 +23,7 @@ global AMT_FOUND_IMMEDIATE_TEMPLATE := -1
 ; global variable used by this module
 												;global g_countAmTemplates := 0
 global g_HwndAmt ; HWND for AMT dialog.
+global g_amtTemplateSrcDir ; the Dir with file AmTemplate.cfg.ini
 
 ; Max 9 words supported.
 global g_amteditOldword1, g_amteditNewword1
@@ -48,6 +50,9 @@ global g_amteditOldguid9, g_amteditNewguid9
 
 global g_amt_arTemplateGuids := [] ; an array of object(.oldword .desc .newword)
 
+global g_amtIsAutoGuid := true
+
+global g_amtDirApply
 
 ; AmTemplates_InitHotkeys()
 
@@ -57,7 +62,7 @@ return ; End of auto-execute section.
 
 Amt_GetIniFilepath(dirtmpl)
 {
-	return dirtmpl "\" g_amtIniFilename
+	return dirtmpl "\" g_amtIniCfgFilename
 }
 
 Amt_PrepareDir(basemenu, basedirpath)
@@ -73,14 +78,14 @@ Amt_PrepareDir(basemenu, basedirpath)
 	;
 	; Three cases:
 	;
-	; (1) If there is an immediate g_amtIniFilename found, we'll NOT create 
+	; (1) If there is an immediate g_amtIniCfgFilename found, we'll NOT create 
 	; this basemenu and return AMT_FOUND_IMMEDIATE_TEMPLATE(-1).
 	;
-	; (2) If there is any g_amtIniFilename found in deeper subdirs, we'll 
+	; (2) If there is any g_amtIniCfgFilename found in deeper subdirs, we'll 
 	; actually create this basemenu and return a positive number indicating 
 	; templates inside.
 	;
-	; (3) If there is no g_amtIniFilename found, basemenu is NOT created 
+	; (3) If there is no g_amtIniCfgFilename found, basemenu is NOT created 
 	; and we will return 0.
 	;
 	; Yes, the caller suggests the basemenu name(string) for us to create.
@@ -90,7 +95,7 @@ Amt_PrepareDir(basemenu, basedirpath)
 		return AMT_FOUND_IMMEDIATE_TEMPLATE
 	}
 	
-	; Now recurse into subdirs to find other potential g_amtIniFilename files.
+	; Now recurse into subdirs to find other potential g_amtIniCfgFilename files.
 	
 	total_found := 0
 	
@@ -178,11 +183,17 @@ Amt_ExpandTemplateUI(dirtmpl)
 
 Amt_CreateGui(inipath)
 {
+	g_amt_arTemplateWords := []
+	g_amt_arTemplateGuids := []
+
+	inidir := dev_SplitPath(inipath, inifilename)
+
 	Gui, AMT:New ; Destroy old window if any
 	Gui, AMT:+Hwndg_HwndAmt
 
 	Gui, AMT:Font, s9, Tahoma
-	Gui, AMT:Add, Text, xm w500, % inipath
+	Gui, AMT:Add, Text, xm w580, % Format("Template folder found: (with {})", inifilename)
+	Gui, AMT:Add, Edit, xm w580 ReadOnly -E0x200 vg_amtTemplateSrcDir, % inidir ; -E0x200: turn off WS_EX_CLIENTEDGE
 
 	Gui, AMT:Add, Text, xm y+16 w160, % "Old words from template:"
 	Gui, AMT:Add, Text, x+10 yp, % "New words to apply:"
@@ -212,16 +223,16 @@ Amt_CreateGui(inipath)
 		varname_oldword := "g_amteditOldword" + index
 		varname_newword := "g_amteditNewword" + index
 		
-		Gui, AMT:Add, Edit,    xm   w160 ReadOnly  v%varname_oldword%                     , % key
-		Gui, AMT:Add, Edit, yp x+10 w160           v%varname_newword% gAmt_OnNewWordChange, % key
+		Gui, AMT:Add, Edit,    xm   w160 ReadOnly -Tabstop           v%varname_oldword% , % key
+		Gui, AMT:Add, Edit, yp x+10 w160        gAmt_OnNewWordChange v%varname_newword% , % key
 		
 		g_amt_arTemplateWords[index] := {"oldword":key, "newword":key, "desc":value}
 	}
 	
 	
-	
 	Gui, AMT:Add, Text, xm y+16 w280, % "Old GUIDs from template:"
 	Gui, AMT:Add, Text, x+10 yp , % "New GUIDs to apply:"
+	Gui, AMT:Add, Checkbox, x+45 yp Checked vg_amtIsAutoGuid gAmt_ResyncUI, % "Auto &generate"
 	
 	;
 	; Get all items from [GUID]
@@ -246,11 +257,23 @@ Amt_CreateGui(inipath)
 		varname_oldword := "g_amteditOldguid" + index
 		varname_newword := "g_amteditNewguid" + index
 		
-		Gui, AMT:Add, Edit,    xm   w280 ReadOnly v%varname_oldword%                      , % key
-		Gui, AMT:Add, Edit, yp x+10 w280          v%varname_newword% gAmt_OnNewGuidChange , % key
+		; Generate a set of GUIDs by current timestamp, like 
+		; {20220119-0000-0000-0000-134742000001}
+		; {20220119-0000-0000-0000-134742000002}
+		;
+		guidfmt := Format("{yyyyMMdd-0000-0000-0000-HHmmss00000{1}}", index)
+		guidnew := dev_GetCurrentDatetime(guidfmt)
 		
-		g_amt_arTemplateGuids[index] := {"oldword":key, "newword":key, "desc":value}
+		Gui, AMT:Add, Edit,    xm   w280 ReadOnly -Tabstop         v%varname_oldword% , % key
+		Gui, AMT:Add, Edit, yp x+10 w280      gAmt_OnNewGuidChange v%varname_newword% , % guidnew
+		
+		g_amt_arTemplateGuids[index] := {"oldword":key, "newword":guidnew, "desc":value}
 	}
+	
+	Gui, AMT:Add, Text, y+16 xm , % "Apply to folder:"
+	Gui, AMT:Add, Edit, xm w580 vg_amtDirApply, % "fill later"
+	
+	Gui, AMT:Add, Button, y+16 xm Default gAMT_BtnOK, % " &Apply "
 }
 
 Amt_ShowGui(inipath)
@@ -260,6 +283,14 @@ Amt_ShowGui(inipath)
 	OnMessage(0x200, Func("Amt_WM_MOUSEMOVE")) ; add message hook
 	
 	Gui, AMT:Show, , % "Expand your AmTemplate"
+
+	Amt_ResyncUI()
+
+	; Fill a preset apply path for user
+	inidir := dev_SplitPath(inipath)
+	applydir := dev_FindVacantFilename(inidir "-Apply{}")
+
+	GuiControl, AMT:, g_amtDirApply, % applydir
 }
 
 Amt_HideGui()
@@ -282,7 +313,38 @@ AMTGuiEscape()
 
 AMT_BtnOK()
 {
-	Amt_HideGui()
+	Gui, AMT:Submit, NoHide
+	Gui, AMT:+OwnDialogs ; So that child dialogboxes are Modal.
+	
+	if(FileExist(g_amtDirApply))
+	{
+		dev_MsgBoxWarning("Apply folder already exists. Please choose a different one.")
+		return
+	}
+
+	; Check that editbox contents has changed.
+	stales := ""
+	for index,obj in g_amt_arTemplateWords
+	{
+		if(obj.oldword==obj.newword)
+			stales .= obj.oldword "`n"
+	}
+	;
+	if(stales)
+	{
+		isgo := dev_MsgBoxYesNo_Warning(Format("The following word(s) remain the same:`n`n{}`n`nAre you sure?", stales), false)
+		if(!isgo)
+			return
+	}
+
+	isok := Amt_DoExpandTemplate(g_amtTemplateSrcDir, g_amtDirApply)
+	; -- implicit input: g_amt_arTemplateGuids[], g_amt_arTemplateWords
+
+	if(isok)
+	{
+		dev_MsgBoxInfo("Expand template folder success.")
+	}
+;	Amt_HideGui()
 }
 
 
@@ -335,12 +397,137 @@ Amt_WM_MOUSEMOVE()
 		
 ;		MsgBox, % Format("Amt_WM_MOUSEMOVE on Oldword #{1} : {2} , {3} , {4}", index, g_amt_arTemplateWords[index].oldword, g_amt_arTemplateWords[index].newword, g_amt_arTemplateWords[index].desc)
 	}
+	else if(StrIsStartsWith(idCtrl, "g_amteditOldguid"))
+	{
+		index := dev_str2num(dev_StripPrefix(idCtrl, "g_amteditOldguid"))
+		
+		dev_TooltipAutoClear(g_amt_arTemplateGuids[index].desc)
+	}
 	else if(A_Gui=="AMT")
 	{
 		; Note: We use delay-hide here.
 		; If execute `tooltip` immediately, the dev_TooltipAutoClear() call from 
 		; Amt_OnNewWordChange() and Amt_OnNewGuidChange() will vanish immediately, with a mere flash.
 		dev_TooltipDelayHide()
+	}
+}
+
+Amt_ResyncUI()
+{
+	GuiControlGet, ischecked, AMT:, g_amtIsAutoGuid
+
+	cmdEnable := ischecked ? "Disable" : "Enable"
+	
+	for index,obj in g_amt_arTemplateGuids
+	{
+		varname := "g_amteditNewguid" . index
+	
+		GuiControl, AMT:%cmdEnable%, %varname%
+	}
+}
+
+Amt_DoExpandTemplate(srcdir, dstdir)
+{
+	arPairs := []
+
+	Loop, Files, % srcdir "\*", FR
+	{
+		srcRela := dev_StripPrefix(A_LoopFileFullPath, srcdir) ; srcRela will have \ prefix
+		
+		for idx,wordmap in g_amt_arTemplateWords
+		{
+			dstRela := StrReplace(srcRela, wordmap.oldword, wordmap.newword)
+		}
+
+		arPairs.Push({"srcrela":srcRela , "dstrela":dstRela}) 
+	}
+	
+	; Actually copy these files.
+	
+	for index,pair in arPairs
+	{
+		srcpath := srcdir . pair.srcrela
+		dstpath := dstdir . pair.dstrela
+
+		dstdir_tip := dev_SplitPath(dstpath)
+		
+		FileCreateDir, %dstdir_tip%
+		if ErrorLevel {
+			dev_MsgBoxError("ERROR: Cannot create folder: " dstdir_tip)
+			return false
+		}
+		
+;		FileCopy, %srcpath%, %dstpath%, 1 ; overwrite
+;		if ErrorLevel {
+;			dev_MsgBoxError(Format("ERROR: Cannot copy file: `n`n{}`n`nto`n`n{}", srcpath, dstpath))
+;			return false
+;		}
+
+		if(srcpath == Amt_GetIniFilepath(srcdir))
+		{
+			Amt_WriteResultIni(srcpath, dstdir_tip "\" g_amtIniResultFileName)
+		}
+		else 
+		{
+			FileRead, filetext, %srcpath%
+			if(!filetext)
+			{
+				dev_MsgBoxError(Format("ERROR: Fail to read source file: {}", srcpath))
+				return false
+			}
+			
+			for index,obj in g_amt_arTemplateWords
+			{
+				filetext := StrReplace(filetext, obj.oldword, obj.newword)
+			}
+			
+			for index,obj in g_amt_arTemplateGuids
+			{
+				filetext := StrReplace(filetext, obj.oldword, obj.newword)
+			}
+			
+			if(FileExist(dstpath))
+			{
+				dev_MsgBoxError(Format("Unexpected: Target file should not have exsited: {}", dstpath))
+				return false
+			}
+			
+			FileAppend, %filetext%, %dstpath%
+			if(ErrorLevel)
+			{
+				dev_MsgBoxError(Format("ERROR: Fail to create new file: {}", dstpath))
+				return false
+			}
+		}
+	}
+	
+	return true
+}
+
+Amt_WriteResultIni(srcini, dstini)
+{
+	; First make a verbatim copy to new filename
+	
+	FileCopy, %srcini%, %dstini%, 1 ; overwrite
+	
+	; Then append actual expansion parameters into dstini.
+	;
+	; [Replaced]
+	; OldWord1=NewWord1
+	; OldWord2=NewWord2
+	; {A33FD2BA-B4AE-4C44-A512-FCF87D0F9976}={20220119-0000-0000-0000-213712000001}
+	
+	inisect := "Replaced"
+	
+	for index,obj in g_amt_arTemplateWords
+	{
+;MsgBox, % Format("### {} || {}", obj.oldword, obj.newword)
+		IniWrite, % obj.newword, % dstini, % inisect, % obj.oldword
+	}
+	
+	for index,obj in g_amt_arTemplateGuids
+	{
+		IniWrite, % obj.newword, % dstini, % inisect, % obj.oldword
 	}
 }
 
