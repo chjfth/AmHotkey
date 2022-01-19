@@ -1228,13 +1228,43 @@ CharIsAlphaNum(c)
 	
 }
 
-dev_TooltipAutoClear(text, keep_milisec:=2000)
+dev_StripPrefix(str, prefix, is_case_sensitive:=false)
+{
+	if(StrIsStartsWith(str, prefix, is_case_sensitive))
+		return SubStr(str, StrLen(prefix)+1)
+	else
+		return str
+	
+}
+
+dev_str2num(str)
+{
+	; Convert "012" to 12, so that it can be used as array index.
+	; Tip from Lexikos: https://www.autohotkey.com/board/topic/21271-converting-string-to-number/
+	
+	num := "0" . str
+	num += 0
+	return num
+}
+
+dev_TooltipAutoClear(text, keep_millisec:=2000)
 {
 	tooltip, %text%
-	SetTimer, lb_TooltipAutoClear, % 0-keep_milisec
+	SetTimer, lb_TooltipAutoClear, % 0-keep_millisec
 	return
 	
 lb_TooltipAutoClear:
+	tooltip
+	return
+}
+
+dev_TooltipDelayHide(keep_millisec:=2000)
+{
+	; Hide the tooltip after some millisec.
+	SetTimer, lb_TooltipDelayHide, % 0-keep_millisec
+	return 
+	
+lb_TooltipDelayHide:
 	tooltip
 	return
 }
@@ -2934,6 +2964,27 @@ dev_hasValue(haystack, needle)
             return true
     return false
 }
+
+dev_Menu_CreateEmpty(menuname)
+{
+	dev_Menu_DeleteAll(menuname)
+	
+	Menu, % menuname, Add, "===empty===", dev_Menu_DoNone
+	Menu, % menuname, DeleteAll
+}
+
+dev_Menu_DeleteAll(menuname)
+{
+	try {
+		Menu, % menuname, DeleteAll
+	} catch {
+	}
+}
+
+dev_Menu_DoNone()
+{
+}
+
 
 
 ;==============================================================================
