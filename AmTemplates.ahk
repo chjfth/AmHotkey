@@ -25,6 +25,8 @@ global AMT_FOUND_IMMEDIATE_TEMPLATE := -1
 global g_HwndAmt ; HWND for AMT dialog.
 global g_amtTemplateSrcDir ; the Dir with file AmTemplate.cfg.ini
 
+global g_OldwordHeader, g_NewwordHeader
+;
 ; Max 9 words supported.
 global g_amteditOldword1, g_amteditNewword1
 global g_amteditOldword2, g_amteditNewword2
@@ -37,6 +39,8 @@ global g_amteditOldword8, g_amteditNewword8
 global g_amteditOldword9, g_amteditNewword9
 ;
 global g_amt_arTemplateWords := [] ; an array of object(.oldword .desc .newword)
+
+global g_OldguidHeader, g_NewguidHeader
 
 global g_amteditOldguid1, g_amteditNewguid1
 global g_amteditOldguid2, g_amteditNewguid2
@@ -185,18 +189,21 @@ Amt_CreateGui(inipath)
 {
 	g_amt_arTemplateWords := []
 	g_amt_arTemplateGuids := []
+	;
+	dev_GuiAutoResizeRemove("AMT")
 
 	inidir := dev_SplitPath(inipath, inifilename)
 
 	Gui, AMT:New ; Destroy old window if any
 	Gui, AMT:+Hwndg_HwndAmt
+	Gui, AMT:+Resize +MinSize
 
 	Gui, AMT:Font, s9, Tahoma
 	Gui, AMT:Add, Text, xm w580, % Format("Template folder found: (with {})", inifilename)
 	Gui, AMT:Add, Edit, xm w580 ReadOnly -E0x200 vg_amtTemplateSrcDir, % inidir ; -E0x200: turn off WS_EX_CLIENTEDGE
 
-	Gui, AMT:Add, Text, xm y+16 w160, % "Old words from template:"
-	Gui, AMT:Add, Text, x+10 yp, % "New words to apply:"
+	Gui, AMT:Add, Text, xm y+16 w180  vg_OldwordHeader, % "Old words from template:"
+	Gui, AMT:Add, Text, x+10 yp       vg_NewwordHeader, % "New words to apply:"
 
 	;
 	; Get all items from [WordToReplace]
@@ -223,15 +230,15 @@ Amt_CreateGui(inipath)
 		varname_oldword := "g_amteditOldword" + index
 		varname_newword := "g_amteditNewword" + index
 		
-		Gui, AMT:Add, Edit,    xm   w160 ReadOnly -Tabstop           v%varname_oldword% , % key
-		Gui, AMT:Add, Edit, yp x+10 w160        gAmt_OnNewWordChange v%varname_newword% , % key
+		Gui, AMT:Add, Edit,    xm   w180 ReadOnly -Tabstop           v%varname_oldword% , % key
+		Gui, AMT:Add, Edit, yp x+10 w180        gAmt_OnNewWordChange v%varname_newword% , % key
 		
 		g_amt_arTemplateWords[index] := {"oldword":key, "newword":key, "desc":value}
 	}
 	
 	
-	Gui, AMT:Add, Text, xm y+16 w280, % "Old GUIDs from template:"
-	Gui, AMT:Add, Text, x+10 yp , % "New GUIDs to apply:"
+	Gui, AMT:Add, Text, xm y+16 w280 vg_OldguidHeader, % "Old GUIDs from template:"
+	Gui, AMT:Add, Text, x+10 yp      vg_NewguidHeader, % "New GUIDs to apply:"
 	Gui, AMT:Add, Checkbox, x+45 yp Checked vg_amtIsAutoGuid gAmt_ResyncUI, % "Auto &generate"
 	
 	;
@@ -299,6 +306,39 @@ Amt_HideGui()
 
 	OnMessage(0x200, Func("Amt_WM_MOUSEMOVE"), 0) ; remove message hook
 	tooltip
+}
+
+AMTGuiSize()
+{
+	Gui, AMT:+MaxSizex%A_GuiHeight% ; Effect: only allow changing window width, not height
+
+	rsdict := {}
+	rsdict.g_amtTemplateSrcDir := "0,0,100,0"
+	
+	rsdict.g_OldwordHeader := "0,0,33,0"
+	rsdict.g_NewwordHeader := "33,0,66,0"
+	;
+	nwords := g_amt_arTemplateWords.Length()
+	Loop, %nwords%
+	{
+		rsdict["g_amteditOldword" A_index] := rsdict.g_OldwordHeader
+		rsdict["g_amteditNewword" A_Index] := rsdict.g_NewwordHeader
+	}
+
+;	// No need to change GUID editbox width.
+;	rsdict.g_OldguidHeader := "0,0,50,0"
+;	rsdict.g_NewguidHeader := "50,0,100,0"
+;	;
+;	nguids := g_amt_arTemplateGuids.Length()
+;	Loop, %nguids%
+;	{
+;		rsdict["g_amteditOldguid" A_Index] := rsdict.g_OldguidHeader
+;		rsdict["g_amteditNewguid" A_Index] := rsdict.g_NewguidHeader
+;	}
+	
+	rsdict.g_amtDirApply := "0,0,100,0"
+	
+	dev_GuiAutoResize("AMT", rsdict, A_GuiWidth, A_GuiHeight)
 }
 
 AMTGuiClose()
@@ -470,7 +510,7 @@ Amt_DoExpandTemplate(srcdir, dstdir)
 		else 
 		{
 			FileRead, filetext, %srcpath%
-			if(!filetext)
+			if(ErrorLevel)
 			{
 				dev_MsgBoxError(Format("ERROR: Fail to read source file: {}", srcpath))
 				return false
