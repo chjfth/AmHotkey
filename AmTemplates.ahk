@@ -11,7 +11,8 @@ Amt_LaunchMenu()
 */
 
 global g_dirsAmTemplates := [ A_ScriptDir "\AmTemplates" ]
-; -- Templates will be searched inside these dirs. User can override or append to this array.
+	; Templates will be searched inside these dirs. User can override or append to this array.
+	; g_dirsAmTemplates.Push("D:\test\AmTemplates")
 
 ; global constant use by this module
 global g_amtIniCfgFilename := "AmTemplate.cfg.ini"
@@ -469,11 +470,23 @@ Amt_ResyncUI()
 Amt_DoExpandTemplate(srcdir, dstdir)
 {
 	arPairs := []
+	
+	cfgini := Amt_GetIniFilepath(srcdir)
+
+	IniRead, IncludePatterns, % cfgini, % "global", % "IncludePatterns", % "*"
+	ptns := StrSplit(IncludePatterns, "|")
 
 	Loop, Files, % srcdir "\*", FR
 	{
 		srcRela := dev_StripPrefix(A_LoopFileFullPath, srcdir) ; srcRela will have \ prefix
 		
+		dev_SplitPath(srcRela, filename)
+		
+		if(!amt_IsWildcardsMatch(ptns, filename))
+		{
+			continue
+		}
+
 		for idx,wordmap in g_amt_arTemplateWords
 		{
 			dstRela := StrReplace(srcRela, wordmap.oldword, wordmap.newword)
@@ -481,6 +494,8 @@ Amt_DoExpandTemplate(srcdir, dstdir)
 
 		arPairs.Push({"srcrela":srcRela , "dstrela":dstRela}) 
 	}
+
+	Amt_WriteResultIni(cfgini, dstdir_tip "\" g_amtIniResultFileName)
 	
 	; Actually copy these files.
 	
@@ -497,47 +512,34 @@ Amt_DoExpandTemplate(srcdir, dstdir)
 			return false
 		}
 		
-;		FileCopy, %srcpath%, %dstpath%, 1 ; overwrite
-;		if ErrorLevel {
-;			dev_MsgBoxError(Format("ERROR: Cannot copy file: `n`n{}`n`nto`n`n{}", srcpath, dstpath))
-;			return false
-;		}
-
-		if(srcpath == Amt_GetIniFilepath(srcdir))
+		FileRead, filetext, %srcpath%
+		if(ErrorLevel)
 		{
-			Amt_WriteResultIni(srcpath, dstdir_tip "\" g_amtIniResultFileName)
+			dev_MsgBoxError(Format("ERROR: Fail to read source file: {}", srcpath))
+			return false
 		}
-		else 
+		
+		for index,obj in g_amt_arTemplateWords
 		{
-			FileRead, filetext, %srcpath%
-			if(ErrorLevel)
-			{
-				dev_MsgBoxError(Format("ERROR: Fail to read source file: {}", srcpath))
-				return false
-			}
-			
-			for index,obj in g_amt_arTemplateWords
-			{
-				filetext := StrReplace(filetext, obj.oldword, obj.newword)
-			}
-			
-			for index,obj in g_amt_arTemplateGuids
-			{
-				filetext := StrReplace(filetext, obj.oldword, obj.newword)
-			}
-			
-			if(FileExist(dstpath))
-			{
-				dev_MsgBoxError(Format("Unexpected: Target file should not have exsited: {}", dstpath))
-				return false
-			}
-			
-			FileAppend, %filetext%, %dstpath%
-			if(ErrorLevel)
-			{
-				dev_MsgBoxError(Format("ERROR: Fail to create new file: {}", dstpath))
-				return false
-			}
+			filetext := StrReplace(filetext, obj.oldword, obj.newword)
+		}
+		
+		for index,obj in g_amt_arTemplateGuids
+		{
+			filetext := StrReplace(filetext, obj.oldword, obj.newword)
+		}
+		
+		if(FileExist(dstpath))
+		{
+			dev_MsgBoxError(Format("Unexpected: Target file should not have exsited: {}", dstpath))
+			return false
+		}
+		
+		FileAppend, %filetext%, %dstpath%
+		if(ErrorLevel)
+		{
+			dev_MsgBoxError(Format("ERROR: Fail to create new file: {}", dstpath))
+			return false
 		}
 	}
 	
@@ -561,7 +563,6 @@ Amt_WriteResultIni(srcini, dstini)
 	
 	for index,obj in g_amt_arTemplateWords
 	{
-;MsgBox, % Format("### {} || {}", obj.oldword, obj.newword)
 		IniWrite, % obj.newword, % dstini, % inisect, % obj.oldword
 	}
 	
@@ -570,6 +571,35 @@ Amt_WriteResultIni(srcini, dstini)
 		IniWrite, % obj.newword, % dstini, % inisect, % obj.oldword
 	}
 }
+
+amt_IsWildcardMatch(ptn, filename)
+{
+	; ptn: the pattern, like: "*.cpp" 
+	
+	; Currently, I do rough processing, hoping no wacky chars in ptn
+	; I change ptn to a regex pattern so that I can use regex match.
+	
+	reptn := ptn
+	reptn := StrReplace(reptn, ".", "\.")
+	reptn := StrReplace(reptn, "*", ".*")
+	
+	if(filename ~= "^" reptn "$")
+		return true
+	else
+		return false
+}
+
+amt_IsWildcardsMatch(ptns, filename)
+{
+	for index,ptn in ptns
+	{
+		if(amt_IsWildcardMatch(ptn, filename))
+			return true
+	}
+	
+	return false
+}
+
 
 Amt_none()
 {
