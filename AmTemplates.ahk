@@ -495,7 +495,7 @@ Amt_DoExpandTemplate(srcdir, dstdir)
 		arPairs.Push({"srcrela":srcRela , "dstrela":dstRela}) 
 	}
 
-	Amt_WriteResultIni(cfgini, dstdir_tip "\" g_amtIniResultFileName)
+	Amt_WriteResultIni(cfgini, dstdir "\" g_amtIniResultFileName)
 	
 	; Actually copy these files.
 	
@@ -549,7 +549,8 @@ Amt_DoExpandTemplate(srcdir, dstdir)
 Amt_WriteResultIni(srcini, dstini)
 {
 	; First make a verbatim copy to new filename
-	
+
+	FileCreateDir, % dev_SplitPath(dstini)
 	FileCopy, %srcini%, %dstini%, 1 ; overwrite
 	
 	; Then append actual expansion parameters into dstini.
