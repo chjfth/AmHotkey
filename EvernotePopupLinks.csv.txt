@@ -14,16 +14,28 @@ https://www.evernote.com/shard/s21/nl/2425275/482e794b-7dde-4653-bd68-f16c100e3b
 https://www.evernote.com/shard/s21/nl/2425275/2f0287be-ce65-4e1f-bf5e-3ecf488e4a73 , WinDrv:Toaster, WDK Toaster 示例
 https://www.evernote.com/shard/s21/nl/2425275/f297ca74-4311-4fa2-a1e0-ec18964ab169 , WinDrv:Toaster2022
 
+https://www.evernote.com/shard/s21/nl/2425275/b86653d1-f665-48db-a87e-f651ab52f009 , Windows一般话题:WinMgmt ,Windows 系统管理
+https://www.evernote.com/shard/s21/nl/2425275/06e2eb0e-2d37-48f5-9df6-bf287eb30f03 , Windows一般话题:WinsvrMgmt , Windows Server 管理
+
+https://www.evernote.com/shard/s21/nl/2425275/586c101e-dbdb-44d0-b9f5-82ebffb7c8de , Linux:LinuxUse , Linux 日常使用
+
+https://www.evernote.com/shard/s21/nl/2425275/c6dca407-074c-49ce-b797-2291325bea8b , Programming:MyPrg  , 自写程序收集备忘
+https://www.evernote.com/shard/s21/nl/2425275/7d2bfa22-fe88-4074-86fe-2a087ee97258 , Programming:MySnip , 自写函数库/代码片段
+https://www.evernote.com/shard/s21/nl/2425275/431cba60-f0b4-4223-9c05-b9c623425c25 , Programming:CodeSnip , 其他函数库/代码片段
+https://www.evernote.com/shard/s21/nl/2425275/9c9bc2d0-31a0-41b4-9382-84353b73ecfa , Programming:TLS/SSL ,
+
 https://www.evernote.com/shard/s21/nl/2425275/b49be72e-4bbe-4949-b95b-a777b7ed23a0 , BATCMD , Windows batch script
 https://www.evernote.com/shard/s21/nl/2425275/850c9be2-7b91-4d85-965e-646923bc22c1 , VSIDE , Visual Studio IDE
 
 https://www.evernote.com/shard/s21/nl/2425275/47874f88-fdcf-4eca-84fe-2cb0ef05a4a0 , Autohotkey
 https://www.evernote.com/shard/s21/nl/2425275/35e458a1-d25e-45bb-83ab-b7358c4af4f5 , CSharp , C# language
-https://www.evernote.com/shard/s21/nl/2425275/b1c9e992-0c29-45a1-a0d9-1f6eb91677ac , Git
 ;https://www.evernote.com/shard/s21/nl/2425275/51824870-0471-4f73-999c-8d396ae0e8b5 , DPI Scaling
-https://www.evernote.com/shard/s21/nl/2425275/b86653d1-f665-48db-a87e-f651ab52f009 , WinMgt ,Windows 系统管理
 
-https://www.evernote.com/shard/s21/nl/2425275/5622a161-f0dd-40c4-a048-4bc10f13b9e2 , WINSDV
+https://www.evernote.com/shard/s21/nl/2425275/5622a161-f0dd-40c4-a048-4bc10f13b9e2 , WinSDV2022
+
+https://www.evernote.com/shard/s21/nl/2425275/cea49e43-0939-4555-bea5-9ab71888a970 , InfoSec:InfoSec , 信息安全
+https://www.evernote.com/shard/s21/nl/2425275/842522bf-b2f2-4a9a-bfe7-bacfc5eba6f0 , InfoSec:Crypto , 加密解密编程
+https://www.evernote.com/shard/s21/nl/2425275/0bb453f4-20a9-4b84-bb25-cf19121dcd3e , InfoSec:WireGuard , 加密隧道软件
 
 https://www.evernote.com/shard/s21/nl/2425275/68f18a8e-d3af-47d4-8a24-69579b8d02fe , 零碎:CORPUP , 开办公司
 https://www.evernote.com/shard/s21/nl/2425275/78d5ee72-4ae9-4d05-8fbb-3549d4b653cf , 零碎:MSDNview
@@ -32,18 +44,24 @@ https://www.evernote.com/shard/s21/nl/2425275/6f3a3c9a-c6c8-4c67-abe8-ba5567b4a9
 
 https://www.evernote.com/shard/s21/nl/2425275/7b769e8c-0fd6-4342-9147-8738e9188196 , 软件主题:VMwks , VMware Workstation
 https://www.evernote.com/shard/s21/nl/2425275/66a2acec-5d85-4be7-a714-f9d85fa11679 , 软件主题:VirtualBox
+https://www.evernote.com/shard/s21/nl/2425275/b1c9e992-0c29-45a1-a0d9-1f6eb91677ac , 软件主题:Git
 https://www.evernote.com/shard/s21/nl/2425275/b541de60-735a-475f-be07-715f55078704 , 软件主题:Evernote
 https://www.evernote.com/shard/s21/nl/2425275/a130bbdb-7d4e-498a-b4f4-84f712a62dc9 , 软件主题:MPC-HC , Media Player Classic
 https://www.evernote.com/shard/s21/nl/2425275/86ba9db5-f49b-4f9f-a2e0-6e8c12b09563 , 软件主题:SpaceDesk , 多显示器扩展软件
+https://www.evernote.com/shard/s21/nl/2425275/c059d4c6-f0a0-4116-b0a8-1595312cf260 , 软件主题:OSS , 开源软件
 
 https://www.evernote.com/shard/s21/nl/2425275/15efd366-1488-49a4-928b-d13a66f1feab , 小工具:showargs, 显示命令行拆解结果
 
 https://www.evernote.com/shard/s21/nl/2425275/8c1a47a1-5577-4cec-86d0-06a48ef2193e , 自创主题:VSPG, Visual Studio 构建前后批处理通用框架
 https://www.evernote.com/shard/s21/nl/2425275/ee552f1d-8e4b-4051-8039-9ab7ee52c8f9 , 自创主题:WINFONTC, Windows Fonts and Charset
 https://www.evernote.com/shard/s21/nl/2425275/61d348e1-8ab7-4bec-93f4-48e248d89a6c , 自创主题:chja20 ,我的 3950X 台式机
+https://www.evernote.com/shard/s21/nl/2425275/2ae180b6-5406-409a-a38d-debc58702270 , 自创主题:chjhotkey , 我的常用热键
 https://www.evernote.com/shard/s21/nl/2425275/a9416fe2-72d2-44ab-9e59-b297f2276ce4 , 自创主题:ThingRela , 信息分类关系
 https://www.evernote.com/shard/s21/nl/2425275/5cfb0da8-4f25-4300-9749-fa1c196c9ad3 , 自创主题:AMBIG , 歧义收集帖
 https://www.evernote.com/shard/s21/nl/2425275/5cfb0da8-4f25-4300-9749-fa1c196c9ad3 , 自创主题:歧义  , 歧义收集帖
+https://www.evernote.com/shard/s21/nl/2425275/23a51b98-5bfe-4e28-9075-efee3a74a2dc , 自创主题:ThinkPrg , 编程思想
+https://www.evernote.com/shard/s21/nl/2425275/0ec4ab0c-99b2-4b9b-8b71-38c828c4054d , 自创主题:MidWare , 中间物
+https://www.evernote.com/shard/s21/nl/2425275/2626ae56-a0eb-4c2a-97ae-8c331e8f581e , 自创主题:Naming , 起名难题
 
 ; Books below
 ;

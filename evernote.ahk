@@ -140,9 +140,10 @@ global g_evtblIsWhiteText
 global g_evtblBtnColorMatrix
 global g_evtblBtnColorMatrix2
 
-global g_evtblIsDiv
-global g_evtblIsTable
-global g_evtblIsCssTable         ; This is for CssTable
+global g_evtblIsDiv         ; <DIV>
+global g_evtblIsTable       ; <TABLE>
+global g_evtblIsCssTable    ; This is for CssTable
+global g_evtblIsSpan        ; <span> inline text with bgcolor
 global Evtbl_OnTableDivSwitch
 ;
 global g_evtblEdtCsstableRows
@@ -701,14 +702,15 @@ Evtbl_CreateGui()
 	Gui, EVTBL:Font, s9 cBlack, Tahoma
 
 	;
-	; HTML content selection: TABLE or DIV
+	; HTML content selection: <TABLE> , <DIV> , CSS-Table , <span>
 	;
 	Gui, EVTBL:Add, Text, xm Y+15 , % "HTML content:"
 	Gui, EVTBL:Add, Radio, X+10 Group Checked vg_evtblIsTable gEvtbl_OnTableDivSwitch, % "<&TABLE>"
 	Gui, EVTBL:Add, Radio, X+10                 vg_evtblIsDiv gEvtbl_OnTableDivSwitch, % "<&DIV>"
 	Gui, EVTBL:Add, Radio, X+25            vg_evtblIsCsstable gEvtbl_OnTableDivSwitch, % "CSS-t&able"
+	Gui, EVTBL:Add, Radio, X+10                vg_evtblIsSpan gEvtbl_OnTableDivSwitch, % "<spa&n>"
 	; // set CSS-table rows //
-	Gui, EVTBL:Add, Edit, x+10 yp-3 w30 Hidden vg_evtblEdtCsstableRows, % "3"
+	Gui, EVTBL:Add, Edit, xp yp-3 w30 Hidden vg_evtblEdtCsstableRows, % "3"
 	Gui, EVTBL:Add, Text, x+5 yp+3      Hidden vg_evtblLblCsstableRows, % "rows"
 	Gui, EVTBL:Add, CheckBox, x+5  Checked Hidden vg_evtblChkboxCsstableHead, % "Add header"
 
@@ -792,12 +794,16 @@ Evtbl_OnTableDivSwitch()
 	if(g_evtblIsCssTable)
 	{
 		hide_more_ctls := [ "lbl_TableCellPadding", "g_evtblIsPaddingSparse", "g_evtblIsPaddingDense"
-			, "lbl_TableBorderPx", "g_evtblBorder1px", "g_evtblBorder2px" ]
+			, "lbl_TableBorderPx", "g_evtblBorder1px", "g_evtblBorder2px", "g_evtblIsSpan" ]
 		Loop, % hide_more_ctls.Length()
 		{
 			GuiControl, EVTBL:Hide, % hide_more_ctls[A_Index]
 		}
 		
+	}
+	else 
+	{
+		GuiControl, EVTBL:Show, % "g_evtblIsSpan"
 	}
 }
 
@@ -1000,6 +1006,10 @@ Evtbl_GenHtml()
 		
 		html := Evtbl_GenHtml_CssTable(rows, isAddHead, hexcolor1, hexcolor2)
 	}
+	else if(g_evtblIsSpan)
+	{
+		html := Evtbl_GenHtml_Span(hexcolor1, hexcolor2)
+	}
 	
 	return html
 }
@@ -1124,6 +1134,16 @@ Evtbl_GenHtml_CssTable_OneRow(ar_colinfo, css_bg_rule, is_first_line, is_color_r
 	return tablerow
 }
 
+Evtbl_GenHtml_Span(hexcolor1, hexcolor2)
+{
+	htmlptn = 
+(
+&nbsp;<span style="{1}; color:{2}">~ ~</span>&nbsp;
+)
+	css_bg_rule := make_css_bg_rule(hexcolor1, hexcolor2)
+	html := Format(htmlptn, css_bg_rule, g_evtblIsWhiteText?"white":"black")
+	return html
+}
 
 Evtbl_BtnOK()
 {
