@@ -196,7 +196,10 @@ global g_matrixColor11, g_matrixColor12, g_matrixColor13, g_matrixColor14, g_mat
 global g_matrixColor21, g_matrixColor22, g_matrixColor23, g_matrixColor24, g_matrixColor25, g_matrixColor26, g_matrixColor27, g_matrixColor28, g_matrixColor29, g_matrixColor30
 global g_matrixColor31, g_matrixColor32, g_matrixColor33, g_matrixColor34, g_matrixColor35, g_matrixColor36, g_matrixColor37, g_matrixColor38, g_matrixColor39, g_matrixColor40
 global g_matrixColor41, g_matrixColor42, g_matrixColor43, g_matrixColor44, g_matrixColor45, g_matrixColor46, g_matrixColor47, g_matrixColor48, g_matrixColor49, g_matrixColor50
-
+global g_matrixColor51, g_matrixColor52, g_matrixColor53, g_matrixColor54, g_matrixColor55, g_matrixColor56, g_matrixColor57, g_matrixColor58, g_matrixColor59, g_matrixColor60
+global g_matrixColor61, g_matrixColor62, g_matrixColor63, g_matrixColor64, g_matrixColor65, g_matrixColor66, g_matrixColor67, g_matrixColor68, g_matrixColor69, g_matrixColor70
+global g_matrixColor71, g_matrixColor72, g_matrixColor73, g_matrixColor74, g_matrixColor75, g_matrixColor76, g_matrixColor77, g_matrixColor78, g_matrixColor79, g_matrixColor80
+global g_matrixColor81, g_matrixColor82, g_matrixColor83, g_matrixColor84, g_matrixColor85, g_matrixColor86, g_matrixColor87, g_matrixColor88, g_matrixColor89, g_matrixColor90
 ; ======
 
 global g_HwndSupsub

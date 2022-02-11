@@ -13,6 +13,24 @@ AUTOEXEC_customize_ahk: ; Workaround for Autohotkey's ugly auto-exec feature. Do
 Init_MyCustomizedEnv() ; This function is defined after the first "return".
 
 
+global g_evtblColorCustoms := [ "#C0B0B0,铁锈红"
+	, "#C030FF,炫目紫"
+    , "#EEAAFF,亮粉紫"
+	, "#FFA090,淡唇红"
+    , "#e4a232,亮棕色"
+	, "#C6E28F,青涩绿"
+	, "#548414,沼泽绿"
+	, "#948414,焦叶黄"
+	, "#30A878,深潭绿"
+	, "#CAD0A0,抹茶绿"
+	, "#50A0E0,深邃蓝"
+	, "#30A0D0,水墨蓝"
+	, "#8864B8,VS2019 purple"
+	, "#b0c0b0,深灰1"
+	, "#b0c0c0,深灰2"
+	, "#f4f4f4" ]
+
+; global g_evernotePopLinksFile := "EvernoteLinks.chj.txt"
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; If you define any global variables, you MUST define them ABOVE this line.
