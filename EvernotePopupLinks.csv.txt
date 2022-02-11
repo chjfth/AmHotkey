@@ -1,14 +1,16 @@
-﻿https://www.evernote.com/shard/s21/nl/2425275/c07f9c0a-b536-4ecb-9254-2d422564da11 , MSBuild
-
-https://www.evernote.com/shard/s21/nl/2425275/08cea251-4484-4a3d-afd0-22ae81f0bc47 , WinDev:WinAPI , Windows API 相关
+﻿https://www.evernote.com/shard/s21/nl/2425275/08cea251-4484-4a3d-afd0-22ae81f0bc47 , WinDev:WinAPI , Windows API 相关
 https://www.evernote.com/shard/s21/nl/2425275/4586fb5e-4414-4e81-8ea8-75bf28d9d666 , WinDev:WinGUI , Windows UI 编程
 https://www.evernote.com/shard/s21/nl/2425275/718144a8-3879-4a58-bddd-b689b2866e2e , WinDev:MSCOM , 微软组件对象模型
 https://www.evernote.com/shard/s21/nl/2425275/a56322fb-1dc6-4f88-b939-f5c5a90e51ff , WinDev:WinMisc , 杂类 Windows 编程
+https://www.evernote.com/shard/s21/nl/2425275/c07f9c0a-b536-4ecb-9254-2d422564da11 , WinDev:MSBuild
+https://www.evernote.com/shard/s21/nl/2425275/850c9be2-7b91-4d85-965e-646923bc22c1 , WinDev:VSIDE , Visual Studio IDE
+https://www.evernote.com/shard/s21/nl/2425275/b49be72e-4bbe-4949-b95b-a777b7ed23a0 , BATCMD , Windows batch script
+
 
 https://www.evernote.com/shard/s21/nl/2425275/5dd911c7-6bae-44e0-8726-05f1a5644e61 , WinDrv:WinDrv, Windows Driver 主帖
+https://www.evernote.com/shard/s21/nl/2425275/75c2ea1d-e961-49a2-a417-3e359be85c99 , WinDrv:WinDBG
 https://www.evernote.com/shard/s21/nl/2425275/1863e49d-1936-4628-97e9-85fc75ca317e , WinDrv:SetupDi 
 https://www.evernote.com/shard/s21/nl/2425275/5f94596d-8bf3-4a8b-9565-ee13361b62c0 , WinDrv:WHQL
-https://www.evernote.com/shard/s21/nl/2425275/75c2ea1d-e961-49a2-a417-3e359be85c99 , WinDrv:WinDBG
 https://www.evernote.com/shard/s21/nl/2425275/72790fe5-27f9-4b76-baa3-0a4a80754c65 , WinDrv:UFCOM
 https://www.evernote.com/shard/s21/nl/2425275/482e794b-7dde-4653-bd68-f16c100e3b60 , WinDrv:VisualDDK
 https://www.evernote.com/shard/s21/nl/2425275/2f0287be-ce65-4e1f-bf5e-3ecf488e4a73 , WinDrv:Toaster, WDK Toaster 示例
@@ -23,9 +25,6 @@ https://www.evernote.com/shard/s21/nl/2425275/c6dca407-074c-49ce-b797-2291325bea
 https://www.evernote.com/shard/s21/nl/2425275/7d2bfa22-fe88-4074-86fe-2a087ee97258 , Programming:MySnip , 自写函数库/代码片段
 https://www.evernote.com/shard/s21/nl/2425275/431cba60-f0b4-4223-9c05-b9c623425c25 , Programming:CodeSnip , 其他函数库/代码片段
 https://www.evernote.com/shard/s21/nl/2425275/9c9bc2d0-31a0-41b4-9382-84353b73ecfa , Programming:TLS/SSL ,
-
-https://www.evernote.com/shard/s21/nl/2425275/b49be72e-4bbe-4949-b95b-a777b7ed23a0 , BATCMD , Windows batch script
-https://www.evernote.com/shard/s21/nl/2425275/850c9be2-7b91-4d85-965e-646923bc22c1 , VSIDE , Visual Studio IDE
 
 https://www.evernote.com/shard/s21/nl/2425275/47874f88-fdcf-4eca-84fe-2cb0ef05a4a0 , Autohotkey
 https://www.evernote.com/shard/s21/nl/2425275/35e458a1-d25e-45bb-83ab-b7358c4af4f5 , CSharp , C# language
