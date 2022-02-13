@@ -123,7 +123,7 @@ chj_DefineQuickSwitchApps() ; as template for actual users
 ;	QSA_DefineActivateGroup_Caps("1", "Chrome_WidgetWin_1", "Chrome")
 ;	[2018-07-25] I have to use this bcz Skype 8.x UI is using the Chromium framework.
 	;QSA_DefineActivateGroupFlex_Caps("1", "Chrome_WidgetWin_1", QSA_NO_WNDCLS_REGEX, "^(?!Skype).*", "Chrome")
-	QSA_DefineActivateGroupFlex_Caps("1", "Chrome_WidgetWin_1", QSA_NO_WNDCLS_REGEX, "(Google Chrome|Comodo Dragon)$", "Google Chrome")
+	QSA_DefineActivateGroupFlex_Caps("1", "Chrome_WidgetWin_1", QSA_NO_WNDCLS_REGEX, "(Google Chrome|Comodo Dragon|Edge)$", "Google Chrome genre browser")
 	
 	QSA_DefineActivateGroupFlex_Caps("2", "MozillaWindowClass", QSA_NO_WNDCLS_REGEX, "(Firefox|Waterfox)", "Firefox or Waterfox")
 	;QSA_DefineActivateGroup_Caps("2", "MozillaWindowClass", "Firefox") // would share with Active-state Komodo 7

@@ -1,4 +1,4 @@
-
+﻿
 AUTOEXEC_webbrowers: ; Workaround for Autohotkey's ugly auto-exec feature. Don't delete.
 
 global Chrome_kbd_MoveTabLeft := "+^{pgup}"
@@ -31,7 +31,9 @@ IsChromeWindowActive()
 	WinGetTitle, title, ahk_id %Awinid%
 
 	if( class=="Chrome_WidgetWin_1" 
-		and (StrIsEndsWith(title, "Google Chrome") or StrIsEndsWith(title, "Comodo Dragon")) 
+		and (StrIsEndsWith(title, "Google Chrome") 
+		  or StrIsEndsWith(title, "Comodo Dragon")
+		  or StrIsEndsWith(title, "Microsoft​ Edge")) 
 		and title!="Skype" )
 	{
 		return true
