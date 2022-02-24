@@ -18,6 +18,8 @@ https://www.evernote.com/shard/s21/nl/2425275/b49be72e-4bbe-4949-b95b-a777b7ed23
 
 https://www.evernote.com/shard/s21/nl/2425275/b86653d1-f665-48db-a87e-f651ab52f009 , Windows一般话题:WinMgmt ,Windows 系统管理
 https://www.evernote.com/shard/s21/nl/2425275/06e2eb0e-2d37-48f5-9df6-bf287eb30f03 , Windows一般话题:WinsvrMgmt , Windows Server 管理
+https://www.evernote.com/shard/s21/nl/2425275/7dd94f40-6dcd-43d2-b0d3-eed6fb3030ed , Windows一般话题:WinPE
+https://www.evernote.com/shard/s21/nl/2425275/6a06a3d1-d5f4-4af9-98f3-12ed3daff442 , Windows一般话题:BOOTMGR , Vista+ Boot manager
 
 https://www.evernote.com/shard/s21/nl/2425275/586c101e-dbdb-44d0-b9f5-82ebffb7c8de , Linux:LinuxUse , Linux 日常使用
 
@@ -39,12 +41,17 @@ https://www.evernote.com/shard/s21/nl/2425275/0bb453f4-20a9-4b84-bb25-cf19121dcd
 https://www.evernote.com/shard/s21/nl/2425275/68f18a8e-d3af-47d4-8a24-69579b8d02fe , 零碎:CORPUP , 开办公司
 https://www.evernote.com/shard/s21/nl/2425275/78d5ee72-4ae9-4d05-8fbb-3549d4b653cf , 零碎:MSDNview
 https://www.evernote.com/shard/s21/nl/2425275/a6d83ecc-9248-4452-a254-65d8de2252f7 , 零碎:ISO , ISO 国际标准
-https://www.evernote.com/shard/s21/nl/2425275/6f3a3c9a-c6c8-4c67-abe8-ba5567b4a995 , 零碎:hdisk , 硬盘相关
+https://www.evernote.com/shard/s21/nl/2425275/12f6924b-285d-4c6b-a3fa-6dc59c4a4035 , 零碎:UEFI
+https://www.evernote.com/shard/s21/nl/2425275/c9323a30-4bb8-4312-8863-a6344c24f6f3 , 零碎:Digicert , 数字证书相关
+
+https://www.evernote.com/shard/s21/nl/2425275/803ad1b0-9e6e-4f1a-9b62-e76ebb7eeecf , 硬件相关:RasPi, Raspberry Pi
+https://www.evernote.com/shard/s21/nl/2425275/6f3a3c9a-c6c8-4c67-abe8-ba5567b4a995 , 硬件相关:hdisk, 硬盘
 
 https://www.evernote.com/shard/s21/nl/2425275/7b769e8c-0fd6-4342-9147-8738e9188196 , 软件主题:VMwks , VMware Workstation
 https://www.evernote.com/shard/s21/nl/2425275/66a2acec-5d85-4be7-a714-f9d85fa11679 , 软件主题:VirtualBox
 https://www.evernote.com/shard/s21/nl/2425275/b1c9e992-0c29-45a1-a0d9-1f6eb91677ac , 软件主题:Git
 https://www.evernote.com/shard/s21/nl/2425275/b541de60-735a-475f-be07-715f55078704 , 软件主题:Evernote
+https://www.evernote.com/shard/s21/nl/2425275/60f84ac4-388e-442f-9747-d15d15f37ad3 , 软件主题:Fiddler
 https://www.evernote.com/shard/s21/nl/2425275/a130bbdb-7d4e-498a-b4f4-84f712a62dc9 , 软件主题:MPC-HC , Media Player Classic
 https://www.evernote.com/shard/s21/nl/2425275/86ba9db5-f49b-4f9f-a2e0-6e8c12b09563 , 软件主题:SpaceDesk , 多显示器扩展软件
 https://www.evernote.com/shard/s21/nl/2425275/c059d4c6-f0a0-4116-b0a8-1595312cf260 , 软件主题:OSS , 开源软件
