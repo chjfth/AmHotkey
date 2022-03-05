@@ -19,7 +19,9 @@ https://www.evernote.com/shard/s21/nl/2425275/b49be72e-4bbe-4949-b95b-a777b7ed23
 https://www.evernote.com/shard/s21/nl/2425275/b86653d1-f665-48db-a87e-f651ab52f009 , Windows一般话题:WinMgmt ,Windows 系统管理
 https://www.evernote.com/shard/s21/nl/2425275/06e2eb0e-2d37-48f5-9df6-bf287eb30f03 , Windows一般话题:WinsvrMgmt , Windows Server 管理
 https://www.evernote.com/shard/s21/nl/2425275/7dd94f40-6dcd-43d2-b0d3-eed6fb3030ed , Windows一般话题:WinPE
+https://www.evernote.com/shard/s21/nl/2425275/b60a8772-afb4-4cb3-9728-00d230fa7c09 , Windows一般话题:WinToGo , Windows-To-Go
 https://www.evernote.com/shard/s21/nl/2425275/6a06a3d1-d5f4-4af9-98f3-12ed3daff442 , Windows一般话题:BOOTMGR , Vista+ Boot manager
+https://www.evernote.com/shard/s21/nl/2425275/cc6deee7-0d6a-4f4b-a0cd-49c0a03c94fa , Windows一般话题:Win10WSL
 
 https://www.evernote.com/shard/s21/nl/2425275/586c101e-dbdb-44d0-b9f5-82ebffb7c8de , Linux:LinuxUse , Linux 日常使用
 
@@ -62,6 +64,7 @@ https://www.evernote.com/shard/s21/nl/2425275/8c1a47a1-5577-4cec-86d0-06a48ef219
 https://www.evernote.com/shard/s21/nl/2425275/d56e6568-8101-4d27-88c9-6e7f6d600c95 , 自创主题:GMU, GnumakeUniproc
 https://www.evernote.com/shard/s21/nl/2425275/ee552f1d-8e4b-4051-8039-9ab7ee52c8f9 , 自创主题:WINFONTC, Windows Fonts and Charset
 https://www.evernote.com/shard/s21/nl/2425275/61d348e1-8ab7-4bec-93f4-48e248d89a6c , 自创主题:chja20 ,我的 3950X 台式机
+https://www.evernote.com/shard/s21/nl/2425275/72790fe5-27f9-4b76-baa3-0a4a80754c65  ,自创主题:UFCOM
 https://www.evernote.com/shard/s21/nl/2425275/2ae180b6-5406-409a-a38d-debc58702270 , 自创主题:chjhotkey , 我的常用热键
 https://www.evernote.com/shard/s21/nl/2425275/a9416fe2-72d2-44ab-9e59-b297f2276ce4 , 自创主题:ThingRela , 信息分类关系
 https://www.evernote.com/shard/s21/nl/2425275/5cfb0da8-4f25-4300-9749-fa1c196c9ad3 , 自创主题:AMBIG , 歧义收集帖
@@ -69,6 +72,9 @@ https://www.evernote.com/shard/s21/nl/2425275/5cfb0da8-4f25-4300-9749-fa1c196c9a
 https://www.evernote.com/shard/s21/nl/2425275/23a51b98-5bfe-4e28-9075-efee3a74a2dc , 自创主题:ThinkPrg , 编程思想
 https://www.evernote.com/shard/s21/nl/2425275/0ec4ab0c-99b2-4b9b-8b71-38c828c4054d , 自创主题:MidWare , 中间物
 https://www.evernote.com/shard/s21/nl/2425275/2626ae56-a0eb-4c2a-97ae-8c331e8f581e , 自创主题:Naming , 起名难题
+
+; My computer instance
+https://www.evernote.com/shard/s21/nl/2425275/7e850d61-28f6-4427-940c-93a284e44c82 , 机器实例:Win10vwork
 
 ; Books below
 ;

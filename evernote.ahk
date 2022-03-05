@@ -12,7 +12,8 @@ Evernote_PopLinkShowMenu()
 */
 
 ; User can define g_evtblColorCustoms[] to append custom colors to g_evtblColorPresets
-global g_evtblColorPresets := [ "#f0f0f0,灰白" 
+global g_evtblColorPresets := [ "#f0f0f0,清淡灰" 
+	, "#e0e0e0,代码灰"
 	, "#c6e2ff,多云蓝"
 	, "#ecf8ff,晴空蓝"
 	, "#e0f0f0,灰蓝"
@@ -144,6 +145,8 @@ global g_evtblIsDiv         ; <DIV>
 global g_evtblIsTable       ; <TABLE>
 global g_evtblIsCssTable    ; This is for CssTable
 global g_evtblIsSpan        ; <span> inline text with bgcolor
+global g_evtblSpanText      ; User text that will appear in resulting html <span> tag
+;
 global Evtbl_OnTableDivSwitch
 ;
 global g_evtblEdtCsstableRows
@@ -717,10 +720,12 @@ Evtbl_CreateGui()
 	Gui, EVTBL:Add, Text, x+5 yp+3      Hidden vg_evtblLblCsstableRows, % "rows"
 	Gui, EVTBL:Add, CheckBox, x+5  Checked Hidden vg_evtblChkboxCsstableHead, % "Add header"
 
+	; 2022.03 span-text editbox
+	Gui, EVTBL:Add, Edit, xm y+9 w498  Hidden vg_evtblSpanText , % "span text"
 	;
-	; Table Columns: ____24,360,540____  [x] First column in color
+	; Table Columns: ____24,360,540____  [x] First column in color // reuse the same position as span-text
 	;
-	Gui, EVTBL:Add, Text, xm y+15 vlbl_TableColumnSpec, % "Table Column&s:"
+	Gui, EVTBL:Add, Text, xm yp+2 vlbl_TableColumnSpec, % "Table Column&s:"
 	Gui, EVTBL:Add, Edit, x+10 yp-2 w240 vg_evtblTableColumnSpec, % "24:#,360:Brief,540:Detail"
 	Gui, EVTBL:Add, Edit, xp yp wp Hidden vg_evtblCssTableColumnSpec, % "30%,30%,30%" ; yes, overlap with previous
 	Gui, EVTBL:Add, Checkbox, x+20 yp+4 vg_evtblIsFirstColumnColor, % "&First column in color"
@@ -769,6 +774,8 @@ Evtbl_CreateGui()
 
 Evtbl_OnTableDivSwitch()
 {
+	; Memo: Initial hidden ctrls is controlled in Evtbl_CreateGui()
+
 	tablectls_share := [ "lbl_TableColumnSpec", "g_evtblIsFirstColumnColor",
 		, "lbl_TableCellPadding", "g_evtblIsPaddingSparse", "g_evtblIsPaddingDense"
 		, "lbl_TableBorderPx", "g_evtblBorder1px", "g_evtblBorder2px" ]
@@ -776,6 +783,7 @@ Evtbl_OnTableDivSwitch()
 
 	GuiControlGet, g_evtblIsTable, EVTBL:
 	GuiControlGet, g_evtblIsCssTable, EVTBL:
+	GuiControlGet, g_evtblIsSpan, EVTBL:
 	
 	hideORshow := (g_evtblIsTable || g_evtblIsCssTable) ? "Show" : "Hide"
 	;
@@ -808,6 +816,9 @@ Evtbl_OnTableDivSwitch()
 	{
 		GuiControl, EVTBL:Show, % "g_evtblIsSpan"
 	}
+	
+	hideORshow := g_evtblIsSpan ? "Show" : "Hide"
+	GuiControl, EVTBL:%hideORshow%, g_evtblSpanText
 }
 
 Evtbl_ParseTableColumnWidth(ColumnSpec)
@@ -1011,7 +1022,10 @@ Evtbl_GenHtml()
 	}
 	else if(g_evtblIsSpan)
 	{
-		html := Evtbl_GenHtml_Span(hexcolor1, hexcolor2)
+		GuiControlGet, spantext, EVTBL:, g_evtblSpanText
+		if (spantext=="")
+			spantext := "~~"
+		html := Evtbl_GenHtml_Span(hexcolor1, hexcolor2, spantext)
 	}
 	
 	return html
@@ -1137,14 +1151,16 @@ Evtbl_GenHtml_CssTable_OneRow(ar_colinfo, css_bg_rule, is_first_line, is_color_r
 	return tablerow
 }
 
-Evtbl_GenHtml_Span(hexcolor1, hexcolor2)
+Evtbl_GenHtml_Span(hexcolor1, hexcolor2, spantext)
 {
 	htmlptn = 
 (
-&nbsp;<span style="{1}; color:{2}">~ ~</span>&nbsp;
+&nbsp;<span style="{1}; color:{2}">{3}</span>&nbsp;
 )
+	spanhtml := dev_EscapeHtmlChars(spantext)
+
 	css_bg_rule := make_css_bg_rule(hexcolor1, hexcolor2)
-	html := Format(htmlptn, css_bg_rule, g_evtblIsWhiteText?"white":"black")
+	html := Format(htmlptn, css_bg_rule, g_evtblIsWhiteText?"white":"black", spanhtml)
 	return html
 }
 
