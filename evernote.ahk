@@ -146,6 +146,7 @@ global g_evtblIsTable       ; <TABLE>
 global g_evtblIsCssTable    ; This is for CssTable
 global g_evtblIsSpan        ; <span> inline text with bgcolor
 global g_evtblSpanText      ; User text that will appear in resulting html <span> tag
+global g_evtblIsSpanMono    ; Whether use monospaced text in <span>
 ;
 global Evtbl_OnTableDivSwitch
 ;
@@ -721,7 +722,8 @@ Evtbl_CreateGui()
 	Gui, EVTBL:Add, CheckBox, x+5  Checked Hidden vg_evtblChkboxCsstableHead, % "Add header"
 
 	; 2022.03 span-text editbox
-	Gui, EVTBL:Add, Edit, xm y+9 w498  Hidden vg_evtblSpanText , % "span text"
+	Gui, EVTBL:Add, Edit, xm y+9 w415       Hidden vg_evtblSpanText  , % "span text"
+	Gui, EVTBL:Add, Checkbox, x+3 yp+2 w80  Hidden vg_evtblIsSpanMono, % "mono-f&ont"
 	;
 	; Table Columns: ____24,360,540____  [x] First column in color // reuse the same position as span-text
 	;
@@ -819,6 +821,7 @@ Evtbl_OnTableDivSwitch()
 	
 	hideORshow := g_evtblIsSpan ? "Show" : "Hide"
 	GuiControl, EVTBL:%hideORshow%, g_evtblSpanText
+	GuiControl, EVTBL:%hideORshow%, g_evtblIsSpanMono
 }
 
 Evtbl_ParseTableColumnWidth(ColumnSpec)
@@ -1025,7 +1028,10 @@ Evtbl_GenHtml()
 		GuiControlGet, spantext, EVTBL:, g_evtblSpanText
 		if (spantext=="")
 			spantext := "~~"
-		html := Evtbl_GenHtml_Span(hexcolor1, hexcolor2, spantext)
+		
+		GuiControlGet, g_evtblIsSpanMono, EVTBL:
+			
+		html := Evtbl_GenHtml_Span(hexcolor1, hexcolor2, spantext, g_evtblIsSpanMono)
 	}
 	
 	return html
@@ -1151,16 +1157,23 @@ Evtbl_GenHtml_CssTable_OneRow(ar_colinfo, css_bg_rule, is_first_line, is_color_r
 	return tablerow
 }
 
-Evtbl_GenHtml_Span(hexcolor1, hexcolor2, spantext)
+Evtbl_GenHtml_Span(hexcolor1, hexcolor2, spantext, is_monofont)
 {
 	htmlptn = 
 (
-&nbsp;<span style="{1}; color:{2}">{3}</span>&nbsp;
+&nbsp;<span style="{1}; color:{2}; {3}">{4}</span>&nbsp;
 )
 	spanhtml := dev_EscapeHtmlChars(spantext)
 
+;	spanhtml := "<tt>" spanhtml "</tt>" ; This renders extra borders on span text, not good.
+	monofont := is_monofont ? "font-family:consolas,monospace;" : ""
+
 	css_bg_rule := make_css_bg_rule(hexcolor1, hexcolor2)
-	html := Format(htmlptn, css_bg_rule, g_evtblIsWhiteText?"white":"black", spanhtml)
+	html := Format(htmlptn
+		, css_bg_rule
+		, g_evtblIsWhiteText?"white":"black"
+		, monofont
+		, spanhtml)
 	return html
 }
 
