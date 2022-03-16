@@ -1161,7 +1161,7 @@ Evtbl_GenHtml_Span(hexcolor1, hexcolor2, spantext, is_monofont)
 {
 	htmlptn = 
 (
-&nbsp;<span style="{1}; color:{2}; {3}">{4}</span>&nbsp;
+<span style="{1}; color:{2}; {3}">{4}</span>&nbsp;
 )
 	spanhtml := dev_EscapeHtmlChars(spantext)
 

@@ -46,6 +46,7 @@ https://www.evernote.com/shard/s21/nl/2425275/a6d83ecc-9248-4452-a254-65d8de2252
 https://www.evernote.com/shard/s21/nl/2425275/12f6924b-285d-4c6b-a3fa-6dc59c4a4035 , 零碎:UEFI
 https://www.evernote.com/shard/s21/nl/2425275/c9323a30-4bb8-4312-8863-a6344c24f6f3 , 零碎:Digicert , 数字证书相关
 https://www.evernote.com/shard/s21/nl/2425275/33540000-5da8-40cb-b094-53d333fe483b , 零碎:FONTS , 字体相关
+https://www.evernote.com/shard/s21/nl/2425275/ee552f1d-8e4b-4051-8039-9ab7ee52c8f9 , 自创主题:WINFONTC, Windows Fonts and Charset
 
 https://www.evernote.com/shard/s21/nl/2425275/803ad1b0-9e6e-4f1a-9b62-e76ebb7eeecf , 硬件相关:RasPi, Raspberry Pi
 https://www.evernote.com/shard/s21/nl/2425275/6f3a3c9a-c6c8-4c67-abe8-ba5567b4a995 , 硬件相关:hdisk, 硬盘
@@ -63,7 +64,7 @@ https://www.evernote.com/shard/s21/nl/2425275/15efd366-1488-49a4-928b-d13a66f1fe
 
 https://www.evernote.com/shard/s21/nl/2425275/8c1a47a1-5577-4cec-86d0-06a48ef2193e , 自创主题:VSPG, Visual Studio 构建前后批处理通用框架
 https://www.evernote.com/shard/s21/nl/2425275/d56e6568-8101-4d27-88c9-6e7f6d600c95 , 自创主题:GMU, GnumakeUniproc
-https://www.evernote.com/shard/s21/nl/2425275/ee552f1d-8e4b-4051-8039-9ab7ee52c8f9 , 自创主题:WINFONTC, Windows Fonts and Charset
+https://www.evernote.com/shard/s21/nl/2425275/2cf1d0ae-03a5-460b-b7a0-c46f19489b62 , 自创主题:BESTPRAC, 最佳实践收集
 https://www.evernote.com/shard/s21/nl/2425275/61d348e1-8ab7-4bec-93f4-48e248d89a6c , 自创主题:chja20 ,我的 3950X 台式机
 https://www.evernote.com/shard/s21/nl/2425275/72790fe5-27f9-4b76-baa3-0a4a80754c65  ,自创主题:UFCOM
 https://www.evernote.com/shard/s21/nl/2425275/2ae180b6-5406-409a-a38d-debc58702270 , 自创主题:chjhotkey , 我的常用热键
