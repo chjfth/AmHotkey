@@ -53,6 +53,7 @@ https://www.evernote.com/shard/s21/nl/2425275/6f3a3c9a-c6c8-4c67-abe8-ba5567b4a9
 
 https://www.evernote.com/shard/s21/nl/2425275/7b769e8c-0fd6-4342-9147-8738e9188196 , 软件主题:VMwks , VMware Workstation
 https://www.evernote.com/shard/s21/nl/2425275/66a2acec-5d85-4be7-a714-f9d85fa11679 , 软件主题:VirtualBox
+https://www.evernote.com/shard/s21/nl/2425275/eace55aa-14ea-4d9a-9b17-13451082c67a , 软件主题:EmEditor
 https://www.evernote.com/shard/s21/nl/2425275/b1c9e992-0c29-45a1-a0d9-1f6eb91677ac , 软件主题:Git
 https://www.evernote.com/shard/s21/nl/2425275/b541de60-735a-475f-be07-715f55078704 , 软件主题:Evernote
 https://www.evernote.com/shard/s21/nl/2425275/60f84ac4-388e-442f-9747-d15d15f37ad3 , 软件主题:Fiddler
