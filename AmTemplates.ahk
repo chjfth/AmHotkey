@@ -55,9 +55,15 @@ global g_amteditOldguid9, g_amteditNewguid9
 
 global g_amt_arTemplateGuids := [] ; an array of object(.oldword .desc .newword)
 
+global CREATE_SUBDIR_WITH_NEW_WORD := "Create a subdir with first new word"
+
 global g_amtIsAutoGuid := true
 
-global g_amtDirApply
+global g_amtEdtOutdirUser
+
+global g_amtIsCreateDirForFirstWord := false
+global g_amtTxtApplyDirFinal
+global g_amtIconWarnOverwrite
 
 ; AmTemplates_InitHotkeys()
 
@@ -278,27 +284,42 @@ Amt_CreateGui(inipath)
 		g_amt_arTemplateGuids[index] := {"oldword":key, "newword":guidnew, "desc":value}
 	}
 	
-	Gui, AMT:Add, Text, y+16 xm , % "Apply to folder:"
-	Gui, AMT:Add, Edit, xm w580 vg_amtDirApply, % "fill later"
+	Gui, AMT:Add, Text, y+16 xm, % "Apply &to:"
+	Gui, AMT:Add, Edit, xm w580 vg_amtEdtOutdirUser gAmt_ResyncUI, % ""
+	
+	Gui, AMT:Add, Checkbox, xm w500 Checked vg_amtIsCreateDirForFirstWord gAmt_ResyncUI, % CREATE_SUBDIR_WITH_NEW_WORD
+	Gui, AMT:Add, Edit, xm+1 w560  ReadOnly -E0x200   vg_amtTxtApplyDirFinal, % "" ; -E0x200: turn off WS_EX_CLIENTEDGE, no so editbox border
+	;
+	; An exclamation icon at right end, to indicate output folder already exists
+	Gui, Add, Picture, x+3 yp Icon2 Hidden w16 h16 +0x100 vg_amtIconWarnOverwrite, % "USER32.DLL" 
 	
 	Gui, AMT:Add, Button, y+16 xm Default gAMT_BtnOK, % " &Apply "
 }
 
 Amt_ShowGui(inipath)
 {
-	Amt_CreateGui(inipath)
+
+	if(!g_HwndAmt) {
+		Amt_CreateGui(inipath)
+	}
 	
 	OnMessage(0x200, Func("Amt_WM_MOUSEMOVE")) ; add message hook
 	
 	Gui, AMT:Show, , % "Expand your AmTemplate"
 
+	GuiControlGet, g_amtEdtOutdirUser, AMT:
+
+	if(g_amtEdtOutdirUser=="")
+	{
+		; Fill a preset apply path for user
+		useroutdir := A_AppData "\" "AmTemplatesApply" ; Example: C:\Users\win7evn\AppData\Roaming\AmTemplatesApply
+
+		GuiControl, AMT:, g_amtEdtOutdirUser, % useroutdir
+	}
+	
+;	applydir := dev_FindVacantFilename(inidir "-Apply{}")
+
 	Amt_ResyncUI()
-
-	; Fill a preset apply path for user
-	inidir := dev_SplitPath(inipath)
-	applydir := dev_FindVacantFilename(inidir "-Apply{}")
-
-	GuiControl, AMT:, g_amtDirApply, % applydir
 }
 
 Amt_HideGui()
@@ -337,7 +358,8 @@ AMTGuiSize()
 ;		rsdict["g_amteditNewguid" A_Index] := rsdict.g_NewguidHeader
 ;	}
 	
-	rsdict.g_amtDirApply := "0,0,100,0"
+	rsdict.g_amtEdtOutdirUser := "0,0,100,0"
+	rsdict.g_amtTxtApplyDirFinal := "0,0,100,0"
 	
 	dev_GuiAutoResize("AMT", rsdict, A_GuiWidth, A_GuiHeight)
 }
@@ -357,7 +379,9 @@ AMT_BtnOK()
 	Gui, AMT:Submit, NoHide
 	Gui, AMT:+OwnDialogs ; So that child dialogboxes are Modal.
 	
-	if(FileExist(g_amtDirApply))
+	finalApplyDir := g_amtTxtApplyDirFinal
+	
+	if(FileExist(finalApplyDir))
 	{
 		dev_MsgBoxWarning("Apply folder already exists. Please choose a different one.")
 		return
@@ -378,13 +402,16 @@ AMT_BtnOK()
 			return
 	}
 
-	isok := Amt_DoExpandTemplate(g_amtTemplateSrcDir, g_amtDirApply)
+	isok := Amt_DoExpandTemplate(g_amtTemplateSrcDir, finalApplyDir)
 	; -- implicit input: g_amt_arTemplateGuids[], g_amt_arTemplateWords
 
 	if(isok)
 	{
-		dev_MsgBoxInfo("Expand template folder success.")
+		dev_MsgBoxInfo("Expand template success.`n`n" finalApplyDir)
 	}
+	
+	Amt_ResyncUI() ; Purpose: show "folder exists" warning icon at bottom-right
+	
 ;	Amt_HideGui()
 }
 
@@ -404,8 +431,12 @@ Amt_OnNewWordChange()
 	newtext := %idCtrl%
 	g_amt_arTemplateWords[index].newword := newtext
 	
-	
 ;	dev_TooltipAutoClear("text changed to: " newtext)
+
+	if(idCtrl=="g_amteditNewword1")
+	{
+		Amt_ResyncUI()
+	}
 }
 
 Amt_OnNewGuidChange()
@@ -444,6 +475,10 @@ Amt_WM_MOUSEMOVE()
 		
 		dev_TooltipAutoClear(g_amt_arTemplateGuids[index].desc)
 	}
+	else if(idCtrl=="g_amtIconWarnOverwrite")
+	{
+		dev_TooltipAutoClear("This folder already exists.")
+	}
 	else if(A_Gui=="AMT")
 	{
 		; Note: We use delay-hide here.
@@ -455,6 +490,8 @@ Amt_WM_MOUSEMOVE()
 
 Amt_ResyncUI()
 {
+	; ==== Auto-generate GUID checkbox ====
+
 	GuiControlGet, ischecked, AMT:, g_amtIsAutoGuid
 
 	cmdEnable := ischecked ? "Disable" : "Enable"
@@ -465,6 +502,34 @@ Amt_ResyncUI()
 	
 		GuiControl, AMT:%cmdEnable%, %varname%
 	}
+	
+	; ==== Create subdir checkbox ====
+	
+	GuiControlGet, g_amtEdtOutdirUser, AMT:
+	GuiControlGet, g_amteditNewword1, AMT:
+	GuiControlGet, ischecked, AMT:, g_amtIsCreateDirForFirstWord
+	
+	if(ischecked)
+	{
+		ckbText := Format("Create a subdir named ""{1}"", so we will create folder:", g_amteditNewword1)
+		GuiControl, AMT:, g_amtIsCreateDirForFirstWord, % ckbText
+		
+		finalApplyDir := g_amtEdtOutdirUser "\" g_amteditNewword1
+		GuiControl, AMT:Show, g_amtTxtApplyDirFinal
+	}
+	else
+	{
+		GuiControl, AMT:, g_amtIsCreateDirForFirstWord, % CREATE_SUBDIR_WITH_NEW_WORD
+		
+		finalApplyDir := g_amtEdtOutdirUser
+		GuiControl, AMT:Hide, g_amtTxtApplyDirFinal
+	}
+
+	;  Update text in g_amtTxtApplyDirFinal
+	GuiControl, AMT:, g_amtTxtApplyDirFinal, % finalApplyDir
+	
+	showOverwriteWarning := FileExist(finalApplyDir) ? "Show" : "Hide"
+	GuiControl, AMT:%showOverwriteWarning%, g_amtIconWarnOverwrite
 }
 
 Amt_DoExpandTemplate(srcdir, dstdir)
