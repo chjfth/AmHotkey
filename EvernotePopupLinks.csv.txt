@@ -36,6 +36,9 @@ https://www.evernote.com/shard/s21/nl/2425275/35e458a1-d25e-45bb-83ab-b7358c4af4
 
 https://www.evernote.com/shard/s21/nl/2425275/5622a161-f0dd-40c4-a048-4bc10f13b9e2 , WinSDV2022
 
+https://www.evernote.com/shard/s21/nl/2425275/b8d347a4-dbdc-4833-a5eb-6bc3c085658f , WebDev:HTMLDOM
+https://www.evernote.com/shard/s21/nl/2425275/88cd0469-7be3-4245-ac1b-6644432d4857 , WebDev:HTMLCSS
+
 https://www.evernote.com/shard/s21/nl/2425275/cea49e43-0939-4555-bea5-9ab71888a970 , InfoSec:InfoSec , 信息安全
 https://www.evernote.com/shard/s21/nl/2425275/842522bf-b2f2-4a9a-bfe7-bacfc5eba6f0 , InfoSec:Crypto , 加密解密编程
 https://www.evernote.com/shard/s21/nl/2425275/0bb453f4-20a9-4b84-bb25-cf19121dcd3e , InfoSec:WireGuard , 加密隧道软件
