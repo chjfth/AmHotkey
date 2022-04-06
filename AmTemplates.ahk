@@ -101,6 +101,8 @@ Amt_PrepareDir(basemenu, basedirpath)
 	;
 	; Yes, the caller suggests the basemenu name(string) for us to create.
 
+	dev_Menu_DeleteAll(basemenu) ; clear old menu with the "same" name
+
 	if FileExist(Amt_GetIniFilepath(basedirpath))
 	{
 		return AMT_FOUND_IMMEDIATE_TEMPLATE
