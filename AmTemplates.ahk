@@ -246,7 +246,7 @@ Amt_CreateGui(inipath)
 	
 	Gui, AMT:Add, Text, xm y+16 w280 vg_OldguidHeader, % "Old GUIDs from template:"
 	Gui, AMT:Add, Text, x+10 yp      vg_NewguidHeader, % "New GUIDs to apply:"
-	Gui, AMT:Add, Checkbox, x+45 yp Checked vg_amtIsAutoGuid gAmt_ResyncUI, % "Auto &generate"
+	Gui, AMT:Add, Checkbox, x+45 yp Checked vg_amtIsAutoGuid gAmt_ckbToggleAutoGenGuid, % "Auto &generate"
 	
 	;
 	; Get all items from [GUID]
@@ -271,12 +271,7 @@ Amt_CreateGui(inipath)
 		varname_oldword := "g_amteditOldguid" + index
 		varname_newword := "g_amteditNewguid" + index
 		
-		; Generate a set of GUIDs by current timestamp, like 
-		; {20220119-0000-0000-0000-134742000001}
-		; {20220119-0000-0000-0000-134742000002}
-		;
-		guidfmt := Format("{yyyyMMdd-0000-0000-0000-HHmmss00000{1}}", index)
-		guidnew := dev_GetCurrentDatetime(guidfmt)
+		guidnew := Amt_GenerateGuidByTime(index)
 		
 		Gui, AMT:Add, Edit,    xm   w280 ReadOnly -Tabstop         v%varname_oldword% , % key
 		Gui, AMT:Add, Edit, yp x+10 w280      gAmt_OnNewGuidChange v%varname_newword% , % guidnew
@@ -295,6 +290,7 @@ Amt_CreateGui(inipath)
 	
 	Gui, AMT:Add, Button, y+16 xm Default gAMT_BtnOK, % " &Apply "
 }
+
 
 Amt_ShowGui(inipath)
 {
@@ -415,6 +411,35 @@ AMT_BtnOK()
 ;	Amt_HideGui()
 }
 
+Amt_GenerateGuidByTime(suffix_num)
+{
+	; Generate a set of GUIDs by current timestamp, like 
+	; {20220119-0000-0000-0000-134742000001}
+	; {20220119-0000-0000-0000-134742000002}
+	
+	if(suffix_num>=0 && suffix_num<=9)
+		guidfmt := Format("{yyyyMMdd-0000-0000-0000-HHmmss00000{1}}", suffix_num)
+	else if(suffix_num>=10 && suffix_num<=99)
+		guidfmt := Format("{yyyyMMdd-0000-0000-0000-HHmmss0000{1}}", suffix_num)
+	else {
+		guidfmt := "{yyyyMMdd-0000-0000-0000-HHmmss000000}"
+		dev_MsgBoxError("Amt_GenerateGuidByTime input parameter error, suffix_num should be 0~99.")
+	}
+	
+	guidnew := dev_GetCurrentDatetime(guidfmt)
+	return guidnew
+}
+
+Amt_GenerateAllGuidsByTime()
+{
+	for index,obj in g_amt_arTemplateGuids
+	{
+		obj.newword := Amt_GenerateGuidByTime(index)
+	
+		GuiControl, AMT:, % Format("g_amteditNewguid{1}", index), % obj.newword
+	}
+}
+
 
 Amt_OnNewWordChange()
 {
@@ -490,6 +515,18 @@ Amt_WM_MOUSEMOVE()
 		; Amt_OnNewWordChange() and Amt_OnNewGuidChange() will vanish immediately, with a mere flash.
 		dev_TooltipDelayHide()
 	}
+}
+
+Amt_ckbToggleAutoGenGuid()
+{
+	GuiControlGet, ischecked, AMT:, g_amtIsAutoGuid
+	
+	if(ischecked)
+	{
+		Amt_GenerateAllGuidsByTime()
+	}
+
+	Amt_ResyncUI()
 }
 
 Amt_ResyncUI()
@@ -597,7 +634,6 @@ Amt_DoExpandTemplate(srcdir, dstdir)
 		
 		for index,obj in g_amt_arTemplateGuids
 		{
-;MsgBox, % "newword:" . obj.newword
 			filetext := StrReplace(filetext, obj.oldword, obj.newword)
 		}
 		
