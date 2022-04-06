@@ -61,7 +61,7 @@ global g_amtIsAutoGuid := true
 
 global g_amtEdtOutdirUser
 
-global g_amtIsCreateDirForFirstWord := false
+global g_amtIsCreateDirForFirstWord := true
 global g_amtTxtApplyDirFinal
 global g_amtIconWarnOverwrite
 
@@ -284,9 +284,10 @@ Amt_CreateGui(inipath)
 	}
 	
 	Gui, AMT:Add, Text, y+16 xm, % "Apply &to:"
-	Gui, AMT:Add, Edit, xm w580 vg_amtEdtOutdirUser gAmt_ResyncUI, % ""
+	Gui, AMT:Add, Edit, xm w580 vg_amtEdtOutdirUser gAmt_ResyncUI, % "" ; text fill later in Amt_ShowGui()
 	
-	Gui, AMT:Add, Checkbox, xm w500 Checked vg_amtIsCreateDirForFirstWord gAmt_ResyncUI, % CREATE_SUBDIR_WITH_NEW_WORD
+	initcheck := g_amtIsCreateDirForFirstWord ? "Checked" : ""
+	Gui, AMT:Add, Checkbox, xm w500 %initcheck% vg_amtIsCreateDirForFirstWord gAmt_ResyncUI, % CREATE_SUBDIR_WITH_NEW_WORD
 	Gui, AMT:Add, Edit, xm+1 w560  ReadOnly -E0x200   vg_amtTxtApplyDirFinal, % "" ; -E0x200: turn off WS_EX_CLIENTEDGE, no so editbox border
 	;
 	; An exclamation icon at right end, to indicate output folder already exists
@@ -298,7 +299,6 @@ Amt_CreateGui(inipath)
 
 Amt_ShowGui(inipath)
 {
-
 	if(!g_HwndAmt || inipath!=g_amtPrevInipath) {
 		
 		Amt_CreateGui(inipath) ; destroy old and create new
@@ -310,15 +310,14 @@ Amt_ShowGui(inipath)
 	
 	Gui, AMT:Show, , % "Expand your AmTemplate"
 
-	GuiControlGet, g_amtEdtOutdirUser, AMT:
+															;	GuiControlGet, g_amtEdtOutdirUser, AMT:
 
 	if(g_amtEdtOutdirUser=="")
 	{
 		; Fill a preset apply path for user
-		useroutdir := A_AppData "\" "AmTemplatesApply" ; Example: C:\Users\win7evn\AppData\Roaming\AmTemplatesApply
-
-		GuiControl, AMT:, g_amtEdtOutdirUser, % useroutdir
+		g_amtEdtOutdirUser := A_AppData "\" "AmTemplatesApply" ; Example: C:\Users\win7evn\AppData\Roaming\AmTemplatesApply
 	}
+	GuiControl, AMT:, g_amtEdtOutdirUser, % g_amtEdtOutdirUser
 	
 ;	applydir := dev_FindVacantFilename(inidir "-Apply{}")
 
@@ -553,11 +552,9 @@ Amt_ResyncUI()
 	
 	; ==== Create subdir checkbox ====
 	
-	GuiControlGet, g_amtEdtOutdirUser, AMT:
-	GuiControlGet, g_amteditNewword1, AMT:
-	GuiControlGet, ischecked, AMT:, g_amtIsCreateDirForFirstWord
+	Gui, AMT:Submit, NoHide
 	
-	if(ischecked)
+	if(g_amtIsCreateDirForFirstWord)
 	{
 		ckbText := Format("Create a subdir named ""{1}"", so we will create folder:", g_amteditNewword1)
 		GuiControl, AMT:, g_amtIsCreateDirForFirstWord, % ckbText
