@@ -65,6 +65,8 @@ global g_amtIsCreateDirForFirstWord := false
 global g_amtTxtApplyDirFinal
 global g_amtIconWarnOverwrite
 
+global g_amtPrevInipath := ""
+
 ; AmTemplates_InitHotkeys()
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -297,8 +299,11 @@ Amt_CreateGui(inipath)
 Amt_ShowGui(inipath)
 {
 
-	if(!g_HwndAmt) {
-		Amt_CreateGui(inipath)
+	if(!g_HwndAmt || inipath!=g_amtPrevInipath) {
+		
+		Amt_CreateGui(inipath) ; destroy old and create new
+		
+		g_amtPrevInipath := inipath
 	}
 	
 	OnMessage(0x200, Func("Amt_WM_MOUSEMOVE")) ; add message hook
