@@ -68,6 +68,10 @@ global g_amtIconWarnOverwrite
 global g_amtPrevInipath := ""
 global g_amtApplyFolderHint := ""
 
+global g_amtDefaultOutdirUser := A_AppData "\" "AmTemplatesApply" 
+	; Example: C:\Users\win7evn\AppData\Roaming\AmTemplatesApply
+	; This can be overridden in customize.ahk
+
 ; AmTemplates_InitHotkeys()
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -313,12 +317,10 @@ Amt_ShowGui(inipath)
 	
 	Gui, AMT:Show, , % "Expand your AmTemplate"
 
-															;	GuiControlGet, g_amtEdtOutdirUser, AMT:
-
 	if(g_amtEdtOutdirUser=="")
 	{
 		; Fill a preset apply path for user
-		g_amtEdtOutdirUser := A_AppData "\" "AmTemplatesApply" ; Example: C:\Users\win7evn\AppData\Roaming\AmTemplatesApply
+		g_amtEdtOutdirUser := g_amtDefaultOutdirUser
 	}
 	GuiControl, AMT:, g_amtEdtOutdirUser, % g_amtEdtOutdirUser
 	
@@ -412,7 +414,7 @@ AMT_BtnOK()
 
 	if(isok)
 	{
-		dev_MsgBoxInfo("Expand template success.`n`n" finalApplyDir)
+		dev_MsgBoxInfo("Expand template success.`n`n" finalApplyDir "`n`nHint: Default output folder can be set in global var g_amtDefaultOutdirUser.")
 	}
 	
 	Amt_ResyncUI() ; Purpose: show "folder exists" warning icon at bottom-right
