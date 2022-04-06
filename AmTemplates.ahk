@@ -450,9 +450,11 @@ Amt_OnNewGuidChange()
 	
 	GuiControlGet, %idCtrl%, AMT:
 	newtext := %idCtrl%
+
+	index := dev_str2num(dev_StripPrefix(idCtrl, "g_amteditNewguid"))
 	g_amt_arTemplateGUIDs[index].newword := newtext
 
-;	dev_TooltipAutoClear("text changed to: " newtext)
+;	dev_TooltipAutoClear(Format("g_amt_arTemplateGUIDs[{1}].newword changed to: {2}", index, newtext)) ; debug
 }
 
 Amt_WM_MOUSEMOVE()
@@ -471,6 +473,8 @@ Amt_WM_MOUSEMOVE()
 	}
 	else if(StrIsStartsWith(idCtrl, "g_amteditOldguid"))
 	{
+		; show tooltip on old-GUID, that is text description of this GUID's meaning.
+	
 		index := dev_str2num(dev_StripPrefix(idCtrl, "g_amteditOldguid"))
 		
 		dev_TooltipAutoClear(g_amt_arTemplateGuids[index].desc)
@@ -537,6 +541,8 @@ Amt_DoExpandTemplate(srcdir, dstdir)
 	arPairs := []
 	
 	cfgini := Amt_GetIniFilepath(srcdir)
+	
+	; Walk source dir and find files matching IncludePatterns.
 
 	IniRead, IncludePatterns, % cfgini, % "global", % "IncludePatterns", % "*"
 	ptns := StrSplit(IncludePatterns, "|")
@@ -591,6 +597,7 @@ Amt_DoExpandTemplate(srcdir, dstdir)
 		
 		for index,obj in g_amt_arTemplateGuids
 		{
+;MsgBox, % "newword:" . obj.newword
 			filetext := StrReplace(filetext, obj.oldword, obj.newword)
 		}
 		
