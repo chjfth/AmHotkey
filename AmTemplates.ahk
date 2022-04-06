@@ -577,6 +577,9 @@ Amt_ResyncUI()
 
 Amt_DoExpandTemplate(srcdir, dstdir)
 {
+	logfile := "AmTemplates.log"
+;	dev_WriteLogFile(logfile, "", false) ; create logfile
+
 	arPairs := []
 	
 	cfgini := Amt_GetIniFilepath(srcdir)
@@ -597,11 +600,13 @@ Amt_DoExpandTemplate(srcdir, dstdir)
 			continue
 		}
 
+		dstRela := srcRela
 		for idx,wordmap in g_amt_arTemplateWords
 		{
-			dstRela := StrReplace(srcRela, wordmap.oldword, wordmap.newword)
+			dstRela := StrReplace(dstRela, wordmap.oldword, wordmap.newword)
 		}
 
+;		dev_WriteLogFile(logfile, Format("[{1}] -> [{2}]`n", srcRela, dstRela)) ; debug
 		arPairs.Push({"srcrela":srcRela , "dstrela":dstRela}) 
 	}
 
