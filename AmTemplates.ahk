@@ -66,6 +66,7 @@ global g_amtTxtApplyDirFinal
 global g_amtIconWarnOverwrite
 
 global g_amtPrevInipath := ""
+global g_amtApplyFolderHint := ""
 
 ; AmTemplates_InitHotkeys()
 
@@ -284,14 +285,16 @@ Amt_CreateGui(inipath)
 	}
 	
 	Gui, AMT:Add, Text, y+16 xm, % "Apply &to:"
-	Gui, AMT:Add, Edit, xm w580 vg_amtEdtOutdirUser gAmt_ResyncUI, % "" ; text fill later in Amt_ShowGui()
+	Gui, AMT:Add, Edit, xm+15 w565 vg_amtEdtOutdirUser gAmt_ResyncUI, % "" ; text fill later in Amt_ShowGui()
 	
 	initcheck := g_amtIsCreateDirForFirstWord ? "Checked" : ""
 	Gui, AMT:Add, Checkbox, xm w500 %initcheck% vg_amtIsCreateDirForFirstWord gAmt_ResyncUI, % CREATE_SUBDIR_WITH_NEW_WORD
-	Gui, AMT:Add, Edit, xm+1 w560  ReadOnly -E0x200   vg_amtTxtApplyDirFinal, % "" ; -E0x200: turn off WS_EX_CLIENTEDGE, no so editbox border
-	;
-	; An exclamation icon at right end, to indicate output folder already exists
-	Gui, Add, Picture, x+3 yp Icon2 Hidden w16 h16 +0x100 vg_amtIconWarnOverwrite, % "USER32.DLL" 
+	
+	Gui, AMT:Add, Text, xm, % "Final apply folder:"
+	
+	; Now, a readonly text line that shows final apply folder, with a prefix icon showing final-folder state.
+	Gui, AMT:Add, Picture, xm w16 h16 +0x100 vg_amtIconWarnOverwrite ; 0x100: SS_NOTIFY, for hovering tooltip
+	Gui, AMT:Add, Edit, yp x+3  w562 ReadOnly -E0x200   vg_amtTxtApplyDirFinal, % "" ; -E0x200: turn off WS_EX_CLIENTEDGE, no so editbox border
 	
 	Gui, AMT:Add, Button, y+16 xm Default gAMT_BtnOK, % " &Apply "
 }
@@ -512,7 +515,7 @@ Amt_WM_MOUSEMOVE()
 	}
 	else if(idCtrl=="g_amtIconWarnOverwrite")
 	{
-		dev_TooltipAutoClear("This folder already exists.")
+		dev_TooltipAutoClear(g_amtApplyFolderHint)
 	}
 	else if(A_Gui=="AMT")
 	{
@@ -556,25 +559,31 @@ Amt_ResyncUI()
 	
 	if(g_amtIsCreateDirForFirstWord)
 	{
-		ckbText := Format("Create a subdir named ""{1}"", so we will create folder:", g_amteditNewword1)
+		ckbText := Format("Create a subdir named ""{1}"" .", g_amteditNewword1)
 		GuiControl, AMT:, g_amtIsCreateDirForFirstWord, % ckbText
 		
 		finalApplyDir := g_amtEdtOutdirUser "\" g_amteditNewword1
-		GuiControl, AMT:Show, g_amtTxtApplyDirFinal
 	}
 	else
 	{
 		GuiControl, AMT:, g_amtIsCreateDirForFirstWord, % CREATE_SUBDIR_WITH_NEW_WORD
 		
 		finalApplyDir := g_amtEdtOutdirUser
-		GuiControl, AMT:Hide, g_amtTxtApplyDirFinal
 	}
 
 	;  Update text in g_amtTxtApplyDirFinal
 	GuiControl, AMT:, g_amtTxtApplyDirFinal, % finalApplyDir
-	
-	showOverwriteWarning := FileExist(finalApplyDir) ? "Show" : "Hide"
-	GuiControl, AMT:%showOverwriteWarning%, g_amtIconWarnOverwrite
+
+	if(FileExist(finalApplyDir)) {
+		icongroup := 2 ; yellow exclamation triangle
+		g_amtApplyFolderHint := "This folder already exists. You need to choose another."
+	}
+	else {
+		icongroup := 5 ; blue info circle
+		g_amtApplyFolderHint := "This folder will be created."
+	}
+	iconparams := Format("*icon{1} USER32.DLL", icongroup)
+	GuiControl, AMT:, g_amtIconWarnOverwrite, % iconparams
 }
 
 Amt_DoExpandTemplate(srcdir, dstdir)
