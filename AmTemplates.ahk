@@ -55,9 +55,22 @@ global g_amteditOldguid9, g_amteditNewguid9
 
 global g_amt_arTemplateGuids := [] ; an array of object(.oldword .desc .newword)
 
+global CREATE_SUBDIR_WITH_NEW_WORD := "Create a subdir with first new word"
+
 global g_amtIsAutoGuid := true
 
-global g_amtDirApply
+global g_amtEdtOutdirUser
+
+global g_amtIsCreateDirForFirstWord := true
+global g_amtTxtApplyDirFinal
+global g_amtIconWarnOverwrite
+
+global g_amtPrevInipath := ""
+global g_amtApplyFolderHint := ""
+
+global g_amtDefaultOutdirUser := A_AppData "\" "AmTemplatesApply" 
+	; Example: C:\Users\win7evn\AppData\Roaming\AmTemplatesApply
+	; This can be overridden in customize.ahk
 
 ; AmTemplates_InitHotkeys()
 
@@ -94,6 +107,8 @@ Amt_PrepareDir(basemenu, basedirpath)
 	; and we will return 0.
 	;
 	; Yes, the caller suggests the basemenu name(string) for us to create.
+
+	dev_Menu_DeleteAll(basemenu) ; clear old menu with the "same" name
 
 	if FileExist(Amt_GetIniFilepath(basedirpath))
 	{
@@ -240,7 +255,7 @@ Amt_CreateGui(inipath)
 	
 	Gui, AMT:Add, Text, xm y+16 w280 vg_OldguidHeader, % "Old GUIDs from template:"
 	Gui, AMT:Add, Text, x+10 yp      vg_NewguidHeader, % "New GUIDs to apply:"
-	Gui, AMT:Add, Checkbox, x+45 yp Checked vg_amtIsAutoGuid gAmt_ResyncUI, % "Auto &generate"
+	Gui, AMT:Add, Checkbox, x+45 yp Checked vg_amtIsAutoGuid gAmt_ckbToggleAutoGenGuid, % "Auto &generate"
 	
 	;
 	; Get all items from [GUID]
@@ -265,12 +280,7 @@ Amt_CreateGui(inipath)
 		varname_oldword := "g_amteditOldguid" + index
 		varname_newword := "g_amteditNewguid" + index
 		
-		; Generate a set of GUIDs by current timestamp, like 
-		; {20220119-0000-0000-0000-134742000001}
-		; {20220119-0000-0000-0000-134742000002}
-		;
-		guidfmt := Format("{yyyyMMdd-0000-0000-0000-HHmmss00000{1}}", index)
-		guidnew := dev_GetCurrentDatetime(guidfmt)
+		guidnew := Amt_GenerateGuidByTime(index)
 		
 		Gui, AMT:Add, Edit,    xm   w280 ReadOnly -Tabstop         v%varname_oldword% , % key
 		Gui, AMT:Add, Edit, yp x+10 w280      gAmt_OnNewGuidChange v%varname_newword% , % guidnew
@@ -278,27 +288,45 @@ Amt_CreateGui(inipath)
 		g_amt_arTemplateGuids[index] := {"oldword":key, "newword":guidnew, "desc":value}
 	}
 	
-	Gui, AMT:Add, Text, y+16 xm , % "Apply to folder:"
-	Gui, AMT:Add, Edit, xm w580 vg_amtDirApply, % "fill later"
+	Gui, AMT:Add, Text, y+16 xm, % "Apply &to:"
+	Gui, AMT:Add, Edit, xm+15 w565 vg_amtEdtOutdirUser gAmt_ResyncUI, % "" ; text fill later in Amt_ShowGui()
+	
+	initcheck := g_amtIsCreateDirForFirstWord ? "Checked" : ""
+	Gui, AMT:Add, Checkbox, xm w500 %initcheck% vg_amtIsCreateDirForFirstWord gAmt_ResyncUI, % CREATE_SUBDIR_WITH_NEW_WORD
+	
+	Gui, AMT:Add, Text, xm, % "Final apply folder:"
+	
+	; Now, a readonly text line that shows final apply folder, with a prefix icon showing final-folder state.
+	Gui, AMT:Add, Picture, xm w16 h16 +0x100 vg_amtIconWarnOverwrite ; 0x100: SS_NOTIFY, for hovering tooltip
+	Gui, AMT:Add, Edit, yp x+3  w562 ReadOnly -E0x200   vg_amtTxtApplyDirFinal, % "" ; -E0x200: turn off WS_EX_CLIENTEDGE, no so editbox border
 	
 	Gui, AMT:Add, Button, y+16 xm Default gAMT_BtnOK, % " &Apply "
 }
 
+
 Amt_ShowGui(inipath)
 {
-	Amt_CreateGui(inipath)
+	if(!g_HwndAmt || inipath!=g_amtPrevInipath) {
+		
+		Amt_CreateGui(inipath) ; destroy old and create new
+		
+		g_amtPrevInipath := inipath
+	}
 	
 	OnMessage(0x200, Func("Amt_WM_MOUSEMOVE")) ; add message hook
 	
 	Gui, AMT:Show, , % "Expand your AmTemplate"
 
+	if(g_amtEdtOutdirUser=="")
+	{
+		; Fill a preset apply path for user
+		g_amtEdtOutdirUser := g_amtDefaultOutdirUser
+	}
+	GuiControl, AMT:, g_amtEdtOutdirUser, % g_amtEdtOutdirUser
+	
+;	applydir := dev_FindVacantFilename(inidir "-Apply{}")
+
 	Amt_ResyncUI()
-
-	; Fill a preset apply path for user
-	inidir := dev_SplitPath(inipath)
-	applydir := dev_FindVacantFilename(inidir "-Apply{}")
-
-	GuiControl, AMT:, g_amtDirApply, % applydir
 }
 
 Amt_HideGui()
@@ -337,7 +365,8 @@ AMTGuiSize()
 ;		rsdict["g_amteditNewguid" A_Index] := rsdict.g_NewguidHeader
 ;	}
 	
-	rsdict.g_amtDirApply := "0,0,100,0"
+	rsdict.g_amtEdtOutdirUser := "0,0,100,0"
+	rsdict.g_amtTxtApplyDirFinal := "0,0,100,0"
 	
 	dev_GuiAutoResize("AMT", rsdict, A_GuiWidth, A_GuiHeight)
 }
@@ -357,7 +386,9 @@ AMT_BtnOK()
 	Gui, AMT:Submit, NoHide
 	Gui, AMT:+OwnDialogs ; So that child dialogboxes are Modal.
 	
-	if(FileExist(g_amtDirApply))
+	finalApplyDir := g_amtTxtApplyDirFinal
+	
+	if(FileExist(finalApplyDir))
 	{
 		dev_MsgBoxWarning("Apply folder already exists. Please choose a different one.")
 		return
@@ -378,14 +409,46 @@ AMT_BtnOK()
 			return
 	}
 
-	isok := Amt_DoExpandTemplate(g_amtTemplateSrcDir, g_amtDirApply)
+	isok := Amt_DoExpandTemplate(g_amtTemplateSrcDir, finalApplyDir)
 	; -- implicit input: g_amt_arTemplateGuids[], g_amt_arTemplateWords
 
 	if(isok)
 	{
-		dev_MsgBoxInfo("Expand template folder success.")
+		dev_MsgBoxInfo("Expand template success.`n`n" finalApplyDir "`n`nHint: Default output folder can be set in global var g_amtDefaultOutdirUser.")
 	}
+	
+	Amt_ResyncUI() ; Purpose: show "folder exists" warning icon at bottom-right
+	
 ;	Amt_HideGui()
+}
+
+Amt_GenerateGuidByTime(suffix_num)
+{
+	; Generate a set of GUIDs by current timestamp, like 
+	; {20220119-0000-0000-0000-134742000001}
+	; {20220119-0000-0000-0000-134742000002}
+	
+	if(suffix_num>=0 && suffix_num<=9)
+		guidfmt := Format("{yyyyMMdd-0000-0000-0000-HHmmss00000{1}}", suffix_num)
+	else if(suffix_num>=10 && suffix_num<=99)
+		guidfmt := Format("{yyyyMMdd-0000-0000-0000-HHmmss0000{1}}", suffix_num)
+	else {
+		guidfmt := "{yyyyMMdd-0000-0000-0000-HHmmss000000}"
+		dev_MsgBoxError("Amt_GenerateGuidByTime input parameter error, suffix_num should be 0~99.")
+	}
+	
+	guidnew := dev_GetCurrentDatetime(guidfmt)
+	return guidnew
+}
+
+Amt_GenerateAllGuidsByTime()
+{
+	for index,obj in g_amt_arTemplateGuids
+	{
+		obj.newword := Amt_GenerateGuidByTime(index)
+	
+		GuiControl, AMT:, % Format("g_amteditNewguid{1}", index), % obj.newword
+	}
 }
 
 
@@ -404,8 +467,12 @@ Amt_OnNewWordChange()
 	newtext := %idCtrl%
 	g_amt_arTemplateWords[index].newword := newtext
 	
-	
 ;	dev_TooltipAutoClear("text changed to: " newtext)
+
+	if(idCtrl=="g_amteditNewword1")
+	{
+		Amt_ResyncUI()
+	}
 }
 
 Amt_OnNewGuidChange()
@@ -419,9 +486,11 @@ Amt_OnNewGuidChange()
 	
 	GuiControlGet, %idCtrl%, AMT:
 	newtext := %idCtrl%
+
+	index := dev_str2num(dev_StripPrefix(idCtrl, "g_amteditNewguid"))
 	g_amt_arTemplateGUIDs[index].newword := newtext
 
-;	dev_TooltipAutoClear("text changed to: " newtext)
+;	dev_TooltipAutoClear(Format("g_amt_arTemplateGUIDs[{1}].newword changed to: {2}", index, newtext)) ; debug
 }
 
 Amt_WM_MOUSEMOVE()
@@ -440,9 +509,15 @@ Amt_WM_MOUSEMOVE()
 	}
 	else if(StrIsStartsWith(idCtrl, "g_amteditOldguid"))
 	{
+		; show tooltip on old-GUID, that is text description of this GUID's meaning.
+	
 		index := dev_str2num(dev_StripPrefix(idCtrl, "g_amteditOldguid"))
 		
 		dev_TooltipAutoClear(g_amt_arTemplateGuids[index].desc)
+	}
+	else if(idCtrl=="g_amtIconWarnOverwrite")
+	{
+		dev_TooltipAutoClear(g_amtApplyFolderHint)
 	}
 	else if(A_Gui=="AMT")
 	{
@@ -453,8 +528,22 @@ Amt_WM_MOUSEMOVE()
 	}
 }
 
+Amt_ckbToggleAutoGenGuid()
+{
+	GuiControlGet, ischecked, AMT:, g_amtIsAutoGuid
+	
+	if(ischecked)
+	{
+		Amt_GenerateAllGuidsByTime()
+	}
+
+	Amt_ResyncUI()
+}
+
 Amt_ResyncUI()
 {
+	; ==== Auto-generate GUID checkbox ====
+
 	GuiControlGet, ischecked, AMT:, g_amtIsAutoGuid
 
 	cmdEnable := ischecked ? "Disable" : "Enable"
@@ -465,13 +554,50 @@ Amt_ResyncUI()
 	
 		GuiControl, AMT:%cmdEnable%, %varname%
 	}
+	
+	; ==== Create subdir checkbox ====
+	
+	Gui, AMT:Submit, NoHide
+	
+	if(g_amtIsCreateDirForFirstWord)
+	{
+		ckbText := Format("Create a subdir named ""{1}"" .", g_amteditNewword1)
+		GuiControl, AMT:, g_amtIsCreateDirForFirstWord, % ckbText
+		
+		finalApplyDir := g_amtEdtOutdirUser "\" g_amteditNewword1
+	}
+	else
+	{
+		GuiControl, AMT:, g_amtIsCreateDirForFirstWord, % CREATE_SUBDIR_WITH_NEW_WORD
+		
+		finalApplyDir := g_amtEdtOutdirUser
+	}
+
+	;  Update text in g_amtTxtApplyDirFinal
+	GuiControl, AMT:, g_amtTxtApplyDirFinal, % finalApplyDir
+
+	if(FileExist(finalApplyDir)) {
+		icongroup := 2 ; yellow exclamation triangle
+		g_amtApplyFolderHint := "This folder already exists. You need to choose another."
+	}
+	else {
+		icongroup := 5 ; blue info circle
+		g_amtApplyFolderHint := "This folder will be created."
+	}
+	iconparams := Format("*icon{1} USER32.DLL", icongroup)
+	GuiControl, AMT:, g_amtIconWarnOverwrite, % iconparams
 }
 
 Amt_DoExpandTemplate(srcdir, dstdir)
 {
+	logfile := "AmTemplates.log"
+;	dev_WriteLogFile(logfile, "", false) ; create logfile
+
 	arPairs := []
 	
 	cfgini := Amt_GetIniFilepath(srcdir)
+	
+	; Walk source dir and find files matching IncludePatterns.
 
 	IniRead, IncludePatterns, % cfgini, % "global", % "IncludePatterns", % "*"
 	ptns := StrSplit(IncludePatterns, "|")
@@ -487,11 +613,13 @@ Amt_DoExpandTemplate(srcdir, dstdir)
 			continue
 		}
 
+		dstRela := srcRela
 		for idx,wordmap in g_amt_arTemplateWords
 		{
-			dstRela := StrReplace(srcRela, wordmap.oldword, wordmap.newword)
+			dstRela := StrReplace(dstRela, wordmap.oldword, wordmap.newword)
 		}
 
+;		dev_WriteLogFile(logfile, Format("[{1}] -> [{2}]`n", srcRela, dstRela)) ; debug
 		arPairs.Push({"srcrela":srcRela , "dstrela":dstRela}) 
 	}
 

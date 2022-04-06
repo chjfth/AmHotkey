@@ -3028,6 +3028,13 @@ dev_FindVacantFilename(path_ptn, start_seq:=1, max_seq:=10000)
 	}
 }
 
+dev_EscapeHtmlChars(text)
+{
+	text := StrReplace(text, "&", "&amp;")
+	text := StrReplace(text, "<", "&lt;")
+	text := StrReplace(text, ">", "&gt;")
+	return text
+}
 
 ;==============================================================================
 #Include *i _more_includes_.ahk ;This should be the final statement of this ahk

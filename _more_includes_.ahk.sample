@@ -35,6 +35,8 @@
 ; #include <Vis2> ; Equivalent to #include .\lib\Vis2.ahk
 
 #Include chjmisc.ahk
+
+; #Include *i AmTemplates.ahk
 ; #Include menus.ahk
 ; #Include mstsc.ahk ; Microsoft terminal service client
 ; #Include Teclast_X98.ahk
