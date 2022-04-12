@@ -3036,6 +3036,17 @@ dev_EscapeHtmlChars(text)
 	return text
 }
 
+dev_IsSameFiletime(file1, file2)
+{
+	FileGetTime, time1, % file1
+	FileGetTime, time2, % file2
+	
+	if(time1 && time1==time2)
+		return true
+	else
+		return false
+}
+
 ;==============================================================================
 #Include *i _more_includes_.ahk ;This should be the final statement of this ahk
 ;==============================================================================
