@@ -637,6 +637,12 @@ Amt_DoExpandTemplate(srcdir, dstdir)
 		dstpath := dstdir . pair.dstrela
 
 		dstdir_tip := dev_SplitPath(dstpath)
+
+		if(FileExist(dstpath))
+		{
+			dev_MsgBoxError(Format("Unexpected: Target file should not have exsited: {}", dstpath))
+			return false
+		}
 		
 		FileCreateDir, %dstdir_tip%
 		if ErrorLevel {
@@ -644,34 +650,43 @@ Amt_DoExpandTemplate(srcdir, dstdir)
 			return false
 		}
 		
-		FileRead, filetext, %srcpath%
-		if(ErrorLevel)
+		if(dev_IsBinaryFile(srcpath))
 		{
-			dev_MsgBoxError(Format("ERROR: Fail to read source file: {}", srcpath))
-			return false
+			; For binary file, do raw file copy.
+			FileCopy, %srcpath%, %dstpath%
+			if(ErrorLevel)
+			{
+				dev_MsgBoxError(Format("ERROR: Fail to create new binary file: {}", dstpath))
+				return false
+			}
 		}
-		
-		for index,obj in g_amt_arTemplateWords
+		else
 		{
-			filetext := StrReplace(filetext, obj.oldword, obj.newword)
-		}
-		
-		for index,obj in g_amt_arTemplateGuids
-		{
-			filetext := StrReplace(filetext, obj.oldword, obj.newword)
-		}
-		
-		if(FileExist(dstpath))
-		{
-			dev_MsgBoxError(Format("Unexpected: Target file should not have exsited: {}", dstpath))
-			return false
-		}
-		
-		FileAppend, %filetext%, %dstpath%
-		if(ErrorLevel)
-		{
-			dev_MsgBoxError(Format("ERROR: Fail to create new file: {}", dstpath))
-			return false
+			; For text file, we need to replace text.
+			
+			FileRead, filetext, %srcpath%
+			if(ErrorLevel)
+			{
+				dev_MsgBoxError(Format("ERROR: Fail to read source file: {}", srcpath))
+				return false
+			}
+			
+			for index,obj in g_amt_arTemplateWords
+			{
+				filetext := StrReplace(filetext, obj.oldword, obj.newword)
+			}
+			
+			for index,obj in g_amt_arTemplateGuids
+			{
+				filetext := StrReplace(filetext, obj.oldword, obj.newword)
+			}
+			
+			FileAppend, %filetext%, %dstpath%
+			if(ErrorLevel)
+			{
+				dev_MsgBoxError(Format("ERROR: Fail to create new text file: {}", dstpath))
+				return false
+			}
 		}
 	}
 	

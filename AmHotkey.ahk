@@ -2961,7 +2961,7 @@ dev_hasValue(haystack, needle)
 	; Check if needle is in the haystack array.
 	; https://stackoverflow.com/a/33593563/151453
     
-    if(!isObject(haystack))
+    if(!IsObject(haystack))
         return false
     if(haystack.Length()==0)
         return false
@@ -3046,6 +3046,55 @@ dev_IsSameFiletime(file1, file2)
 	else
 		return false
 }
+
+dev_IsBinaryFile(filepath, bytes_to_check:=8192)
+{
+	; Note: UTF-16 text files will be considered as binary.
+	; We only check for byte-value >=0 and <9 , so, text files encoded in MBCS(GBK etc)
+	; will still be considered text. For a GBK file, there will be byte-value >=128.
+	; Also, UTF-8 file with BOM will not be considered binary.
+
+	FileGetSize, filelen, % filepath
+	if ErrorLevel
+		return false
+
+	if(filelen==0)
+		return true
+
+	isbin := false ; assume false
+
+	if(filelen<bytes_to_check)
+		bytes_to_check := filelen
+
+;	dev_WriteLogFile("binlog.txt", "Byte dump of " filepath "`n", false) ; debug
+
+	file := FileOpen(filepath, "r", "UTF-8-RAW")
+	if(!IsObject(file))
+		return false
+	
+	; Seek to file start explicitly.
+	; Withouth this, Autohotkey will skip BOM bytes for us, which is not desired.
+	file.Pos := 0
+	
+	file.RawRead(buffer, bytes_to_check)
+	
+	Loop, % bytes_to_check
+	{
+		byteval := NumGet(buffer, A_Index-1, "UChar")
+		
+;		dev_WriteLogFile("binlog.txt", Format("{1:02X}`n", byteval)) ; debug
+		
+		if(byteval>=0 && byteval<9)
+		{
+			isbin := true
+		}
+	}
+	
+	file.Close()
+	return isbin
+}
+
+
 
 ;==============================================================================
 #Include *i _more_includes_.ahk ;This should be the final statement of this ahk
