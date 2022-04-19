@@ -73,6 +73,8 @@ global g_amtDefaultOutdirUser := A_AppData "\" "AmTemplatesApply"
 	; Example: C:\Users\win7evn\AppData\Roaming\AmTemplatesApply
 	; This can be overridden in customize.ahk
 
+global g_amtDefaultOutdirUser0 := g_amtDefaultOutdirUser
+
 ; AmTemplates_InitHotkeys()
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -418,7 +420,15 @@ AMT_BtnOK()
 
 	if(isok)
 	{
-		dev_MsgBoxInfo("Expand template success.`n`n" finalApplyDir "`n`nHint: Default output folder can be set in global var g_amtDefaultOutdirUser.")
+		msg := "Expand template success.`n`n" finalApplyDir 
+		
+		if(g_amtDefaultOutdirUser==g_amtDefaultOutdirUser0)
+		{	
+			; If user is using the raw default, give him a hint about using user default.
+			msg .= "`n`nHint: Default output folder can be set in global var g_amtDefaultOutdirUser."
+		}
+		
+		dev_MsgBoxInfo(msg)
 	}
 	
 	Amt_ResyncUI() ; Purpose: show "folder exists" warning icon at bottom-right
