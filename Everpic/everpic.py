@@ -78,7 +78,7 @@ EndFragment:0123456789
 SourceURL:file:///everpic
 <html>
 <body>
-<!--StartFragment--><div><img src="http://localhost:2017/Everpic-save/%(imgname)s" style="width:100%%; max-width:%(imwidth)dpx" /><br>
+<!--StartFragment--><div><img src="http://localhost:2017/Everpic-save/%(imgname)s" alt="max-width:%(imwidth)dpx" /><br>
 <span style="font-size: 10px; color: rgb(144,144,144)">
 %(imkb)d KB (%(imwidth)d*%(imheight)d),%(imghint)s %(imgname)s [%(imdatetime)s (%(imtimezone)s)]
 </span></div>~<!--EndFragment-->

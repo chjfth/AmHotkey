@@ -66,6 +66,7 @@ global g_amtTxtApplyDirFinal
 global g_amtIconWarnOverwrite
 
 global g_amtPrevInipath := ""
+global g_amtPrevIniTime := ""
 global g_amtApplyFolderHint := ""
 
 global g_amtDefaultOutdirUser := A_AppData "\" "AmTemplatesApply" 
@@ -306,11 +307,14 @@ Amt_CreateGui(inipath)
 
 Amt_ShowGui(inipath)
 {
-	if(!g_HwndAmt || inipath!=g_amtPrevInipath) {
+	FileGetTime, NowIniTime, % inipath
+
+	if(!g_HwndAmt || inipath!=g_amtPrevInipath || NowIniTime!=g_amtPrevIniTime) {
 		
 		Amt_CreateGui(inipath) ; destroy old and create new
 		
 		g_amtPrevInipath := inipath
+		g_amtPrevIniTime := NowIniTime
 	}
 	
 	OnMessage(0x200, Func("Amt_WM_MOUSEMOVE")) ; add message hook
