@@ -1141,7 +1141,7 @@ Evtbl_GenHtml_CssTable_OneRow(ar_colinfo, css_bg_rule, is_first_line, is_color_r
 		
 		tablecells_onerow .= Format(fmt_tablecell
 			, width_value
-			, is_first_line ? "text-align:center" : ""
+			, (is_first_line && is_color_row) ? "text-align:center" : ""
 			, bg_rule
 			, is_first_line ? Format("Column{1}", A_Index) : "-")
 	}
