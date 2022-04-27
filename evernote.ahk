@@ -7,8 +7,10 @@ Evp_ImagePreviewCreateGui()
 EverTable_Start()
 PreviewHtml_ShowGui(html)
 ColorMatrix_ShowGui()
-
+;
 Evernote_PopLinkShowMenu()
+;
+Evernote_PasteSingleLineCode() ; Ctrl+Alt+V
 */
 
 ; User can define g_evtblColorCustoms[] to append custom colors to g_evtblColorPresets
@@ -2069,13 +2071,10 @@ Evernote_AlignCenter()
 	ClickInActiveWindow(tbx+520, tby+96)
 }
 
-Evernote_PastePlainText() ; not successful
+Evernote_PastePlainText()
 {
-	KeyWait, Alt
-	KeyWait, Ctrl
-	sleep, 500
-	ControlSend , , +^v, A 
-	; Send +^v ; This triggers global hotkey, calling my Clipcache global Ctrl+Shift+V
+	; Evernote 5.9+ Paste plain text
+	Send !em
 }
 
 
@@ -2202,7 +2201,6 @@ MoveToNotebook()
 	
 }
 
-; ^!v:: Evernote_PastePlainText() ; not effective
 
 ^!F1:: Everpic_LoadTempDirToClipboard()
 Everpic_LoadTempDirToClipboard()
@@ -2219,7 +2217,7 @@ Everpic_LoadTempDirToClipboard()
 
 ^!c:: Send ^+l ; Evernote 6: Apply code block to selected text.
 
-Ins:: Send !em ; Evernote 5.9+ Paste plain text
+Ins:: Evernote_PastePlainText()
 
 ; ^!p:: dev_ClipboardSetHTML("__<sup>^^</sup> =", true)
 ; ^!b:: dev_ClipboardSetHTML("^^<sub>__</sub> =", true)
