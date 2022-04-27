@@ -2738,6 +2738,11 @@ Return dataL ? dataL : 0
 
 dev_ClipboardSetHTML(html, is_paste_now:=false)
 {
+	; [2022-04-28] Limitation: 
+	; After calling WinClip.SetHTML(), the clipboard contains only
+	; one format("HTML Format"), i.e. no "Text" format. So, subsequent 
+	; `Clipboard` variable will return empty text.
+
 	WinClip.Clear()
 	WinClip.SetHTML(html)
 	
