@@ -6,13 +6,20 @@ AUTOEXEC_chjmisc_ahk: ; Workaround for Autohotkey's ugly auto-exec feature. Don'
 ; * Customize these global vars according to your running machine:
 ; * Call the run-once functions.
 
-; Example
-;global g_dirEverpic := "D:\chj\scripts\everpic"
+/* APIs:
+
+chj_PrettyprintClipboardCode()
+
+*/
+
 
 global g_LeftsideClickPct := 0.3
 global g_RightsideClickPct := -0.3
 global g_MiddleFloorClickPct := 0.5
 
+global g_prettyprint_template := "D:\chj\scripts\prettify_code_in_html\prettyprint-template.html"
+global g_prettyprint_webbrowser := "" ; "D:\PortableApps\GoogleChrome-74\GoogleChromePortable.exe"
+; -- Above two vars can be overridden by user.
 
 chj_DefineQuickSwitchApps()
 Bcam4_Init()
@@ -276,6 +283,70 @@ chj_StartMultiPageScreenGrabber(screenshot_hotkey, pgdn_hotkey, image_dir, pages
 	MsgBox, % "chj_StartMultiPageScreenGrabber() done!"
 }
 
+^+q:: chj_PrettyprintClipboardCode()
+
+chj_PrettyprintClipboardCode()
+{
+	; Launch a webbrowser to display prettyprinted-code. 
+	; The code text is from current clipboard.
+	
+	clipboard_text := Clipboard
+	
+	if(!clipboard_text) {
+		dev_MsgBoxWarning("Clipboard has empty text.")
+		return	
+	}
+	
+	dev_TooltipAutoClear(Format("Prettyprint clipboard content, text length {1}...", StrLen(clipboard_text)))
+	
+	SplitPath, g_prettyprint_template, filename, dir
+	
+	hfTmpl := FileOpen(g_prettyprint_template, "r", "UTF-8-RAW")
+	if(!hfTmpl) {
+		msg := "Cannot open template file:`r`n`r`n" g_prettyprint_template
+		dev_MsgBoxError(msg)
+		return
+	}
+	
+	html := hfTmpl.Read()
+	hfTmpl.Close()
+	
+	html := StrReplace(html, "{{CODE}}", clipboard_text)
+	
+	htmlfile := dir "\prettyprint.html" ; in the same folder as template
+	hfNew := FileOpen(htmlfile, "w", "UTF-8-RAW")
+	
+	if(!hfNew) {
+		msg := "Cannot create file:`r`n`r`n" htmlfile
+		dev_MsgBoxError(msg)
+		return
+	}
+	
+	hfNew.Write(html)
+	hfNew.Close()
+
+	if(g_prettyprint_webbrowser) {
+	
+		if(!FileExist(g_prettyprint_webbrowser)) {
+			msg := Format("The Web browser program(g_prettyprint_webbrowser) ""{1}"" does not exist.", g_prettyprint_webbrowser)
+			dev_MsgBoxError(msg)
+			return
+		}
+	
+		cmdbrowser := Format("""{1}"" ""{2}""", g_prettyprint_webbrowser, htmlfile)
+	} 
+	else {
+		static s_warnonce := false
+		
+		if(!s_warnonce) {
+			dev_MsgBoxInfo("g_prettyprint_webbrowser global var is empty, so I will use system-default browser.")
+			s_warnonce := true
+		}
+		cmdbrowser := Format("""{1}""", htmlfile)
+	}
+	
+	Run, % cmdbrowser
+}
 
 ;==============================================================================
 ; Clipcache 3.4
