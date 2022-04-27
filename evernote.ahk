@@ -10,8 +10,9 @@ ColorMatrix_ShowGui()
 ;
 Evernote_PopLinkShowMenu()
 ;
-Evernote_PasteSingleLineCode() ; Ctrl+Alt+V
-Evernote_PasteSingleLineCode_SelectBg()
+Evernote_PopupPasteMenu()
+Evernote_PasteSingleLineCode()
+Evernote_PasteSingleLineCode_SelectBg() ; redundant
 */
 
 ; User can define g_evtblColorCustoms[] to append custom colors to g_evtblColorPresets
@@ -224,7 +225,7 @@ QSA_DefineActivateSingle_Caps("m", "ENMainFrame", "Evernote")
 QSA_DefineActivateGroupFlex_Caps("n", "ENSingleNoteView", QSA_NO_WNDCLS_REGEX, "^(?!#ENS).+", "Evernote Single-note")
 	; Match any single note whose title does NOT starts with #ENS
 
-evernote_PasteSingleLineCode_InitMenu()
+evernote_SpecialPaste_InitMenu()
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -2221,8 +2222,6 @@ Everpic_LoadTempDirToClipboard()
 
 ^!c:: Send ^+l ; Evernote 6: Apply code block to selected text.
 
-Ins:: Evernote_PastePlainText()
-
 ; ^!p:: dev_ClipboardSetHTML("__<sup>^^</sup> =", true)
 ; ^!b:: dev_ClipboardSetHTML("^^<sub>__</sub> =", true)
 ^!':: Evernote_InsertSupSub()
@@ -2604,13 +2603,6 @@ Evernote_OpenPopLinkFile()
 }
 
 
-#If Evernote_IsMainFrameOrSingleActive()
-
-^!v:: Evernote_PasteSingleLineCode()
-^!b:: Evernote_PasteSingleLineCode_SelectBg()
-
-#If
-
 evernote_GetClipboardSingleLine()
 {
 	codetext := Trim(Clipboard, "`r`n")
@@ -2639,18 +2631,21 @@ Evernote_PasteSingleLineCode(bgcolor="#e0e0e0")
 	html := Evtbl_GenHtml_Span(bgcolor, "", codetext, true)
 	
 	dev_ClipboardSetHTML(html, true)
+	
+	; Restore clipboard text, due to dev_ClipboardSetHTML()'s current limitation.
+	Clipboard := codetext 
 }
 
-evernote_PasteSingleLineCode_AddMenuItem(bgcolor, desctext)
+evernote_PasteSingleLineCode_AddMenuItem(bgcolor, desctext, idx)
 {
-	menutext := Format("{1} {2}", bgcolor, desctext)
+	menutext := Format("&{1}. Bgcolor: {2} {3}", idx, bgcolor, desctext)
 	
 	fn := Func("Evernote_PasteSingleLineCode").Bind(bgcolor)
 	
-	Menu, evernote_menuSingleLineCodeColorSelect, add, %menutext%, %fn%
+	Menu, evernote_menuSpecialPaste, add, %menutext%, %fn%
 }
 
-evernote_PasteSingleLineCode_InitMenu()
+evernote_SpecialPaste_InitMenu()
 {
 	color_presets := [ "#e0e0e0,代码灰"
 	, "#C6E2FF,多云蓝"
@@ -2659,12 +2654,14 @@ evernote_PasteSingleLineCode_InitMenu()
 	, "#FFE0B0,霞光橙"
 	, "#F49292,故障红" ]
 	
+	Menu, evernote_menuSpecialPaste, add, % "&0. Paste as plain text", Evernote_PastePlainText
+	
 	for idx, colorspec in color_presets
 	{
 		token := StrSplit(colorspec, ",")
 		; -- token[1]="#e0e0e0" , token[2]="代码灰"
 		
-		evernote_PasteSingleLineCode_AddMenuItem(token[1], token[2])
+		evernote_PasteSingleLineCode_AddMenuItem(token[1], token[2], idx)
 	}
 }
 
@@ -2674,5 +2671,22 @@ Evernote_PasteSingleLineCode_SelectBg()
 	if(!codetext)
 		return
 
-	Menu, evernote_menuSingleLineCodeColorSelect, Show
+	Menu, evernote_menuSpecialPaste, Show
 }
+
+Evernote_PopupPasteMenu()
+{
+	Menu, evernote_menuSpecialPaste, Show
+}
+
+#If Evernote_IsMainFrameOrSingleActive()
+
+; ^!v:: Evernote_PasteSingleLineCode()
+; ^!b:: Evernote_PasteSingleLineCode_SelectBg()
+
+Ins:: Evernote_PopupPasteMenu()
+
+#If
+
+
+
