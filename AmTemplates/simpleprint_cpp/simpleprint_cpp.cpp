@@ -1,10 +1,14 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <tchar.h>
+#include <locale.h>
 
-
-int main(int argc, char* argv[])
+int _tmain(int argc, TCHAR* argv[])
 {
-	printf("Hello, simpleprint_cpp!\n");
+	setlocale(LC_ALL, "");
+	
+	_tprintf(_T("Hello, simpleprint_cpp!\n"));
+	_tprintf(_T("sizeof(TCHAR)=%d\n"), sizeof(TCHAR));
 	return 0;
 }
 
