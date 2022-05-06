@@ -30,6 +30,7 @@ https://www.evernote.com/shard/s21/nl/2425275/c6dca407-074c-49ce-b797-2291325bea
 https://www.evernote.com/shard/s21/nl/2425275/7d2bfa22-fe88-4074-86fe-2a087ee97258 , Programming:MySnip , 自写函数库/代码片段
 https://www.evernote.com/shard/s21/nl/2425275/431cba60-f0b4-4223-9c05-b9c623425c25 , Programming:CodeSnip , 其他函数库/代码片段
 https://www.evernote.com/shard/s21/nl/2425275/9c9bc2d0-31a0-41b4-9382-84353b73ecfa , Programming:TLS/SSL ,
+https://www.evernote.com/shard/s21/nl/2425275/ade2d8f1-be74-43bc-895a-6781fe05565c , Programming:Clang , C/C++ 相关
 
 https://www.evernote.com/shard/s21/nl/2425275/47874f88-fdcf-4eca-84fe-2cb0ef05a4a0 , Autohotkey
 https://www.evernote.com/shard/s21/nl/2425275/35e458a1-d25e-45bb-83ab-b7358c4af4f5 , CSharp , C# language

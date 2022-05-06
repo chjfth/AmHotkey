@@ -311,6 +311,8 @@ chj_PrettyprintClipboardCode()
 	html := hfTmpl.Read()
 	hfTmpl.Close()
 	
+	clipboard_text := dev_EscapeHtmlChars(clipboard_text)
+	
 	html := StrReplace(html, "{{CODE}}", clipboard_text)
 	
 	htmlfile := dir "\prettyprint.html" ; in the same folder as template
