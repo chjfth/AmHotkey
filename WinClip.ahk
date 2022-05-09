@@ -480,23 +480,23 @@
     return this._toclipboard( clipData, clipSize )
   }
 
-  SetHTML( html, source = "" )
+  SetHTML( html, SourceURL = "" )
   {
     if ( html = "" )
       return 0
     clipSize :=  this._fromclipboard( clipData )
-    if !( clipSize := this._setHTML( clipData, clipSize, html, source ) )
+    if !( clipSize := this._setHTML( clipData, clipSize, html, SourceURL ) )
       return 0
     return this._toclipboard( clipData, clipSize )
   }
 
-  iSetHTML( html, source = "" )
+  iSetHTML( html, SourceURL = "" )
   {
     if ( html = "" )
       return 0
     this._IsInstance( A_ThisFunc )
     clipSize := this._getClipData( clipData )
-    if !( clipSize := this._setHTML( clipData, clipSize, html, source ) )
+    if !( clipSize := this._setHTML( clipData, clipSize, html, SourceURL ) )
       return 0
     return this._setClipData( clipData, clipSize )
   }

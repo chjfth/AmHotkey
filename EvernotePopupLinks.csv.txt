@@ -11,6 +11,7 @@ https://www.evernote.com/shard/s21/nl/2425275/1863e49d-1936-4628-97e9-85fc75ca31
 https://www.evernote.com/shard/s21/nl/2425275/5f94596d-8bf3-4a8b-9565-ee13361b62c0 , WinDrv:WHQL
 https://www.evernote.com/shard/s21/nl/2425275/72790fe5-27f9-4b76-baa3-0a4a80754c65 , WinDrv:UFCOM
 https://www.evernote.com/shard/s21/nl/2425275/482e794b-7dde-4653-bd68-f16c100e3b60 , WinDrv:VisualDDK
+https://www.evernote.com/shard/s21/nl/2425275/ba90658c-59ce-46bc-96f7-4d7623f24d72 , WinDrv:devcon
 https://www.evernote.com/shard/s21/nl/2425275/2f0287be-ce65-4e1f-bf5e-3ecf488e4a73 , WinDrv:Toaster, WDK Toaster 示例
 https://www.evernote.com/shard/s21/nl/2425275/f297ca74-4311-4fa2-a1e0-ec18964ab169 , WinDrv:Toaster2022
 
@@ -22,6 +23,8 @@ https://www.evernote.com/shard/s21/nl/2425275/7dd94f40-6dcd-43d2-b0d3-eed6fb3030
 https://www.evernote.com/shard/s21/nl/2425275/b60a8772-afb4-4cb3-9728-00d230fa7c09 , Windows一般话题:WinToGo , Windows-To-Go
 https://www.evernote.com/shard/s21/nl/2425275/6a06a3d1-d5f4-4af9-98f3-12ed3daff442 , Windows一般话题:BOOTMGR , Vista+ Boot manager
 https://www.evernote.com/shard/s21/nl/2425275/cc6deee7-0d6a-4f4b-a0cd-49c0a03c94fa , Windows一般话题:Win10WSL
+https://www.evernote.com/shard/s21/nl/2425275/c0a9ab2e-bebe-45b8-a2f2-61effca286fa , Windows一般话题:WinPwrcfg , Windows 睡眠/休眠/唤醒
+https://www.evernote.com/shard/s21/nl/2425275/a59ec410-ec8a-413b-8a35-ee280bbc41fa , Windows一般话题:taskschd , Windows 内置计划任务功能
 
 https://www.evernote.com/shard/s21/nl/2425275/586c101e-dbdb-44d0-b9f5-82ebffb7c8de , Linux:LinuxUse , Linux 日常使用
 
@@ -29,6 +32,7 @@ https://www.evernote.com/shard/s21/nl/2425275/c6dca407-074c-49ce-b797-2291325bea
 https://www.evernote.com/shard/s21/nl/2425275/7d2bfa22-fe88-4074-86fe-2a087ee97258 , Programming:MySnip , 自写函数库/代码片段
 https://www.evernote.com/shard/s21/nl/2425275/431cba60-f0b4-4223-9c05-b9c623425c25 , Programming:CodeSnip , 其他函数库/代码片段
 https://www.evernote.com/shard/s21/nl/2425275/9c9bc2d0-31a0-41b4-9382-84353b73ecfa , Programming:TLS/SSL ,
+https://www.evernote.com/shard/s21/nl/2425275/ade2d8f1-be74-43bc-895a-6781fe05565c , Programming:Clang , C/C++ 相关
 
 https://www.evernote.com/shard/s21/nl/2425275/47874f88-fdcf-4eca-84fe-2cb0ef05a4a0 , Autohotkey
 https://www.evernote.com/shard/s21/nl/2425275/35e458a1-d25e-45bb-83ab-b7358c4af4f5 , CSharp , C# language
@@ -60,6 +64,7 @@ https://www.evernote.com/shard/s21/nl/2425275/eace55aa-14ea-4d9a-9b17-13451082c6
 https://www.evernote.com/shard/s21/nl/2425275/b1c9e992-0c29-45a1-a0d9-1f6eb91677ac , 软件主题:Git
 https://www.evernote.com/shard/s21/nl/2425275/b541de60-735a-475f-be07-715f55078704 , 软件主题:Evernote
 https://www.evernote.com/shard/s21/nl/2425275/60f84ac4-388e-442f-9747-d15d15f37ad3 , 软件主题:Fiddler
+https://www.evernote.com/shard/s21/nl/2425275/9027fb71-b5c0-49a8-b844-7546bcbd9b03 , 软件主题:FFmpeg
 https://www.evernote.com/shard/s21/nl/2425275/a130bbdb-7d4e-498a-b4f4-84f712a62dc9 , 软件主题:MPC-HC , Media Player Classic
 https://www.evernote.com/shard/s21/nl/2425275/86ba9db5-f49b-4f9f-a2e0-6e8c12b09563 , 软件主题:SpaceDesk , 多显示器扩展软件
 https://www.evernote.com/shard/s21/nl/2425275/c059d4c6-f0a0-4116-b0a8-1595312cf260 , 软件主题:OSS , 开源软件
@@ -91,3 +96,8 @@ https://www.evernote.com/shard/s21/nl/2425275/803cee5a-6ffb-443a-8840-f0de9805b4
 https://www.evernote.com/shard/s21/nl/2425275/d62cf3aa-cad3-4c93-9bec-f89d8ac3b15c , WinBooks:MSBUILD2, Inside.the.Microsoft.Build.Engine.2nd.Edition.Dec.2010
 https://www.evernote.com/shard/s21/nl/2425275/7f6cc57e-acf7-4bc1-bcbb-24911753eb71 , WinBooks:PWDM2, MSPress - Programming WDM 2nd-ed, by Walter Oney (2003)
 https://www.evernote.com/shard/s21/nl/2425275/f1cc9f41-9edd-4699-8397-13788748b470 , WinBooks:LDCOM, OReilly - Learning DCOM (1999)
+
+; Recent use
+https://www.evernote.com/shard/s21/nl/2425275/19b65c87-cb9d-451e-a83e-a042a80989ce , Recent:EN_WakeTimer , Allow wake timers
+
+

@@ -7,8 +7,12 @@ Evp_ImagePreviewCreateGui()
 EverTable_Start()
 PreviewHtml_ShowGui(html)
 ColorMatrix_ShowGui()
-
+;
 Evernote_PopLinkShowMenu()
+;
+Evernote_PopupPasteMenu()
+Evernote_PasteSingleLineCode()
+Evernote_PasteSingleLineCode_SelectBg() ; redundant
 */
 
 ; User can define g_evtblColorCustoms[] to append custom colors to g_evtblColorPresets
@@ -221,10 +225,13 @@ QSA_DefineActivateSingle_Caps("m", "ENMainFrame", "Evernote")
 QSA_DefineActivateGroupFlex_Caps("n", "ENSingleNoteView", QSA_NO_WNDCLS_REGEX, "^(?!#ENS).+", "Evernote Single-note")
 	; Match any single note whose title does NOT starts with #ENS
 
+evernote_SpecialPaste_InitMenu()
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 return ; End of auto-execute section.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 
 
 ; App+C to convert in-clipboard image to your preferred format(png/jpg) and put CF_HTML content into clipboard,
@@ -1141,7 +1148,7 @@ Evtbl_GenHtml_CssTable_OneRow(ar_colinfo, css_bg_rule, is_first_line, is_color_r
 		
 		tablecells_onerow .= Format(fmt_tablecell
 			, width_value
-			, is_first_line ? "text-align:center" : ""
+			, (is_first_line && is_color_row) ? "text-align:center" : ""
 			, bg_rule
 			, is_first_line ? Format("Column{1}", A_Index) : "-")
 	}
@@ -2069,13 +2076,10 @@ Evernote_AlignCenter()
 	ClickInActiveWindow(tbx+520, tby+96)
 }
 
-Evernote_PastePlainText() ; not successful
+Evernote_PastePlainText()
 {
-	KeyWait, Alt
-	KeyWait, Ctrl
-	sleep, 500
-	ControlSend , , +^v, A 
-	; Send +^v ; This triggers global hotkey, calling my Clipcache global Ctrl+Shift+V
+	; Evernote 5.9+ Paste plain text
+	Send !em
 }
 
 
@@ -2202,7 +2206,6 @@ MoveToNotebook()
 	
 }
 
-; ^!v:: Evernote_PastePlainText() ; not effective
 
 ^!F1:: Everpic_LoadTempDirToClipboard()
 Everpic_LoadTempDirToClipboard()
@@ -2218,8 +2221,6 @@ Everpic_LoadTempDirToClipboard()
 ^!F3:: ClickInActiveControl("ENFindInNoteCtrl1", 7,7, false, false)
 
 ^!c:: Send ^+l ; Evernote 6: Apply code block to selected text.
-
-Ins:: Send !em ; Evernote 5.9+ Paste plain text
 
 ; ^!p:: dev_ClipboardSetHTML("__<sup>^^</sup> =", true)
 ; ^!b:: dev_ClipboardSetHTML("^^<sub>__</sub> =", true)
@@ -2600,4 +2601,92 @@ Evernote_OpenPopLinkFile()
 		MsgBox, % "Found Evernote in-clip url, and copied to clipboard:`n`n" url "`n`n" linktext
 	}
 }
+
+
+evernote_GetClipboardSingleLine()
+{
+	codetext := Trim(Clipboard, "`r`n")
+	if(!codetext) {
+		dev_MsgBoxInfo("Clipboard is empty, nothing to paste")
+		return ""
+	}
+	
+	if(InStr(codetext, "`n")) {
+		dev_MsgBoxWarning("Clipboard text has multiple lines, so inline code pasting is forbidden.")
+		return ""
+	}
+
+	return codetext
+}
+
+Evernote_PasteSingleLineCode(bgcolor="#e0e0e0")
+{
+	; This is a special-case shortcut for Evtbl_GenHtml_Span() .
+	; We paste clipboard text in dark background, mono-font .
+	
+	codetext := evernote_GetClipboardSingleLine()
+	if(!codetext)
+		return
+	
+	html := Evtbl_GenHtml_Span(bgcolor, "", codetext, true)
+	
+	dev_ClipboardSetHTML(html, true)
+	
+	; Restore clipboard text, due to dev_ClipboardSetHTML()'s current limitation.
+	Clipboard := codetext 
+}
+
+evernote_PasteSingleLineCode_AddMenuItem(bgcolor, desctext, idx)
+{
+	menutext := Format("&{1}. Bgcolor: {2} {3}", idx, bgcolor, desctext)
+	
+	fn := Func("Evernote_PasteSingleLineCode").Bind(bgcolor)
+	
+	Menu, evernote_menuSpecialPaste, add, %menutext%, %fn%
+}
+
+evernote_SpecialPaste_InitMenu()
+{
+	color_presets := [ "#e0e0e0,代码灰"
+	, "#C6E2FF,多云蓝"
+	, "#B0E0B0,青瓷绿(celadon)"
+	, "#F0F0E0,药片黄"
+	, "#FFE0B0,霞光橙"
+	, "#F49292,故障红" ]
+	
+	Menu, evernote_menuSpecialPaste, add, % "&0. Paste as plain text", Evernote_PastePlainText
+	
+	for idx, colorspec in color_presets
+	{
+		token := StrSplit(colorspec, ",")
+		; -- token[1]="#e0e0e0" , token[2]="代码灰"
+		
+		evernote_PasteSingleLineCode_AddMenuItem(token[1], token[2], idx)
+	}
+}
+
+Evernote_PasteSingleLineCode_SelectBg()
+{
+	codetext := evernote_GetClipboardSingleLine()
+	if(!codetext)
+		return
+
+	Menu, evernote_menuSpecialPaste, Show
+}
+
+Evernote_PopupPasteMenu()
+{
+	Menu, evernote_menuSpecialPaste, Show
+}
+
+#If Evernote_IsMainFrameOrSingleActive()
+
+; ^!v:: Evernote_PasteSingleLineCode()
+; ^!b:: Evernote_PasteSingleLineCode_SelectBg()
+
+Ins:: Evernote_PopupPasteMenu()
+
+#If
+
+
 
