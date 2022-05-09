@@ -75,7 +75,6 @@ return
 
 
 
-; AMCap2 window set position, for presentation purpose
-;#[:: WinMove_MatchTitleRegex("^AMCap2", 10, 10, 1000, 720)
-;#]:: WinMove_MatchTitleRegex("^AMCap2", 211, 210)
+; RCtrl & RAlt:: Send {AppsKey}
+; -- Workaround for the no AppsKey keyboard
 
