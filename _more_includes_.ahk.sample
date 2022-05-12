@@ -34,7 +34,7 @@
 ; #Include zjb-helper.ahk
 ; #include <Vis2> ; Equivalent to #include .\lib\Vis2.ahk
 
-#Include chjmisc.ahk
+#Include *i chjmisc.ahk
 
 ; #Include *i AmTemplates.ahk
 ; #Include menus.ahk

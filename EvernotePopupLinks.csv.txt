@@ -4,6 +4,7 @@ https://www.evernote.com/shard/s21/nl/2425275/718144a8-3879-4a58-bddd-b689b2866e
 https://www.evernote.com/shard/s21/nl/2425275/a56322fb-1dc6-4f88-b939-f5c5a90e51ff , WinDev:WinMisc , 杂类 Windows 编程
 https://www.evernote.com/shard/s21/nl/2425275/c07f9c0a-b536-4ecb-9254-2d422564da11 , WinDev:MSBuild
 https://www.evernote.com/shard/s21/nl/2425275/850c9be2-7b91-4d85-965e-646923bc22c1 , WinDev:VSIDE , Visual Studio IDE
+https://www.evernote.com/shard/s21/nl/2425275/fb0bdf25-f1d4-48d5-b62f-ba08be158567 , WinDev:dotNET
 
 https://www.evernote.com/shard/s21/nl/2425275/5dd911c7-6bae-44e0-8726-05f1a5644e61 , WinDrv:WinDrv, Windows Driver 主帖
 https://www.evernote.com/shard/s21/nl/2425275/75c2ea1d-e961-49a2-a417-3e359be85c99 , WinDrv:WinDBG
