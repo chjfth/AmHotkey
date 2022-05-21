@@ -3100,6 +3100,20 @@ dev_IsBinaryFile(filepath, bytes_to_check:=8192)
 }
 
 
+dev_IsExeRunning(exename)
+{
+	Process, Exist, % exename
+	if ErrorLevel
+	{
+		; ErrorLevel is the pid.
+		return true
+	}
+	else
+	{
+	    return false
+	}
+}
+
 
 ;==============================================================================
 #Include *i _more_includes_.ahk ;This should be the final statement of this ahk

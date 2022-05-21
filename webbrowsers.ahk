@@ -44,16 +44,22 @@ IsChromeWindowActive()
 	}
 }
 
+#If IsChromeWindowActive() and (!dev_IsExeRunning("HprSnap8.exe") and !dev_IsExeRunning("HprSnap7.exe"))
+
+; If Hypersnap 7/8 is running, then I must have configured Hypersnap to monitor global hotkey 
+; Ctrl+Shift+W to start windows-capture, so user pressing Ctrl+Shift+W will not close Chrome window.
+;
+; But if If Hypersnap 7/8 is not running, I want AHK to intercept Ctrl+Shift+W to prevent accidentally closing Chrome window.
+
++^w:: dev_TooltipDisableCloseWindow("Ctrl+Shift+W")
+
+#If
+
+; ////
+
 #If IsChromeWindowActive()
 
 ^w:: dev_TooltipDisableCloseWindow("Ctrl+W")
-+^w:: dev_TooltipDisableCloseWindow("Ctrl+Shift+W")
-;
-;^+w:: Chrome_Disable_CtrlShiftW_ClosingWindow()
-;Chrome_Disable_CtrlShiftW_ClosingWindow()
-;{
-;	dev_TooltipAutoClear("AHK: Ctrl+Shift+W is disabled to prevent closing whole Chrome window.")
-;}
 
 F8:: Send ^{PgUp}
 F9:: Send ^{PgDn}
