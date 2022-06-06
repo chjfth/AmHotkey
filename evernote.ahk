@@ -2214,7 +2214,7 @@ Everpic_LoadTempDirToClipboard()
 	; Call this so that I can quickly change evernote.exe's working dir to Everpic'tempdir
 	; -- by manually export some .enex there.
 	
-	EnvGet, dir_localapp, LOCALAPPDATA
+	dir_localapp := dev_EnvGet("LocalAppData")
 	Clipboard := dir_localapp . "\temp\Everpic"
 	MsgBox, % "Copied to clipboard: " . Clipboard
 }

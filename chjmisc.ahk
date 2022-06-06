@@ -340,11 +340,13 @@ chj_PrettyprintClipboardCode()
 	else {
 		static s_warnonce := false
 		
+		exepath_chrome := dev_EnvGet("LocalAppData") . "\Google\Chrome\Application\chrome.exe"
+		
 		if(!s_warnonce) {
-			dev_MsgBoxInfo("g_prettyprint_webbrowser global var is empty, so I will use system-default browser.")
+			dev_MsgBoxInfo("g_prettyprint_webbrowser global var is empty, so I will use Chrome browser at its default location.`n`n" . exepath_chrome)
 			s_warnonce := true
 		}
-		cmdbrowser := Format("""{1}""", htmlfile)
+		cmdbrowser := Format("""{1}"" ""{2}""", exepath_chrome, htmlfile)
 	}
 	
 	Run, % cmdbrowser

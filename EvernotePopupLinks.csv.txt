@@ -27,6 +27,8 @@ https://www.evernote.com/shard/s21/nl/2425275/a59ec410-ec8a-413b-8a35-ee280bbc41
 
 https://www.evernote.com/shard/s21/nl/2425275/586c101e-dbdb-44d0-b9f5-82ebffb7c8de , Linux:LinuxUse , Linux 日常使用
 https://www.evernote.com/shard/s21/nl/2425275/9d970809-8923-4aa7-b38d-ee6f9f8b7123 , Linux:LinuxDev , Linux 开发收集帖
+https://www.evernote.com/shard/s21/nl/2425275/f2220220-f115-4353-b53d-a020c9d7f8d8 , Linux:VSLinux , VS2019+ Linux dev
+https://www.evernote.com/shard/s21/nl/2425275/268c580b-6016-4166-8e87-a8ba2773c607 , Linux:GDB , GNU debugger
 
 https://www.evernote.com/shard/s21/nl/2425275/c6dca407-074c-49ce-b797-2291325bea8b , Programming:MyPrg  , 自写程序收集备忘
 https://www.evernote.com/shard/s21/nl/2425275/7d2bfa22-fe88-4074-86fe-2a087ee97258 , Programming:MySnip , 自写函数库/代码片段
@@ -59,13 +61,19 @@ https://www.evernote.com/shard/s21/nl/2425275/33540000-5da8-40cb-b094-53d333fe48
 https://www.evernote.com/shard/s21/nl/2425275/ee552f1d-8e4b-4051-8039-9ab7ee52c8f9 , 零碎:WINFONTC , Windows Fonts and Charset
 https://www.evernote.com/shard/s21/nl/2425275/0bb0a5d7-33df-42a0-8f4c-4c7e60e09938 , 零碎:PNGTRANS , PNG 透明图片操作
 
+https://www.evernote.com/shard/s21/nl/2425275/67ce244f-80c4-460e-bbd4-09b4f935aeac , 网贴收集:MSFEEDBACK , 微软产品问题反馈
+
 ; My computer instance
 https://www.evernote.com/shard/s21/nl/2425275/61d348e1-8ab7-4bec-93f4-48e248d89a6c , 机器实例:chja20 ,我的 3950X 台式机
 https://www.evernote.com/shard/s21/nl/2425275/7e850d61-28f6-4427-940c-93a284e44c82 , 机器实例:Win10vwork
 https://www.evernote.com/shard/s21/nl/2425275/a7f5797b-f464-41e7-9098-93f6d3286dd3 , 机器实例:MyNUCs , Intel NUC
+https://www.evernote.com/shard/s21/nl/2425275/c4f3cb6f-f9ff-4a29-969e-931cb9679dfb , 机器实例:GBChj-P35W
 
 https://www.evernote.com/shard/s21/nl/2425275/803ad1b0-9e6e-4f1a-9b62-e76ebb7eeecf , 硬件相关:RasPi, Raspberry Pi
 https://www.evernote.com/shard/s21/nl/2425275/6f3a3c9a-c6c8-4c67-abe8-ba5567b4a995 , 硬件相关:hdisk, 硬盘
+https://www.evernote.com/shard/s21/nl/2425275/111e84fd-853c-4219-92d4-5b2fc2d09e2d , 硬件相关:ASUS-GT710
+https://www.evernote.com/shard/s21/nl/2425275/5633b767-f13c-4318-8d8b-fcaf74ff9b73 , 硬件相关:ASUS-RTX3050
+
 
 https://www.evernote.com/shard/s21/nl/2425275/7b769e8c-0fd6-4342-9147-8738e9188196 , 软件主题:VMwks , VMware Workstation
 https://www.evernote.com/shard/s21/nl/2425275/66a2acec-5d85-4be7-a714-f9d85fa11679 , 软件主题:VirtualBox
@@ -74,9 +82,11 @@ https://www.evernote.com/shard/s21/nl/2425275/b1c9e992-0c29-45a1-a0d9-1f6eb91677
 https://www.evernote.com/shard/s21/nl/2425275/b541de60-735a-475f-be07-715f55078704 , 软件主题:Evernote
 https://www.evernote.com/shard/s21/nl/2425275/1796e14d-54a5-47fc-9a9f-52822f8a9c87 , 软件主题:Krita
 ; https://www.evernote.com/shard/s21/nl/2425275/60f84ac4-388e-442f-9747-d15d15f37ad3 , 软件主题:Fiddler
+https://www.evernote.com/shard/s21/nl/2425275/fe813636-1e19-4761-8bc7-08a5780f0952 , 软件主题:QEMU
 https://www.evernote.com/shard/s21/nl/2425275/9027fb71-b5c0-49a8-b844-7546bcbd9b03 , 软件主题:FFmpeg
 https://www.evernote.com/shard/s21/nl/2425275/a130bbdb-7d4e-498a-b4f4-84f712a62dc9 , 软件主题:MPC-HC , Media Player Classic
 ; https://www.evernote.com/shard/s21/nl/2425275/86ba9db5-f49b-4f9f-a2e0-6e8c12b09563 , 软件主题:SpaceDesk , 多显示器扩展软件
+https://www.evernote.com/shard/s21/nl/2425275/52a1086f-251e-407e-b2cf-de815b639a70 , 软件主题:Handbrake
 https://www.evernote.com/shard/s21/nl/2425275/13c06cd1-0a5e-4ad5-a59f-81114a68a0f0 , 软件主题:SMBNET, Samba server
 https://www.evernote.com/shard/s21/nl/2425275/8c6bd69f-97ca-4997-88c7-31e914074418 , 软件主题:CMake
 https://www.evernote.com/shard/s21/nl/2425275/c059d4c6-f0a0-4116-b0a8-1595312cf260 , 软件主题:OSS , 开源软件

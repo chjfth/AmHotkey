@@ -1301,7 +1301,7 @@ dev_RunWaitOne(command, is_hidewindow:=false, working_dir:="")
 		; Redirect the new process's stdout to a file then retrieve it.
 		; I have to do this because WScript.Shell.Exec does not support "hide window" param,
 		; while Autohotkey's Run allows "hiding".
-		EnvGet, dir_localapp, LocalAppData
+		dir_localapp := dev_EnvGet("LocalAppData")
 		tempfile := dir_localapp . "\temp\dev_RunWaitOne.txt"
 		run_string = %ComSpec% /c %command% > %tempfile%
 		try {
@@ -1312,6 +1312,13 @@ dev_RunWaitOne(command, is_hidewindow:=false, working_dir:="")
 		FileRead, cmd_output, %tempfile%
 		return cmd_output
 	}
+}
+
+dev_EnvGet(varname)
+{
+	; Get environment variable value.
+	EnvGet, val, %varname%
+	return val
 }
 
 dev_MsgBoxInfo(text) ; with a blue (i) icon
