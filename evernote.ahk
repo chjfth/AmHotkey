@@ -2079,8 +2079,13 @@ Evernote_AlignCenter()
 
 Evernote_PastePlainText()
 {
-	; Evernote 5.9+ Paste plain text
-	Send !em
+	; Evernote 6.5.4: Paste plain text.
+	; via Evernote internal hotkey: Ctrl+Shift+v , Paste and matching style.
+	
+	ControlSend, ahk_parent, {Ctrl down}{Shift down}v{Shift up}{Control up}, A
+	; -- by using ControlSend to specific target, we will not trigger global hotkey Ctrl+Shift+v, great.
+	
+	;Send !em ;// -- old style, Popping up main menu is not so reliable.
 }
 
 
@@ -2430,7 +2435,7 @@ AppsKey & t:: EverTable_Start()
 
 
 
-#If Evernote_IsSingleNoteActive()
+#If Evernote_IsSingleNoteActive() and WinExist("ahk_class MediaPlayerClassicW") 
 F3::        MPC_Bg_PausePlay(true)
 F1::        MPC_Bg_PausePlay_front(true)
 ; NumpadSub:: MPC_Bg_PausePlay_front(true)
@@ -2655,7 +2660,7 @@ evernote_SpecialPaste_InitMenu()
 	, "#FFE0B0,霞光橙"
 	, "#F49292,故障红" ]
 	
-	Menu, evernote_menuSpecialPaste, add, % "&0. Paste as plain text", Evernote_PastePlainText
+	Menu, evernote_menuSpecialPaste, add, % "&0. Paste as plain text (or F1)", Evernote_PastePlainText
 	
 	for idx, colorspec in color_presets
 	{
@@ -2682,7 +2687,24 @@ Evernote_PopupPasteMenu()
 
 #If Evernote_IsMainFrameOrSingleActive()
 
-; ^!v:: Evernote_PasteSingleLineCode()
+F1:: Evernote_PastePlainText()
+
++Ins:: Evernote_PastePlainText_exwait()
+Evernote_PastePlainText_exwait()
+{
+	KeyWait, Shift, T1
+	if (ErrorLevel==0) {
+		; note: If not waiting Shift to be released, Shift+Ins's triggering Evernote_PastePlainText() 
+		; will always paste like Ctrl+V, -- can't explain why yet.
+		Evernote_PastePlainText()
+	}
+	else {
+		dev_TooltipAutoClear("Evernote_PastePlainText_exwait() fails bcz Shift key is not released by user.")
+	}
+}
+
+^Ins:: Evernote_PasteSingleLineCode()
+
 ; ^!b:: Evernote_PasteSingleLineCode_SelectBg()
 
 Ins:: Evernote_PopupPasteMenu()

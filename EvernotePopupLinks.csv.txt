@@ -4,6 +4,7 @@ https://www.evernote.com/shard/s21/nl/2425275/718144a8-3879-4a58-bddd-b689b2866e
 https://www.evernote.com/shard/s21/nl/2425275/a56322fb-1dc6-4f88-b939-f5c5a90e51ff , WinDev:WinMisc , 杂类 Windows 编程
 https://www.evernote.com/shard/s21/nl/2425275/c07f9c0a-b536-4ecb-9254-2d422564da11 , WinDev:MSBuild
 https://www.evernote.com/shard/s21/nl/2425275/850c9be2-7b91-4d85-965e-646923bc22c1 , WinDev:VSIDE , Visual Studio IDE
+https://www.evernote.com/shard/s21/nl/2425275/f2220220-f115-4353-b53d-a020c9d7f8d8 , WinDev:VSLinux
 https://www.evernote.com/shard/s21/nl/2425275/fb0bdf25-f1d4-48d5-b62f-ba08be158567 , WinDev:dotNET
 
 https://www.evernote.com/shard/s21/nl/2425275/5dd911c7-6bae-44e0-8726-05f1a5644e61 , WinDrv:WinDrv, Windows Driver 主帖
@@ -24,11 +25,13 @@ https://www.evernote.com/shard/s21/nl/2425275/6a06a3d1-d5f4-4af9-98f3-12ed3daff4
 https://www.evernote.com/shard/s21/nl/2425275/cc6deee7-0d6a-4f4b-a0cd-49c0a03c94fa , Windows一般话题:Win10WSL , Windows Subsystem for Linux
 https://www.evernote.com/shard/s21/nl/2425275/c0a9ab2e-bebe-45b8-a2f2-61effca286fa , Windows一般话题:WinPwrcfg , Windows 睡眠/休眠/唤醒
 https://www.evernote.com/shard/s21/nl/2425275/a59ec410-ec8a-413b-8a35-ee280bbc41fa , Windows一般话题:taskschd , Windows 内置计划任务功能
+https://www.evernote.com/shard/s21/nl/2425275/a65b50f2-6f89-4b17-bf11-5a526f9b91db , Windows一般话题:CMDFONT , CMD 字体话题
 
 https://www.evernote.com/shard/s21/nl/2425275/586c101e-dbdb-44d0-b9f5-82ebffb7c8de , Linux:LinuxUse , Linux 日常使用
 https://www.evernote.com/shard/s21/nl/2425275/9d970809-8923-4aa7-b38d-ee6f9f8b7123 , Linux:LinuxDev , Linux 开发收集帖
 https://www.evernote.com/shard/s21/nl/2425275/f2220220-f115-4353-b53d-a020c9d7f8d8 , Linux:VSLinux , VS2019+ Linux dev
 https://www.evernote.com/shard/s21/nl/2425275/268c580b-6016-4166-8e87-a8ba2773c607 , Linux:GDB , GNU debugger
+https://www.evernote.com/shard/s21/nl/2425275/a73019f6-e1ef-41cd-a2c4-1bf58b23729b , Linux:LinuxWeird , 各种 Linux 怪象
 
 https://www.evernote.com/shard/s21/nl/2425275/c6dca407-074c-49ce-b797-2291325bea8b , Programming:MyPrg  , 自写程序收集备忘
 https://www.evernote.com/shard/s21/nl/2425275/7d2bfa22-fe88-4074-86fe-2a087ee97258 , Programming:MySnip , 自写函数库/代码片段
@@ -36,6 +39,7 @@ https://www.evernote.com/shard/s21/nl/2425275/431cba60-f0b4-4223-9c05-b9c623425c
 https://www.evernote.com/shard/s21/nl/2425275/9c9bc2d0-31a0-41b4-9382-84353b73ecfa , Programming:TLS/SSL ,
 https://www.evernote.com/shard/s21/nl/2425275/ade2d8f1-be74-43bc-895a-6781fe05565c , Programming:Clang , C/C++ 相关
 
+https://www.evernote.com/shard/s21/nl/2425275/ade2d8f1-be74-43bc-895a-6781fe05565c , 编程语言:CCxx , C/C++
 https://www.evernote.com/shard/s21/nl/2425275/b49be72e-4bbe-4949-b95b-a777b7ed23a0 , 编程语言:BATCMD , Windows batch script
 https://www.evernote.com/shard/s21/nl/2425275/47874f88-fdcf-4eca-84fe-2cb0ef05a4a0 , 编程语言:Autohotkey
 https://www.evernote.com/shard/s21/nl/2425275/7d2237b7-62e2-4a2e-a2b1-4ffd776fb563 , 编程语言:Python
@@ -64,6 +68,7 @@ https://www.evernote.com/shard/s21/nl/2425275/0bb0a5d7-33df-42a0-8f4c-4c7e60e099
 https://www.evernote.com/shard/s21/nl/2425275/67ce244f-80c4-460e-bbd4-09b4f935aeac , 网贴收集:MSFEEDBACK , 微软产品问题反馈
 
 ; My computer instance
+https://www.evernote.com/shard/s21/nl/2425275/e3afc836-01d6-42f6-af62-fecfe9154339 , 机器实例:MYPCS , 收集帖
 https://www.evernote.com/shard/s21/nl/2425275/61d348e1-8ab7-4bec-93f4-48e248d89a6c , 机器实例:chja20 ,我的 3950X 台式机
 https://www.evernote.com/shard/s21/nl/2425275/7e850d61-28f6-4427-940c-93a284e44c82 , 机器实例:Win10vwork
 https://www.evernote.com/shard/s21/nl/2425275/a7f5797b-f464-41e7-9098-93f6d3286dd3 , 机器实例:MyNUCs , Intel NUC
@@ -77,6 +82,7 @@ https://www.evernote.com/shard/s21/nl/2425275/5633b767-f13c-4318-8d8b-fcaf74ff9b
 
 https://www.evernote.com/shard/s21/nl/2425275/7b769e8c-0fd6-4342-9147-8738e9188196 , 软件主题:VMwks , VMware Workstation
 https://www.evernote.com/shard/s21/nl/2425275/66a2acec-5d85-4be7-a714-f9d85fa11679 , 软件主题:VirtualBox
+https://www.evernote.com/shard/s21/nl/2425275/23cbec45-a27b-406c-9917-b272bb2a4fc3 , 软件主题:Wireshark
 https://www.evernote.com/shard/s21/nl/2425275/eace55aa-14ea-4d9a-9b17-13451082c67a , 软件主题:EmEditor
 https://www.evernote.com/shard/s21/nl/2425275/b1c9e992-0c29-45a1-a0d9-1f6eb91677ac , 软件主题:Git
 https://www.evernote.com/shard/s21/nl/2425275/b541de60-735a-475f-be07-715f55078704 , 软件主题:Evernote
@@ -120,7 +126,8 @@ https://www.evernote.com/shard/s21/nl/2425275/3f3cfe47-6797-4645-b7bc-060bc8e801
 
 ; Recent use
 ; https://www.evernote.com/shard/s21/nl/2425275/19b65c87-cb9d-451e-a83e-a042a80989ce , Recent:EN_WakeTimer , Allow wake timers
-https://www.evernote.com/shard/s21/nl/2425275/da9d849a-9867-455e-beaf-827aa83f8063 , Recent:VSMOBDEV , Visual Studio Mobile Dev
-https://www.evernote.com/shard/s21/nl/2425275/c49d7832-48ea-4d3c-a35b-eba73e1169c0 , Recent:UseMac , macOS 日常使用
-https://www.evernote.com/shard/s21/nl/2425275/4d24d7d2-af10-4885-9f6b-7420fd84e3d1 , Recent:MacDev , Apple/Mac/iOS 开发工具
+; https://www.evernote.com/shard/s21/nl/2425275/da9d849a-9867-455e-beaf-827aa83f8063 , Recent:VSMOBDEV , Visual Studio Mobile Dev
+; https://www.evernote.com/shard/s21/nl/2425275/c49d7832-48ea-4d3c-a35b-eba73e1169c0 , Recent:UseMac , macOS 日常使用
+; https://www.evernote.com/shard/s21/nl/2425275/4d24d7d2-af10-4885-9f6b-7420fd84e3d1 , Recent:MacDev , Apple/Mac/iOS 开发工具
+https://www.evernote.com/shard/s21/nl/2425275/7f3ca9a9-7d21-426f-b1d0-e53fb6d0107d , Recent:CHNSI , 社保收集帖
 
