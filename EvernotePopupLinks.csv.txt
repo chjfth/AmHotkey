@@ -1,4 +1,7 @@
-﻿https://www.evernote.com/shard/s21/nl/2425275/08cea251-4484-4a3d-afd0-22ae81f0bc47 , WinDev:WinAPI , Windows API 相关
+﻿; 关键字最好有独特性(LinuxUse), 这样的话用关键字做全文搜索容易得到精准结果
+; 反之, 用常见词(Linux,HTTP)的话, 会搜到很多无意间提到该词的不相干帖子.
+
+https://www.evernote.com/shard/s21/nl/2425275/08cea251-4484-4a3d-afd0-22ae81f0bc47 , WinDev:WinAPI , Windows API 相关
 https://www.evernote.com/shard/s21/nl/2425275/4586fb5e-4414-4e81-8ea8-75bf28d9d666 , WinDev:WinGUI , Windows UI 编程
 https://www.evernote.com/shard/s21/nl/2425275/718144a8-3879-4a58-bddd-b689b2866e2e , WinDev:MSCOM , 微软组件对象模型
 https://www.evernote.com/shard/s21/nl/2425275/a56322fb-1dc6-4f88-b939-f5c5a90e51ff , WinDev:WinMisc , 杂类 Windows 编程
@@ -85,6 +88,7 @@ https://www.evernote.com/shard/s21/nl/2425275/66a2acec-5d85-4be7-a714-f9d85fa116
 https://www.evernote.com/shard/s21/nl/2425275/23cbec45-a27b-406c-9917-b272bb2a4fc3 , 软件主题:Wireshark
 https://www.evernote.com/shard/s21/nl/2425275/eace55aa-14ea-4d9a-9b17-13451082c67a , 软件主题:EmEditor
 https://www.evernote.com/shard/s21/nl/2425275/b1c9e992-0c29-45a1-a0d9-1f6eb91677ac , 软件主题:Git
+https://www.evernote.com/shard/s21/nl/2425275/1a8f6e07-7afc-4020-af03-0043a303a860 , 软件主题:SVN , Subversion
 https://www.evernote.com/shard/s21/nl/2425275/b541de60-735a-475f-be07-715f55078704 , 软件主题:Evernote
 https://www.evernote.com/shard/s21/nl/2425275/1796e14d-54a5-47fc-9a9f-52822f8a9c87 , 软件主题:Krita
 ; https://www.evernote.com/shard/s21/nl/2425275/60f84ac4-388e-442f-9747-d15d15f37ad3 , 软件主题:Fiddler
@@ -96,6 +100,7 @@ https://www.evernote.com/shard/s21/nl/2425275/52a1086f-251e-407e-b2cf-de815b639a
 https://www.evernote.com/shard/s21/nl/2425275/13c06cd1-0a5e-4ad5-a59f-81114a68a0f0 , 软件主题:SMBNET, Samba server
 https://www.evernote.com/shard/s21/nl/2425275/8c6bd69f-97ca-4997-88c7-31e914074418 , 软件主题:CMake
 https://www.evernote.com/shard/s21/nl/2425275/c059d4c6-f0a0-4116-b0a8-1595312cf260 , 软件主题:OSS , 开源软件
+https://www.evernote.com/shard/s21/nl/2425275/dfe011c6-02e9-4047-82cf-f9d21b3bae12 , 软件主题:HTTPx , HTTP 协议
 
 https://www.evernote.com/shard/s21/nl/2425275/15efd366-1488-49a4-928b-d13a66f1feab , 小工具:showargs, 显示命令行拆解结果
 
