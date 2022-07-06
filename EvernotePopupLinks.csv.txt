@@ -40,7 +40,7 @@ https://www.evernote.com/shard/s21/nl/2425275/c6dca407-074c-49ce-b797-2291325bea
 https://www.evernote.com/shard/s21/nl/2425275/7d2bfa22-fe88-4074-86fe-2a087ee97258 , Programming:MySnip , 自写函数库/代码片段
 https://www.evernote.com/shard/s21/nl/2425275/431cba60-f0b4-4223-9c05-b9c623425c25 , Programming:CodeSnip , 其他函数库/代码片段
 https://www.evernote.com/shard/s21/nl/2425275/9c9bc2d0-31a0-41b4-9382-84353b73ecfa , Programming:TLS/SSL ,
-https://www.evernote.com/shard/s21/nl/2425275/ade2d8f1-be74-43bc-895a-6781fe05565c , Programming:Clang , C/C++ 相关
+https://www.evernote.com/shard/s21/nl/2425275/ade2d8f1-be74-43bc-895a-6781fe05565c , Programming:CCxx , C/C++ 相关
 
 https://www.evernote.com/shard/s21/nl/2425275/ade2d8f1-be74-43bc-895a-6781fe05565c , 编程语言:CCxx , C/C++
 https://www.evernote.com/shard/s21/nl/2425275/b49be72e-4bbe-4949-b95b-a777b7ed23a0 , 编程语言:BATCMD , Windows batch script
@@ -89,6 +89,7 @@ https://www.evernote.com/shard/s21/nl/2425275/23cbec45-a27b-406c-9917-b272bb2a4f
 https://www.evernote.com/shard/s21/nl/2425275/eace55aa-14ea-4d9a-9b17-13451082c67a , 软件主题:EmEditor
 https://www.evernote.com/shard/s21/nl/2425275/b1c9e992-0c29-45a1-a0d9-1f6eb91677ac , 软件主题:Git
 https://www.evernote.com/shard/s21/nl/2425275/1a8f6e07-7afc-4020-af03-0043a303a860 , 软件主题:SVN , Subversion
+https://www.evernote.com/shard/s21/nl/2425275/4d0e88b8-43e8-4887-8c3d-7cb80735d20b , 软件主题:Apache2 , http server
 https://www.evernote.com/shard/s21/nl/2425275/b541de60-735a-475f-be07-715f55078704 , 软件主题:Evernote
 https://www.evernote.com/shard/s21/nl/2425275/1796e14d-54a5-47fc-9a9f-52822f8a9c87 , 软件主题:Krita
 ; https://www.evernote.com/shard/s21/nl/2425275/60f84ac4-388e-442f-9747-d15d15f37ad3 , 软件主题:Fiddler
@@ -107,6 +108,7 @@ https://www.evernote.com/shard/s21/nl/2425275/15efd366-1488-49a4-928b-d13a66f1fe
 https://www.evernote.com/shard/s21/nl/2425275/8c1a47a1-5577-4cec-86d0-06a48ef2193e , 自创主题:VSPG, Visual Studio 构建前后批处理通用框架
 https://www.evernote.com/shard/s21/nl/2425275/d56e6568-8101-4d27-88c9-6e7f6d600c95 , 自创主题:GMU, GnumakeUniproc
 https://www.evernote.com/shard/s21/nl/2425275/bb772d1e-e18b-4451-87cb-28fc511ca0c8 , 自创主题:NLSBuildEnv, 绿色版编译器集合包
+https://www.evernote.com/shard/s21/nl/2425275/505f1815-9178-4923-b68b-323d36914ffe , 自创主题:Scalacon, C++ 源码管理模型
 https://www.evernote.com/shard/s21/nl/2425275/2cf1d0ae-03a5-460b-b7a0-c46f19489b62 , 自创主题:BESTPRAC, 最佳实践收集
 https://www.evernote.com/shard/s21/nl/2425275/72790fe5-27f9-4b76-baa3-0a4a80754c65  ,自创主题:UFCOM
 https://www.evernote.com/shard/s21/nl/2425275/2ae180b6-5406-409a-a38d-debc58702270 , 自创主题:chjhotkey , 我的常用热键
@@ -135,4 +137,4 @@ https://www.evernote.com/shard/s21/nl/2425275/3f3cfe47-6797-4645-b7bc-060bc8e801
 ; https://www.evernote.com/shard/s21/nl/2425275/c49d7832-48ea-4d3c-a35b-eba73e1169c0 , Recent:UseMac , macOS 日常使用
 ; https://www.evernote.com/shard/s21/nl/2425275/4d24d7d2-af10-4885-9f6b-7420fd84e3d1 , Recent:MacDev , Apple/Mac/iOS 开发工具
 https://www.evernote.com/shard/s21/nl/2425275/7f3ca9a9-7d21-426f-b1d0-e53fb6d0107d , Recent:CHNSI , 社保收集帖
-
+https://www.evernote.com/shard/s21/nl/2425275/82243165-da77-4906-8fff-aff504379a46 , Recent:ProGit , Pro Git 电子书
