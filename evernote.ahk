@@ -2110,12 +2110,9 @@ return
 	ControlFocus, ENAutoCompleteEditCtrl1, A
 return
 
-F1:: ClickInActiveControl("EnShortcutsBar1", 54, -8, true) ; Click on "first"(hopefully) shortcut link.
-	; -4 is enough for Evernote 6.1.2, but -8 is required for 6.3.3
-
 ^F1:: 
 	KeyWait, Ctrl ; otherwise, the note will pop-up in a separate window
-	ClickInActiveControl("EnShortcutsBar1", 124, -8, true) 
+	ClickInActiveControl("EnShortcutsBar1", 54, -8, true) ; Click on "first"(hopefully) shortcut link.
 return
 
 #IfWinActive
@@ -2144,8 +2141,6 @@ ESC:: ; Do not allow ESC to close snippet window
 		Send {ESC}
 	}
 return 
-
-^F1:: Send {ESC}
 
 #IfWinActive ; ENSingleNoteView
 
