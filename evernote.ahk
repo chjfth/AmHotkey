@@ -2213,19 +2213,6 @@ MoveToNotebook()
 }
 
 
-^!F1:: Everpic_LoadTempDirToClipboard()
-Everpic_LoadTempDirToClipboard()
-{
-	; Call this so that I can quickly change evernote.exe's working dir to Everpic'tempdir
-	; -- by manually export some .enex there.
-	
-	dir_localapp := dev_EnvGet("LocalAppData")
-	Clipboard := dir_localapp . "\temp\Everpic"
-	MsgBox, % "Copied to clipboard: " . Clipboard
-}
-
-^!F3:: ClickInActiveControl("ENFindInNoteCtrl1", 7,7, false, false)
-
 ^!c:: Send ^+l ; Evernote 6: Apply code block to selected text.
 
 ; ^!p:: dev_ClipboardSetHTML("__<sup>^^</sup> =", true)
