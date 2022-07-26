@@ -769,8 +769,8 @@ NumpadMult:: Send ^{PgDn}   ; TabsStudio.Connect.NavigateToNextTab
 ;
 #If dev_IsExeActive("pycharm64.exe")
 
-NumpadDiv::  Send ^![   ; Select previous tab
-NumpadMult:: Send ^!]   ; Select next tab
+NumpadDiv::  Send ^!+{Left}    ; Select previous tab
+NumpadMult:: Send ^!+{Right}   ; Select next tab
 
 
 #If ;dev_IsExeActive("pycharm64.exe")
