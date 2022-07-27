@@ -2600,7 +2600,7 @@ evernote_GetClipboardSingleLine()
 	}
 	
 	if(InStr(codetext, "`n")) {
-		dev_MsgBoxWarning("Clipboard text has multiple lines, so inline code pasting is forbidden.")
+		dev_MsgBoxWarning("Clipboard text has multiple lines. To avoid pasting large chunks of text, inline code pasting is forbidden.")
 		return ""
 	}
 

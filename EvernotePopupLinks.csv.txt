@@ -28,6 +28,7 @@ https://www.evernote.com/shard/s21/nl/2425275/6a06a3d1-d5f4-4af9-98f3-12ed3daff4
 https://www.evernote.com/shard/s21/nl/2425275/cc6deee7-0d6a-4f4b-a0cd-49c0a03c94fa , Windows一般话题:Win10WSL , Windows Subsystem for Linux
 https://www.evernote.com/shard/s21/nl/2425275/c0a9ab2e-bebe-45b8-a2f2-61effca286fa , Windows一般话题:WinPwrcfg , Windows 睡眠/休眠/唤醒
 https://www.evernote.com/shard/s21/nl/2425275/a59ec410-ec8a-413b-8a35-ee280bbc41fa , Windows一般话题:taskschd , Windows 内置计划任务功能
+https://www.evernote.com/shard/s21/nl/2425275/3c0fdb0d-3753-43d9-ab65-d6219b2b24f4 , Windows一般话题:Eventvwr , 事件查看器
 https://www.evernote.com/shard/s21/nl/2425275/a65b50f2-6f89-4b17-bf11-5a526f9b91db , Windows一般话题:CMDFONT , CMD 字体话题
 
 https://www.evernote.com/shard/s21/nl/2425275/586c101e-dbdb-44d0-b9f5-82ebffb7c8de , Linux:LinuxUse , Linux 日常使用
@@ -45,7 +46,7 @@ https://www.evernote.com/shard/s21/nl/2425275/ade2d8f1-be74-43bc-895a-6781fe0556
 https://www.evernote.com/shard/s21/nl/2425275/ade2d8f1-be74-43bc-895a-6781fe05565c , 编程语言:CCxx , C/C++
 https://www.evernote.com/shard/s21/nl/2425275/b49be72e-4bbe-4949-b95b-a777b7ed23a0 , 编程语言:BATCMD , Windows batch script
 https://www.evernote.com/shard/s21/nl/2425275/47874f88-fdcf-4eca-84fe-2cb0ef05a4a0 , 编程语言:Autohotkey
-https://www.evernote.com/shard/s21/nl/2425275/7d2237b7-62e2-4a2e-a2b1-4ffd776fb563 , 编程语言:Python
+https://www.evernote.com/shard/s21/nl/2425275/7d2237b7-62e2-4a2e-a2b1-4ffd776fb563 , 编程语言:PYTHON
 https://www.evernote.com/shard/s21/nl/2425275/35e458a1-d25e-45bb-83ab-b7358c4af4f5 , 编程语言:CSharp, C# language
 
 ;https://www.evernote.com/shard/s21/nl/2425275/51824870-0471-4f73-999c-8d396ae0e8b5 , DPI Scaling
@@ -59,22 +60,15 @@ https://www.evernote.com/shard/s21/nl/2425275/cea49e43-0939-4555-bea5-9ab71888a9
 https://www.evernote.com/shard/s21/nl/2425275/842522bf-b2f2-4a9a-bfe7-bacfc5eba6f0 , InfoSec:Crypto , 加密解密编程
 https://www.evernote.com/shard/s21/nl/2425275/0bb453f4-20a9-4b84-bb25-cf19121dcd3e , InfoSec:WireGuard , 加密隧道软件
 
-https://www.evernote.com/shard/s21/nl/2425275/68f18a8e-d3af-47d4-8a24-69579b8d02fe , 零碎:CORPUP , 开办公司
-https://www.evernote.com/shard/s21/nl/2425275/78d5ee72-4ae9-4d05-8fbb-3549d4b653cf , 零碎:MSDNview
-https://www.evernote.com/shard/s21/nl/2425275/a6d83ecc-9248-4452-a254-65d8de2252f7 , 零碎:ISO , ISO 国际标准
-https://www.evernote.com/shard/s21/nl/2425275/12f6924b-285d-4c6b-a3fa-6dc59c4a4035 , 零碎:UEFI
-https://www.evernote.com/shard/s21/nl/2425275/c9323a30-4bb8-4312-8863-a6344c24f6f3 , 零碎:Digicert , 数字证书相关
-https://www.evernote.com/shard/s21/nl/2425275/33540000-5da8-40cb-b094-53d333fe483b , 零碎:FONTS , 字体相关
-https://www.evernote.com/shard/s21/nl/2425275/ee552f1d-8e4b-4051-8039-9ab7ee52c8f9 , 零碎:WINFONTC , Windows Fonts and Charset
-https://www.evernote.com/shard/s21/nl/2425275/0bb0a5d7-33df-42a0-8f4c-4c7e60e09938 , 零碎:PNGTRANS , PNG 透明图片操作
-
 https://www.evernote.com/shard/s21/nl/2425275/67ce244f-80c4-460e-bbd4-09b4f935aeac , 网贴收集:MSFEEDBACK , 微软产品问题反馈
 
 ; My computer instance
 https://www.evernote.com/shard/s21/nl/2425275/e3afc836-01d6-42f6-af62-fecfe9154339 , 机器实例:MYPCS , 收集帖
-https://www.evernote.com/shard/s21/nl/2425275/61d348e1-8ab7-4bec-93f4-48e248d89a6c , 机器实例:chja20 ,我的 3950X 台式机
+https://www.evernote.com/shard/s21/nl/2425275/61d348e1-8ab7-4bec-93f4-48e248d89a6c , 机器实例:chja20 , 我的 3950X 台式机
+https://www.evernote.com/shard/s21/nl/2425275/e84984e1-0f3a-4030-aaac-3243ba61ee73 , 机器实例:A320BK , 群升公寓的备份机
 https://www.evernote.com/shard/s21/nl/2425275/7e850d61-28f6-4427-940c-93a284e44c82 , 机器实例:Win10vwork
 https://www.evernote.com/shard/s21/nl/2425275/a7f5797b-f464-41e7-9098-93f6d3286dd3 , 机器实例:MyNUCs , Intel NUC
+https://www.evernote.com/shard/s21/nl/2425275/2c903369-2c41-4d7c-b2d6-6ebbb10aaec3 , 机器实例:AcerR7
 https://www.evernote.com/shard/s21/nl/2425275/c4f3cb6f-f9ff-4a29-969e-931cb9679dfb , 机器实例:GBChj-P35W
 
 https://www.evernote.com/shard/s21/nl/2425275/803ad1b0-9e6e-4f1a-9b62-e76ebb7eeecf , 硬件相关:RasPi, Raspberry Pi
@@ -104,6 +98,7 @@ https://www.evernote.com/shard/s21/nl/2425275/c059d4c6-f0a0-4116-b0a8-1595312cf2
 https://www.evernote.com/shard/s21/nl/2425275/dfe011c6-02e9-4047-82cf-f9d21b3bae12 , 软件主题:HTTPx , HTTP 协议
 
 https://www.evernote.com/shard/s21/nl/2425275/15efd366-1488-49a4-928b-d13a66f1feab , 小工具:showargs, 显示命令行拆解结果
+https://www.evernote.com/shard/s21/nl/2425275/59e3fa0f-2398-482e-9d69-52a739c4ef1a , 小工具:REGEX, 正则表达式
 
 https://www.evernote.com/shard/s21/nl/2425275/8c1a47a1-5577-4cec-86d0-06a48ef2193e , 自创主题:VSPG, Visual Studio 构建前后批处理通用框架
 https://www.evernote.com/shard/s21/nl/2425275/d56e6568-8101-4d27-88c9-6e7f6d600c95 , 自创主题:GMU, GnumakeUniproc
@@ -120,6 +115,8 @@ https://www.evernote.com/shard/s21/nl/2425275/23a51b98-5bfe-4e28-9075-efee3a74a2
 https://www.evernote.com/shard/s21/nl/2425275/0ec4ab0c-99b2-4b9b-8b71-38c828c4054d , 自创主题:MidWare , 中间物
 https://www.evernote.com/shard/s21/nl/2425275/2626ae56-a0eb-4c2a-97ae-8c331e8f581e , 自创主题:Naming , 起名难题
 
+https://www.evernote.com/shard/s21/nl/2425275/b8ba8d42-fd2e-4497-8bf9-da13309ad0a4 , Math:EQSnVAR , 等号与变量的含义
+
 ; Books below
 ;
 https://www.evernote.com/shard/s21/nl/2425275/3287cab7-94d9-4b3c-a530-0be9421ac1ae , WinBooks:PRWIN5, Programming Windows 5th-ed, Charles Petzold 1998
@@ -131,10 +128,24 @@ https://www.evernote.com/shard/s21/nl/2425275/7f6cc57e-acf7-4bc1-bcbb-24911753eb
 https://www.evernote.com/shard/s21/nl/2425275/f1cc9f41-9edd-4699-8397-13788748b470 , WinBooks:LDCOM, OReilly - Learning DCOM (1999)
 https://www.evernote.com/shard/s21/nl/2425275/3f3cfe47-6797-4645-b7bc-060bc8e80173 , WinBooks:ProCMake , Professional CMake - A Practical Guide by Craig Scott (2018)
 
+; 零碎
+
+https://www.evernote.com/shard/s21/nl/2425275/68f18a8e-d3af-47d4-8a24-69579b8d02fe , 零碎:CORPUP , 开办公司
+https://www.evernote.com/shard/s21/nl/2425275/78d5ee72-4ae9-4d05-8fbb-3549d4b653cf , 零碎:MSDNview
+https://www.evernote.com/shard/s21/nl/2425275/a6d83ecc-9248-4452-a254-65d8de2252f7 , 零碎:ISO , ISO 国际标准
+https://www.evernote.com/shard/s21/nl/2425275/12f6924b-285d-4c6b-a3fa-6dc59c4a4035 , 零碎:UEFI
+https://www.evernote.com/shard/s21/nl/2425275/c9323a30-4bb8-4312-8863-a6344c24f6f3 , 零碎:Digicert , 数字证书相关
+https://www.evernote.com/shard/s21/nl/2425275/33540000-5da8-40cb-b094-53d333fe483b , 零碎:FONTS , 字体相关
+https://www.evernote.com/shard/s21/nl/2425275/ee552f1d-8e4b-4051-8039-9ab7ee52c8f9 , 零碎:WINFONTC , Windows Fonts and Charset
+; https://www.evernote.com/shard/s21/nl/2425275/0bb0a5d7-33df-42a0-8f4c-4c7e60e09938 , 零碎:PNGTRANS , PNG 透明图片操作
+
+
 ; Recent use
+https://www.evernote.com/shard/s21/nl/2425275/41a0fc2c-b818-4e16-ab7e-2704dcd18dc5 , Recent:PDBSEW
 ; https://www.evernote.com/shard/s21/nl/2425275/19b65c87-cb9d-451e-a83e-a042a80989ce , Recent:EN_WakeTimer , Allow wake timers
 ; https://www.evernote.com/shard/s21/nl/2425275/da9d849a-9867-455e-beaf-827aa83f8063 , Recent:VSMOBDEV , Visual Studio Mobile Dev
 ; https://www.evernote.com/shard/s21/nl/2425275/c49d7832-48ea-4d3c-a35b-eba73e1169c0 , Recent:UseMac , macOS 日常使用
 ; https://www.evernote.com/shard/s21/nl/2425275/4d24d7d2-af10-4885-9f6b-7420fd84e3d1 , Recent:MacDev , Apple/Mac/iOS 开发工具
 https://www.evernote.com/shard/s21/nl/2425275/7f3ca9a9-7d21-426f-b1d0-e53fb6d0107d , Recent:CHNSI , 社保收集帖
 https://www.evernote.com/shard/s21/nl/2425275/82243165-da77-4906-8fff-aff504379a46 , Recent:ProGit , Pro Git 电子书
+https://www.evernote.com/shard/s21/nl/2425275/43d53c8e-4781-416d-982b-03932f575d29 , Recent:3Blue1Brown
