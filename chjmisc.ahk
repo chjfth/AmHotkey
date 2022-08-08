@@ -123,6 +123,26 @@ dev_WinMove_with_backup_with_prompt(_newx, _newy, _new_width, _new_height, Awini
 	s_hint_timeout := 1000
 }
 
+chj_IsHwndPythonIDE(hwnd)
+{
+	WinGetClass, class, ahk_id %hwnd%
+	WinGetTitle, title, ahk_id %hwnd%
+	WinGet, pid, PID, ahk_id %hwnd%
+	WinGet, exepath, ProcessPath, ahk_id %hwnd%
+
+	if(title ~= "^\*?Python.+Shell") {
+		; Python IDLE Shell, wintitle example:
+		;	Python 3.7.4 Shell
+		return true
+	}
+	else if(InStr(exepath, "pycharm64.exe") || InStr(exepath, "pycharm.exe")) {
+		; JetBrains PyCharm IDE.
+		return true
+	}
+	else {
+		return false
+	}
+}
 
 chj_DefineQuickSwitchApps() ; as template for actual users
 {
@@ -179,8 +199,10 @@ chj_DefineQuickSwitchApps() ; as template for actual users
 	; Visual Studio Code (2018)
 	QSA_DefineActivateGroupFlex_Caps("9", "Chrome_WidgetWin_1", QSA_NO_WNDCLS_REGEX, "Visual Studio Code$", "Visual Studio Code")
 	
-	; Python IDLE shell
-	QSA_DefineActivateGroupFlex_Caps("y", "TkTopLevel", QSA_NO_WNDCLS_REGEX, "^\*?Python.+Shell", "Python IDLE shell window")
+	; Python IDLE shell (old)
+	;QSA_DefineActivateGroupFlex_Caps("y", "TkTopLevel", QSA_NO_WNDCLS_REGEX, "^\*?Python.+Shell", "Python IDLE shell window")
+	; New:
+	dev_DefineHotkey("CapsLock & y", "dev_MyActivateGroupByBooleanFunc", "y", "chj_IsHwndPythonIDE")
 	
 	; Navicat
 	QSA_DefineActivateGroup_Caps("i", "TNavicatMainForm", "Navicat database manager")

@@ -24,11 +24,10 @@ Is_Chrome_WidgetWin_1()
 	return IsWinClassActive("Chrome_WidgetWin_1")
 }
 
-IsChromeWindowActive()
+IsChromeHwnd(hwnd)
 {
-	WinGet, Awinid, ID, A ; cache active window unique id
-	WinGetClass, class, ahk_id %Awinid%
-	WinGetTitle, title, ahk_id %Awinid%
+	WinGetClass, class, ahk_id %hwnd%
+	WinGetTitle, title, ahk_id %hwnd%
 
 	if( class=="Chrome_WidgetWin_1" 
 		and (StrIsEndsWith(title, "Google Chrome") 
@@ -42,6 +41,12 @@ IsChromeWindowActive()
 	{	
 		return false
 	}
+}
+
+IsChromeWindowActive()
+{
+	WinGet, Awinid, ID, A ; cache active window unique id
+	return IsChromeHwnd(Awinid)
 }
 
 #If IsChromeWindowActive() and (!dev_IsExeRunning("HprSnap8.exe") and !dev_IsExeRunning("HprSnap7.exe"))
