@@ -264,11 +264,12 @@ MyActivateGroup(suffixkey, groupname, winclass, wincls_regex, title_regex, appde
 }
 
 
-dev_MyActivateGroupByBooleanFunc(suffixkey, funcname)
+dev_MyActivateGroupByBooleanFunc(funcname, suffixkey="")
 {
-	; 2022.08.08 Check all HWNDs on current system, If funcname(hwnd) returns true, then this hwnd
-	; is consider in the group (the group is identified by funcname), then one hwnd in this group 
-	; is activated.
+	; 2022.08.08 : Check all HWNDs on current system, If funcname(hwnd) returns true, then this hwnd
+	; is considered in the group (the group is identified by funcname), then one of the hwnds in 
+	; this group is activated.
+	; Flexibility: A specific hwnd can be matched against different funcname-s, at the same time.
 	
 	if QSA_IsFastTyping(suffixkey)
 		return

@@ -202,7 +202,7 @@ chj_DefineQuickSwitchApps() ; as template for actual users
 	; Python IDLE shell (old)
 	;QSA_DefineActivateGroupFlex_Caps("y", "TkTopLevel", QSA_NO_WNDCLS_REGEX, "^\*?Python.+Shell", "Python IDLE shell window")
 	; New:
-	dev_DefineHotkey("CapsLock & y", "dev_MyActivateGroupByBooleanFunc", "y", "chj_IsHwndPythonIDE")
+	dev_DefineHotkey("CapsLock & y", "dev_MyActivateGroupByBooleanFunc", "chj_IsHwndPythonIDE")
 	
 	; Navicat
 	QSA_DefineActivateGroup_Caps("i", "TNavicatMainForm", "Navicat database manager")

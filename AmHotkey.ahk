@@ -2221,7 +2221,7 @@ MouseActInActiveControl(classnn, ux,xomode, uy,yomode, is_movemouse:=true, is_cl
 		
 		errmsg = [AmHotkey]Unexpected in MouseActInActiveControl(): ControlGetPos returns blank for classnn %classnn%
 		
-		MsgBox, % errmsg . "`n`nCallstack below:`n`n" . dev_getCallStack()
+		MsgBox, % errmsg . "`n`nCallstack below (most recent call last):`n`n" . dev_getCallStack()
 		
 		return
 	}
