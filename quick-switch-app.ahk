@@ -96,13 +96,15 @@ ArrayHasValue(ar, chkval)
 	return false
 }
 
-AddHwndToWingroup(hwnd, groupname, actcount)
+AddHwndToWingroup(hwnd, groupname)
 {
 	; This functions remembers which hwnd(s) are in which groupname to avoid add it twice,
 	; duplicate adding causes AHK's internal hwnd Z order to change, which causes 
-	; ``GroupActivate, groupname, R``'s R feature to lose.
+	; `GroupActivate, groupname, R`'s R feature to lose.
 	
 	static s_groupdict := {} ; associative array, groupname as key, python idiom
+	static s_actcount := 0
+	s_actcount += 1
 	
 	is_do_add := false
 	if not s_groupdict.haskey(groupname)
@@ -121,11 +123,11 @@ AddHwndToWingroup(hwnd, groupname, actcount)
 	}
 	
 	; clear stale hwnd periodically
-	if mod(actcount, 100)==0 ; actcount is increased by caller
+	if mod(s_actcount, 100)==0 ; s_actcount is increased by caller
 	{
 		for index, hwnd in s_groupdict[groupname] {
 			if not WinExist("ahk_id " . hwnd) {
-;				msgbox, AddHwndToWingroup() will clear hwnd %hwnd%
+;				msgbox, AddHwndToWingroup() will clear hwnd %hwnd% ; // debug
 				s_groupdict[groupname].remove(index)
 			}
 		}
@@ -162,12 +164,9 @@ MyActivateGroup(suffixkey, groupname, winclass, wincls_regex, title_regex, appde
 {
 	; All winclass, wincls_regex and title_regex should be matched(unless empty) to make activation.
 	
-	static s_actcount := 0
-	s_actcount += 1
-	
 	if(title_regex=="") 
 	{
-		; Withouth this: when winclass and title_regex are both null, and there is only one matched window
+		; Without this: when winclass and title_regex are both null, and there is only one matched window
 		; (e.g. Hypersnap 8), pressing CapsLock+j twice would cause "Cannot find any window of Hypersnap 7 or 8"
 		; message box pop out.
 		title_regex := ".*" ; match any
@@ -225,7 +224,9 @@ MyActivateGroup(suffixkey, groupname, winclass, wincls_regex, title_regex, appde
 ;			FileAppend, [%match_winclass%][%match_winclsregex%][%match_titleregex%]`n, %qsa_dbgfile% ; debug
 
 			if(match_winclass && match_winclsregex && match_titleregex)
-				AddHwndToWingroup(hwnd, groupname, s_actcount)
+			{
+				AddHwndToWingroup(hwnd, groupname) ; inside: calls GroupAdd
+			}
 		}
 	}
 	else 
@@ -234,7 +235,7 @@ MyActivateGroup(suffixkey, groupname, winclass, wincls_regex, title_regex, appde
 	}
 	
 	GroupActivate, %groupname%, R
-		; Note: If only one target window exists and already in foreground, ErrorLevel will assert.
+	; -- Note: If only one target window exists and already in foreground, ErrorLevel will assert.
 
 	if(ErrorLevel) ; check for false ErrorLevel
 	{
@@ -242,7 +243,7 @@ MyActivateGroup(suffixkey, groupname, winclass, wincls_regex, title_regex, appde
 		if(title_regex)
 		{
 			WinGetActiveTitle, title
-			if (title ~= title_regex) ; regex comapre
+			if (title ~= title_regex) ; regex compare
 				ok := true
 		}
 		else
@@ -255,12 +256,69 @@ MyActivateGroup(suffixkey, groupname, winclass, wincls_regex, title_regex, appde
 
 		if not ok
 		{
-			MsgBox, 0x30, , Cannot find any window of %appdesc% 
+			dev_MsgBoxWarning("Cannot find any window of: " . appdesc)
 			return
 		}
 	}
 	MouseMoveInActiveWindow(0.5, 0.5)
 }
+
+
+dev_MyActivateGroupByBooleanFunc(suffixkey, funcname)
+{
+	; 2022.08.08 Check all HWNDs on current system, If funcname(hwnd) returns true, then this hwnd
+	; is consider in the group (the group is identified by funcname), then one hwnd in this group 
+	; is activated.
+	
+	if QSA_IsFastTyping(suffixkey)
+		return
+	
+	if(not funcname)
+	{
+		errmsg := "Error: Input parameter funcname is null!" . "`n`nCallstack below:`n`n" . dev_getCallStack()
+		dev_MsgBoxError(errmsg)
+		return
+	}
+	
+	groupname := "groupbbf_" . funcname
+	
+	WinGet, hwnds, LIST
+	Loop, %hwnds% 
+	{
+		hwnd := hwnds%A_Index%
+
+		if(%funcname%(hwnd))
+		{
+			AddHwndToWingroup(hwnd, groupname) ; inside: calls GroupAdd
+		}
+	}
+	
+	GroupActivate, %groupname%, R
+	; -- Note: If only one target window exists and already in foreground, ErrorLevel will assert.
+
+	if(ErrorLevel) ; check for false ErrorLevel
+	{
+		; Cope with a weird behavior of Autohotkey: If [there is only one HWND in current group and 
+		; it had been in activated state], ErrorLevel will be asserted here. 
+		; We sure should consider this success.
+		;
+		WinGet, Awinid, ID, A
+		if(%funcname%(Awinid))
+		{
+			dev_TooltipAutoClear(Format("The only window matching ""{1}()"" had already been activated.", funcname), 1000)
+		}
+		else
+		{
+			; Now its really a failure.
+			dev_MsgBoxWarning("dev_MyActivateGroupByBooleanFunc(): Cannot find any window matching the function: " . funcname)
+			return
+		}
+	}
+	
+	; Move mouse point to center of the activated window, so we have an additional visual clue of the activated window.
+	MouseMoveInActiveWindow(0.5, 0.5)
+}
+
 
 QSA_make_group_name(iname)
 {
@@ -282,7 +340,7 @@ QSA_DefineActivateGroup_Caps(suffixkey, winclass, appdesc)
 	
 	groupname := "groupWINCLASS_" . QSA_make_group_name(winclass)
 	; GroupAdd, %groupname%, ahk_class %winclass%
-		; Note: GroupAdd is postponed to MyActivateGroup.
+	; -- Note: GroupAdd is postponed to MyActivateGroup.
 	
 	dev_DefineHotkey("CapsLock & " . suffixkey, "MyActivateGroup", suffixkey, groupname, winclass, QSA_NO_WNDCLS_REGEX, "", appdesc)
 }
@@ -313,8 +371,9 @@ QSA_DefineActivateGroupFlex(hotkey, suffixkey, winclass, wincls_regex, title_reg
 	
 	; Auto generate a group-name from appdesc (not using winclass, title_regex because they can be empty)
 	groupname := "groupREGEX_" . QSA_make_group_name(winclass . appdesc)
-		; Note: GroupAdd is postponed to the moment the hot key is pressed,
-		; because we intend the regex title-match behavior to take effect just at the time we fire the hotkey.
+	; -- Note: GroupAdd is postponed to the moment the hotkey is pressed,
+	; because we intend the regex title-match behavior to take effect just at the time we fire the hotkey.
+	
 	dev_DefineHotkey(hotkey, "MyActivateGroup", suffixkey, groupname, winclass, wincls_regex, title_regex, appdesc)
 }
 

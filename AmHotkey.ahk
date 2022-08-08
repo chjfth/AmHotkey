@@ -142,20 +142,20 @@ dev_ActivateLastSeenWindow()
 	return Awinid
 }
 
-dev_CheckWindowInfo(Awinid)
+dev_CheckWindowInfo(hwnd)
 {
-	WinGetClass, class, ahk_id %Awinid%
-	WinGetTitle, title, ahk_id %Awinid%
-	WinGetPos, x,y,w,h, ahk_id %Awinid%
-	WinGet, pid, PID, ahk_id %Awinid%
-	WinGet, exepath, ProcessPath, ahk_id %Awinid%
-	ControlGetFocus, focusNN, ahk_id %Awinid%
-	ControlGet, focus_hctrl, HWND, , %focusNN%, ahk_id %Awinid%
+	WinGetClass, class, ahk_id %hwnd%
+	WinGetTitle, title, ahk_id %hwnd%
+	WinGetPos, x,y,w,h, ahk_id %hwnd%
+	WinGet, pid, PID, ahk_id %hwnd%
+	WinGet, exepath, ProcessPath, ahk_id %hwnd%
+	ControlGetFocus, focusNN, ahk_id %hwnd%
+	ControlGet, focus_hctrl, HWND, , %focusNN%, ahk_id %hwnd%
 	
 	x_end_ := x + w
 	y_end_ := y + h
 	
-	caRect := dev_WinGetClientAreaPos(Awinid)
+	caRect := dev_WinGetClientAreaPos(hwnd)
 	; if (caRect==null) ...
 	;	MsgBox, % "caRect==null"
 	caLeft := caRect.Left
@@ -177,7 +177,7 @@ dev_CheckWindowInfo(Awinid)
 	
 	info =
 	(
-The Active window class is "%class%" (Hwnd=%Awinid%)
+The Active window class is "%class%" (Hwnd=%hwnd%)
 Title is "%title%"
 Position  : X ( %x% ~ %x_end_% ), Y ( %y% ~ %y_end_% ), size ( %w% x %h% )
 
