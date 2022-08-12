@@ -310,8 +310,8 @@ dev_MyActivateGroupByBooleanFunc(funcname, suffixkey="")
 		}
 		else
 		{
-			; Now its really a failure.
-			dev_MsgBoxWarning("dev_MyActivateGroupByBooleanFunc(): Cannot find any window matching the function: " . funcname)
+			; Really no matched window is found.
+			dev_MsgBoxInfo("dev_MyActivateGroupByBooleanFunc(): Cannot find any window matching the function: `n`n" . funcname . "()")
 			return
 		}
 	}
