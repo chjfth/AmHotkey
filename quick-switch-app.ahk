@@ -414,7 +414,7 @@ sample_DefineQuickSwitchApps() ; as template for actual users
 	QSA_DefineActivateGroup_Caps("q", "TXGuiFoundation", "QQ")
 	QSA_DefineActivateGroup_Caps("h", "HH Parent", "CHM viewer")
 
-;	QSA_DefineActivateSingle_Caps("m", "ENMainFrame", "Evernote") ; // [2017-11-18] moved to evrnote.ahk
+;	QSA_DefineActivateSingle_Caps("m", "ENMainFrame", "Evernote") ; // [2017-11-18] moved to evernote.ahk
 ;	QSA_DefineActivateGroup_Caps("n", "ENSingleNoteView", "Evernote Single-note")
 	
 	QSA_DefineActivateGroup_Caps("v", "VMUIFrame", "VMware Workstation")
@@ -428,8 +428,8 @@ sample_DefineQuickSwitchApps() ; as template for actual users
 	QSA_DefineActivateGroup_Caps("c", "VirtualConsoleClass", "ConEmu")
 	QSA_DefineActivateGroup_Caps("p", "PuTTY", "PuTTY")
 
-	QSA_DefineActivateGroupFlex_Caps("u", "ConsoleWindowClass", QSA_NO_WNDCLS_REGEX, "^Ubuntu", "WSL Ubuntu")
-	QSA_DefineActivateGroupFlex_Caps("o", "ConsoleWindowClass", QSA_NO_WNDCLS_REGEX, "^openSUSE", "WSL openSUSE")
+;	QSA_DefineActivateGroupFlex_Caps("u", "ConsoleWindowClass", QSA_NO_WNDCLS_REGEX, "Ubuntu", "WSL Ubuntu")
+;	QSA_DefineActivateGroupFlex_Caps("o", "ConsoleWindowClass", QSA_NO_WNDCLS_REGEX, "^openSUSE", "WSL openSUSE")
 
 	QSA_DefineActivateGroupFlex_Caps("j", QSA_NO_WNDCLASS, "HyperSnap (7|8) Window Class",  "", "Hypersnap 7 or 8")
 
