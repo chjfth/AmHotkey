@@ -1,4 +1,4 @@
-
+﻿
 AUTOEXEC_chmviewer: ; Workaround for Autohotkey's ugly auto-exec feature. Don't delete.
 
 global chmedt_ToolbarX0 := 300 ; change this to the same width of UI's left pane
@@ -119,13 +119,13 @@ Init_ChmEditor()
 
 	arItems := [ ["Grey",  128, 128, 128]
 		, ["Dim Purple",   180, 100, 255]
-		, ["Blue",           0, 128, 255] 
+		, ["Sky Blue",       0, 128, 255] 
 		, ["Dark Blue",      0,  60, 160]
 		, ["Magenta",      255,   0, 255]
 		, ["Dark Purple",  128,  40, 128]
 		, ["Brown",        228, 160,  50]
-		, ["Dark Green",     0, 128, 128]
-		, ["Orange",       255, 128, 64] 
+		, ["Teal (暗绿色)",  0, 128, 128]
+		, ["Orange",        255, 128, 64] 
 		, ["Dark Yellow",  128, 128, 0] ]
 
 	nItems := arItems.Length()
@@ -163,6 +163,7 @@ ChmEditor_ApplyCodeFont()
 ^F11:: ClickInActiveWindow(chmedt_ToolbarX0+630, chmedt_ToolbarY, false) ; Ordered list
 
 ^]:: ClickInActiveWindow(chmedt_ToolbarX0+588, chmedt_ToolbarY, false) ; Indent (blockquote)
++^]:: ClickInActiveWindow(chmedt_ToolbarX0+588+25, chmedt_ToolbarY, false) ; Outdent
 
 NumpadSub:: Send ^u
 NumpadMult:: Send ^b
