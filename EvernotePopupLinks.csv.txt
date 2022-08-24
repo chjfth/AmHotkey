@@ -22,6 +22,7 @@ https://www.evernote.com/shard/s21/nl/2425275/f297ca74-4311-4fa2-a1e0-ec18964ab1
 
 https://www.evernote.com/shard/s21/nl/2425275/b86653d1-f665-48db-a87e-f651ab52f009 , Windows一般话题:WinMgmt ,Windows 系统管理
 https://www.evernote.com/shard/s21/nl/2425275/06e2eb0e-2d37-48f5-9df6-bf287eb30f03 , Windows一般话题:WinsvrMgmt , Windows Server 管理
+https://www.evernote.com/shard/s21/nl/2425275/a56322fb-1dc6-4f88-b939-f5c5a90e51ff , Windows一般话题:WinMisc , 杂类 Windows 收集帖
 https://www.evernote.com/shard/s21/nl/2425275/7dd94f40-6dcd-43d2-b0d3-eed6fb3030ed , Windows一般话题:WinPE
 https://www.evernote.com/shard/s21/nl/2425275/b60a8772-afb4-4cb3-9728-00d230fa7c09 , Windows一般话题:WinToGo , Windows-To-Go
 https://www.evernote.com/shard/s21/nl/2425275/6a06a3d1-d5f4-4af9-98f3-12ed3daff442 , Windows一般话题:BOOTMGR , Vista+ Boot manager
@@ -48,6 +49,28 @@ https://www.evernote.com/shard/s21/nl/2425275/b49be72e-4bbe-4949-b95b-a777b7ed23
 https://www.evernote.com/shard/s21/nl/2425275/47874f88-fdcf-4eca-84fe-2cb0ef05a4a0 , 编程语言:Autohotkey
 https://www.evernote.com/shard/s21/nl/2425275/7d2237b7-62e2-4a2e-a2b1-4ffd776fb563 , 编程语言:PYTHON
 https://www.evernote.com/shard/s21/nl/2425275/35e458a1-d25e-45bb-83ab-b7358c4af4f5 , 编程语言:CSharp, C# language
+
+https://www.evernote.com/shard/s21/nl/2425275/8d388f88-48cc-4bdd-a629-51aeb797320d , 函数库:PYL.Click , Python Click (命令行解析库)
+
+https://www.evernote.com/shard/s21/nl/2425275/7b769e8c-0fd6-4342-9147-8738e9188196 , 软件主题:VMwks , VMware Workstation
+https://www.evernote.com/shard/s21/nl/2425275/66a2acec-5d85-4be7-a714-f9d85fa11679 , 软件主题:VirtualBox
+https://www.evernote.com/shard/s21/nl/2425275/23cbec45-a27b-406c-9917-b272bb2a4fc3 , 软件主题:Wireshark
+https://www.evernote.com/shard/s21/nl/2425275/eace55aa-14ea-4d9a-9b17-13451082c67a , 软件主题:EmEditor
+https://www.evernote.com/shard/s21/nl/2425275/b1c9e992-0c29-45a1-a0d9-1f6eb91677ac , 软件主题:Git
+https://www.evernote.com/shard/s21/nl/2425275/1a8f6e07-7afc-4020-af03-0043a303a860 , 软件主题:SVN , Subversion
+https://www.evernote.com/shard/s21/nl/2425275/4d0e88b8-43e8-4887-8c3d-7cb80735d20b , 软件主题:Apache2 , http server
+https://www.evernote.com/shard/s21/nl/2425275/b541de60-735a-475f-be07-715f55078704 , 软件主题:Evernote
+https://www.evernote.com/shard/s21/nl/2425275/1796e14d-54a5-47fc-9a9f-52822f8a9c87 , 软件主题:Krita
+; https://www.evernote.com/shard/s21/nl/2425275/60f84ac4-388e-442f-9747-d15d15f37ad3 , 软件主题:Fiddler
+https://www.evernote.com/shard/s21/nl/2425275/fe813636-1e19-4761-8bc7-08a5780f0952 , 软件主题:QEMU
+https://www.evernote.com/shard/s21/nl/2425275/9027fb71-b5c0-49a8-b844-7546bcbd9b03 , 软件主题:FFmpeg
+https://www.evernote.com/shard/s21/nl/2425275/a130bbdb-7d4e-498a-b4f4-84f712a62dc9 , 软件主题:MPC-HC , Media Player Classic
+; https://www.evernote.com/shard/s21/nl/2425275/86ba9db5-f49b-4f9f-a2e0-6e8c12b09563 , 软件主题:SpaceDesk , 多显示器扩展软件
+https://www.evernote.com/shard/s21/nl/2425275/52a1086f-251e-407e-b2cf-de815b639a70 , 软件主题:Handbrake
+https://www.evernote.com/shard/s21/nl/2425275/13c06cd1-0a5e-4ad5-a59f-81114a68a0f0 , 软件主题:SMBNET, Samba server
+https://www.evernote.com/shard/s21/nl/2425275/8c6bd69f-97ca-4997-88c7-31e914074418 , 软件主题:CMake
+https://www.evernote.com/shard/s21/nl/2425275/c059d4c6-f0a0-4116-b0a8-1595312cf260 , 软件主题:OSS , 开源软件
+https://www.evernote.com/shard/s21/nl/2425275/dfe011c6-02e9-4047-82cf-f9d21b3bae12 , 软件主题:HTTPx , HTTP 协议
 
 ;https://www.evernote.com/shard/s21/nl/2425275/51824870-0471-4f73-999c-8d396ae0e8b5 , DPI Scaling
 
@@ -76,27 +99,6 @@ https://www.evernote.com/shard/s21/nl/2425275/6f3a3c9a-c6c8-4c67-abe8-ba5567b4a9
 https://www.evernote.com/shard/s21/nl/2425275/111e84fd-853c-4219-92d4-5b2fc2d09e2d , 硬件相关:ASUS-GT710
 https://www.evernote.com/shard/s21/nl/2425275/5633b767-f13c-4318-8d8b-fcaf74ff9b73 , 硬件相关:ASUS-RTX3050
 
-
-https://www.evernote.com/shard/s21/nl/2425275/7b769e8c-0fd6-4342-9147-8738e9188196 , 软件主题:VMwks , VMware Workstation
-https://www.evernote.com/shard/s21/nl/2425275/66a2acec-5d85-4be7-a714-f9d85fa11679 , 软件主题:VirtualBox
-https://www.evernote.com/shard/s21/nl/2425275/23cbec45-a27b-406c-9917-b272bb2a4fc3 , 软件主题:Wireshark
-https://www.evernote.com/shard/s21/nl/2425275/eace55aa-14ea-4d9a-9b17-13451082c67a , 软件主题:EmEditor
-https://www.evernote.com/shard/s21/nl/2425275/b1c9e992-0c29-45a1-a0d9-1f6eb91677ac , 软件主题:Git
-https://www.evernote.com/shard/s21/nl/2425275/1a8f6e07-7afc-4020-af03-0043a303a860 , 软件主题:SVN , Subversion
-https://www.evernote.com/shard/s21/nl/2425275/4d0e88b8-43e8-4887-8c3d-7cb80735d20b , 软件主题:Apache2 , http server
-https://www.evernote.com/shard/s21/nl/2425275/b541de60-735a-475f-be07-715f55078704 , 软件主题:Evernote
-https://www.evernote.com/shard/s21/nl/2425275/1796e14d-54a5-47fc-9a9f-52822f8a9c87 , 软件主题:Krita
-; https://www.evernote.com/shard/s21/nl/2425275/60f84ac4-388e-442f-9747-d15d15f37ad3 , 软件主题:Fiddler
-https://www.evernote.com/shard/s21/nl/2425275/fe813636-1e19-4761-8bc7-08a5780f0952 , 软件主题:QEMU
-https://www.evernote.com/shard/s21/nl/2425275/9027fb71-b5c0-49a8-b844-7546bcbd9b03 , 软件主题:FFmpeg
-https://www.evernote.com/shard/s21/nl/2425275/a130bbdb-7d4e-498a-b4f4-84f712a62dc9 , 软件主题:MPC-HC , Media Player Classic
-; https://www.evernote.com/shard/s21/nl/2425275/86ba9db5-f49b-4f9f-a2e0-6e8c12b09563 , 软件主题:SpaceDesk , 多显示器扩展软件
-https://www.evernote.com/shard/s21/nl/2425275/52a1086f-251e-407e-b2cf-de815b639a70 , 软件主题:Handbrake
-https://www.evernote.com/shard/s21/nl/2425275/13c06cd1-0a5e-4ad5-a59f-81114a68a0f0 , 软件主题:SMBNET, Samba server
-https://www.evernote.com/shard/s21/nl/2425275/8c6bd69f-97ca-4997-88c7-31e914074418 , 软件主题:CMake
-https://www.evernote.com/shard/s21/nl/2425275/c059d4c6-f0a0-4116-b0a8-1595312cf260 , 软件主题:OSS , 开源软件
-https://www.evernote.com/shard/s21/nl/2425275/dfe011c6-02e9-4047-82cf-f9d21b3bae12 , 软件主题:HTTPx , HTTP 协议
-
 https://www.evernote.com/shard/s21/nl/2425275/15efd366-1488-49a4-928b-d13a66f1feab , 小工具:showargs, 显示命令行拆解结果
 https://www.evernote.com/shard/s21/nl/2425275/59e3fa0f-2398-482e-9d69-52a739c4ef1a , 小工具:REGEX, 正则表达式
 
@@ -122,11 +124,12 @@ https://www.evernote.com/shard/s21/nl/2425275/b8ba8d42-fd2e-4497-8bf9-da13309ad0
 https://www.evernote.com/shard/s21/nl/2425275/3287cab7-94d9-4b3c-a530-0be9421ac1ae , WinBooks:PRWIN5, Programming Windows 5th-ed, Charles Petzold 1998
 https://www.evernote.com/shard/s21/nl/2425275/0fef82b4-a55b-4d91-96f3-1d8debc4206b , WinBooks:PAWIN4, Programming Applications for MSWin, Jeffrey Ritchter 1999
 https://www.evernote.com/shard/s21/nl/2425275/6de5b4e8-0915-48b9-bbd3-d1d295c0ccaf , WinBooks:FENGYUANG, Windows Graphics Programming, Win32 GDI and DirectDraw - Feng Yuan 2000
+https://www.evernote.com/shard/s21/nl/2425275/aa81f0e2-0922-47c8-98a2-662a081a3588 , WinBooks:DEVINTL2
 https://www.evernote.com/shard/s21/nl/2425275/803cee5a-6ffb-443a-8840-f0de9805b4ba , WinBooks:INSCOM, Inside COM, Dale Rogerson 1997
 https://www.evernote.com/shard/s21/nl/2425275/d62cf3aa-cad3-4c93-9bec-f89d8ac3b15c , WinBooks:MSBUILD2, Inside.the.Microsoft.Build.Engine.2nd.Edition.Dec.2010
 https://www.evernote.com/shard/s21/nl/2425275/7f6cc57e-acf7-4bc1-bcbb-24911753eb71 , WinBooks:PWDM2, MSPress - Programming WDM 2nd-ed, by Walter Oney (2003)
 https://www.evernote.com/shard/s21/nl/2425275/f1cc9f41-9edd-4699-8397-13788748b470 , WinBooks:LDCOM, OReilly - Learning DCOM (1999)
-https://www.evernote.com/shard/s21/nl/2425275/3f3cfe47-6797-4645-b7bc-060bc8e80173 , WinBooks:ProCMake , Professional CMake - A Practical Guide by Craig Scott (2018)
+; https://www.evernote.com/shard/s21/nl/2425275/3f3cfe47-6797-4645-b7bc-060bc8e80173 , WinBooks:ProCMake , Professional CMake - A Practical Guide by Craig Scott (2018)
 
 ; 零碎
 

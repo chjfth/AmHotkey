@@ -2607,7 +2607,7 @@ evernote_GetClipboardSingleLine()
 	return codetext
 }
 
-Evernote_PasteSingleLineCode(bgcolor="#e0e0e0")
+Evernote_PasteSingleLineCode(bgcolor:="#e0e0e0", keep_orig_clipboard:=true)
 {
 	; This is a special-case shortcut for Evtbl_GenHtml_Span() .
 	; We paste clipboard text in dark background, mono-font .
@@ -2620,8 +2620,10 @@ Evernote_PasteSingleLineCode(bgcolor="#e0e0e0")
 	
 	dev_ClipboardSetHTML(html, true)
 	
-	; Restore clipboard text, due to dev_ClipboardSetHTML()'s current limitation.
-	Clipboard := codetext 
+	if(keep_orig_clipboard) {
+		; Restore clipboard text, due to dev_ClipboardSetHTML()'s current limitation.
+		Clipboard := codetext
+	} 
 }
 
 evernote_PasteSingleLineCode_AddMenuItem(bgcolor, desctext, idx)
@@ -2692,6 +2694,4 @@ Evernote_PastePlainText_exwait()
 Ins:: Evernote_PopupPasteMenu()
 
 #If
-
-
 
