@@ -120,7 +120,7 @@ Init_ChmEditor()
 	arItems := [ ["Grey",  128, 128, 128]
 		, ["Dim Purple",   180, 100, 255]
 		, ["Sky Blue",       0, 128, 255] 
-		, ["Dark Blue",      0,  60, 160]
+		, ["Dark Blue",      0,  40, 200]
 		, ["Magenta",      255,   0, 255]
 		, ["Dark Purple",  128,  40, 128]
 		, ["Brown",        228, 160,  50]
@@ -162,8 +162,8 @@ ChmEditor_ApplyCodeFont()
 ^F10:: ClickInActiveWindow(chmedt_ToolbarX0+660, chmedt_ToolbarY, false) ; Unordered list
 ^F11:: ClickInActiveWindow(chmedt_ToolbarX0+630, chmedt_ToolbarY, false) ; Ordered list
 
-^]:: ClickInActiveWindow(chmedt_ToolbarX0+588, chmedt_ToolbarY, false) ; Indent (blockquote)
-+^]:: ClickInActiveWindow(chmedt_ToolbarX0+588+25, chmedt_ToolbarY, false) ; Outdent
+^]:: ClickInActiveWindow(chmedt_ToolbarX0+588,    chmedt_ToolbarY, false) ; Indent (blockquote)
+^[:: ClickInActiveWindow(chmedt_ToolbarX0+588+25, chmedt_ToolbarY, false) ; Outdent
 
 NumpadSub:: Send ^u
 NumpadMult:: Send ^b
