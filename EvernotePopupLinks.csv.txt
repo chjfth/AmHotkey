@@ -10,6 +10,8 @@ https://www.evernote.com/shard/s21/nl/2425275/850c9be2-7b91-4d85-965e-646923bc22
 https://www.evernote.com/shard/s21/nl/2425275/f2220220-f115-4353-b53d-a020c9d7f8d8 , WinDev:VSLinux
 https://www.evernote.com/shard/s21/nl/2425275/fb0bdf25-f1d4-48d5-b62f-ba08be158567 , WinDev:dotNET
 https://www.evernote.com/shard/s21/nl/2425275/68b7db39-ecb5-4128-9e53-7263292885c2 , WinDev:WinLocale
+https://www.evernote.com/shard/s21/nl/2425275/a42d019c-f47d-493c-9fbe-b64b206b75ef , WinDev:CRTLocale
+https://www.evernote.com/shard/s21/nl/2425275/3ecebcff-e3bc-4cd8-b0ba-b8ca013386e3 , WinDev:MSDNERR , MSDN errors
 
 https://www.evernote.com/shard/s21/nl/2425275/5dd911c7-6bae-44e0-8726-05f1a5644e61 , WinDrv:WinDrv, Windows Driver 主帖
 https://www.evernote.com/shard/s21/nl/2425275/75c2ea1d-e961-49a2-a417-3e359be85c99 , WinDrv:WinDBG
@@ -32,6 +34,7 @@ https://www.evernote.com/shard/s21/nl/2425275/c0a9ab2e-bebe-45b8-a2f2-61effca286
 https://www.evernote.com/shard/s21/nl/2425275/a59ec410-ec8a-413b-8a35-ee280bbc41fa , Windows一般话题:taskschd , Windows 内置计划任务功能
 https://www.evernote.com/shard/s21/nl/2425275/3c0fdb0d-3753-43d9-ab65-d6219b2b24f4 , Windows一般话题:Eventvwr , 事件查看器
 https://www.evernote.com/shard/s21/nl/2425275/a65b50f2-6f89-4b17-bf11-5a526f9b91db , Windows一般话题:CMDFONT , CMD 字体话题
+https://www.evernote.com/shard/s21/nl/2425275/cf1a1965-9586-4361-bce9-7e28ace3258c , Windows一般话题:Win10Terminal
 
 https://www.evernote.com/shard/s21/nl/2425275/586c101e-dbdb-44d0-b9f5-82ebffb7c8de , Linux:LinuxUse , Linux 日常使用
 https://www.evernote.com/shard/s21/nl/2425275/9d970809-8923-4aa7-b38d-ee6f9f8b7123 , Linux:LinuxDev , Linux 开发收集帖
@@ -155,3 +158,4 @@ https://www.evernote.com/shard/s21/nl/2425275/41a0fc2c-b818-4e16-ab7e-2704dcd18d
 ; https://www.evernote.com/shard/s21/nl/2425275/82243165-da77-4906-8fff-aff504379a46 , Recent:ProGit , Pro Git 电子书
 ;https://www.evernote.com/shard/s21/nl/2425275/43d53c8e-4781-416d-982b-03932f575d29 , Recent:3Blue1Brown
 https://www.evernote.com/shard/s21/nl/2425275/0b74c1b8-01b3-4266-be10-da6cf8b431d4 , Recent:UNICODE
+https://www.evernote.com/shard/s21/nl/2425275/82db2908-ba28-48f4-a7f2-7cdb93372849 , Recent:UTF8ACP
