@@ -258,7 +258,7 @@ Amt_CreateGui(inipath)
 	
 	Gui, AMT:Add, Text, xm y+16 w280 vg_OldguidHeader, % "Old GUIDs from template:"
 	Gui, AMT:Add, Text, x+10 yp      vg_NewguidHeader, % "New GUIDs to apply:"
-	Gui, AMT:Add, Checkbox, x+45 yp Checked vg_amtIsAutoGuid gAmt_ckbToggleAutoGenGuid, % "Auto &generate"
+	Gui, AMT:Add, Checkbox, x+45 yp Checked vg_amtIsAutoGuid gAmt_ckbToggledAutoGenGuid, % "Auto &generate"
 	
 	;
 	; Get all items from [GUID]
@@ -431,6 +431,8 @@ AMT_BtnOK()
 		dev_MsgBoxInfo(msg)
 	}
 	
+	Amt_RegenGuidsByCheckbox()
+	
 	Amt_ResyncUI() ; Purpose: show "folder exists" warning icon at bottom-right
 	
 ;	Amt_HideGui()
@@ -542,7 +544,14 @@ Amt_WM_MOUSEMOVE()
 	}
 }
 
-Amt_ckbToggleAutoGenGuid()
+Amt_ckbToggledAutoGenGuid()
+{
+	Amt_RegenGuidsByCheckbox()
+	
+	Amt_ResyncUI()
+}
+
+Amt_RegenGuidsByCheckbox()
 {
 	GuiControlGet, ischecked, AMT:, g_amtIsAutoGuid
 	
@@ -550,8 +559,6 @@ Amt_ckbToggleAutoGenGuid()
 	{
 		Amt_GenerateAllGuidsByTime()
 	}
-
-	Amt_ResyncUI()
 }
 
 Amt_ResyncUI()
