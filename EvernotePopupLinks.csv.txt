@@ -34,6 +34,7 @@ https://www.evernote.com/shard/s21/nl/2425275/c0a9ab2e-bebe-45b8-a2f2-61effca286
 https://www.evernote.com/shard/s21/nl/2425275/a59ec410-ec8a-413b-8a35-ee280bbc41fa , Windows一般话题:taskschd , Windows 内置计划任务功能
 https://www.evernote.com/shard/s21/nl/2425275/3c0fdb0d-3753-43d9-ab65-d6219b2b24f4 , Windows一般话题:Eventvwr , 事件查看器
 https://www.evernote.com/shard/s21/nl/2425275/a65b50f2-6f89-4b17-bf11-5a526f9b91db , Windows一般话题:CMDFONT , CMD 字体话题
+https://www.evernote.com/shard/s21/nl/2425275/3ca47cd8-735d-43b2-b64a-8e9143146865 , Windows一般话题:WinConsole , 命令行控制台相关
 https://www.evernote.com/shard/s21/nl/2425275/cf1a1965-9586-4361-bce9-7e28ace3258c , Windows一般话题:Win10Terminal
 
 https://www.evernote.com/shard/s21/nl/2425275/586c101e-dbdb-44d0-b9f5-82ebffb7c8de , Linux:LinuxUse , Linux 日常使用
@@ -64,6 +65,7 @@ https://www.evernote.com/shard/s21/nl/2425275/b1c9e992-0c29-45a1-a0d9-1f6eb91677
 https://www.evernote.com/shard/s21/nl/2425275/1a8f6e07-7afc-4020-af03-0043a303a860 , 软件主题:SVN , Subversion
 https://www.evernote.com/shard/s21/nl/2425275/4d0e88b8-43e8-4887-8c3d-7cb80735d20b , 软件主题:Apache2 , http server
 https://www.evernote.com/shard/s21/nl/2425275/b541de60-735a-475f-be07-715f55078704 , 软件主题:Evernote
+https://www.evernote.com/shard/s21/nl/2425275/4c473184-2eaa-41df-be37-4495a711f796 , 软件主题:Confluence 
 https://www.evernote.com/shard/s21/nl/2425275/1796e14d-54a5-47fc-9a9f-52822f8a9c87 , 软件主题:Krita
 ; https://www.evernote.com/shard/s21/nl/2425275/60f84ac4-388e-442f-9747-d15d15f37ad3 , 软件主题:Fiddler
 https://www.evernote.com/shard/s21/nl/2425275/fe813636-1e19-4761-8bc7-08a5780f0952 , 软件主题:QEMU
@@ -128,6 +130,7 @@ https://www.evernote.com/shard/s21/nl/2425275/b8ba8d42-fd2e-4497-8bf9-da13309ad0
 ;
 https://www.evernote.com/shard/s21/nl/2425275/3287cab7-94d9-4b3c-a530-0be9421ac1ae , WinBooks:PRWIN5, Programming Windows 5th-ed, Charles Petzold 1998
 https://www.evernote.com/shard/s21/nl/2425275/0fef82b4-a55b-4d91-96f3-1d8debc4206b , WinBooks:PAWIN4, Programming Applications for MSWin, Jeffrey Ritchter 1999
+https://www.evernote.com/shard/s21/nl/2425275/717b2348-7b5c-4c70-afba-3c8e61ffbca5 , WinBooks:PSSA2000 , Programming Server-side Win2000
 https://www.evernote.com/shard/s21/nl/2425275/6de5b4e8-0915-48b9-bbd3-d1d295c0ccaf , WinBooks:FENGYUANG, Windows Graphics Programming, Win32 GDI and DirectDraw - Feng Yuan 2000
 https://www.evernote.com/shard/s21/nl/2425275/aa81f0e2-0922-47c8-98a2-662a081a3588 , WinBooks:DEVINTL2
 https://www.evernote.com/shard/s21/nl/2425275/803cee5a-6ffb-443a-8840-f0de9805b4ba , WinBooks:INSCOM, Inside COM, Dale Rogerson 1997
@@ -149,7 +152,7 @@ https://www.evernote.com/shard/s21/nl/2425275/ee552f1d-8e4b-4051-8039-9ab7ee52c8
 
 
 ; Recent use
-https://www.evernote.com/shard/s21/nl/2425275/41a0fc2c-b818-4e16-ab7e-2704dcd18dc5 , Recent:PDBSEW
+;https://www.evernote.com/shard/s21/nl/2425275/41a0fc2c-b818-4e16-ab7e-2704dcd18dc5 , Recent:PDBSEW
 ; https://www.evernote.com/shard/s21/nl/2425275/19b65c87-cb9d-451e-a83e-a042a80989ce , Recent:EN_WakeTimer , Allow wake timers
 ; https://www.evernote.com/shard/s21/nl/2425275/da9d849a-9867-455e-beaf-827aa83f8063 , Recent:VSMOBDEV , Visual Studio Mobile Dev
 ; https://www.evernote.com/shard/s21/nl/2425275/c49d7832-48ea-4d3c-a35b-eba73e1169c0 , Recent:UseMac , macOS 日常使用
@@ -159,3 +162,8 @@ https://www.evernote.com/shard/s21/nl/2425275/41a0fc2c-b818-4e16-ab7e-2704dcd18d
 ;https://www.evernote.com/shard/s21/nl/2425275/43d53c8e-4781-416d-982b-03932f575d29 , Recent:3Blue1Brown
 https://www.evernote.com/shard/s21/nl/2425275/0b74c1b8-01b3-4266-be10-da6cf8b431d4 , Recent:UNICODE
 https://www.evernote.com/shard/s21/nl/2425275/82db2908-ba28-48f4-a7f2-7cdb93372849 , Recent:UTF8ACP
+https://www.evernote.com/shard/s21/nl/2425275/e00cbd1d-f6a6-4b5f-8660-5b80c22056ed , Recent:ConscpLab 
+https://www.evernote.com/shard/s21/nl/2425275/a37b1d2e-e4aa-48c1-b2e2-b533ca7fa56d , Recent:EnumLocales
+https://www.evernote.com/shard/s21/nl/2425275/56b3b85f-2e31-4ff6-b873-a75fe076dfa1 , Recent:DefaultLocales
+https://www.evernote.com/shard/s21/nl/2425275/326e3905-ea87-4694-a54c-8ea3ede4b349 , Recent:Zhihu_WinLocale
+
