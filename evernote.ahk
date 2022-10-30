@@ -952,7 +952,7 @@ Evtbl_GenHtml_Table(hexcolor1, hexcolor2)
 
 	html_ptn =
 (
-+<table border="{4}" style="border-collapse:collapse; border-color:{5}; width:100`%;">
++<table border="{4}" style="border-collapse:collapse; border-color:{5}; width:100`%; chjid:{6};">
 	<colgroup>{1}</colgroup>
 	<thead>
 		<tr> <!-- 20190722: Do NOT use <th> inside <thead>, which will cause column widths skew after typing words into cells. -->
@@ -969,7 +969,13 @@ Evtbl_GenHtml_Table(hexcolor1, hexcolor2)
 	
 	html := Format(html_ptn
 		, htmline_colgroup, thead_tds, tbody_tds
-		, tableborder, bordercolor)
+		, tableborder, bordercolor
+		, "evertbl_" . dev_GetDateTimeStrCompact())
+
+	; [2022-10-30] Embed `chjid` timestamp into <table>, so that Evernote 6.5.4 preserves it.
+	; Note: I have to use chjid inside style="...", instead of regular id attribute of <table>,
+	; bcz Evernote 6.5.4 will drop the "id=... " when I export the clip to .enex.
+	; Caution: Editing the <table> with Evernote 6.6+ will ruin chjid .
 
 	return html
 }

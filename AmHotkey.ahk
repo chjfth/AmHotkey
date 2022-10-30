@@ -864,6 +864,12 @@ dev_GetDateTimeStrNow()
 	return dt
 }
 
+dev_GetDateTimeStrCompact(sep:="_")
+{
+	FormatTime, dt, , % "yyyyMMdd" . sep .  "HHmmss"
+	return dt
+}
+
 
 ; [2015-02-07] The great dynamically hotkey defining function. (tested on AHK 1.1.13.01)
 ; BIG Thanks to: http://stackoverflow.com/a/17932358
