@@ -4,6 +4,7 @@
 https://www.evernote.com/shard/s21/nl/2425275/08cea251-4484-4a3d-afd0-22ae81f0bc47 , WinDev:WinAPI , Windows API 相关
 https://www.evernote.com/shard/s21/nl/2425275/4586fb5e-4414-4e81-8ea8-75bf28d9d666 , WinDev:WinGUI , Windows UI 编程
 https://www.evernote.com/shard/s21/nl/2425275/718144a8-3879-4a58-bddd-b689b2866e2e , WinDev:MSCOM , 微软组件对象模型
+https://www.evernote.com/shard/s21/nl/2425275/69f3dcbe-21a5-4de7-b7d7-c2a8cd52d9ed , WinDev:WinSecuAPI, Security API
 https://www.evernote.com/shard/s21/nl/2425275/a56322fb-1dc6-4f88-b939-f5c5a90e51ff , WinDev:WinMisc , 杂类 Windows 编程
 https://www.evernote.com/shard/s21/nl/2425275/c07f9c0a-b536-4ecb-9254-2d422564da11 , WinDev:MSBuild
 https://www.evernote.com/shard/s21/nl/2425275/850c9be2-7b91-4d85-965e-646923bc22c1 , WinDev:VSIDE , Visual Studio IDE
