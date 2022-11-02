@@ -1,36 +1,16 @@
-﻿; Note: This file is saved with UTF8 with BOM, which is the best encoding choice to write Unicode chars here.
+﻿; Note: If this file contains non-ASCII characters, you must saved it in UTF8 with BOM,
+; in order for the Unicode characters to be recognized by Autohotkey engine.
 
 AUTOEXEC_customize_ahk: ; Workaround for Autohotkey's ugly auto-exec feature. Don't delete.
-	; MUST DO: Change the above ahk label to a specific one, such as AUTOEXEC_foobar_ahk
+	; When duplicate, you MUST: Change the above ahk label to a unique one, such as AUTOEXEC_foobar_ahk.
 
 ; Something to place here.
 ; * Customize these global vars according to your running machine:
 ; * Call the run-once functions.
 
-; Example
-;global g_dirEverpic := "D:\chj\scripts\everpic"
-
-Init_MyCustomizedEnv() ; This function is defined after the first "return".
-
-
-global g_evtblColorCustoms := [ "#C0B0B0,铁锈红"
-	, "#C030FF,炫目紫"
-    , "#EEAAFF,亮粉紫"
-	, "#FFA090,淡唇红"
-    , "#e4a232,亮棕色"
-	, "#C6E28F,青涩绿"
-	, "#548414,沼泽绿"
-	, "#948414,焦叶黄"
-	, "#30A878,深潭绿"
-	, "#CAD0A0,抹茶绿"
-	, "#50A0E0,深邃蓝"
-	, "#30A0D0,水墨蓝"
-	, "#8864B8,VS2019 purple"
-	, "#b0c0b0,深灰1"
-	, "#b0c0c0,深灰2"
-	, "#f4f4f4" ]
-
-; global g_evernotePopLinksFile := "EvernoteLinks.chj.txt"
+Init_MyCustomizedEnv() 
+; -- This function's body is defined after the first "return",
+;    but we have to call it before the first "return".
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; If you define any global variables, you MUST define them ABOVE this line.
@@ -40,39 +20,11 @@ return ; End of auto-execute section.
 
 Init_MyCustomizedEnv()
 {
-	; Write your initialization action here.
-
-	; Define Hotkey RightAlt+F1 to switch to a VirtualBox VM.
-;	QSA_DefineActivateGroupFlex(">!F1", QSA_NO_SUFFIXKEY, QSA_NO_WNDCLASS, QSA_NO_WNDCLS_REGEX, "^Win7Evernote", "[Win7Evernote] Vbox VM")
-;	QSA_DefineActivateGroupFlex(">!F2", QSA_NO_SUFFIXKEY, QSA_NO_WNDCLASS, QSA_NO_WNDCLS_REGEX, "^Win7vbox-IM", "[Win7vbox-IM] Vbox VM")
+	; Write your initialization statements here.
 }
 
 
-^!F8::
-MsgBox, 0x40, Autohotkey script info, 
-(
-Chj: You pressed Ctrl+Alt+F8 hotkey, which is intercepted by me.
-
-Otherwise, Intel graphics driver (Intel HD4600 etc) will grab it and revert(ruin) your monitors layout without any warning.
-)
-	; 禁掉 Intel 核心显卡（比如 Z87 主板上的 HD4600 显卡）控制面板的强制绑定的“恢复显卡默认值”热键。
-	; 该热键会导致 Windows 7 显示器布局重排。 （是否能挡住待验证）
-return
-
-
-
-; Define hotkeys below::::::::
-
-
-; TotalPhase DataCenter click the small "Auto scrolling" button(position guess)
-#If IsWinClassActive("QWidget") && IsWinTitleMatchRegex("Total Phase Data Center")
-F12::
-	MouseGetPos origx, origy
-	ClickInActiveWindow(-366, -266)
-	MouseMove origx, origy
-return
-#If
-
+; :::: Add your OWN hotkey definition below ::::
 
 
 ; RCtrl & RAlt:: Send {AppsKey}
