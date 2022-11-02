@@ -200,11 +200,12 @@ hwndCtrl under mouse is "%hctrl_undermouse%"
 
 AmDoInit()
 {
-	Menu, tray, add  ; Creates a separator line.
-	SystrayMenu_AddMuteItem()
+	; [2022-11-02] Move this to chjmisc.ahk, other people may not need it.
+;	Menu, tray, add  ; Creates a separator line.
+;	SystrayMenu_Add_MuteClicking()
 }
 
-SystrayMenu_AddMuteItem()
+SystrayMenu_Add_MuteClicking()
 {
 	Menu, TRAY, add, %g_amstrMute%, dev_AmMute  ; Creates a new menu item.
 }

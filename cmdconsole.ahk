@@ -428,9 +428,12 @@ cmdconsole_InitHotkeys()
 	dev_DefineHotkeyWithCondition("!Right", "putty_IsActive", "putty_SimuMouseMove", "right", 5)
 		; [2015-03-28] Strange: Using "<!Up" here will invalidate emeditor.ahk's ``!UP:: Send {UP 10}``
 		
-	
-	; CMD use
-	;
+	; cmdc_SetNewPrompt_AddTrayMenu()
+}
+
+
+cmdc_SetNewPrompt_AddTrayMenu() ; Legacy, not used now
+{
 	; Define submenu item list:
 	Menu, CmdconsoleSubmenu, add, %g_cmdc_text_Cmd100Prompt%, cmdc_Prompt100
 	Menu, CmdconsoleSubmenu, add, %g_cmdc_text_Cmd120Prompt%, cmdc_Prompt120
