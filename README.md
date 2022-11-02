@@ -1,5 +1,7 @@
 # AmHotkey: Modularized Autohotkey scripts
 
+AmHotkey is a set of [Autohotkey](http://www.autohotkey.com) script that modularize AHK scripts authoring. You can consider it a framework. Following some preset rules, AHK files from different authors can work together inside a single Autohotkey running instance.
+
 ## QUICK START 
 
 These scripts have been verified with Autohotkey 1.1.24, and new versions should be OK too.
