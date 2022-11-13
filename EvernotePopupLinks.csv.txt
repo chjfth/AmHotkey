@@ -10,6 +10,7 @@ https://www.evernote.com/shard/s21/nl/2425275/c07f9c0a-b536-4ecb-9254-2d422564da
 https://www.evernote.com/shard/s21/nl/2425275/850c9be2-7b91-4d85-965e-646923bc22c1 , WinDev:VSIDE , Visual Studio IDE
 https://www.evernote.com/shard/s21/nl/2425275/f2220220-f115-4353-b53d-a020c9d7f8d8 , WinDev:VSLinux
 https://www.evernote.com/shard/s21/nl/2425275/fb0bdf25-f1d4-48d5-b62f-ba08be158567 , WinDev:dotNET
+https://www.evernote.com/shard/s21/nl/2425275/17e84984-240b-41a7-90a5-3d47181d46a4 , WinDev:WinCmdLine , 命令行拆解
 https://www.evernote.com/shard/s21/nl/2425275/68b7db39-ecb5-4128-9e53-7263292885c2 , WinDev:WinLocale
 https://www.evernote.com/shard/s21/nl/2425275/a42d019c-f47d-493c-9fbe-b64b206b75ef , WinDev:CRTLocale
 https://www.evernote.com/shard/s21/nl/2425275/3ecebcff-e3bc-4cd8-b0ba-b8ca013386e3 , WinDev:MSDNERR , MSDN errors
@@ -44,6 +45,7 @@ https://www.evernote.com/shard/s21/nl/2425275/f2220220-f115-4353-b53d-a020c9d7f8
 https://www.evernote.com/shard/s21/nl/2425275/268c580b-6016-4166-8e87-a8ba2773c607 , Linux:GDB , GNU debugger
 https://www.evernote.com/shard/s21/nl/2425275/a73019f6-e1ef-41cd-a2c4-1bf58b23729b , Linux:LinuxWeird , 各种 Linux 怪象
 
+https://www.evernote.com/shard/s21/nl/2425275/23a51b98-5bfe-4e28-9075-efee3a74a2dc , Programming:ThinkPrg , 编程思想
 https://www.evernote.com/shard/s21/nl/2425275/c6dca407-074c-49ce-b797-2291325bea8b , Programming:MyPrg  , 自写程序收集备忘
 https://www.evernote.com/shard/s21/nl/2425275/7d2bfa22-fe88-4074-86fe-2a087ee97258 , Programming:MySnip , 自写函数库/代码片段
 https://www.evernote.com/shard/s21/nl/2425275/431cba60-f0b4-4223-9c05-b9c623425c25 , Programming:CodeSnip , 其他函数库/代码片段
@@ -78,6 +80,7 @@ https://www.evernote.com/shard/s21/nl/2425275/13c06cd1-0a5e-4ad5-a59f-81114a68a0
 https://www.evernote.com/shard/s21/nl/2425275/8c6bd69f-97ca-4997-88c7-31e914074418 , 软件主题:CMake
 https://www.evernote.com/shard/s21/nl/2425275/c059d4c6-f0a0-4116-b0a8-1595312cf260 , 软件主题:OSS , 开源软件
 https://www.evernote.com/shard/s21/nl/2425275/dfe011c6-02e9-4047-82cf-f9d21b3bae12 , 软件主题:HTTPx , HTTP 协议
+https://www.evernote.com/shard/s21/nl/2425275/aad80337-7da3-4a40-82cf-dac78643e3b8 , 软件主题:ChmFAR , Helpware FAR, chm editor
 
 ;https://www.evernote.com/shard/s21/nl/2425275/51824870-0471-4f73-999c-8d396ae0e8b5 , DPI Scaling
 
@@ -121,7 +124,6 @@ https://www.evernote.com/shard/s21/nl/2425275/a9416fe2-72d2-44ab-9e59-b297f2276c
 https://www.evernote.com/shard/s21/nl/2425275/f12b2a42-e986-4e21-a2d4-daa69da7f3d3 , 自创主题:ZhihuPost , 知乎发帖
 https://www.evernote.com/shard/s21/nl/2425275/5cfb0da8-4f25-4300-9749-fa1c196c9ad3 , 自创主题:AMBIG , 歧义收集帖
 https://www.evernote.com/shard/s21/nl/2425275/5cfb0da8-4f25-4300-9749-fa1c196c9ad3 , 自创主题:歧义  , 歧义收集帖
-https://www.evernote.com/shard/s21/nl/2425275/23a51b98-5bfe-4e28-9075-efee3a74a2dc , 自创主题:ThinkPrg , 编程思想
 https://www.evernote.com/shard/s21/nl/2425275/0ec4ab0c-99b2-4b9b-8b71-38c828c4054d , 自创主题:MidWare , 中间物
 https://www.evernote.com/shard/s21/nl/2425275/2626ae56-a0eb-4c2a-97ae-8c331e8f581e , 自创主题:Naming , 起名难题
 

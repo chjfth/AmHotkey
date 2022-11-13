@@ -1,4 +1,4 @@
-
+﻿
 AUTOEXEC_winshell: ; Workaround for Autohotkey's ugly auto-exec feature. Don't delete.
 
 global g_ctlmove_unit := 10 ; control move unit
@@ -754,11 +754,40 @@ ctlmove_AimControlUnderMouse()
 	CoordMode, Mouse, Window
 	MouseGetPos, mxWindow, myWindow, mouse_at_htopwin, classnn
 	
-;	dev_TooltipAutoClear("classNN=" . classnn . " wintitle=" . wintitle, 5000)
+;	dev_TooltipAutoClear("classNN=" . classnn . " mouse_at_htopwin=" . mouse_at_htopwin, 15000)
 	
-	if(mouse_at_htopwin!=Awinid) {
-		MsgBox, % "ctlmove_AimControlUnderMouse(): Your mouse is not above an active window. I will not work."
-		return
+	if(mouse_at_htopwin!=Awinid) 
+	{
+		; [2022-11-13] Check for a special case: If the window under mouse pointer 
+		; is a combobox-dropdown, we increase its width. This copes with the 
+		; "combobox dropdown width often too narrow" baffle.
+		if(StrIsStartsWith(classnn, "ComboLBox"))
+		{
+			; mouse_at_htopwin is probably 0x10010
+			
+			wintitle := "ahk_id " mouse_at_htopwin
+			ControlGetPos, x,y, w,h, %classnn%, %WinTitle%
+			newwidth := w + g_ctlmove_unit
+			
+			ControlMove, %classnn%, %x%, %y%, %newwidth%, %h%, %wintitle%
+			
+			dev_TooltipAutoClear(Format("Combobox dropdown at X,Y={},{} W,H={},{}. Now width increased to {}."
+				, x,y, w,h, newwidth), 5000)
+			
+			; Set the two g_ vars so that we can later press (Shift+)Ctrl+Win+NumpadArrows to try to further 
+			; increase/decrease its width/height. But weird: I can only see its height decreased but not increased.
+			g_ctlmove_hwndtop := wintitle
+			g_ctlmove_classnn := classnn
+
+			; Don't call DoHilightRectInTopwin(), which would cause the dropdown window to vanish immediately.
+			return
+		}
+		else
+		{
+			dev_TooltipAutoClear(Format("ctlmove_AimControlUnderMouse(): Your mouse is not above an active window. I will not work. htopwin={} , classnn={}"
+				, mouse_at_htopwin, clasnn), 5000)
+			return
+		}
 	}
 	
 	ControlGetPos, x,y, w,h, %classnn%, %wintitle%
