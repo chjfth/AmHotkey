@@ -1,7 +1,7 @@
 
 ; Note: 
-;	A Line starting with semicolon is a comment line.
-;	*i means "ignore if that .ahk does not exist"
+;  A Line starting with semicolon is a comment line.
+;  *i means "ignore if that .ahk does not exist"
 
 #Include WinClipAPI.ahk
 #Include WinClip.ahk
@@ -11,15 +11,15 @@
 
 #Include *i keymouse.ahk
 
-#Include *i winshell.ahk
-
 #Include *i cmdconsole.ahk
-
-#Include *i windev.ahk
 
 #Include *i chmviewer.ahk
 
 #Include *i emeditor.ahk
+
+; #Include *i winshell.ahk
+
+; #Include *i windev.ahk
 
 ;#Include *i mediaplayer.ahk
 ;#Include *i pdfreader.ahk
@@ -34,7 +34,7 @@
 ; #Include zjb-helper.ahk
 ; #include <Vis2> ; Equivalent to #include .\lib\Vis2.ahk
 
-#Include *i chjmisc.ahk
+; #Include *i chjmisc.ahk
 
 ; #Include *i AmTemplates.ahk
 ; #Include menus.ahk

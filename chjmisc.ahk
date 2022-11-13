@@ -22,6 +22,7 @@ global g_prettyprint_webbrowser := "" ; "D:\PortableApps\GoogleChrome-74\GoogleC
 ; -- Above two vars can be overridden by user.
 
 chj_DefineQuickSwitchApps()
+chjmisc_InitSystryMenus()
 Bcam4_Init()
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -123,65 +124,41 @@ dev_WinMove_with_backup_with_prompt(_newx, _newy, _new_width, _new_height, Awini
 	s_hint_timeout := 1000
 }
 
-chj_IsHwndPythonIDE(hwnd)
-{
-	WinGetClass, class, ahk_id %hwnd%
-	WinGetTitle, title, ahk_id %hwnd%
-	WinGet, pid, PID, ahk_id %hwnd%
-	WinGet, exepath, ProcessPath, ahk_id %hwnd%
-
-	if(title ~= "^\*?Python.+Shell") {
-		; Python IDLE Shell, wintitle example:
-		;	Python 3.7.4 Shell
-		return true
-	}
-	else if(InStr(exepath, "pycharm64.exe") || InStr(exepath, "pycharm.exe")) {
-		; JetBrains PyCharm IDE.
-		return true
-	}
-	else {
-		return false
-	}
-}
 
 chj_DefineQuickSwitchApps() ; as template for actual users
 {
 	QSA_DefineActivateGroup_Caps("/", "Notepad", "Notepad")
+;	QSA_DefineActivateGroup_Caps("1", "Chrome_WidgetWin_1", "Chrome")
+;	[2018-07-25] I have to use this bcz Skype 8.x UI is using the Chromium framework.
+	;QSA_DefineActivateGroupFlex_Caps("1", "Chrome_WidgetWin_1", QSA_NO_WNDCLS_REGEX, "^(?!Skype).*", "Chrome")
+	QSA_DefineActivateGroupFlex_Caps("1", "Chrome_WidgetWin_1", QSA_NO_WNDCLS_REGEX, "(Google Chrome|Comodo Dragon|Edge)$", "Google Chrome genre browser")
+	
+	QSA_DefineActivateGroupFlex_Caps("2", "MozillaWindowClass", QSA_NO_WNDCLS_REGEX, "(Firefox|Waterfox)", "Firefox or Waterfox")
+	;QSA_DefineActivateGroup_Caps("2", "MozillaWindowClass", "Firefox") // would share with Active-state Komodo 7
+	
+	QSA_DefineActivateGroup_Caps("d", "ConsoleWindowClass", "CMD")
+	QSA_DefineActivateGroup_Caps("q", "TXGuiFoundation", "QQ")
+	QSA_DefineActivateGroup_Caps("h", "HH Parent", "CHM viewer")
 
-
-
+;	QSA_DefineActivateSingle_Caps("m", "ENMainFrame", "Evernote") ; // [2017-11-18] moved to evrnote.ahk
+;	QSA_DefineActivateGroup_Caps("n", "ENSingleNoteView", "Evernote Single-note")
+	
+	QSA_DefineActivateGroup_Caps("v", "VMUIFrame", "VMware Workstation")
+		; Note: On activated, the VM may or may not grabs input immediately, which depends on 
+		; whether you have used Ctrl+Alt to release control from the VM.
 	QSA_DefineActivateGroupFlex_Caps("b", QSA_NO_WNDCLASS, QSA_NO_WNDCLS_REGEX, "VirtualBox Manager$", "VirtualBox Manager") ; virtualbox 6
 
-	QSA_DefineActivateGroup_Caps("c", "VirtualConsoleClass", "ConEmu")
-	QSA_DefineActivateGroup_Caps("d", "ConsoleWindowClass", "CMD")
 	QSA_DefineActivateGroup_Caps("w", "CabinetWClass", "Windows Explorer")
 	QSA_DefineActivateGroup_Caps("e", "EmEditorMainFrame3", "EmEditor")
 	QSA_DefineActivateGroup_Caps("f", "classFoxitReader", "Foxit Reader")
-	QSA_DefineActivateGroup_Caps("h", "HH Parent", "CHM viewer")
-	QSA_DefineActivateGroup_Caps("i", "TNavicatMainForm", "Navicat database manager") ; Navicat
+	QSA_DefineActivateGroup_Caps("c", "VirtualConsoleClass", "ConEmu")
+	QSA_DefineActivateGroup_Caps("p", "PuTTY", "PuTTY")
+
+	QSA_DefineActivateGroupFlex_Caps("u", "ConsoleWindowClass", QSA_NO_WNDCLS_REGEX, "^Ubuntu", "WSL Ubuntu")
+	QSA_DefineActivateGroupFlex_Caps("o", "ConsoleWindowClass", QSA_NO_WNDCLS_REGEX, "^openSUSE", "WSL openSUSE")
+
 	QSA_DefineActivateGroupFlex_Caps("j", QSA_NO_WNDCLASS, "HyperSnap (7|8) Window Class",  "", "Hypersnap 7 or 8")
 
-;	QSA_DefineActivateSingle_Caps("m", "ENMainFrame", "Evernote") ; // [2017-11-18] moved to evernote.ahk
-;	QSA_DefineActivateGroup_Caps("n", "ENSingleNoteView", "Evernote Single-note")
-
-;	QSA_DefineActivateGroupFlex_Caps("o", "ConsoleWindowClass", QSA_NO_WNDCLS_REGEX, "^openSUSE", "WSL openSUSE")
-	QSA_DefineActivateGroup_Caps("p", "PuTTY", "PuTTY")
-;	QSA_DefineActivateGroup_Caps("q", "TXGuiFoundation", "QQ")
-
-	QSA_DefineActivateGroupFlex_Caps("u", "ConsoleWindowClass", QSA_NO_WNDCLS_REGEX, "Ubuntu", "WSL Ubuntu")
-
-	QSA_DefineActivateGroup_Caps("v", "VMUIFrame", "VMware Workstation")
-	; -- Note: On activated, the VM may or may not grabs input immediately, which depends on 
-	; whether you have used Ctrl+Alt to release control from the VM.
-
-	; Python IDLE shell (old)
-	;QSA_DefineActivateGroupFlex_Caps("y", "TkTopLevel", QSA_NO_WNDCLS_REGEX, "^\*?Python.+Shell", "Python IDLE shell window")
-	; New:
-	dev_DefineHotkey("CapsLock & y", "dev_MyActivateGroupByBooleanFunc", "chj_IsHwndPythonIDE")
-
-	QSA_DefineActivateGroupFlex_Caps("1", "Chrome_WidgetWin_1", QSA_NO_WNDCLS_REGEX, "(Google Chrome|Comodo Dragon|Edge)$", "Google Chrome genre browser")
-	QSA_DefineActivateGroupFlex_Caps("2", "MozillaWindowClass", QSA_NO_WNDCLS_REGEX, "(Firefox|Waterfox)", "Firefox or Waterfox")
-	
 	QSA_DefineActivateGroupFlex_Caps("6", QSA_NO_WNDCLASS, "^Afx", "Microsoft Visual C\+\+", "The Visual C++ 6 IDE")
 		; VC6 winclass is like Afx:400000:8:10009:0:3ab31345
 		; Sigh, with 1.1.19.02, MRU behavior is broken with this regex mode
@@ -194,14 +171,22 @@ chj_DefineQuickSwitchApps() ; as template for actual users
      ;QSA_DefineActivateGroupFlex_Caps("8", "wndclass_desked_gsk", QSA_NO_WNDCLS_REGEX, "^Microsoft Visual Studio", "VS2008 IDE")
      ; -- CapsLock & 8
 
-	; Visual Studio Code (2018)
-	QSA_DefineActivateGroupFlex_Caps("9", "Chrome_WidgetWin_1", QSA_NO_WNDCLS_REGEX, "Visual Studio Code$", "Visual Studio Code")
-	
 	; Visual Studio VS2010+
 	QSA_DefineActivateGroupFlex_Caps("0", QSA_NO_WNDCLASS, "^HwndWrapper", "Microsoft Visual Studio( \(Administrator\))*$", "VS2010_or_above")
 
 	; MS Help Viewer 2.x
 	QSA_DefineActivateGroupFlex_Caps("-", QSA_NO_WNDCLASS, "^HwndWrapper\[HlpViewer", "", "MS Help Viewer 2.x")
+	
+	; Visual Studio Code (2018)
+	QSA_DefineActivateGroupFlex_Caps("9", "Chrome_WidgetWin_1", QSA_NO_WNDCLS_REGEX, "Visual Studio Code$", "Visual Studio Code")
+	
+	; Python IDLE shell
+	QSA_DefineActivateGroupFlex_Caps("y", "TkTopLevel", QSA_NO_WNDCLS_REGEX, "^\*?Python.+Shell", "Python IDLE shell window")
+	
+	; Navicat
+	QSA_DefineActivateGroup_Caps("i", "TNavicatMainForm", "Navicat database manager")
+	
+	;QSA_DefineActivateGroupFlex_Caps("-", QSA_NO_WNDCLASS, "^HwndWrapper", "Microsoft Help Viewer", "MS Help Viewer 1.x/2.x") //VS2010 hlpviewer 1.x
 }
 
 
@@ -214,6 +199,12 @@ get_dirfilecount(file_pattern)
 	}
 	;MsgBox, %count%
 	return count
+}
+
+chjmisc_InitSystryMenus()
+{
+	Menu, tray, add  ; Creates a separator line.
+	SystrayMenu_Add_MuteClicking()
 }
 
 chj_StartMultiPageScreenGrabber(screenshot_hotkey, pgdn_hotkey, image_dir, pages, pgdn_wait_millisec:=500)

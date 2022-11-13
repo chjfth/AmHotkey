@@ -200,11 +200,12 @@ hwndCtrl under mouse is "%hctrl_undermouse%"
 
 AmDoInit()
 {
-	Menu, tray, add  ; Creates a separator line.
-	SystrayMenu_AddMuteItem()
+	; [2022-11-02] Move this to chjmisc.ahk, other people may not need it.
+;	Menu, tray, add  ; Creates a separator line.
+;	SystrayMenu_Add_MuteClicking()
 }
 
-SystrayMenu_AddMuteItem()
+SystrayMenu_Add_MuteClicking()
 {
 	Menu, TRAY, add, %g_amstrMute%, dev_AmMute  ; Creates a new menu item.
 }
@@ -330,17 +331,22 @@ CallAutoexecLabels()
 		
 		FileCopy, %srcfile%, %dstfile%
 		
-		if(! (ErrorLevel==0 && A_LastError==0) )
+		if(ErrorLevel)
 		{
-	;		MsgBox, % Format("{} , {}", ErrorLevel, A_LastError)
-			MsgBox, 0x10, % "AmHotkey.ahk starts error!",  % Format("Cannot find or generate ""{}"" . The program will exit.", dstfile)
-	;	no_ahk_modules := "(no modules)`n`nMaybe you should get a copy of _more_includes_.ahk from _more_includes_.ahk.sample"
+			dev_MsgBoxError(Format("Cannot find or generate ""{}"" . The program will exit.", dstfile))
 			ExitApp, 4
 		}
 		
-		if(1) ;if(ErrorLevel==0) ; success
+		; Generate customize.ahk from customize.ahk.sample as well
+		
+		dst_customize_ahk := A_ScriptDir "\customize.ahk"
+		FileCopy, % A_ScriptDir "\customize.ahk.sample" , % dst_customize_ahk , 0 ; no overwrite
+		if(!FileExist(dst_customize_ahk))
 		{
-			MsgBox, 0x40, % "AmHotkey.ahk starts", 
+			dev_MsgBoxWarning("Cannot create file: " dst_customize_ahk)
+		}
+		
+		MsgBox, % msgboxoption_IconInfo, % "AmHotkey.ahk starts", 
 (
 This is the first time you run this script. 
 
@@ -352,14 +358,7 @@ to customize what AHK modules to load into this program.
 
 Click OK to continue.
 )
-			Reload
-		}
-		else
-		{
-			MsgBox, 0x10, % "AmHotkey.ahk starts error!",  % Format("Cannot find or generate ""{}"" . The program will exit.", dstfile)
-	;	no_ahk_modules := "(no modules)`n`nMaybe you should get a copy of _more_includes_.ahk from _more_includes_.ahk.sample"
-			ExitApp, 4
-		}
+		Reload
 	}
 	;
 	MsgBox, 0x40, Autohotkey script loading info, 
