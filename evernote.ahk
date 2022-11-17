@@ -2094,21 +2094,41 @@ Evernote_PastePlainText()
 	;Send !em ;// -- old style, Popping up main menu is not so reliable.
 }
 
-
-#IfWinActive ahk_class ENMainFrame
-
-CapsLock & Left:: 
+Evernote_ClickNoteListArea()
+{
 	; ControlClick, ENSnippetListCtrl1, A, , LEFT
 		; [2015-01-22] In Evernote 5.8.1, this is danger! Although it seems to work, but sometimes 
 		; it moves some clip to a strange location.
 		; So use ClickInActiveWindow() instead.
 	ClickInActiveWindow(1/5, 1/2, false)
-return
+}
+
+Evernote_GotoNoteListFirstItem()
+{
+	; In my convention, this causes ENMainFrame go to the newest clip.
+	; I conventionally sort all my notes in last-updated order.
+
+	Send {F6}
+	; -- This clears current Notebook selection, so that note-list area displays
+	; all clips, not just clips from a single Notebook.
+	
+	Evernote_ClickNoteListArea()
+	
+	Send {Home}
+	; -- Go to first item in the list.
+}
+
+#IfWinActive ahk_class ENMainFrame
+
+CapsLock & Left:: Evernote_ClickNoteListArea()
+
 CapsLock & Right:: 
 	Evernote_ClickEditingArea()
 	; Tip: Press Caps+(Right Arrow, 2 or more times) to clearly see where the caret is,
 	; because double click select(highlight) a word, triple click select a whole line.
 return
+
+CapsLock & Up:: Evernote_GotoNoteListFirstItem()
 
 ^!s:: Send +!n ; Jump to Notebook(dropdown list)
 
@@ -2126,9 +2146,9 @@ return
 
 #IfWinActive ahk_class ENSingleNoteView
 
-CapsLock & Right:: 
-	Evernote_ClickEditingArea()
-return
+CapsLock & Right:: Evernote_ClickEditingArea()
+
+
 ESC:: ; Do not allow ESC to close snippet window
 	if(dev_IsWinclassExist("PYJJ_COMPUI_WND") || dev_IsWinclassExist("QQPinyinCompWndTSF"))
 	{
