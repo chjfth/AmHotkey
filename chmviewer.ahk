@@ -4,6 +4,7 @@ AUTOEXEC_chmviewer: ; Workaround for Autohotkey's ugly auto-exec feature. Don't 
 global chmedt_ToolbarX0 := 300 ; change this to the same width of UI's left pane
 global chmedt_ToolbarY := 104
 global chmedt_Xcolor := chmedt_ToolbarX0 + 268
+global chmedt_XFontsize := chmedt_ToolbarX0 + 360
 
 Init_ChmEditor()
 
@@ -148,6 +149,13 @@ ChmEditor_PopupColorCombo()
 {
 	ClickInActiveWindow(chmedt_Xcolor, chmedt_ToolbarY, true) ; Popup the color selection combobox
 }
+
+ChmEditor_PopupFontsizeCombo()
+{
+	ClickInActiveWindow(chmedt_XFontsize, chmedt_ToolbarY, true)
+}
+
+F9:: ChmEditor_PopupFontsizeCombo()
 
 ^F12:: ChmEditor_SetTextColor(128, 128, 128) ;grey
 ^p::   ChmEditor_SetTextColor(180, 100, 255) ;purple
