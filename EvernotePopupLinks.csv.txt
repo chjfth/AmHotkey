@@ -4,7 +4,7 @@
 https://www.evernote.com/shard/s21/nl/2425275/08cea251-4484-4a3d-afd0-22ae81f0bc47 , WinDev:WinAPI , Windows API 相关
 https://www.evernote.com/shard/s21/nl/2425275/4586fb5e-4414-4e81-8ea8-75bf28d9d666 , WinDev:WinGUI , Windows UI 编程
 https://www.evernote.com/shard/s21/nl/2425275/718144a8-3879-4a58-bddd-b689b2866e2e , WinDev:MSCOM , 微软组件对象模型
-https://www.evernote.com/shard/s21/nl/2425275/69f3dcbe-21a5-4de7-b7d7-c2a8cd52d9ed , WinDev:WinSecuAPI, Security API
+https://www.evernote.com/shard/s21/nl/2425275/69f3dcbe-21a5-4de7-b7d7-c2a8cd52d9ed , WinDev:WinSecuAPI, WinNT Security API
 https://www.evernote.com/shard/s21/nl/2425275/a56322fb-1dc6-4f88-b939-f5c5a90e51ff , WinDev:WinMisc , 杂类 Windows 编程
 https://www.evernote.com/shard/s21/nl/2425275/c07f9c0a-b536-4ecb-9254-2d422564da11 , WinDev:MSBuild
 https://www.evernote.com/shard/s21/nl/2425275/850c9be2-7b91-4d85-965e-646923bc22c1 , WinDev:VSIDE , Visual Studio IDE
@@ -28,6 +28,7 @@ https://www.evernote.com/shard/s21/nl/2425275/f297ca74-4311-4fa2-a1e0-ec18964ab1
 https://www.evernote.com/shard/s21/nl/2425275/b86653d1-f665-48db-a87e-f651ab52f009 , Windows一般话题:WinMgmt ,Windows 系统管理
 https://www.evernote.com/shard/s21/nl/2425275/06e2eb0e-2d37-48f5-9df6-bf287eb30f03 , Windows一般话题:WinsvrMgmt , Windows Server 管理
 https://www.evernote.com/shard/s21/nl/2425275/a56322fb-1dc6-4f88-b939-f5c5a90e51ff , Windows一般话题:WinMisc , 杂类 Windows 收集帖
+https://www.evernote.com/shard/s21/nl/2425275/61130b53-504e-45f2-8bca-834e32261fae , Windows一般话题:WinRegKeys 
 https://www.evernote.com/shard/s21/nl/2425275/7dd94f40-6dcd-43d2-b0d3-eed6fb3030ed , Windows一般话题:WinPE
 https://www.evernote.com/shard/s21/nl/2425275/b60a8772-afb4-4cb3-9728-00d230fa7c09 , Windows一般话题:WinToGo , Windows-To-Go
 https://www.evernote.com/shard/s21/nl/2425275/6a06a3d1-d5f4-4af9-98f3-12ed3daff442 , Windows一般话题:BOOTMGR , Vista+ Boot manager
@@ -51,6 +52,7 @@ https://www.evernote.com/shard/s21/nl/2425275/7d2bfa22-fe88-4074-86fe-2a087ee972
 https://www.evernote.com/shard/s21/nl/2425275/431cba60-f0b4-4223-9c05-b9c623425c25 , Programming:CodeSnip , 其他函数库/代码片段
 https://www.evernote.com/shard/s21/nl/2425275/9c9bc2d0-31a0-41b4-9382-84353b73ecfa , Programming:TLS/SSL ,
 https://www.evernote.com/shard/s21/nl/2425275/ade2d8f1-be74-43bc-895a-6781fe05565c , Programming:CCxx , C/C++ 相关
+https://www.evernote.com/shard/s21/nl/2425275/ec194f0c-fbba-4abf-94a0-70beb26767c9 , Programming:APIANNO , API Annotation
 
 https://www.evernote.com/shard/s21/nl/2425275/ade2d8f1-be74-43bc-895a-6781fe05565c , 编程语言:CCxx , C/C++
 https://www.evernote.com/shard/s21/nl/2425275/b49be72e-4bbe-4949-b95b-a777b7ed23a0 , 编程语言:BATCMD , Windows batch script
@@ -169,4 +171,5 @@ https://www.evernote.com/shard/s21/nl/2425275/e00cbd1d-f6a6-4b5f-8660-5b80c22056
 https://www.evernote.com/shard/s21/nl/2425275/a37b1d2e-e4aa-48c1-b2e2-b533ca7fa56d , Recent:EnumLocales
 https://www.evernote.com/shard/s21/nl/2425275/56b3b85f-2e31-4ff6-b873-a75fe076dfa1 , Recent:DefaultLocales
 https://www.evernote.com/shard/s21/nl/2425275/326e3905-ea87-4694-a54c-8ea3ede4b349 , Recent:Zhihu_WinLocale
+https://www.evernote.com/shard/s21/nl/2425275/537afc56-a58a-40fc-8206-8e935a13d71d , Recent:AccessMaster
 

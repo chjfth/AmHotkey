@@ -784,8 +784,11 @@ ctlmove_AimControlUnderMouse()
 		}
 		else
 		{
-			dev_TooltipAutoClear(Format("ctlmove_AimControlUnderMouse(): Your mouse is not above an active window. I will not work. htopwin={} , classnn={}"
-				, mouse_at_htopwin, clasnn), 5000)
+			dev_TooltipAutoClear(Format("ctlmove_AimControlUnderMouse(): `n`n"
+				. "Your mouse is not above an active window. I will not work. htopwin={} , classnn={}`n`n"
+				. "But if you are hovering on a comboxbox dropdown, this may be a misreport and please try again."
+				, mouse_at_htopwin, clasnn)
+				, 9900)
 			return
 		}
 	}
