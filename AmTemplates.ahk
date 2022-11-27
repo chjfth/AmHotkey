@@ -331,6 +331,9 @@ Amt_ShowGui(inipath)
 	GuiControl, AMT:, g_amtEdtOutdirUser, % g_amtEdtOutdirUser
 	
 ;	applydir := dev_FindVacantFilename(inidir "-Apply{}")
+	
+	Amt_RegenGuidsByCheckbox()
+	; -- to avoid using stale auto-GUIDs from maybe several hours/days agao.
 
 	Amt_ResyncUI()
 }
