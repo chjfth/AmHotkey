@@ -3193,6 +3193,16 @@ dev_LocalTimeZoneMinutesStr()
 		return Format("-{:02X}{:02X}", (-tzminutes)/60, Mod(-tzminutes, 60))
 }
 
+dev_IsShiftKeyDown()
+{
+	GetKeyState, state, Shift
+	if(state=="D")
+	    return true
+	else
+	    return false
+
+}
+
 ;==============================================================================
 #Include *i _more_includes_.ahk ;This should be the final statement of this ahk
 ;==============================================================================

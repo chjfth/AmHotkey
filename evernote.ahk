@@ -246,6 +246,8 @@ Evp_ImagePreviewCreateGui()
 	Gui, EVP:Add, Button, Section vg_evpBtnDismiss gEVPGuiEscape, % "Dismiss"
 	
 	Gui, EVP:Show, % " xCenter w" . g_evpGuiDefaultWidth, % Evp_WinTitle()
+	
+	OnMessage(0x200, Func("Evp_WM_MOUSEMOVE"))
 
 	SetTimer, timer_EvpCheckProgress, 500
 }
@@ -344,6 +346,9 @@ Evp_TimerOff()
 Evp_CleanupUI()
 {
 	Evp_TimerOff()
+	
+	OnMessage(0x200, Func("Evp_WM_MOUSEMOVE"), 0) ; remove message hook
+	
 	Gui, EVP:Destroy
 }
 
@@ -354,6 +359,18 @@ EVPGuiEscape:
 Evp_WinTitle()
 {
 	return "Everpic"
+}
+
+Evp_WM_MOUSEMOVE()
+{
+	if(A_GuiControl=="g_evpBtnOK")
+	{
+		tooltip, % "Shift+click to keep this dialog-box on screen."
+	}
+	else if(A_Gui=="EVP")
+	{
+		tooltip ; hide
+	}
 }
 
 Evp_WaitingPreviewShowErrMsg(msg, detail:="")
@@ -589,17 +606,25 @@ Evp_BtnOK()
 	; in case Evernote fail to actually store my picture in the note.
 	dir_everpic_save := A_AppData . "\Everpic-save"
 	FileCreateDir, %dir_everpic_save%
-	FileCopy, %imgfilepath%, %dir_everpic_save%
+	FileCopy, %imgfilepath%, %dir_everpic_save%, 1 ; 1=overwrite
 	if(ErrorLevel) {
 		; Note: We did a non-overwrite copy, if destination file exist, we get ErrorLevel.
-		MsgBox, % "Unexpect: Fail to copy(overwrite) your image file to " . dir_everpic_save
+		MsgBox, % "Unexpect: Fail to copy your image file to " . dir_everpic_save
 	}
 	
-	Evp_CleanupUI()
+	if(dev_IsShiftKeyDown())
+	{
+		dev_ClipboardSetHTML(html, false) ; Keep Everpic UI on screen
+		
+		dev_MsgBoxInfo("HTML content referring to this image has been placed into Clipboard.")
+	}
+	else
+	{
+		Evp_CleanupUI()
+		dev_ClipboardSetHTML(html, true, g_evpHwndToPaste)
 
-	dev_ClipboardSetHTML(html, true, g_evpHwndToPaste)
-
-	Evp_CleanupOldTemp()
+		Evp_CleanupOldTemp()
+	}
 }
 
 Evp_CleanupOldTemp()
