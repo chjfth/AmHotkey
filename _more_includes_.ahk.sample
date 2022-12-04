@@ -6,6 +6,7 @@
 #Include WinClipAPI.ahk
 #Include WinClip.ahk
 #Include CtlColorStatic.ahk
+; #Include libs\Gdip_All.ahk ; need by everpic
 
 #Include *i quick-switch-app.ahk
 
