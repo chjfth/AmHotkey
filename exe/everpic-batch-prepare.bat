@@ -38,13 +38,13 @@ for %%A in ("%fpinput%") do (
 )
 
 set fpImageList=%fpPrefix%.imagelist.txt
-echo.> "%fpImageList%"
+rem echo.> "%fpImageList%"
 
 set fpProgressDone=%fpPrefix%.progress.done.txt
 echo.> "%fpProgressDone%"
 
 REM 
-set pngCfgs=8bit#256 5bit#32 3bit#8
+set pngCfgs=png8bit#256 png5bit#32 png3bit#8
 REM
 set jpgQuals=95 80 60 40 20 10
 
@@ -77,7 +77,7 @@ for %%A in (%pngCfgs%) do (
 	echo !donecfgs!/%totalcfgs%> "%fpProgressDone%"
 )
 
-set pctchar=%
+
 for %%A in (%jpgQuals%) do (
 
 	set fpoutput=%fpPrefix%.q%%A.jpg
@@ -93,11 +93,6 @@ for %%A in (%jpgQuals%) do (
 	set /a donecfgs=!donecfgs!+1
 	echo !donecfgs!/%totalcfgs%> "%fpProgressDone%"
 )
-
-
-call :Echos fpPrefix=%fpPrefix%
-
-
 
 exit /b %ERRORLEVEL%
 
@@ -144,7 +139,7 @@ REM 	filekb=33
     set filesize=%%~zA
   )
   endlocal & (
-    set /a "%~1=%filesize%/1000"
+    set /a "%~1=%filesize%/1024"
   )
 exit /b 0
 

@@ -57,6 +57,13 @@ global g_evtblColorPresets := [ "#f0f0f0,清淡灰"
 	, "#FFFFFF,Pure White" ]
 
 
+global g_evpTempDir := A_Temp "\Everpic" ; 2022.12
+global gc_evpBatchConvertExecpath := A_ScriptDir "\exe\everpic-batch-prepare.bat"
+global g_evpBatchProgressFilepath
+global g_evpImageNamePrefix
+global g_evpImageWidth
+global g_evpImageHeight
+
 global g_dirEverpic := A_ScriptDir . "\Everpic" ; chj's default
 global g_pyEverpicBatch := "everpic_batch.pyw"
 global g_pyEverpic_w := "everpic_w.pyw"
@@ -246,6 +253,9 @@ Evp_ImagePreviewCreateGui()
 	; This will generate a series of image previews with different quality, with Gui,
 	; then user can pick the "best" one to use(to paste into Evernote).
 
+	if(!Evp_ImagePreviewCreateGui_prereq())
+		return
+
 	g_evpTotalWaitedSec := 0
 	g_evp_isPicControlCreated := false
 	g_evpImglistTxtPath := ""
@@ -262,18 +272,93 @@ Evp_ImagePreviewCreateGui()
 	Gui, EVP:Add, Button, Section vg_evpBtnDismiss gEVPGuiEscape, % "Dismiss"
 	
 	Gui, EVP:Show, % " xCenter w" . g_evpGuiDefaultWidth, % Evp_WinTitle()
-	
-	everpy_path := g_dirEverpic . "\" . g_pyEverpicBatch
-	dev_TooltipAutoClear(everpy_path, 5000)
-	Run, % everpy_path . " --id=" . g_evpRandomId, , UseErrorLevel
-	if(ErrorLevel) {
-		MsgBox, "%everpy_path%" launch failed! You have to install Python and PIL library.
-		return
-		; todo: distinguish python not installed OR py exec fail
-	}
 
 	SetTimer, timer_EvpCheckProgress, 500
 }
+
+Evp_ImagePreviewCreateGui_prereq()
+{
+	fpBaseImage := Evp_GenerateBaseImage() 
+	; -- filepath of the base-image, exampe:
+	; C:\Users\win7evn\AppData\Local\Temp\Everpic\everpic-20221204_150000.png
+	
+	if(!fpBaseImage)
+		return false
+		
+	fpImageStem := dev_SplitExtname(fpBaseImage)
+		
+	fpImageList := fpImageStem ".imagelist.txt"
+	
+	FileGetSize, filekb, % fpBaseImage, K
+	
+	stageline_png32b := Format("PNG (32bit),{}KB,{}`r`n", filekb, fpBaseImage)
+
+	FileDelete, % fpImageList
+	FileAppend, % stageline_png32b, % fpImageList
+	
+	g_evpBatchProgressFilepath := fpImageStem ".progress.done.txt"
+	
+	fpbat := gc_evpBatchConvertExecpath
+	fpbatlog := fpbat ".log"
+	
+	; TODO: this batchcmd is NOT space-tolerable in its path.
+	batchcmd := Format("cmd /c ""{} {} > {}""", fpbat, fpBaseImage, fpbatlog)
+;	dev_MsgBoxInfo(batchcmd) ; debug
+
+	Run, % batchcmd, , UseErrorLevel ;Hide
+	if(ErrorLevel)
+	{
+		dev_MsgBoxError(Format("{} launch error. `n`nSee log file for reason:`n`n{}", fpbat, fpbatlog))
+		return false
+	}
+	
+	return true
+}
+
+
+Evp_GenerateBaseImage()
+{
+	; Generate the base .png image from clipboard.
+	
+	If !pToken := Gdip_Startup()
+	{
+		dev_MsgBoxError("Gdip_Startup() failed. GDI+ problem!")
+		return
+	}
+
+	fpBaseImage_ret := ""
+
+	bitmap := Gdip_CreateBitmapFromClipboard()
+	if(bitmap<=0)
+	{
+		dev_MsgBoxWarning("No bitmap in clipboard yet. Everpic can do nothing.")
+		goto EVP_CLEANUP
+	}
+
+	FormatTime, dt, , % "yyyyMMdd_HHmmss"
+	g_evpImageNamePrefix := "everpic-" dt
+
+	Gdip_GetImageDimensions(bitmap, w, h)
+	g_evpImageWidth := w
+	g_evpImageHeight := h
+	
+	fpBaseImage := Format("{}\{}.png", g_evpTempDir, g_evpImageNamePrefix)
+	
+	err := Gdip_SaveBitmapToFile(bitmap, fpBaseImage)
+	if(err) {
+		dev_MsgBoxError(Format("Gdip_SaveBitmapToFile(""{}"") fail, errcode={}.", fpBaseImage, err))
+		goto EVP_CLEANUP
+	}
+	
+	fpBaseImage_ret := fpBaseImage
+	
+EVP_CLEANUP:	
+	Gdip_DisposeImage(bitmap)
+	Gdip_Shutdown(pToken)
+	
+	return fpBaseImage_ret
+}
+
 
 Evp_TimerOff()
 {

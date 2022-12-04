@@ -7,6 +7,8 @@
 
 #Include *i custom_env.ahk ; optional 
 
+global NOERROR_0 := 0
+
 global g_winmove_unit := 50 ; window move unit small
 global g_winmove_scale := 5 ; window move 5x larger step if you tap LCtrl just before doing win move
 
@@ -3018,6 +3020,13 @@ dev_SplitPath(input, byref Filename:="")
 {
 	SplitPath, input, Filename, OutDir
 	return OutDir
+}
+
+dev_SplitExtname(input, byref dotext:="")
+{
+	SplitPath, input, Filename, OutDir, OutExt, OutNameNoExt
+	dotext := "." OutExt
+	return Format("{}\{}", OutDir, OutNameNoExt) ; the stempath
 }
 
 dev_FindVacantFilename(path_ptn, start_seq:=1, max_seq:=10000)
