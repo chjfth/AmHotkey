@@ -129,7 +129,7 @@ dev_ActivateLastSeenWindow()
 {
 	; Usage scenario: 
 	; When a Systray Autohotkey menu item wants to operate current active window, 
-	; there may not be a active window(``WinGet, Awinid, ID, A`` reports Awinid==null),
+	; there may not be an active window(``WinGet, Awinid, ID, A`` reports Awinid==null),
 	; so we can use this function to bring up the last seen active window.
 
 	WinGet, Awinid, ID, A ; cache active window unique id
@@ -1335,7 +1335,7 @@ dev_EnvGet(varname)
 	return val
 }
 
-dev_MsgBoxInfo(text) ; with a blue (i) icon
+dev_MsgBoxInfo(text, wintitle:="") ; with a blue (i) icon
 {
 	if(!wintitle)
 		wintitle := "AHK Info"
@@ -1343,7 +1343,7 @@ dev_MsgBoxInfo(text) ; with a blue (i) icon
 	MsgBox, 64, % wintitle, % text
 }
 
-dev_MsgBoxWarning(text) ; with a yellow (!) icon
+dev_MsgBoxWarning(text, wintitle:="") ; with a yellow (!) icon
 {
 	if(!wintitle)
 		wintitle := "AHK Warning"
@@ -2766,7 +2766,7 @@ ClipboardGet_HTML( byref Data )
 Return dataL ? dataL : 0
 }
 
-dev_ClipboardSetHTML(html, is_paste_now:=false)
+dev_ClipboardSetHTML(html, is_paste_now:=false, wait_hwnd:=0)
 {
 	; [2022-04-28] Limitation: 
 	; After calling WinClip.SetHTML(), the clipboard contains only
@@ -2775,9 +2775,31 @@ dev_ClipboardSetHTML(html, is_paste_now:=false)
 
 	WinClip.Clear()
 	WinClip.SetHTML(html)
-	
+
 	if(is_paste_now)
+	{
+		if(wait_hwnd)
+		{
+			dev_TooltipAutoClear(Format("Wait for paste-target window to be active. Hwnd={}", wait_hwnd))
+			WinWaitActive, % "ahk_id " wait_hwnd, , 1.0
+
+			if not ErrorLevel 
+			{
+				tooltip ; clear tooltip
+			}
+			else
+			{
+				dev_MsgBoxWarning(Format("Fail to wait for paste-target window to become active.`r`n`r`n"
+						. "Hwnd={}`r`n`r`n"
+						. "So I can not paste for you. You can manually paste it by typing Ctrl+V ."
+						, wait_hwnd)
+					, "AmHotkey - Everpic Wrinkle")
+				return ; So not paste into wrong window.
+			}
+		}
+		
 		WinClip.Paste()
+	}
 }
 
 dev_IsWinclassExist(classname)

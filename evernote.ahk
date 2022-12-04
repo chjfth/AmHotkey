@@ -70,6 +70,8 @@ global g_evpImageHeight
 
 global gc_evpCleanupTempDirDays := 1
 
+global g_evpHwndToPaste
+
 global g_evpGuiDefaultWidth := 600 ; const
 global g_evpMarginX := 10 ; const
 global g_evpMarginY := 10 ; const
@@ -224,6 +226,10 @@ Evp_ImagePreviewCreateGui()
 
 	if(!Evp_ImagePreviewCreateGui_prereq())
 		return
+
+	; Remember current active window
+	WinGet, Awinid, ID, A
+	g_evpHwndToPaste := Awinid
 
 	g_evpTotalWaitedSec := 0
 	g_evp_isPicControlCreated := false
@@ -579,8 +585,6 @@ Evp_BtnOK()
 		, g_evpImageNamePrefix ; {6}
 		, dev_LocalTimeZoneMinutesStr()) ;{7} timezone 
 
-	dev_ClipboardSetHTML(html, true)
-	
 	; Save the used picture to a permanent directory, so that we can get it back 
 	; in case Evernote fail to actually store my picture in the note.
 	dir_everpic_save := A_AppData . "\Everpic-save"
@@ -592,7 +596,9 @@ Evp_BtnOK()
 	}
 	
 	Evp_CleanupUI()
-	
+
+	dev_ClipboardSetHTML(html, true, g_evpHwndToPaste)
+
 	Evp_CleanupOldTemp()
 }
 
