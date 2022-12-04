@@ -68,6 +68,8 @@ global g_evpImageNamePrefix
 global g_evpImageWidth
 global g_evpImageHeight
 
+global gc_evpCleanupTempDirDays := 1
+
 global g_evpGuiDefaultWidth := 600 ; const
 global g_evpMarginX := 10 ; const
 global g_evpMarginY := 10 ; const
@@ -91,7 +93,6 @@ global g_evpPic ; gui-assoc, Picture control
 global g_evp_isPicControlCreated := false
 
 global g_evpLaunchTimeoutSec := 3
-global g_evpIsPyLaunched := false
 global g_evpTotalWaitedSec := 0.0 ; seconds
 ;global g_evpClipboardLastOKSec ; todo: later (workaround for clipboard robbing by other program)
 
@@ -301,7 +302,7 @@ Evp_GenerateBaseImage()
 	if(bitmap<=0)
 	{
 		dev_MsgBoxWarning("No bitmap in clipboard yet. Everpic can do nothing.")
-		goto EVP_CLEANUP
+		goto EVP_CLEANUP_20221204
 	}
 
 	FormatTime, dt, , % "yyyyMMdd_HHmmss"
@@ -316,12 +317,12 @@ Evp_GenerateBaseImage()
 	err := Gdip_SaveBitmapToFile(bitmap, fpBaseImage)
 	if(err) {
 		dev_MsgBoxError(Format("Gdip_SaveBitmapToFile(""{}"") fail, errcode={}.", fpBaseImage, err))
-		goto EVP_CLEANUP
+		goto EVP_CLEANUP_20221204
 	}
 	
 	fpBaseImage_ret := fpBaseImage
 	
-EVP_CLEANUP:	
+EVP_CLEANUP_20221204:	
 	Gdip_DisposeImage(bitmap)
 	Gdip_Shutdown(pToken)
 	
@@ -334,14 +335,14 @@ Evp_TimerOff()
 	SetTimer, timer_EvpCheckProgress, Off
 }
 
-Evp_Cleanup()
+Evp_CleanupUI()
 {
 	Evp_TimerOff()
 	Gui, EVP:Destroy
 }
 
 EVPGuiEscape:
-	Evp_Cleanup()
+	Evp_CleanupUI()
 	return
 
 Evp_WinTitle()
@@ -590,9 +591,37 @@ Evp_BtnOK()
 		MsgBox, % "Unexpect: Fail to copy(overwrite) your image file to " . dir_everpic_save
 	}
 	
-	Evp_Cleanup()
+	Evp_CleanupUI()
+	
+	Evp_CleanupOldTemp()
 }
 
+Evp_CleanupOldTemp()
+{
+	; Cleanup old everpic-xxx files in C:\Users\win7evn\AppData\Local\Temp\Everpic
+
+	Loop, Files, % g_evpTempDir . "\*"
+	{
+		filename := A_LoopFileName ; example: "everpic-20221204_220000.q40.jpg"
+		
+		foundpos := RegExMatch(filename, "^everpic-([0-9]+)_([0-9]+)", subpat)
+		if(foundpos>0)
+		{
+			file_datetime := subpat1 . subpat2
+			
+			diff_seconds := A_Now
+			EnvSub diff_seconds, file_datetime, Seconds
+;			dev_MsgBoxInfo("Diff seconds: " diff_seconds)
+			
+			N := gc_evpCleanupTempDirDays
+			if(diff_seconds >= 3600*24*N) ; if older than N days 
+			{
+				FileDelete, % g_evpTempDir "\" filename
+			}
+		}
+
+	}
+}
 
 ; ========================= EverTable(Evtbl) code starts =========================
 
