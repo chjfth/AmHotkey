@@ -67,7 +67,7 @@ for %%A in (%pngCfgs%) do (
 	
 	call :getfilesize_KB filekb "!fpoutput!"
 	
-	set stageline=PNG ^(!colors! colors^),!filekb!KB,!fpoutput!
+	set stageline=PNG ^(!colors! colors^),!filekb! KB,!fpoutput!
 	
 	echo !stageline!
 	echo !stageline!>> "%fpImageList%"
@@ -85,7 +85,7 @@ for %%A in (%jpgQuals%) do (
 
 	call :getfilesize_KB filekb "!fpoutput!"
 	
-	set stageline=JPG ^(%%A%%^),!filekb!KB,!fpoutput!
+	set stageline=JPG ^(%%A%%^),!filekb! KB,!fpoutput!
 	echo !stageline!
 	echo !stageline!>> "%fpImageList%"
 	

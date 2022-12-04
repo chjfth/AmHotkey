@@ -574,13 +574,13 @@ Evp_BtnOK()
 (
 <div><img src="http://localhost:2017/Everpic-save/{1}" alt="max-width:{2}px" /><br>
 <span style="font-size: 10px; color: rgb(144,144,144)">
-{4} KB, {2}*{3}, {5}, {6} ({7})
+{4}, {2}*{3}, {5}, {6} ({7})
 </span></div>~
 )
 	html := Format(html_fmt
 		, imgfilename ; {1}
 		, g_evpImageWidth, g_evpImageHeight ; {2}, {3} width and height
-		, imgsizekb ; {4}
+		, imgsizekb ; {4} "33KB" etc
 		, imghint ; {5} 
 		, g_evpImageNamePrefix ; {6}
 		, dev_LocalTimeZoneMinutesStr()) ;{7} timezone 
