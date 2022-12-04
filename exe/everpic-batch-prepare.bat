@@ -37,12 +37,6 @@ for %%A in ("%fpinput%") do (
 	set fpPrefix=%%~dpA%%~nA
 )
 
-set fpImageList=%fpPrefix%.imagelist.txt
-rem echo.> "%fpImageList%"
-
-set fpProgressDone=%fpPrefix%.progress.done.txt
-echo.> "%fpProgressDone%"
-
 REM 
 set pngCfgs=png8bit#256 png5bit#32 png3bit#8
 REM
@@ -55,6 +49,11 @@ call :cfgcount %jpgQuals%
 set /a totalcfgs=%totalcfgs%+%ERRORLEVEL%
 
 set donecfgs=0
+
+set fpImageList=%fpPrefix%.imagelist.txt
+
+set fpProgressDone=%fpPrefix%.progress.done.txt
+echo 0/%totalcfgs%> "%fpProgressDone%"
 
 
 for %%A in (%pngCfgs%) do (
@@ -86,7 +85,7 @@ for %%A in (%jpgQuals%) do (
 
 	call :getfilesize_KB filekb "!fpoutput!"
 	
-	set stageline=JPG ^(%%A%% quality^),!filekb!KB,!fpoutput!
+	set stageline=JPG ^(%%A%%^),!filekb!KB,!fpoutput!
 	echo !stageline!
 	echo !stageline!>> "%fpImageList%"
 	
@@ -124,6 +123,15 @@ exit /b 0
   REM Usage example:
   REM call :SetErrorlevel 4
 exit /b %1
+
+:SleepSeconds
+  REM Here, we use ping.exe to simluate delay.
+  REM Don't use `timeout /t 3` etc, bcz timeout will refuse to work from VSIDE called .bat,
+  REM Run `timeout /t 3 < some-exist-file.txt` and you can see the fail.
+  call :Echos Sleep %~1 seconds...
+  ping 127.0.0.1 -n %~1 -w 1000 > nul
+  ping 127.0.0.1 -n 2 -w 1000 > nul
+exit /b
 
 REM ====
 

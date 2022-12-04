@@ -100,6 +100,12 @@ return
 ;################################### Global-exec section ENDS ################################### 
 ;################################################################################################ 
 
+AmDoInit()
+{
+	; [2022-11-02] Move this to chjmisc.ahk, other people may not need it.
+;	Menu, tray, add  ; Creates a separator line.
+;	SystrayMenu_Add_MuteClicking()
+}
 
 ; ########## Some debugging hotkeys first ##########
 
@@ -200,11 +206,12 @@ hwndCtrl under mouse is "%hctrl_undermouse%"
 }
 
 
-AmDoInit()
+dev_assert(torf)
 {
-	; [2022-11-02] Move this to chjmisc.ahk, other people may not need it.
-;	Menu, tray, add  ; Creates a separator line.
-;	SystrayMenu_Add_MuteClicking()
+	if(torf!=true)
+	{
+		dev_MsgBoxError(dev_getCallStack(), "AHK Assertion Fail! Stacktrace >>>")
+	}
 }
 
 SystrayMenu_Add_MuteClicking()
@@ -1330,17 +1337,26 @@ dev_EnvGet(varname)
 
 dev_MsgBoxInfo(text) ; with a blue (i) icon
 {
-	MsgBox, 64, % "AHK Info", % text
+	if(!wintitle)
+		wintitle := "AHK Info"
+
+	MsgBox, 64, % wintitle, % text
 }
 
 dev_MsgBoxWarning(text) ; with a yellow (!) icon
 {
-	MsgBox, 48, % "AHK Warning", % text
+	if(!wintitle)
+		wintitle := "AHK Warning"
+
+	MsgBox, 48, % wintitle, % text
 }
 
-dev_MsgBoxError(text) ; with a red (x) icon
+dev_MsgBoxError(text, wintitle:="") ; with a red (x) icon
 {
-	MsgBox, 16, % "AHK Error", % text
+	if(!wintitle)
+		wintitle := "AHK Error"
+
+	MsgBox, 16, % wintitle, % text
 }
 
 dev_MsgBoxYesNo(text, default_yes:=true, parent_winid:=0, icon:=64)
@@ -3135,6 +3151,25 @@ dev_IsExeRunning(exename)
 	}
 }
 
+dev_LocalTimeZoneInMinutes()
+{
+	; For China, it returns 480 (8*60)
+	
+	VarSetCapacity(Tzinfo, 200, 0)
+	DllCall("GetTimeZoneInformation", Ptr,&Tzinfo)
+	
+	tzminutes := NumGet(&Tzinfo, 0, "Int")
+	return -tzminutes
+}
+
+dev_LocalTimeZoneMinutesStr()
+{
+	tzminutes := dev_LocalTimeZoneInMinutes()
+	if(tzminutes>=0)
+		return Format("+{:02X}{:02X}", tzminutes/60, Mod(tzminutes, 60))
+	else
+		return Format("-{:02X}{:02X}", (-tzminutes)/60, Mod(-tzminutes, 60))
+}
 
 ;==============================================================================
 #Include *i _more_includes_.ahk ;This should be the final statement of this ahk

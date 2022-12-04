@@ -57,51 +57,21 @@ global g_evtblColorPresets := [ "#f0f0f0,清淡灰"
 	, "#FFFFFF,Pure White" ]
 
 
+;;;;;;;; Everpic global vars ;;;;;;;;;;
+
 global g_evpTempDir := A_Temp "\Everpic" ; 2022.12
 global gc_evpBatchConvertExecpath := A_ScriptDir "\exe\everpic-batch-prepare.bat"
+global g_evpImglistTxtPath
 global g_evpBatchProgressFilepath
+global g_evpBaseImageFilepath
 global g_evpImageNamePrefix
 global g_evpImageWidth
 global g_evpImageHeight
 
-global g_dirEverpic := A_ScriptDir . "\Everpic" ; chj's default
-global g_pyEverpicBatch := "everpic_batch.pyw"
-global g_pyEverpic_w := "everpic_w.pyw"
-
-; Q: How to debug everpic.py program?
-; A: Step 1
-; Run the Python scripts from command line and see the error message.
-;
-;	everpic_w.pyw --input=c:\users\chj\appdata\local\temp\Everpic\mytest.png
-;
-; or, when you have a image/image-filepath in clipboard, just run
-;
-;   everpic_w.pyw
-;
-; -- CF_HTML content should be generated in clipboard, and Ctrl+V should paste 
-;    that CF_HTML content into Evernote clip.
-;    Note: If input png is not in dir %LocalAppData%\temp\Everpic , the pasted
-;    content may probably contains broken image.
-;
-; In case it failed, you can see error information by calling text-mode py-script:
-;
-;   everpic.py
-;
-;
-; Step 2, run everpic_batch.pyw when you have a image/image-filepath in clipboard:
-;
-;	python everpic_batch.pyw 
-;
-; -- you should see some text printed on CMD window like this:
-;	txtpath= c:\users\chj\appdata\local\temp\Everpic\imagelist-20150319_212257.467.(455x245).txt
-; and check that .txt(containing imgspec list) to diagnose.
-
-;;;;;;;; Everpic global vars ;;;;;;;;;;
-
 global g_evpGuiDefaultWidth := 600 ; const
 global g_evpMarginX := 10 ; const
 global g_evpMarginY := 10 ; const
-global g_evpListboxWidth := 140 ; const
+global g_evpListboxWidth := 160 ; const
 global g_evpGapX := 10 ; const, gap between listbox and pic-control
 global g_evpWindowBorder := 14
 global g_evpBottomLineHeight := 16 ; for Button OK/Dismiss/Use_This
@@ -111,7 +81,6 @@ global g_evpRandomId ; not used yet
 global g_HwndEVPGui
 
 global g_evpTitleLine ; gui-assoc
-;global g_evpTitleStatus ; gui-assoc
 global g_evpSecondLine ; gui-assoc
 global g_evpBtnDismiss ; gui-assoc
 global g_evpBtnOK ; gui-assoc
@@ -124,11 +93,10 @@ global g_evp_isPicControlCreated := false
 global g_evpLaunchTimeoutSec := 3
 global g_evpIsPyLaunched := false
 global g_evpTotalWaitedSec := 0.0 ; seconds
-global g_evpClipboardLastOKSec ; todo: later (workaround for clipboard robbing by other program)
+;global g_evpClipboardLastOKSec ; todo: later (workaround for clipboard robbing by other program)
 
-global g_evpImglistTxtPath
 global g_evp_arImageStore := [] ; g_evp_arImageStore[1] refers to the first previewed image.
-	; members: .hint .path
+	; members: .hint .sizekb .path
 global g_evpCurImageFile ; current select image filepath
 global g_evpImageZoom := 1
 
@@ -258,7 +226,6 @@ Evp_ImagePreviewCreateGui()
 
 	g_evpTotalWaitedSec := 0
 	g_evp_isPicControlCreated := false
-	g_evpImglistTxtPath := ""
 	Random, g_evpRandomId
 
 	Gui, EVP:Destroy ; destroy old
@@ -291,13 +258,11 @@ Evp_ImagePreviewCreateGui_prereq()
 	
 	FileGetSize, filekb, % fpBaseImage, K
 	
-	stageline_png32b := Format("PNG (32bit),{}KB,{}`r`n", filekb, fpBaseImage)
+	stageline_png32b := Format("PNG (32-bit),{}KB,{}`r`n", filekb, fpBaseImage)
 
 	FileDelete, % fpImageList
 	FileAppend, % stageline_png32b, % fpImageList
-	
-	g_evpBatchProgressFilepath := fpImageStem ".progress.done.txt"
-	
+
 	fpbat := gc_evpBatchConvertExecpath
 	fpbatlog := fpbat ".log"
 	
@@ -305,12 +270,16 @@ Evp_ImagePreviewCreateGui_prereq()
 	batchcmd := Format("cmd /c ""{} {} > {}""", fpbat, fpBaseImage, fpbatlog)
 ;	dev_MsgBoxInfo(batchcmd) ; debug
 
-	Run, % batchcmd, , UseErrorLevel ;Hide
+	Run, % batchcmd, , UseErrorLevel Hide
 	if(ErrorLevel)
 	{
 		dev_MsgBoxError(Format("{} launch error. `n`nSee log file for reason:`n`n{}", fpbat, fpbatlog))
 		return false
 	}
+	
+	g_evpImglistTxtPath := fpImageList
+	g_evpBatchProgressFilepath := fpImageStem ".progress.done.txt"
+	g_evpBaseImageFilepath := fpBaseImage
 	
 	return true
 }
@@ -401,101 +370,56 @@ Evp_SecondLineShowMsg(msg)
 	GuiControl, EVP:, g_evpSecondLine, % msg
 }
 
-timer_EvpCheckProgress:
-	Evp_CheckProgress()
-	return
-
-Evp_GetClipboardSafe()
+timer_EvpCheckProgress()
 {
-	count := 0
-	while true
-	{
-		try {
-			data := Clipboard
-				; May get temporary error of "Can't open clipboard for reading", so catch it and retry
-		} catch e {
-			count += 1
-			tooltip, % "evernote.ahk: Retrying(" . count . ") fetching clipboard content..."
-			Sleep, 500
-			continue
-		}
-		break
-	}
-	tooltip
-	return data
-}
+	; Check file content in g_evpBatchProgressFilepath to see whether the background
+	; image-list generation has completed. Sample file:
+	; 	C:\Users\win7evn\AppData\Local\Temp\Everpic\everpic-20221204_165806.progress.done.txt
+	; File content, just one line, can be:
+	; 1/9
+	; 2/9
+	; ...
+	; 9/9
+	;
+	; If 9/9 is reached, it means completed.
 
-Evp_CheckProgress()
-{
-	; Check clipboard text for progress.
-	; Clipboard should have content like
-	;
-	;	[EverpicDone:1/8]PNG,32-bit,88KB|c:\users\...\everpic-20150318_111149.509.png
-	;
-	; When it reaches
-	;
-	;	[EverpicDone:8/8]....
-	;
-	; I'll consider it done.
-	
 	g_evpTotalWaitedSec += 0.5
 	
-	proghint := Evp_GetClipboardSafe() ; proghint := Clipboard
-
-	foundpos := RegExMatch(proghint, "^\[EverpicDone:([0-9#]+)/([0-9#]+)\]", subpat)
-	if(foundpos>0)
+	fpProgress := g_evpBatchProgressFilepath
+	if(!FileExist(fpProgress))
 	{
-		if(subpat1=="0" and subpat2=="0")
-		{
-			Evp_WaitingPreviewShowErrMsg("Nothing to convert. No image or image-filename in clipboard.")
-			Evp_TimerOff()
-			return ; User should dismiss the preview dialog manually
-		}
+		Evp_SecondLineShowMsg(Format("Waiting for progress file creation: {}", fpProgress))
+		return 
 	}
-	else
+
+	FileReadLine, progline, % fpProgress, 1
+	
+	nums := StrSplit(progline, "/")
+	nDone := nums[1]
+	nTotal := nums[2]
+
+	if(!nTotal)
 	{
-		if((not g_evpIsPyLaunched) and g_evpTotalWaitedSec>=g_evpLaunchTimeoutSec)
-		{
-			Evp_WaitingPreviewShowErrMsg("Python script '" . g_pyEverpicBatch . "' possibly fails to launch. Continue waiting or dismiss.")
-		}
+		Evp_WaitingPreviewShowErrMsg("Something Wrong!", "Bad content in progress file: " fpProgress)
+		MsgBox, % Format("[{}]", progline)
+		Evp_TimerOff()
 		return
 	}
-
-	g_evpIsPyLaunched := true
 	
-	foundpos := RegExMatch(proghint, "^\[EverpicDone:([0-9#]+)/([0-9#]+)\]\(([0-9]+)x([0-9]+)\)(.+)\|(.+)", subpat)
-		; Sample:
-		;	[EverpicDone:1/8](640x480)PNG,32-bit,88KB|c:\users\....png
-	if(foundpos==0)
-	{
-		; Perphaps other program rob the clipboard(not fatal)
-		; todo: check success by .txt file existence(in case clipboard robbed by other program).
-		return
-	}
+	imgw := g_evpImageWidth
+	imgh := g_evpImageHeight
 
-	g_evpClipboardLastOKSec := g_evpTotalWaitedSec
-	
-	done := subpat1
-	total := subpat2
-	imgw := subpat3
-	imgh := subpat4
-	desc := subpat5
-	imgfile := subpat6
-	; FileDelete, check.txt ;debug
-	; FileAppend, %subpat1%;%subpat2%;%subpat3%;%subpat4%;`n, check.txt ;debug
-;tooltip, EVPGOT: %done% / %total% // %imgw% / %imgh% @ %imgfile% ; debugging
-
-	if(done=="#" and total=="#")
+	if(nDone==nTotal)
 	{
 		; All previews generated successfully.
-		Evp_DisplayInitPreview(imgw, imgh, None)
-		g_evpImglistTxtPath := imgfile
+		Evp_DisplayInitPreview()
 
 		Evp_WaitingPreviewShowErrMsg("")
 		tailtext := "All previews generated. Pick one to use. (paste into Evernote etc)"
 		
 		if(g_evpImageZoom!=1)
 			zoomhint := "(Zoom " . floor(g_evpImageZoom*100) . "%) "
+		
 		Evp_SecondLineShowMsg("[" . imgw . "x" . imgh . "] " . zoomhint . tailtext )
 		
 		Evp_RefreshPreviewAllGui()
@@ -503,25 +427,27 @@ Evp_CheckProgress()
 		Evp_TimerOff()
 		return
 	}
-	else if(done<=total)
+	else if(nDone<=nTotal)
 	{
-		Evp_SecondLineShowMsg("Loading " . done . "/" . total . " ...")
-		Evp_DisplayInitPreview(imgw, imgh, imgfile)
+		Evp_SecondLineShowMsg(Format("Loading {}/{} ...", nDone, nTotal))
+		Evp_DisplayInitPreview()
 			; just to let the user know the image dimension with an arbitrary preview
 	}
-	else ; done>total (error occurred)
+	else
 	{
-		; The second line from clipboard(proghint) starts detail error info.
-		detail := RegExReplace(proghint, "^[^\n]+\n") ; remove first line
-		Evp_WaitingPreviewShowErrMsg("Error occurred executing '" . g_pyEverpicBatch . "'. Error detail below.", detail)
+		Evp_WaitingPreviewShowErrMsg("Something went Wrong, nDone/nTotal!")
 		Evp_TimerOff()
 	}
 }
 
-Evp_DisplayInitPreview(imgw, imgh, imgfile)
+Evp_DisplayInitPreview()
 {
+	imgw := g_evpImageWidth
+	imgh := g_evpImageHeight
+	imgfile := g_evpBaseImageFilepath
+
 	; Do it only when the preview Pic control has not been created.
-	if(g_evp_isPicControlCreated )
+	if(g_evp_isPicControlCreated)
 		return
 
 	g_evp_isPicControlCreated := true
@@ -562,12 +488,12 @@ Evp_DisplayInitPreview(imgw, imgh, imgfile)
 
 	; Create left-side listbox and right-side picture-control.
 	GuiControl, EVP:Hide, g_evpBtnDismiss
-	Gui, EVP:Add, ListBox, % "ys xm Section r9 vg_evpImageList glb_evpListboxSelChange AltSubmit w" . g_evpListboxWidth 
+	Gui, EVP:Add, ListBox, % Format("ys xm Section r12 vg_evpImageList gEvp_ListboxSelChange AltSubmit w{}", g_evpListboxWidth)
 		; ys: Let it place where the Dismiss button was.
 	Gui, EVP:Add, Pic, % "ys vg_evpPic w" . wpreview . " h" . hpreview, % imgfile
 	;
 	Gui, EVP:Add, Edit, xm ReadOnly vg_evpCurImageFile w0
-	Gui, EVP:Add, Button, xm vg_evpBtnOK default glb_evpBtnOK, % "Use This (or press Enter)"
+	Gui, EVP:Add, Button, xm vg_evpBtnOK default gEvp_BtnOK, % "Use This (or press Enter)"
 	GuiControl, EVP:Disable, g_evpBtnOK ; Not enabled until all previews generated
 
 	; todo: adjust y position ,
@@ -593,22 +519,19 @@ Evp_RefreshPreviewAllGui()
 	
 	Loop, Read, % g_evpImglistTxtPath
 	{
-		field := StrSplit(A_LoopReadLine, "|")
-		desc := field[1]
-			; Example: "PNG(32-bit), 80KB"
-		imgfile := field[2]
-		
-		RegExMatch(desc, "^([^,]+)", subpat)
-		hint := subpat1
-			; Example: "PNG(32-bit)"
+		field := StrSplit(A_LoopReadLine, ",")
+		desc := field[1]	; Example: "PNG (32bit), 80KB"
+		filesizeKB := field[2]
+		imgfile := field[3]
 		
 		; Add desc(image variant description) to listbox
-		GuiControl, EVP:, g_evpImageList, % desc
+		GuiControl, EVP:, g_evpImageList, % Format("{}, {}", desc, filesizeKB)
 		
-		g_evp_arImageStore[A_Index] := {"hint":hint, "path":imgfile}
+		g_evp_arImageStore[A_Index] := {"hint":desc, "sizekb":filesizeKB, "path":imgfile}
+		; -- hint will be displayed as small-font footnote beneath each image inserted into Evernote clip.
 	}
 	
-	; Choose and display PNG-32 by default
+	; Choose and display PNG-32bit by default
 	GuiControl, EVP:Choose, g_evpImageList, 1
 	GuiControl, EVP:, g_evpPic, % g_evp_arImageStore[1].path
 	GuiControl, EVP:Focus, g_evpImageList
@@ -616,10 +539,7 @@ Evp_RefreshPreviewAllGui()
 	GuiControl, EVP:Enable, g_evpBtnOK
 }
 
-lb_evpListboxSelChange:
-	Evp_ListboxSelChange()
-	return
-	
+
 Evp_ListboxSelChange()
 {
 	GuiControlGet, g_evpImageList
@@ -633,31 +553,38 @@ Evp_ListboxSelChange()
 	GuiControl, EVP:, g_evpCurImageFile, % cur_imagefile
 }
 
-lb_evpBtnOK:
-	Evp_BtnOK()
-	return
-	
 Evp_BtnOK()
 {
 	GuiControlGet, g_evpImageList
-	cur_imagefile := g_evp_arImageStore[g_evpImageList].path
-	hint := g_evp_arImageStore[g_evpImageList].hint
+	imgfilepath := g_evp_arImageStore[g_evpImageList].path
+	dev_SplitPath(imgfilepath, imgfilename)
+	imghint := g_evp_arImageStore[g_evpImageList].hint ; "PNG(32-bit)" etc
+	imgsizekb := g_evp_arImageStore[g_evpImageList].sizekb
+	
+	dev_assert(StrIsStartsWith(imgfilename, g_evpImageNamePrefix))
 
-	everpy_path := g_dirEverpic . "\" . g_pyEverpic_w
-	cmd := everpy_path . " --input=" . cur_imagefile . " --hint=" . hint
-;	msgbox, % ">>> " . cmd ; debug
-	Run, %cmd%, , UseErrorLevel
-	if(ErrorLevel) {
-		MsgBox, "%everpy_path%" launch failed! You have to install Python and PIL library.
-		return
-		; todo: distinguish python not installed OR py exec fail
-	}
+	html_fmt = 
+(
+<div><img src="http://localhost:2017/Everpic-save/{1}" alt="max-width:{2}px" /><br>
+<span style="font-size: 10px; color: rgb(144,144,144)">
+{4} KB, {2}*{3}, {5}, {6} ({7})
+</span></div>~
+)
+	html := Format(html_fmt
+		, imgfilename ; {1}
+		, g_evpImageWidth, g_evpImageHeight ; {2}, {3} width and height
+		, imgsizekb ; {4}
+		, imghint ; {5} 
+		, g_evpImageNamePrefix ; {6}
+		, dev_LocalTimeZoneMinutesStr()) ;{7} timezone 
+
+	dev_ClipboardSetHTML(html, true)
 	
 	; Save the used picture to a permanent directory, so that we can get it back 
 	; in case Evernote fail to actually store my picture in the note.
 	dir_everpic_save := A_AppData . "\Everpic-save"
 	FileCreateDir, %dir_everpic_save%
-	FileCopy, %cur_imagefile%, %dir_everpic_save%
+	FileCopy, %imgfilepath%, %dir_everpic_save%
 	if(ErrorLevel) {
 		; Note: We did a non-overwrite copy, if destination file exist, we get ErrorLevel.
 		MsgBox, % "Unexpect: Fail to copy(overwrite) your image file to " . dir_everpic_save
