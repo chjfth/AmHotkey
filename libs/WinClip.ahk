@@ -112,7 +112,7 @@
   
   _loadFile( filePath, ByRef Data )
   {
-    f := FileOpen( filePath, "r","CP0" )
+    f := FileOpen( filePath, "r","UTF-8" )
     if !IsObject( f )
       return 0
     f.Pos := 0
@@ -123,7 +123,7 @@
 
   _saveFile( filepath, byRef data, size )
   {
-    f := FileOpen( filepath, "w","CP0" )
+    f := FileOpen( filepath, "w","UTF-8" )
     bytes := f.RawWrite( &data, size )
     f.close()
     return bytes
@@ -861,7 +861,7 @@ _BITMAPtoDIB_cleanup:
     return strget( &out_data, out_size, "UTF-16" )
   }
   
-  GetHtml(encoding="CP0")
+  GetHtml(encoding="UTF-8")
   {
     if !( clipSize := this._fromclipboard( clipData ) )
       return ""
@@ -870,7 +870,7 @@ _BITMAPtoDIB_cleanup:
     return strget( &out_data, out_size, encoding )
   }
   
-  iGetHtml(encoding="CP0")
+  iGetHtml(encoding="UTF-8")
   {
     this._IsInstance( A_ThisFunc )
     if !( clipSize := this._getClipData( clipData ) )

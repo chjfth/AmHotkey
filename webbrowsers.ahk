@@ -97,33 +97,72 @@ CopyAndFix_Evernote_CF_HTML()
 	ClipWait 0.5
 	if(ErrorLevel)
 	{
-		MsgBox, 48, %title%, % "Nothing copied to clipboard. Nothing to do."
+		dev_MsgBoxWarning("Nothing copied to clipboard. Nothing to do.", title)
 		return	
 	}
 	
-	py := g_dirEverpic . "\fix_CF_HTML_for_Evernote.pyw" ; Use g_dirEverpic for convenience 
-	IfNotExist, % py
-	{
-		tooltip, >>> %g_dirEverpic%
-		MsgBox, 16, %title%, % py . " does not exist. `nCheck your g_dirEverpic value in customize.ahk ."
-		return
-	}
-	
-	RunWait, % py, , UseErrorLevel
-	if(ErrorLevel==101)
-	{
-		MsgBox, 48, %title%, % "No CF_HTML content in clipboard, nothing to do."
-		return
-	}
-	else if(ErrorLevel)
-	{
-		MsgBox, 16, %title%, % "Fail to run " . py . "`nExitcode=" . ErrorLevel
-		return
-	}
+	Fix_prettyprint_html_pre_for_Evernote()
 	
 	info := "Copied web page content to clipboard with CF_HTML fix for Evernote. Now you can paste it into Evernote."
-	MsgBox, 64, %title%, % info, 2
-;	TrayTip, % "AHK info", % info, 3
+	dev_MsgBoxInfo(info, title)
+}
+
+Fix_prettyprint_html_pre_for_Evernote()
+{
+	htmlcc := WinClip.GetHtml() ; cc: clipboard content
+	
+	if(!htmlcc) {
+		; maybe no "HTML Format" in clipboard
+		dev_TooltipAutoClear("Fix_prettyprint_html_pre_for_Evernote(): WinClip.GetHtml() got empty string.")
+		return false
+	}
+	
+	; When a piece of code is prettyprinted into foo.html, and we open foo.html in Chrome/Firefox,
+	; Ctrl+A, then Ctrl+C to copy the HTML content into Clipboard, we will get htmlcc like this:
+/* 
+
+Version:0.9
+StartHTML:0000000181
+EndHTML:0000001598
+StartFragment:0000000217
+EndFragment:0000001562
+SourceURL:file:///C:/Users/win7evn/AppData/Local/Temp/prettify_output.html
+<html>
+<body>
+<!--StartFragment--><pre class="prettyprint prettyprinted" style="font-family: consolas, monospace; font-size: 12px; background-color: rgb(238, 238, 238); padding: 0.5em; border: 1px solid rgb(221, 221, 221); color: rgb(0, 0, 0); font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-align: start; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial;"><span class="kwd" style="color: rgb(0, 0, 204);">void</span><span class="pln" style="color: rgb(0, 0, 0);"> foo</span><span class="pun" style="color: rgb(136, 0, 0);">()</span><span class="pln" style="color: rgb(0, 0, 0);">
+</span><span class="pun" style="color: rgb(136, 0, 0);">{</span><span class="pln" style="color: rgb(0, 0, 0);">
+    printf</span><span class="pun" style="color: rgb(136, 0, 0);">(</span><span class="str" style="color: rgb(238, 0, 255);">"Hello.\n"</span><span class="pun" style="color: rgb(136, 0, 0);">);</span><span class="pln" style="color: rgb(0, 0, 0);"> </span><span class="com" style="color: rgb(0, 136, 0);">// do something</span><span class="pln" style="color: rgb(0, 0, 0);">
+</span><span class="pun" style="color: rgb(136, 0, 0);">}</span></pre><!--EndFragment-->
+</body>
+</html> 
+
+*/
+	; [2015~2022] The problem(A) is: If we just paste current clipboard into Evernote,
+	; some line breaks are lost... bcz there is "</span>" at start of some html line,
+	; and Evernote do NOT like this, so the line break there is lost.
+	; [Workaround] Swap \n and </span>, so that </span> is at tail of a line, and,
+	; add an extra </br> after </span>. This makes Evernote happy.
+	;
+	; [2022-12-05] This was once implemented in fix_CF_HTML_for_Evernote.pyw, but
+	; now we can do it in Autohotkey purely. BUT, there is limitation:
+	; the .py function linenums_extra() cannot be achieved by AHK, so prettyprint's
+	; line-number mode html cannot be copied to Evernote yet.
+	
+	; We need to strip the "format header" and only care for content from "<html>".
+
+	foundpos := InStr(htmlcc, "<html>")
+	if(foundpos==0) {
+		dev_TooltipAutoClear("Fix_prettyprint_html_pre_for_Evernote(): no <html>")
+		return false
+	}
+	
+	htmlraw := SubStr(htmlcc, foundpos)
+	
+	; Cope with problem(A)
+	htmlraw := StrReplace(htmlraw, "`r`n", "`n")
+	htmlraw := StrReplace(htmlraw, "`n</span>", "</span><br/>`n")
+	
+	dev_ClipboardSetHTML(htmlraw)
 }
 
 ; [2018-05-01] Chrome Console's caret cannot be fetched by A_CaretX and A_CaretY
