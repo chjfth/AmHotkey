@@ -3195,8 +3195,7 @@ dev_LocalTimeZoneMinutesStr()
 
 dev_IsShiftKeyDown()
 {
-	GetKeyState, state, Shift
-	if(state=="D")
+	if(GetKeyState("Shift", "P"))
 	    return true
 	else
 	    return false

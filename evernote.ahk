@@ -248,6 +248,7 @@ Evp_ImagePreviewCreateGui()
 	Gui, EVP:Show, % " xCenter w" . g_evpGuiDefaultWidth, % Evp_WinTitle()
 	
 	OnMessage(0x200, Func("Evp_WM_MOUSEMOVE"))
+    OnMessage(0x111, Func("Evp_WM_COMMAND"))
 
 	SetTimer, timer_EvpCheckProgress, 500
 }
@@ -372,6 +373,18 @@ Evp_WM_MOUSEMOVE()
 		tooltip ; hide
 	}
 }
+
+Evp_WM_COMMAND(wParam, lParam, msg, hwnd)
+{
+	hctrl := lParam
+	notify_code := wParam >> 16
+
+;	if(hctrl==g_evtblHwndComboColor && notify_code==4) ; CBN_KILLFOCUS=4
+	{
+;	    Evtbl_ColorComboSetColorDualFormat()
+	}   
+}
+
 
 Evp_WaitingPreviewShowErrMsg(msg, detail:="")
 {
@@ -719,7 +732,7 @@ Evtbl_HideGui(html_clipboard:="")
 	Gui, EVTBL:Hide
 	
 	OnMessage(0x200, Func("Evtbl_WM_MOUSEMOVE"), 0) ; remove message hook
-	OnMessage(0x08, Func("Evtbl_WM_COMMAND"), 0)
+	OnMessage(0x111, Func("Evtbl_WM_COMMAND"), 0)
 	tooltip ; turn off possible dangling tooltip
 	
 	if(html_clipboard)
