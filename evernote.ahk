@@ -101,6 +101,7 @@ global gc_evp_CF_BITMAP := 2
 global gu_evpBtnConvert := ""  ; The top-left corner "Batch convert" button
 global gu_evpTxtScale   := ""  ; the small "Scale:" text label
 global gu_evpCbxScalePct := 0  ; The image-scale percent combobox
+global g_evpCurrentScalePct := 100
 global gu_evpLbxImages   := 0  ; Image-candidates list listbox 
 global gu_evpEdrLoadStat := "" ; Small text label, result statistics, e.g, "640*480, 0.2s"
 ;
@@ -112,7 +113,7 @@ global gu_evpPic ; gui-assoc, Picture control
 ;
 global gu_evpBtnOK := "" ; Left-bottom "Use This" button
 
-global gu_evpEdrFootline   := "" ; current select image filepath , todo: Adjust dynamically
+global gu_evpEdrFootline   := "" ; current select image filepath
 
 global g_evpIsGuiVisible := false
 global g_evpConvertsAfterUIShown := 0 ; Reset to 0 after each UI hide-and-show. 
@@ -423,9 +424,44 @@ Evp_BaseImageFilepathPrefix(imgsig)
 	return Format("{}\{}", g_evpTempDir, imgsig)
 }
 
-Evp_ScaleDownImage(scale_pct, srcimg, dstimg)
+Evp_ScaleDownImage(scale_pct, srcimgpath, dstimgpath)
 {
-	dev_assert(0) ; XXX
+	; 2022.12.09 https://www.autohotkey.com/board/topic/52033-convertresize-image-with-gdip-solved/
+
+;	convert_resize(source_file,out_file,function="",value=1)
+
+	If !pToken := Gdip_Startup()
+		return false
+
+	is_succ := false
+
+	sBitmap := Gdip_CreateBitmapFromFile(srcimgpath)
+	if(sBitmap<=0)
+		goto Evp_ScaleDownImage_END
+	
+	sWidth  := Gdip_GetImageWidth(sBitmap)
+	sHeight := Gdip_GetImageHeight(sBitmap)
+	
+	dWidth  := sWidth  * scale_pct // 100
+	dHeight := sHeight * scale_pct // 100
+
+	dBitmap := Gdip_CreateBitmap(dWidth, dHeight)
+	G := Gdip_GraphicsFromImage(dBitmap)
+	Gdip_DrawImage(G, sBitmap, 0, 0, dWidth, dHeight, 0, 0, sWidth, sHeight)
+	
+	err := Gdip_SaveBitmapToFile(dBitmap, dstimgpath)
+	if(err)
+		goto Evp_ScaleDownImage_END
+		
+	is_succ := true
+
+Evp_ScaleDownImage_END:
+	Gdip_DisposeImage(sBitmap)
+	Gdip_DisposeImage(dBitmap)
+	Gdip_DeleteGraphics(G)
+	Gdip_Shutdown(pToken)
+	
+	return is_succ
 }
 
 
@@ -436,7 +472,10 @@ Evp_evtBatchConvert(CtrlHwnd, GuiEvent, EventInfo, ErrLevel:="")
 
 Evp_LaunchBatchConvert_UseUIParam()
 {
-	text := GuiControl_GetText("EVP", gu_evpCbxScalePct)
+	GuiControl_ChangeOpt("EVP", "gu_evpCbxScalePct", "-AltSubmit")
+	text := GuiControl_GetText("EVP", "gu_evpCbxScalePct")
+	GuiControl_ChangeOpt("EVP", "gu_evpCbxScalePct", "+AltSubmit")
+	
 	scale_pct := dev_str2num(text)
 	
 	Evp_LaunchBatchConvert("", scale_pct>0 ? scale_pct : 100)
@@ -446,8 +485,8 @@ Evp_LaunchBatchConvert(fpFromImage:="", scale_pct:=100)
 {
 	; Return BaseImage filepath, empty string if launching fail.
 
-	if(scale_pct<=0 || scale_pct>100) {
-		dev_MsgBoxError("Bad Scale percent value: " scale_pct)
+	if(scale_pct<=1 || scale_pct>100) {
+		dev_MsgBoxError("Bad Scale percent value(should be 2 ~ 100): " scale_pct)
 		return ""
 	}
 	
@@ -516,7 +555,7 @@ Evp_LaunchBatchConvert(fpFromImage:="", scale_pct:=100)
 	
 	GuiControl_SetText("EVP", "gu_evpTxtClipbState", "Convert starting...")
 	
-	Evp_SyncGuiByBaseImage(fpBaseImage, imgw, imgh)
+	Evp_SyncGuiByBaseImage(fpBaseImage, imgw, imgh, scale_pct)
 	
 	Evp_ShowAllControls(true)
 	
@@ -535,8 +574,6 @@ Evp_GenerateBaseImage(fpFromImage, scale_pct, imgsig, byref imgw, byref imgh)
 	; Memo: Whether scale_pct is 100, we always generate 100pct image 
 	; and cache it into g_evp100pctBaseImage, so that when user changes scale,
 	; we can scale it down from g_evp100pctBaseImage.
-
-; TODO: scale_pct
 
 	ofpprefix := Evp_BaseImageFilepathPrefix(imgsig)
 	fp_100pctimg := ofpprefix ".png"
@@ -781,7 +818,7 @@ Evp_CheckConvertingProgressUpdateUI()
 	
 	dev_assert(g_evpTimerStage=="ConvertStarted")
 	
-	dev_assert(progtext) ; Todo: what about previous dev_FileReadLine() faile, due to file being locked by background process.
+	dev_assert(progtext) ; Todo: what about previous dev_FileReadLine() failed, due to file being locked by background process.
 
 	; Check file content in fpProgress to see whether the background
 	; image-list generation has completed. Sample file:
@@ -835,7 +872,8 @@ Evp_CheckConvertingProgressUpdateUI()
 		
 		GuiControl_SetText("EVP", "gu_evpEdrLoadStat"
 			, Format("{}*{} , {}.{:03}s {}"
-				, g_evpImgpaneWidth, g_evpImgpaneHeight, floor(msecs/1000), Mod(msecs,1000)
+				, Evp_ImgScaledWidth(), Evp_ImgScaledHeight()
+				, floor(msecs/1000), Mod(msecs,1000)
 				, zoomhint))
 		
 ;		Evp_ShowAllControls(true) ; already done
@@ -854,6 +892,16 @@ Evp_CheckConvertingProgressUpdateUI()
 	}
 }
 
+Evp_ImgScaledWidth()
+{
+	return g_evpImageWidth*g_evpCurrentScalePct//100
+}
+
+Evp_ImgScaledHeight()
+{
+	return g_evpImageHeight * g_evpCurrentScalePct // 100
+}
+
 Evp_BatchConvertDone(is_succ)
 {
 	; Set some shared-status after convert is done.
@@ -868,7 +916,7 @@ Evp_BatchConvertDone(is_succ)
 	}
 }
 
-Evp_SyncGuiByBaseImage(imgfilepath, imgw, imgh) 
+Evp_SyncGuiByBaseImage(imgfilepath, imgw, imgh, scale_pct)
 {
 	; This function adjusts(Increase or decrease)  EVP GUI's window size 
 	; so that the image can be display at 100% Zoom level. 
@@ -877,7 +925,13 @@ Evp_SyncGuiByBaseImage(imgfilepath, imgw, imgh)
 	; imgfilepath and be empty, this will change the UI to its default(blank) size.
 	;
 	; This function changes global vars:
-	; g_evpBaseImageFilepath, g_evpImageWidth, g_evpImageHeight
+	; g_evpBaseImageFilepath, g_evpImageWidth, g_evpImageHeight,
+	; g_evpCurrentScalePct, g_evpImgpaneWidth, g_evpImgpaneWidth
+	
+	dev_assert(scale_pct>1 || scale_pct<=100)
+	
+	imgw_scaled := imgw * scale_pct // 100
+	imgh_scaled := imgh * scale_pct // 100
 	
 	; //// Reset UI controls first ////
 	
@@ -895,8 +949,8 @@ Evp_SyncGuiByBaseImage(imgfilepath, imgw, imgh)
 		
 		max_gui_width := wa.width - 2*g_evpWindowBorder
 		
-		imgw_gui_units := imgw / Get_DPIScale()
-		imgh_gui_units := imgh / Get_DPIScale()
+		imgw_gui_units := imgw_scaled / Get_DPIScale()
+		imgh_gui_units := imgh_scaled / Get_DPIScale()
 			; For example, on an 120-dpi monitor setting Windows(125% scale), for a 125-pixel width image,
 			; you need to only pass w100 for the picture control to show it perfectly.
 		
@@ -936,12 +990,13 @@ Evp_SyncGuiByBaseImage(imgfilepath, imgw, imgh)
 	
 	GuiControl_SetPos("EVP", "gu_evpPic", ximgpane, rlistbox.y, wimgpane, himgpane) ; same vertical pos
 
+	g_evpBaseImageFilepath := imgfilepath
+	g_evpImageWidth  := imgw
+	g_evpImageHeight := imgh
+	g_evpCurrentScalePct := scale_pct
+	;
 	g_evpImgpaneWidth := round(wimgpane)
 	g_evpImgpaneHeight := round(himgpane)
-	;
-	g_evpBaseImageFilepath := imgfilepath
-	g_evpImageWidth := imgw
-	g_evpImageHeight := imgh
 
 	col2w := dev_max(wimgpane, gc_evpImgpaneDefWidth)
 	GuiControl_SetPos("EVP", "gu_evpTxtClipbState", -1, -1, col2w, -1)
@@ -1003,10 +1058,8 @@ Evp_RefreshPreviewAllGui()
 }
 
 
-Evp_RefreshImgpane() ; was Evp_ListboxSelChange()
+Evp_RefreshImgpane()
 {
-; TODO: scale AWARE
-
 	GuiControlGet, gu_evpLbxImages
 
 	cur_imagefile := g_evp_arImageStore[gu_evpLbxImages].path
@@ -1023,7 +1076,7 @@ Evp_BtnOK()
 	dev_SplitPath(imgfilepath, imgfilename)
 	imghint := g_evp_arImageStore[gu_evpLbxImages].hint ; "PNG(32-bit)" etc
 	imgsizekb := g_evp_arImageStore[gu_evpLbxImages].sizekb
-;msgbox, % "####" imgfilepath " | " g_evpImageSig	
+
 	dev_assert(StrIsStartsWith(imgfilename, g_evpImageSig))
 
 	html_fmt = 
@@ -1035,7 +1088,7 @@ Evp_BtnOK()
 )
 	html := Format(html_fmt
 		, imgfilename ; {1}
-		, g_evpImageWidth, g_evpImageHeight ; {2}, {3} width and height
+		, Evp_ImgScaledWidth(), Evp_ImgScaledHeight() ; {2}, {3} width and height
 		, imgsizekb ; {4} "33KB" etc
 		, imghint ; {5} 
 		, g_evpImageSig ; {6}
@@ -1048,7 +1101,7 @@ Evp_BtnOK()
 	FileCopy, %imgfilepath%, %dir_everpic_save%, 1 ; 1=overwrite
 	if(ErrorLevel) {
 		; Note: We did a non-overwrite copy, if destination file exist, we get ErrorLevel.
-		MsgBox, % "Unexpect: Fail to copy your image file to " . dir_everpic_save
+		dev_MsgBoxInfo("Unexpect: Fail to copy your image file to " . dir_everpic_save)
 	}
 	
 	if(dev_IsShiftKeyDown())

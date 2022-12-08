@@ -3443,6 +3443,13 @@ dev_Listbox_Clear(hwndListbox, entries:=100)
 	}
 }
 
+GuiControl_ComboboxGetText(GuiName, CtrlVarname)
+{
+	;pending, need to query whether it has 'AltSubmit' option .
+}
+
+
+
 ;==============================================================================
 #Include *i _more_includes_.ahk ;This should be the final statement of this ahk
 ;==============================================================================
