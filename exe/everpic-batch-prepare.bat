@@ -25,6 +25,8 @@ REM 	foo.q80.jpg
 REM 	foo.q60.jpg
 REM 	...
 
+call :Echos Now time: %DATE% %TIME%
+
 set fpinput=%~1
 
 if not defined fpinput (
@@ -53,6 +55,7 @@ set donecfgs=0
 set fpImageList=%fpPrefix%.imagelist.txt
 
 set fpProgressDone=%fpPrefix%.progress.done.txt
+
 echo 0/%totalcfgs%> "%fpProgressDone%"
 
 
@@ -91,6 +94,8 @@ for %%A in (%jpgQuals%) do (
 	
 	set /a donecfgs=!donecfgs!+1
 	echo !donecfgs!/%totalcfgs%> "%fpProgressDone%"
+	
+REM	call :SleepSeconds 1
 )
 
 exit /b %ERRORLEVEL%

@@ -2,7 +2,7 @@
 AUTOEXEC_Evernote: ; Workaround for Autohotkey's ugly auto-exec feature. Don't delete.
 
 /* APIs:
-Evp_ImagePreviewCreateGui()
+Evp_LaunchUI()
 ;
 EverTable_Start()
 PreviewHtml_ShowGui(html)
@@ -61,51 +61,90 @@ global g_evtblColorPresets := [ "#f0f0f0,清淡灰"
 
 global g_evpTempDir := A_Temp "\Everpic" ; 2022.12
 global gc_evpBatchConvertExecpath := A_ScriptDir "\exe\everpic-batch-prepare.bat"
-global g_evpImglistTxtPath
-global g_evpBatchProgressFilepath
-global g_evpBaseImageFilepath
-global g_evpImageNamePrefix
+
+global g_evpBaseImageFilepath ; key switch
 global g_evpImageWidth
 global g_evpImageHeight
+
+global g_evpImglistTxtPath
+global g_evpBatchProgressFilepath
+global g_evpImageSig := ""
+	; need it as "signature" in Evernote image footnote. by Evp_GenImageSigByTimestamp().
+	; Example: "everpic-20221205_150413"
 
 global gc_evpCleanupTempDirDays := 1
 
 global g_evpHwndToPaste
 
-global g_evpGuiDefaultWidth := 600 ; const
-global g_evpMarginX := 10 ; const
-global g_evpMarginY := 10 ; const
-global g_evpListboxWidth := 160 ; const
-global g_evpGapX := 10 ; const, gap between listbox and pic-control
-global g_evpWindowBorder := 14
-global g_evpBottomLineHeight := 16 ; for Button OK/Dismiss/Use_This
+global gc_evpImgpaneDefWidth  := 400 ; image-pane default width
+global gc_evpImgpaneDefHeight := 300
+global g_evpImgpaneWidth      := gc_evpImgpaneDefWidth  ; To be filled in Evp_ShowGui()
+global g_evpImgpaneHeight     := gc_evpImgpaneDefHeight ; To be filled in Evp_ShowGui()
+global gc_evpCol1Width     := 160 ; EVP GUI Column 1 width in pixels
+global gc_evpGapX := 10 ; const, gap between listbox and pic-control
+global gc_evpGapY := 10 ; const, gap between listbox and pic-control
+global gc_evp_GUIDefWidth := gc_evpGapX*2 + gc_evpCol1Width + gc_evpImgpaneDefWidth ; GUI default width
 
-global g_evpRandomId ; not used yet
+global gar_evpScalePcts := [ 100, 75, 50, 40, 30, 20 ]
+
+global gc_evpGuiDefaultWidth_XXX := 600 ; TODO remove, would be calculated from gc_evpImgpaneDefWidth
+global gc_evpMarginX := 10 ; const
+global gc_evpMarginY := 10 ; const
+global g_evpWindowBorder := 14 ; assume, may not be accurate yes
+global g_evpBottomLineHeight := 16 ; for Button OK/Dismiss/Use_This
 
 global g_HwndEVPGui
 
-global g_evpTitleLine ; gui-assoc
-global g_evpSecondLine ; gui-assoc
-global g_evpBtnDismiss ; gui-assoc
-global g_evpBtnOK ; gui-assoc
+global gc_evp_CF_BITMAP := 2
 
-;global g_evpc_NotUsedYet = "not-used-yet"
-global g_evpImageList
-global g_evpPic ; gui-assoc, Picture control
-global g_evp_isPicControlCreated := false
+; First column controls:
+;
+global gu_evpBtnConvert := ""  ; The top-left corner "Batch convert" button
+global gu_evpTxtScale   := ""  ; the small "Scale:" text label
+global gu_evpCbxScalePct := 0  ; The image-scale percent combobox
+global gu_evpLbxImages   := 0  ; Image-candidates list listbox 
+global gu_evpTxtLoadStat := "" ; Small text label, result statistics, e.g, "640*480, 0.2s"
+;
+; Second column controls:
+;
+global gu_evpTxtClipbState := "" ; Text label showing clipboard state.
+global gu_evpEdrImgFilepath := "" ; Currently previewing image filepath (readonly editbox)
+global gu_evpPic ; gui-assoc, Picture control
+;
+global gu_evpBtnOK := "" ; Left-bottom "Use This" button
 
-global g_evpLaunchTimeoutSec := 3
-global g_evpTotalWaitedSec := 0.0 ; seconds
-;global g_evpClipboardLastOKSec ; todo: later (workaround for clipboard robbing by other program)
+global gu_evpEdrFootline   := "" ; current select image filepath , todo: Adjust dynamically
+
+global g_evpIsGuiVisible := false
+global g_evpConvertsAfterUIShown := 0 ; Reset to 0 after each UI hide-and-show. 
+
+global g_evpTimerStage := "Monitoring" 
+	; "Monitoring" : Periodically check(monitor) the clipboard for image or CF_BITMAP or image-filepath.
+	; "ConvertStarting" : External everpic-batch-prepare.bat launched, waiting for <basename>.progress.done.txt .
+	; "ConvertStarted"  : <basename>.progress.done.txt detected, checking its content for progress.
+global g_evpTickLastActivity := 0
+global g_evpTickConvertStart := 0
+
+global g_evp100pctBaseImage ; Filepath of the 100% zoom base-image, as a cache.
+	; If user choose a new scale, we can use this, instead of re-generate from clipboard.
+	; Note: The so-called "BaseImage", is always in g_evpTempDir.
+
+global gc_evpFileSuffix_progressdone := ".progress.done.txt"
+global gc_evpFileSuffix_imagelist    := ".imagelist.txt"
+
+global gc_evpStartingTimeoutSec := 2
+global gc_evpStartedTimeoutSec  := 3
 
 global g_evp_arImageStore := [] ; g_evp_arImageStore[1] refers to the first previewed image.
 	; members: .hint .sizekb .path
-global g_evpCurImageFile ; current select image filepath
 global g_evpImageZoom := 1
 
-global g_evpDetailMsg
+global gut_progressbar := ""
+
+; =======
 
 global g_HwndEvtbl
+
 
 global text_ColorPreview := "Color Preview"
 
@@ -215,56 +254,226 @@ return ; End of auto-execute section.
 
 ; App+C to convert in-clipboard image to your preferred format(png/jpg) and put CF_HTML content into clipboard,
 ; so Ctrl+V pasting it into Evernote saves quite much space (Evernote defaultly gives you very big PNG-32).
-AppsKey & c:: Evp_ImagePreviewCreateGui()
+AppsKey & c:: Evp_LaunchUI()
 
-
-Evp_ImagePreviewCreateGui()
+Evp_LaunchUI()
 {
-	; Evp: short for "Everpic"
-	; This will generate a series of image previews with different quality, with Gui,
-	; then user can pick the "best" one to use(to paste into Evernote).
+	Evp_ShowGui()
 
-	if(!Evp_ImagePreviewCreateGui_prereq())
+	Evp_LaunchBatchConvert_UseUIParam()
+}
+
+Evp_ShowGui()
+{
+	if(g_evpIsGuiVisible)
 		return
 
-	; Remember current active window
-	WinGet, Awinid, ID, A
-	g_evpHwndToPaste := Awinid
+	if(!g_HwndEVPGui) {
+		Evp_CreateGui()
+	} else {
+;		MsgBox, % "Skip Evp_CreateGui()"
+	}
 
-	g_evpTotalWaitedSec := 0
-	g_evp_isPicControlCreated := false
-	Random, g_evpRandomId
+	Evp_AutosizeNowUI() ; Gui, EVP:Show inside
 
-	Gui, EVP:Destroy ; destroy old
-	Gui, EVP:+Hwndg_HwndEVPGui ; Gui hwnd generated in g_HwndEVPGui
-	Gui, EVP:Margin, %g_evpMarginX%, %g_evpMarginY%
-	Gui, EVP:Font, s9 cBlack, Tahoma
-	fullwidth := g_evpGuiDefaultWidth - 2*g_evpMarginX
-	Gui, EVP:Add, Text, % "xm vg_evpTitleLine w" . fullwidth, % "Generating image previews from clipboard... "
-	Gui, EVP:Add, Text, % "xm vg_evpSecondLine w" . fullwidth ; text later
-	
-	Gui, EVP:Add, Button, Section vg_evpBtnDismiss gEVPGuiEscape, % "Dismiss"
-	
-	Gui, EVP:Show, % " xCenter w" . g_evpGuiDefaultWidth, % Evp_WinTitle()
-	
 	OnMessage(0x200, Func("Evp_WM_MOUSEMOVE"))
     OnMessage(0x111, Func("Evp_WM_COMMAND"))
 
-	SetTimer, timer_EvpCheckProgress, 500
+	Evp_TimerOn()
+
+;	Evp_SyncGuiByBaseImage("D:\test\PIL2-png256-with-purple.png", 1092, 663) ; temp XXX
+	g_evpIsGuiVisible := true
+	g_evpConvertsAfterUIShown := 0
 }
 
-Evp_ImagePreviewCreateGui_prereq()
+Evp_CleanupUI()
 {
-	fpBaseImage := Evp_GenerateBaseImage() 
-	; -- filepath of the base-image, exampe:
-	; C:\Users\win7evn\AppData\Local\Temp\Everpic\everpic-20221204_150000.png
+	Evp_TimerOff()
+	
+	OnMessage(0x200, Func("Evp_WM_MOUSEMOVE"), 0) ; remove message hook
+    OnMessage(0x111, Func("Evp_WM_COMMAND"), 0)
+	
+	Gui, EVP:Hide	; I will not do EVP:Destroy. If really want, just Reload the AHK script.
+	g_evpIsGuiVisible := false
+}
+
+EVPGuiEscape(hwndGui)
+{
+;	dev_TooltipAutoClear("EVPGuiEscape() called")
+	Evp_CleanupUI()
+}
+
+EVPGuiClose(hwndGui)
+{
+;	dev_TooltipAutoClear("EVPGuiClose() called")
+	Evp_CleanupUI()
+}
+
+
+
+Evp_CreateGui()
+{
+	; Evp: short for "Everpic"
+	; This UI will generate a series of image previews with different quality,
+	; then user can pick the "best" one to use(paste it into Evernote).
+
+	Gui, EVP:New ; Destroy old window if any
+	Gui, EVP:+Hwndg_HwndEVPGui ; Gui hwnd generated in g_HwndEVPGui
+
+	Gui, EVP:Margin, %gc_evpMarginX%, %gc_evpMarginY%
+	Gui, EVP:Font, s9 cBlack, Tahoma
+	
+	; ==== Create Column1 controls. ====
+	;
+	col1w := gc_evpCol1Width
+	Gui_Add_Button(  "EVP", "gu_evpBtnConvert",  col1w, "Section xm ym g" . "Evp_evtBatchConvert" , "Batch &Convert")
+	lwScale := 42 ; label-width
+	Gui_Add_TxtLabel("EVP", "gu_evpTxtScale", lwScale, "", "Scale:")
+	Gui_Add_Combobox("EVP", "gu_evpCbxScalePct", col1w-lwScale-gc_evpGapX
+		, Format("x+{} yp-2 AltSubmit g{}", gc_evpGapX, "Evp_RefreshImgpane"))
+	Gui_Add_Listbox( "EVP", "gu_evpLbxImages",    col1w, Format("xs r12 AltSubmit g{}", "Evp_RefreshImgpane"))
+	Gui_Add_TxtLabel("EVP", "gu_evpTxtLoadStat",  col1w, "", "")
+	Gui_Add_Button(  "EVP", "gu_evpBtnOK",        col1w, "default g" . "Evp_BtnOK", "&Use This (or press Enter)")
+
+	; ==== Create Column2 controls. ====
+	;
+	col2w := gc_evpImgpaneDefWidth
+	Gui_Add_TxtLabel("EVP", "gu_evpTxtClipbState",  col2w, Format("xs+{} ys+5 +0x8000", col1w+gc_evpGapX), "Clipboard state")
+	Gui_Add_Editbox( "EVP", "gu_evpEdrImgFilepath", col2w, "y+15 Readonly -E0x200", "imgfilepath")
+	Gui_Add_Picbox(  "EVP", "gu_evpPic",            col2w, "h" g_evpImgpaneHeight)
+	
+	; FootLine
+	fullwidth := Evp_CalCtrlFullWidth()
+	Gui_Add_Editbox( "EVP", "gu_evpEdrFootline", fullwidth, "xm Readonly", "Footline")
+
+;Gui, EVP:Add, Progress, xp w100 vgut_progressbar, % "progressbar" ; to-delete XXX
+	
+	; Fill gu_evpCbxScalePct combobox
+	for index,value in gar_evpScalePcts
+	{
+		if(index==1)
+			jstr := value . "%|" ; extra "|" means default selection
+		else
+			jstr := jstr "|" value "%"
+	}
+	GuiControl_SetText("EVP", "gu_evpCbxScalePct", jstr)
+	
+	; Set default states of the controls:
+	;
+	GuiControl_Enable("EVP","gu_evpBtnConvert", false) ; Not enabled until image in clipboard
+	GuiControl_Enable("EVP","gu_evpBtnOK", false) ; Not enabled until image previews all generated
+	;
+	Evp_ShowAllControls(false)
+	
+	Gui_Show("EVP", "xCenter yCenter", Evp_WinTitle()) ; only center it when first created
+}
+
+Evp_ShowAllControls(is_show:=true)
+{
+	static s_prev_shown := -1
+
+	if(is_show==s_prev_shown)
+		return
+
+	s_prev_shown := is_show
+
+	ctls := ["gu_evpTxtScale", "gu_evpCbxScalePct", "gu_evpLbxImages", "gu_evpTxtLoadStat"
+		, "gu_evpBtnOK"
+		, "gu_evpEdrImgFilepath", "gu_evpPic", "gu_evpEdrFootline" ] 
+	
+	for index,value in ctls
+	{
+		GuiControl_Show("EVP", value, is_show)
+	}
+	
+	GuiControl_SetText("EVP", "gu_evpEdrImgFilepath", "Base-image: " g_evpBaseImageFilepath)
+	
+	Evp_AutosizeNowUI()
+}
+
+Evp_AutosizeNowUI()
+{
+	Gui_Show("EVP", "AutoSize", Evp_WinTitle())
+}
+
+Evp_WinTitle()
+{
+	return "Everpic"
+}
+
+
+Evp_CalCtrlFullWidth()
+{
+	; Calculate from g_evpImgpaneWidth
+	;
+	return gc_evpCol1Width + gc_evpGapX + g_evpImgpaneWidth
+}
+
+Evp_CalGuiFullWidth()
+{
+	return 2 * gc_evpMarginX + Evp_CalCtrlFullWidth()
+}
+
+Evp_GenImageSigByTimestamp()
+{
+	; Example: everpic-20221205_150413
+	
+	FormatTime, dt, , % "yyyyMMdd_HHmmss"
+	return "everpic-" dt
+}
+
+Evp_BaseImageFilepathPrefix(imgsig)
+{
+	return Format("{}\{}", g_evpTempDir, imgsig)
+}
+
+Evp_ScaleDownImage(scale_pct, srcimg, dstimg)
+{
+	dev_assert(0) ; XXX
+}
+
+
+Evp_evtBatchConvert(CtrlHwnd, GuiEvent, EventInfo, ErrLevel:="")
+{
+	Evp_LaunchBatchConvert_UseUIParam()
+}
+
+Evp_LaunchBatchConvert_UseUIParam()
+{
+	text := GuiControl_GetText("EVP", gu_evpCbxScalePct)
+	scale_pct := dev_str2num(text)
+	
+	Evp_LaunchBatchConvert("", scale_pct>0 ? scale_pct : 100)
+}
+
+Evp_LaunchBatchConvert(fpFromImage:="", scale_pct:=100)
+{
+	; Return BaseImage filepath, empty string if launching fail.
+
+	if(scale_pct<=0 || scale_pct>100) {
+		dev_MsgBoxError("Bad Scale percent value: " scale_pct)
+		return ""
+	}
+	
+	if(g_evpTimerStage!="Monitoring") {
+		dev_MsgBoxWarning("Last converting is in progress, please retry later.")
+		return ""
+	}
+
+	imgsig := Evp_GenImageSigByTimestamp()
+
+;Msgbox, % "fpFromImage=" fpFromImage "  scale_pct=" scale_pct ; xxx debug
+
+	fpBaseImage := Evp_GenerateBaseImage(fpFromImage, scale_pct, imgsig, imgw, imgh) ; imgw, imgh is output-var
+		; -- filepath of the base-image, example:
+		; C:\Users\win7evn\AppData\Local\Temp\Everpic\everpic-20221204_150000.png
 	
 	if(!fpBaseImage)
-		return false
+		return ""
 		
 	fpImageStem := dev_SplitExtname(fpBaseImage)
 		
-	fpImageList := fpImageStem ".imagelist.txt"
+	fpImageList := fpImageStem . gc_evpFileSuffix_imagelist
 	
 	FileGetSize, filekb, % fpBaseImage, K
 	
@@ -276,97 +485,168 @@ Evp_ImagePreviewCreateGui_prereq()
 	fpbat := gc_evpBatchConvertExecpath
 	fpbatlog := fpbat ".log"
 	
-	; TODO: this batchcmd is NOT space-tolerable in its path.
+	; TODO: this batchcmd is NOT space-char-tolerable in its path.
 	batchcmd := Format("cmd /c ""{} {} > {}""", fpbat, fpBaseImage, fpbatlog)
 ;	dev_MsgBoxInfo(batchcmd) ; debug
 
+	; We use `Run`, not `RunWait`, to avoid blocking ourselves. 
+	; `Run` reports success as long as CreateProcess() succeeds. That means,
+	; only when the target exe/bat(cmd.exe in this case) does not exists will we get ErrorLevel.
+	; In turn, for `cmd /c foo.bat`, even if foo.bat does not exist, `Run` still report success.
+	;
+	; So, we'd better explictly check for .bat existence here.
+	;
+	if(!FileExist(fpbat))
+	{
+		dev_MsgBoxError(Format("Everpic missing required file: ""{}""", fpbat))
+		return false
+	}
+	;
 	Run, % batchcmd, , UseErrorLevel Hide
 	if(ErrorLevel)
-	{
-		dev_MsgBoxError(Format("{} launch error. `n`nSee log file for reason:`n`n{}", fpbat, fpbatlog))
+	{	; Not likely to get this.
+		dev_MsgBoxError(Format("{} launch error.`n`nSee log file for reason:`n`n{}", fpbat, fpbatlog))
 		return false
 	}
 	
-	g_evpImglistTxtPath := fpImageList
-	g_evpBatchProgressFilepath := fpImageStem ".progress.done.txt"
+	g_evpImageSig := imgsig
 	g_evpBaseImageFilepath := fpBaseImage
+	g_evpImglistTxtPath := fpImageList
+	g_evpBatchProgressFilepath := fpImageStem . gc_evpFileSuffix_progressdone
+	if(FileExist(g_evpBatchProgressFilepath))
+		FileDelete, % g_evpBatchProgressFilepath
+	
+	g_evpTimerStage := "ConvertStarting"
+	g_evpTickLastActivity := A_TickCount
+	g_evpTickConvertStart := A_TickCount
+	
+	GuiControl_SetText("EVP", "gu_evpTxtClipbState", "Convert starting...")
+	
+	Evp_SyncGuiByBaseImage(fpBaseImage, imgw, imgh)
+	
+	Evp_ShowAllControls(true)
+	
+	if(g_evpConvertsAfterUIShown==0)
+		Gui_Show("EVP", "xCenter yCenter", Evp_WinTitle())
 	
 	return true
 }
 
-
-Evp_GenerateBaseImage()
+Evp_GenerateBaseImage(fpFromImage, scale_pct, imgsig, byref imgw, byref imgh)
 {
-	; Generate the base .png image from clipboard.
-	
-	If !pToken := Gdip_Startup()
+	; If fpFromImage is empty, generate the base .png image from clipboard.
+	; Else, fpFromImage is the existing image file to use.
+	; Return that .png filepath, empty string if fail.
+	;
+	; Memo: Whether scale_pct is 100, we always generate 100pct image 
+	; and cache it into g_evp100pctBaseImage, so that when user changes scale,
+	; we can scale it down from g_evp100pctBaseImage.
+
+; TODO: scale_pct
+
+	ofpprefix := Evp_BaseImageFilepathPrefix(imgsig)
+	fp_100pctimg := ofpprefix ".png"
+	fp_scaledimg := Format("{}-z{}.png", ofpprefix, scale_pct)
+
+	fpBaseImage := scale_pct==100 ? fp_100pctimg : fp_scaledimg
+
+	if(FileExist(fpBaseImage))
 	{
-		dev_MsgBoxError("Gdip_Startup() failed. GDI+ problem!")
-		return
+		dev_TooltipAutoClear("BaseImage already exists: " fpBaseImage)
+		return fpBaseImage
 	}
 
-	fpBaseImage_ret := ""
+	is_100pct_succ := false ; assume fail
+	
+	g_evp100pctBaseImage := ""
 
-	bitmap := Gdip_CreateBitmapFromClipboard()
-	if(bitmap<=0)
+	if(!FileExist(fp_100pctimg))
 	{
-		dev_MsgBoxWarning("No bitmap in clipboard yet. Everpic can do nothing.")
-		goto EVP_CLEANUP_20221204
+		If !pToken := Gdip_Startup()
+		{
+			dev_MsgBoxError("Gdip_Startup() failed. GDI+ problem!")
+			return ""
+		}
+
+		Evp_IsBitmapInClipboard(bitmap_filepath)
+		if(!fpFromImage && bitmap_filepath)
+			fpFromImage := bitmap_filepath
+
+		if(fpFromImage) ; XXX to-test
+		{
+			; fpFromImage can be any format(bmp, jpg, gif, png etc)
+			; We need to first save it as 32-bit png, via Gdip libray.
+
+			bitmap := Gdip_CreateBitmapFromFile(fpFromImage)
+			if(bitmap<=0) {
+				dev_MsgBoxError(Format("Gdip_CreateBitmapFromFile(""{}"") fail, errcode={}.", fp_100pctimg, bitmap))
+				goto EVP_CLEANUP_20221204
+			}
+
+			Gdip_GetImageDimensions(bitmap, imgw, imgh)
+
+			dev_assert(StrIsEndsWith(fp_100pctimg, ".png"))
+			err := Gdip_SaveBitmapToFile(bitmap, fp_100pctimg)
+			if(err) {
+				dev_MsgBoxError(Format("Gdip_SaveBitmapToFile(""{}"") fail, errcode={}.", fp_100pctimg, err))
+				goto EVP_CLEANUP_20221204
+			}
+			
+			is_100pct_succ := true
+		}
+		else ; will get from Clipboard
+		{
+			bitmap := Gdip_CreateBitmapFromClipboard()
+			if(bitmap<=0)
+			{
+				dev_MsgBoxWarning("No bitmap in clipboard yet. Everpic can do nothing.")
+				goto EVP_CLEANUP_20221204
+			}
+
+			Gdip_GetImageDimensions(bitmap, imgw, imgh)
+			
+			err := Gdip_SaveBitmapToFile(bitmap, fp_100pctimg)
+			if(err) {
+				dev_MsgBoxError(Format("Gdip_SaveBitmapToFile(""{}"") fail, errcode={}.", fp_100pctimg, err))
+				goto EVP_CLEANUP_20221204
+			}
+			
+			is_100pct_succ := true
+		}
+
+	EVP_CLEANUP_20221204:
+	
+		Gdip_DisposeImage(bitmap)
+		Gdip_Shutdown(pToken)
+		
+	} ; if(!FileExist(fp_100pctimg))
+	
+	if(is_100pct_succ)
+	{
+		if(scale_pct!=100 && !FileExist(fp_scaledimg))
+		{
+			succ := Evp_ScaleDownImage(scale_pct, fp_100pctimg, fp_scaledimg)
+				; It Reports error via MsgBox inside.
+			if(!succ)
+				return ""
+		}
+
+		g_evp100pctBaseImage := fp_100pctimg
+		
+		return fpBaseImage
 	}
-
-	FormatTime, dt, , % "yyyyMMdd_HHmmss"
-	g_evpImageNamePrefix := "everpic-" dt
-
-	Gdip_GetImageDimensions(bitmap, w, h)
-	g_evpImageWidth := w
-	g_evpImageHeight := h
-	
-	fpBaseImage := Format("{}\{}.png", g_evpTempDir, g_evpImageNamePrefix)
-	
-	err := Gdip_SaveBitmapToFile(bitmap, fpBaseImage)
-	if(err) {
-		dev_MsgBoxError(Format("Gdip_SaveBitmapToFile(""{}"") fail, errcode={}.", fpBaseImage, err))
-		goto EVP_CLEANUP_20221204
+	else
+	{
+		return ""
 	}
-	
-	fpBaseImage_ret := fpBaseImage
-	
-EVP_CLEANUP_20221204:	
-	Gdip_DisposeImage(bitmap)
-	Gdip_Shutdown(pToken)
-	
-	return fpBaseImage_ret
 }
 
-
-Evp_TimerOff()
-{
-	SetTimer, timer_EvpCheckProgress, Off
-}
-
-Evp_CleanupUI()
-{
-	Evp_TimerOff()
-	
-	OnMessage(0x200, Func("Evp_WM_MOUSEMOVE"), 0) ; remove message hook
-	
-	Gui, EVP:Destroy
-}
-
-EVPGuiEscape:
-	Evp_CleanupUI()
-	return
-
-Evp_WinTitle()
-{
-	return "Everpic"
-}
 
 Evp_WM_MOUSEMOVE()
 {
-	if(A_GuiControl=="g_evpBtnOK")
+	if(A_GuiControl=="gu_evpBtnOK")
 	{
-		tooltip, % "Shift+click to keep this dialog-box on screen."
+		dev_TooltipAutoClear("Shift+click to keep this dialog-box on screen." , 5000)
 	}
 	else if(A_Gui=="EVP")
 	{
@@ -386,30 +666,130 @@ Evp_WM_COMMAND(wParam, lParam, msg, hwnd)
 }
 
 
-Evp_WaitingPreviewShowErrMsg(msg, detail:="")
+Evp_TimerOn()
 {
-	GuiControl, EVP:, g_evpTitleLine, % msg
+	SetTimer, Evp_TimerProc, 500
+}
+
+Evp_TimerOff()
+{
+	SetTimer, Evp_TimerProc, Off
+}
+
+Evp_TimerProc()
+{
+	if(g_evpTimerStage=="Monitoring")
+		Evp_CheckClipboardStateUpdateUI()
+	else if(g_evpTimerStage=="ConvertStarting" || g_evpTimerStage=="ConvertStarted")
+		Evp_CheckConvertingProgressUpdateUI()
+	else {
+		dev_MsgBoxError("Bad value of g_evpTimerStage: " g_evpTimerStage)
+		dev_assert(("Bad value of g_evpTimerStage") ?0:0)
+	}
+}
+
+Evp_IsImagefileSuffix(filepath)
+{
+	arsuffix := ["bmp", "png", "jpg", "gif"]
+
+	if(StrLen(filepath)<8)
+		return ""
+   	
+   	if(SubStr(filepath, 2, 1)!=":")
+   		return "" ; No drive letter prefix
 	
-	if(not detail)
-		return
-
-	; Create detail error-info box.
-	GuiControl, EVP:Hide, g_evpBtnDismiss
-	Gui, EVP:Font, s9 cBlack, % "Consolas"
-	Gui, EVP:Add, Edit, % "xm ys Section vg_evpDetailMsg HScroll r12 Readonly -Wrap w" . g_evpGuiDefaultWidth-2*g_evpMarginX
-		; ys: Let it place where the Dismiss button was.
-	Gui, EVP:Show, % "xCenter yCenter Autosize" 
-	GuiControl, EVP:, g_evpDetailMsg, % detail
+	for index,extname in arsuffix
+    {
+    	if(StrIsEndsWith(filepath, "." extname))
+    		return extname
+    }
+    return ""
 }
 
-Evp_SecondLineShowMsg(msg)
+Evp_IsBitmapInClipboard(byref filepath_bitmap)
 {
-	GuiControl, EVP:, g_evpSecondLine, % msg
+	filepath_bitmap := ""
+	if( WinClipAPI.IsClipboardFormatAvailable(gc_evp_CF_BITMAP) )
+	{
+		return true
+	}
+	else
+	{
+		filepath := Clipboard ; assume filepath and check
+		if(filepath && StrLen(filepath)<260 && Evp_IsImagefileSuffix(filepath))
+		{
+			filepath_bitmap := filepath
+		}
+		return false
+	}
+	
 }
 
-timer_EvpCheckProgress()
+Evp_CheckClipboardStateUpdateUI()
 {
-	; Check file content in g_evpBatchProgressFilepath to see whether the background
+	hint := ""
+	if( Evp_IsBitmapInClipboard(bitmap_filepath) )
+		hint := "Bitmap in Clipboard. You can now [Batch Convert]."
+	else if(bitmap_filepath)
+		hint := "Clipboard has filepath: " bitmap_filepath
+
+	if(hint)
+	{
+		GuiControl_Enable("EVP","gu_evpBtnConvert", true)
+		fgcolor := "8888cc"
+;		Evp_ShowAllControls(true) ; not so fast
+	}
+	else 
+	{
+		GuiControl_Enable("EVP","gu_evpBtnConvert", false)
+		hint := "Copy an image, or a filepath into system Clipboard so to convert it."
+		fgcolor := "CC8888"
+	}
+	
+	GuiControl_SetColor("EVP", "gu_evpTxtClipbState", fgcolor)
+	GuiControl_SetText( "EVP", "gu_evpTxtClipbState", hint)
+}
+
+Evp_CheckConvertingProgressUpdateUI()
+{
+	static s_prev_nDone := 0
+
+	fpProgress := g_evpBatchProgressFilepath ; was set in Evp_LaunchBatchConvert()
+	; 	C:\Users\win7evn\AppData\Local\Temp\Everpic\everpic-20221204_165806.progress.done.txt
+	dev_assert(fpProgress) 
+
+	progtext := dev_FileReadLine(fpProgress, 1)
+
+	if(g_evpTimerStage=="ConvertStarting")
+	{
+		; Check file content of fpProgress to see whether it has "0/9", "0/10" etc. 
+		; If so, we move to next timer-stage; If not after some timeout, we claim it error.
+
+		if(progtext ~= "^[0-9]+/[0-9]+$")
+		{
+			g_evpTimerStage := "ConvertStarted"
+			s_prev_nDone := 0
+			g_evpTickLastActivity := A_TickCount
+			
+			GuiControl_SetText("EVP", "gu_evpTxtClipbState", "Converting " progtext " ...")
+		}
+		else if(A_TickCount-g_evpTickLastActivity > gc_evpStartingTimeoutSec*1000)
+		{
+			dev_MsgBoxError("ConvertStarting background execution timeout!`r`n`r`nCheck everpic-batch-prepare.bat.log for reason.")
+			
+			Evp_BatchConvertDone(false)
+			; todo: Reset UI ?
+			return
+		}
+		else
+			return ; Keep waiting in "ConvertStarting"
+	}
+	
+	dev_assert(g_evpTimerStage=="ConvertStarted")
+	
+	dev_assert(progtext) ; Todo: what about previous dev_FileReadLine() faile, due to file being locked by background process.
+
+	; Check file content in fpProgress to see whether the background
 	; image-list generation has completed. Sample file:
 	; 	C:\Users\win7evn\AppData\Local\Temp\Everpic\everpic-20221204_165806.progress.done.txt
 	; File content, just one line, can be:
@@ -420,128 +800,181 @@ timer_EvpCheckProgress()
 	;
 	; If 9/9 is reached, it means completed.
 
-	g_evpTotalWaitedSec += 0.5
-	
-	fpProgress := g_evpBatchProgressFilepath
-	if(!FileExist(fpProgress))
-	{
-		Evp_SecondLineShowMsg(Format("Waiting for progress file creation: {}", fpProgress))
-		return 
-	}
+;	if(!FileExist(fpProgress))
+;	{
+;		Evp_SecondLineShowMsg(Format("Waiting for progress file creation: {}", fpProgress))
+;		return 
+;	}
 
-	FileReadLine, progline, % fpProgress, 1
-	
-	nums := StrSplit(progline, "/")
+	nums := StrSplit(progtext, "/")
 	nDone := nums[1]
 	nTotal := nums[2]
 
+;dev_TooltipAutoClear("### " A_TickCount-g_evpTickLastActivity "%%% " Format("{}/{}", nDone, nTotal)) ; yes counting
+
 	if(!nTotal)
 	{
-		Evp_WaitingPreviewShowErrMsg("Something Wrong!", "Bad content in progress file: " fpProgress)
-		MsgBox, % Format("[{}]", progline)
-		Evp_TimerOff()
+		dev_MsgBoxError("Something Wrong!", "Bad content in progress file: " fpProgress)
 		return
 	}
 	
-	imgw := g_evpImageWidth
-	imgh := g_evpImageHeight
-
-	if(nDone==nTotal)
+	if(nDone<nTotal)
 	{
-		; All previews generated successfully.
-		Evp_DisplayInitPreview()
+		GuiControl_SetText("EVP", "gu_evpTxtClipbState"
+			, Format("Converting {}/{} ...", nDone, nTotal))
+		
+		if(nDone>s_prev_nDone)
+		{
+			g_evpTickLastActivity := A_TickCount
+			s_prev_nDone := nDone
+		}
+	}
+	else if(nDone==nTotal)
+	{
+		; All (background) image conversion done successfully.
 
-		Evp_WaitingPreviewShowErrMsg("")
-		tailtext := "All previews generated. Pick one to use. (paste into Evernote etc)"
+		msecs := A_TickCount - g_evpTickConvertStart
 		
+		zoomhint := ""
 		if(g_evpImageZoom!=1)
-			zoomhint := "(Zoom " . floor(g_evpImageZoom*100) . "%) "
+			zoomhint := "(Zoom " . floor(g_evpImageZoom*100) . "%) " ; note Zoom-pct is not Scale-pct
 		
-		Evp_SecondLineShowMsg("[" . imgw . "x" . imgh . "] " . zoomhint . tailtext )
+		GuiControl_SetText("EVP", "gu_evpTxtLoadStat"
+			, Format("{}*{} {}, {}.{:03}s"
+				, g_evpImgpaneWidth, g_evpImgpaneHeight, zoomhint, msecs/1000, Mod(msecs,1000)))
+		
+;		Evp_ShowAllControls(true) ; already done
 		
 		Evp_RefreshPreviewAllGui()
 		
-		Evp_TimerOff()
+		Evp_BatchConvertDone(true)
+		
 		return
 	}
-	else if(nDone<=nTotal)
+	
+	if(A_TickCount-g_evpTickLastActivity > gc_evpStartedTimeoutSec*1000)
 	{
-		Evp_SecondLineShowMsg(Format("Loading {}/{} ...", nDone, nTotal))
-		Evp_DisplayInitPreview()
-			; just to let the user know the image dimension with an arbitrary preview
-	}
-	else
-	{
-		Evp_WaitingPreviewShowErrMsg("Something went Wrong, nDone/nTotal!")
-		Evp_TimerOff()
+		dev_MsgBoxError("ConvertStarted background execution timeout!`r`n`r`nCheck everpic-batch-prepare.bat.log for reason.")
+		Evp_BatchConvertDone(false)
 	}
 }
 
-Evp_DisplayInitPreview()
+Evp_BatchConvertDone(is_succ)
 {
-	imgw := g_evpImageWidth
-	imgh := g_evpImageHeight
-	imgfile := g_evpBaseImageFilepath
+	; Set some shared-status after convert is done.
 
-	; Do it only when the preview Pic control has not been created.
-	if(g_evp_isPicControlCreated)
-		return
+	g_evpTimerStage := "Monitoring"
+	g_evpTickLastActivity := 0
+	g_evpTickConvertStart := 0
 
-	g_evp_isPicControlCreated := true
-
-	; Now enlarge the Gui to fit the preview-image but not exceeding the size of main screen.
-	
-	wa := GetMonitorWorkArea(1)
-	
-	max_gui_width := wa.width - 2*g_evpWindowBorder
-	
-	imgw_gui_units := imgw / Get_DPIScale()
-	imgh_gui_units := imgh / Get_DPIScale()
-		; For example, on an 120-dpi monitor setting Windows(125% scale), for a 125-pixel width image,
-		; you need to only pass w100 for the picture control to show it perfectly.
-	
-	stock_width := 2*g_evpMarginX + g_evpListboxWidth + g_evpGapX
-	gui_wreq := stock_width + imgw_gui_units
-	if(gui_wreq<=g_evpGuiDefaultWidth)
-		gui_wreq := g_evpGuiDefaultWidth
-	else if(gui_wreq > max_gui_width)
-		gui_wreq := max_gui_width ; not execeed primary monitor workarea width
-
-	wpreview := imgw_gui_units
-	hpreview := imgh_gui_units
-	if(wpreview > gui_wreq-stock_width)
-	{	; shrink wpreview to fit in monitor
-		wpreview := gui_wreq - stock_width ; preview(pic control) width
-		hpreview := wpreview * imgh/imgw ; preview height
-		
-		g_evpImageZoom := wpreview / imgw_gui_units
-	}
-	else 
+	if(is_succ)
 	{
-		g_evpImageZoom := 1
+		g_evpConvertsAfterUIShown += 1
+	}
+}
+
+Evp_SyncGuiByBaseImage(imgfilepath, imgw, imgh) 
+{
+	; This function adjusts(Increase or decrease)  EVP GUI's window size 
+	; so that the image can be display at 100% Zoom level. 
+	; But if the image is larger than monitor area, I have to shrink it. 
+	;
+	; imgfilepath and be empty, this will change the UI to its default(blank) size.
+	;
+	; This function changes global vars:
+	; g_evpBaseImageFilepath, g_evpImageWidth, g_evpImageHeight
+	
+	; //// Reset UI controls first ////
+	
+	
+	; Clear listbox
+	hwndListbox := GuiControl_GetHwnd("EVP", "gu_evpLbxImages")
+	dev_assert(hwndListbox)
+	dev_Listbox_Clear(hwndListbox)
+
+	; //// Set new content into controls according to imgfilepath ////
+	
+	if(imgfilepath)
+	{
+		wa := GetMonitorWorkArea(1)
+		
+		max_gui_width := wa.width - 2*g_evpWindowBorder
+		
+		imgw_gui_units := imgw / Get_DPIScale()
+		imgh_gui_units := imgh / Get_DPIScale()
+			; For example, on an 120-dpi monitor setting Windows(125% scale), for a 125-pixel width image,
+			; you need to only pass w100 for the picture control to show it perfectly.
+		
+		stock_width := 2*gc_evpMarginX + gc_evpCol1Width + gc_evpGapX
+		gui_wreq := stock_width + imgw_gui_units
+		if(gui_wreq<=gc_evpGuiDefaultWidth_XXX)
+			gui_wreq := gc_evpGuiDefaultWidth_XXX
+		else if(gui_wreq > max_gui_width)
+			gui_wreq := max_gui_width ; not execeed primary monitor workarea width
+
+		wimgpane := imgw_gui_units
+
+		himgpane := imgh_gui_units
+		if(wimgpane > gui_wreq-stock_width)
+		{	
+		; shrink wimgpane to fit in monitor
+			wimgpane := round(gui_wreq - stock_width) ; preview(pic control) width
+			himgpane := round(wimgpane * imgh/imgw) ; preview height
+			
+			g_evpImageZoom := wimgpane / imgw_gui_units
+		}
+		else 
+		{
+			g_evpImageZoom := 1
+		}
+		
+		; todo optimize: adjust y position ,
+		; todo optimize: deal with long portrait image scaling
+	}
+	else ; imgfilepath is empty, reset UI to default
+	{
+		wimgpane := gc_evpImgpaneDefWidth
+		himgpane := gc_evpImgpaneDefHeight
 	}
 	
-	xpreview := g_evpMarginX + g_evpListboxWidth + g_evpGapX
+	ximgpane := gc_evpMarginX + gc_evpCol1Width + gc_evpGapX
 
-	; Create left-side listbox and right-side picture-control.
-	GuiControl, EVP:Hide, g_evpBtnDismiss
-	Gui, EVP:Add, ListBox, % Format("ys xm Section r12 vg_evpImageList gEvp_ListboxSelChange AltSubmit w{}", g_evpListboxWidth)
-		; ys: Let it place where the Dismiss button was.
-	Gui, EVP:Add, Pic, % "ys vg_evpPic w" . wpreview . " h" . hpreview, % imgfile
-	;
-	Gui, EVP:Add, Edit, xm ReadOnly vg_evpCurImageFile w0
-	Gui, EVP:Add, Button, xm vg_evpBtnOK default gEvp_BtnOK, % "Use This (or press Enter)"
-	GuiControl, EVP:Disable, g_evpBtnOK ; Not enabled until all previews generated
-
-	; todo: adjust y position ,
-	; todo: deal with long portrait image scaling
-	Gui, EVP:Show, xCenter yCenter Autosize, % Evp_WinTitle()
-	; Some quick tweak: If the window is too tall, we move down the window so that 
-	; its title bars can be seen on primary monitor.
-	WinGetPos, x,y,w,h, ahk_id %g_HwndEVPGui%
-	if(h>wa.height)
-		WinMove, ahk_id %g_HwndEVPGui%, , %x%, 0
+	rlistbox := GuiControl_GetPos("EVP", "gu_evpLbxImages")
 	
+	GuiControl_SetPos("EVP", "gu_evpPic", ximgpane, rlistbox.y, wimgpane, himgpane) ; same vertical pos
+
+	g_evpImgpaneWidth := wimgpane
+	g_evpImgpaneHeight := himgpane
+	;
+	g_evpBaseImageFilepath := imgfilepath
+	g_evpImageWidth := imgw
+	g_evpImageHeight := imgh
+
+	col2w := dev_max(wimgpane, gc_evpImgpaneDefWidth)
+	GuiControl_SetPos("EVP", "gu_evpTxtClipbState", -1, -1, col2w, -1)
+	GuiControl_SetPos("EVP", "gu_evpEdrImgFilepath", -1, -1, col2w, -1)
+	
+	GuiControl_SetText("EVP", "gu_evpPic", imgfilepath) ; this actually changes Pic control's picture appearance
+
+	GuiControl_SetPos("EVP", "gu_evpEdrFootline"
+		, -1, rlistbox.y + dev_max(gc_evpImgpaneDefHeight, himgpane) + gc_evpGapY
+		, dev_max(Evp_CalCtrlFullWidth(), gc_evp_GUIDefWidth), -1)
+
+	rFootline := GuiControl_GetPos("EVP", "gu_evpEdrFootline")
+	GuiControl_SetPos("EVP", "gu_evpBtnOK"
+		, -1, rFootline.y + rFootline.h + gc_evpGapY
+		, -1, -1)
+	
+	Evp_AutosizeNowUI()
+
+	if(imgfilepath)
+	{
+		; Some quick tweak: If the window is too tall, we move down the window to y=0, 
+		; so that its title bar can be seen on primary monitor.
+		WinGetPos, x,y,w,h, ahk_id %g_HwndEVPGui%
+		if(h>wa.height)
+			WinMove, ahk_id %g_HwndEVPGui%, , %x%, 0
+	}
 }
 
 Evp_RefreshPreviewAllGui()
@@ -557,48 +990,48 @@ Evp_RefreshPreviewAllGui()
 	Loop, Read, % g_evpImglistTxtPath
 	{
 		field := StrSplit(A_LoopReadLine, ",")
-		desc := field[1]	; Example: "PNG (32bit), 80KB"
+		desc := field[1]	; Example: "PNG (32-bit), 80KB"
 		filesizeKB := field[2]
 		imgfile := field[3]
 		
 		; Add desc(image variant description) to listbox
-		GuiControl, EVP:, g_evpImageList, % Format("{}, {}", desc, filesizeKB)
+		GuiControl, EVP:, gu_evpLbxImages, % Format("{}, {}", desc, filesizeKB)
 		
 		g_evp_arImageStore[A_Index] := {"hint":desc, "sizekb":filesizeKB, "path":imgfile}
 		; -- hint will be displayed as small-font footnote beneath each image inserted into Evernote clip.
 	}
 	
 	; Choose and display PNG-32bit by default
-	GuiControl, EVP:Choose, g_evpImageList, 1
-	GuiControl, EVP:, g_evpPic, % g_evp_arImageStore[1].path
-	GuiControl, EVP:Focus, g_evpImageList
+	GuiControl, EVP:Choose, gu_evpLbxImages, 1
+	GuiControl, EVP:, gu_evpPic, % g_evp_arImageStore[1].path
+	GuiControl, EVP:Focus, gu_evpLbxImages
 	
-	GuiControl, EVP:Enable, g_evpBtnOK
+	GuiControl_Enable("EVP","gu_evpBtnOK", true)
 }
 
 
-Evp_ListboxSelChange()
+Evp_RefreshImgpane() ; was Evp_ListboxSelChange()
 {
-	GuiControlGet, g_evpImageList
-;	tooltip, imglist=%g_evpImageList%
-	cur_imagefile := g_evp_arImageStore[g_evpImageList].path
+; TODO: scale AWARE
+
+	GuiControlGet, gu_evpLbxImages
+
+	cur_imagefile := g_evp_arImageStore[gu_evpLbxImages].path
 	
-	GuiControl, EVP:, g_evpPic, % cur_imagefile
+	GuiControl_SetText("EVP", "gu_evpPic",  cur_imagefile)
 	
-	WinGetPos, x,y,w,h, ahk_id %g_HwndEVPGui%
-	GuiControl, EVP:Move, g_evpCurImageFile, % "w" . w-2*(g_evpMarginX*g_evpWindowBorder)
-	GuiControl, EVP:, g_evpCurImageFile, % cur_imagefile
+	GuiControl_SetText("EVP", "gu_evpEdrFootline", cur_imagefile)
 }
 
 Evp_BtnOK()
 {
-	GuiControlGet, g_evpImageList
-	imgfilepath := g_evp_arImageStore[g_evpImageList].path
+	GuiControlGet, gu_evpLbxImages
+	imgfilepath := g_evp_arImageStore[gu_evpLbxImages].path
 	dev_SplitPath(imgfilepath, imgfilename)
-	imghint := g_evp_arImageStore[g_evpImageList].hint ; "PNG(32-bit)" etc
-	imgsizekb := g_evp_arImageStore[g_evpImageList].sizekb
-	
-	dev_assert(StrIsStartsWith(imgfilename, g_evpImageNamePrefix))
+	imghint := g_evp_arImageStore[gu_evpLbxImages].hint ; "PNG(32-bit)" etc
+	imgsizekb := g_evp_arImageStore[gu_evpLbxImages].sizekb
+;msgbox, % "####" imgfilepath " | " g_evpImageSig	
+	dev_assert(StrIsStartsWith(imgfilename, g_evpImageSig))
 
 	html_fmt = 
 (
@@ -612,7 +1045,7 @@ Evp_BtnOK()
 		, g_evpImageWidth, g_evpImageHeight ; {2}, {3} width and height
 		, imgsizekb ; {4} "33KB" etc
 		, imghint ; {5} 
-		, g_evpImageNamePrefix ; {6}
+		, g_evpImageSig ; {6}
 		, dev_LocalTimeZoneMinutesStr()) ;{7} timezone 
 
 	; Save the used picture to a permanent directory, so that we can get it back 

@@ -29,7 +29,7 @@ global g_AmMute := false
 
 global g_RCtrl_WinMoveScale_graceticks = 3000
 
-
+global gu_TxtLabelDefault := ""
 
 global g_func_IsTypingZhongwen := "IsTypingZhongwen_PinyinJiaJia"
 global g_func_IMEToggleZhonwen := "ToggleZhongwenStatus_PinyinJiaJia"
@@ -208,10 +208,15 @@ hwndCtrl under mouse is "%hctrl_undermouse%"
 
 dev_assert(torf)
 {
-	if(torf!=true)
+	if(!torf)
 	{
 		dev_MsgBoxError(dev_getCallStack(), "AHK Assertion Fail! Stacktrace >>>")
 	}
+}
+
+dev_max(a, b)
+{
+	return a>b ? a : b
 }
 
 SystrayMenu_Add_MuteClicking()
@@ -1249,16 +1254,6 @@ dev_StripPrefix(str, prefix, is_case_sensitive:=false)
 	else
 		return str
 	
-}
-
-dev_str2num(str)
-{
-	; Convert "012" to 12, so that it can be used as array index.
-	; Tip from Lexikos: https://www.autohotkey.com/board/topic/21271-converting-string-to-number/
-	
-	num := "0" . str
-	num += 0
-	return num
 }
 
 dev_TooltipAutoClear(text, keep_millisec:=2000)
@@ -2587,7 +2582,6 @@ RegexBlindScrollAControl(sdir, wintitle, regexClassnn, regexControlText)
 	return true
 }
 
-
 dev_Hex2Num(HX)
 {
 	; https://autohotkey.com/boards/viewtopic.php?t=6434
@@ -2601,6 +2595,28 @@ dev_Hex2Num(HX)
 	return Dec
 }
 
+dev_str2num(str)
+{
+	; Convert "012" to 12, so that it can be used as array index.
+	; Tip from Lexikos: https://www.autohotkey.com/board/topic/21271-converting-string-to-number/
+	;
+	; [2022-12-07] Memo: Convert "90%" to 90 .
+	
+	num := "0" . str
+	num += 0
+	return num
+}
+
+;dev_Str2Num(str) // chj
+;{
+;	; like ANSI C atoi(str),  str="90%", will return 90. 
+;	foundpos := RegExMatch(str, "^([0-9]+)", subpat)
+;	if(foundpos==1)
+;		return subpat1
+;	else
+;		return 0
+;}
+;
 dev_GuiLabelSetText(GuiName, LabelName, text)
 {
 	GuiControl, %GuiName%:, %LabelName%, % text
@@ -3013,6 +3029,12 @@ dev_getCallStack(deepness = 20, is_print_code = true)
 	return stack
 }
 
+dev_FileReadLine(filepath, idxline)
+{
+	FileReadLine, linetext, % filepath, % idxline
+	return linetext
+}
+
 dev_hasValue(haystack, needle) 
 {
 	; Check if needle is in the haystack array.
@@ -3173,6 +3195,23 @@ dev_IsExeRunning(exename)
 	}
 }
 
+dev_JoinStrings(ar_strings, join_with:=",")
+{
+	; ar_strings is an array containing strings
+	if(!IsObject(ar_strings))
+		return ""
+	
+	ret := ""
+	for index,value in ar_strings 
+	{
+		if(index==1)
+			ret := value
+		else
+			ret := ret . join_with . value
+	}
+	return ret
+}
+
 dev_LocalTimeZoneInMinutes()
 {
 	; For China, it returns 480 (8*60)
@@ -3200,6 +3239,208 @@ dev_IsShiftKeyDown()
 	else
 	    return false
 
+}
+
+;======== Gui & GuiControl =========
+
+Gui_IsValidVar(varname)
+{
+	; If varname is not defined, return false.
+	; User note: When passed in, your varname should be surround by double-quotes.
+	; Example:
+	;	Gui_IsValidVar("g_count")    ; may get true
+	;	Gui_IsValidVar("NoSuchVar")  ; will get false
+	;
+	; In order for a `global` var to pass this test, please initialize 
+	; your global var with a explicit value, like this:
+	; 	global g_count := 0
+	; 	global g_errmsg := ""
+
+	if(%varname%)
+		return true
+	else if(%varname%==0)
+		return true
+	else if(%varname%=="")
+		return true
+	else
+		return false
+}
+
+Gui_Show(GuiName, options, title:="AHKGUI")
+{
+	cmd := "Show"
+	if(GuiName)
+		cmd := Format("{}:{}", GuiName, cmd)
+
+	Gui, % cmd, % options, % title
+}
+
+GuiControl_ChangeOpt(GuiName, CtrlVarname, opt)
+{
+	; Example:
+	;	GuiControl_ChangeOpt("EVP", gu_xxx, "+AltSubmit")
+	
+	dev_assert(Gui_IsValidVar(CtrlVarname))
+	cmd := (GuiName ? GuiName ":" : "") . opt
+	GuiControl, % cmd, % CtrlVarname, % opt
+}
+
+Gui_Add_TxtLabel(GuiName, CtrlVarname, width, format, text:="")
+{
+	; format: 
+	; +0x8000 (SS_PATHELLIPSIS)
+	; +0xC000 (SS_WORDELLIPSIS)
+	
+	if(!CtrlVarname)
+		CtrlVarname := "gu_TxtLabelDefault"
+
+	dev_assert(Gui_IsValidVar(CtrlVarname))
+	cmdadd := GuiName ? (GuiName ":Add") : "Add"
+	Gui, % cmdadd, Text, % Format("v{} w{} {}", CtrlVarname, width, format), % text
+}
+
+GuiControl_SetColor(GuiName, CtrlVarname, fgcolor:="", bgcolor:="")
+{
+	; color value in RRGGBB string format, "FF9977", "Blue", "Red" or "default".
+	; If empty string, that means no change to current value.
+	;
+	; Note: bgcolor is only effective on a small number of controls, such as Progress-bar.
+	
+	dev_assert(Gui_IsValidVar(CtrlVarname))
+	optfg := fgcolor ? ("+c" fgcolor) : ""
+	optbg := bgcolor ? ("+Background" bgcolor) : ""
+	
+	if(optfg || optbg)
+	{
+		GuiControl_ChangeOpt(GuiName, CtrlVarname, optfg " " optbg)
+	}
+}
+
+Gui_Add_Button(GuiName, CtrlVarname, width, format, btntext)
+{
+	dev_assert(Gui_IsValidVar(CtrlVarname))
+	cmdadd := GuiName ? (GuiName ":Add") : "Add"
+	Gui, % cmdadd, Button, % Format("v{} w{} {}", CtrlVarname, width, format), % btntext
+}
+
+Gui_Add_Picbox(GuiName, CtrlVarname, width, format, imgfilepath:="")
+{
+	dev_assert(Gui_IsValidVar(CtrlVarname))
+	cmdadd := GuiName ? (GuiName ":Add") : "Add"
+	Gui, % cmdadd, Pic, % Format("v{} w{} {}", CtrlVarname, width, format), % imgfilepath
+}
+
+Gui_Add_Editbox(GuiName, CtrlVarname, width, format, init_text:="")
+{
+	; format: 
+	; Readonly
+	; -E0x200 (turn off WS_EX_CLIENTEDGE, remove editbox border thin line)
+
+	dev_assert(Gui_IsValidVar(CtrlVarname))
+	cmdadd := GuiName ? (GuiName ":Add") : "Add"
+	Gui, % cmdadd, Edit, % Format("v{} w{} {}", CtrlVarname, width, format), % init_text
+}
+
+Gui_Add_Listbox(GuiName, CtrlVarname, width, format, itemlist_pipes:="")
+{
+	; format: AltSumbit r12
+
+	dev_assert(Gui_IsValidVar(CtrlVarname))
+	cmdadd := GuiName ? (GuiName ":Add") : "Add"
+	Gui, % cmdadd, ListBox, % Format("v{} w{} {}", CtrlVarname, width, format), % itemlist_pipes
+}
+
+Gui_Add_Combobox(GuiName, CtrlVarname, width, format, itemlist_pipes:="")
+{
+	; format: AltSumbit
+
+	dev_assert(Gui_IsValidVar(CtrlVarname))
+	cmdadd := GuiName ? (GuiName ":Add") : "Add"
+	Gui, % cmdadd, ComboBox, % Format("v{} w{} {}", CtrlVarname, width, format), % itemlist_pipes
+}
+
+GuiControl_Enable(GuiName, CtrlVarname, is_enable)
+{
+	dev_assert(Gui_IsValidVar(CtrlVarname))
+	cmd := is_enable ? "Enable" : "Disable"
+	if(GuiName)
+		cmd := Format("{}:{}", GuiName, cmd)
+
+	GuiControl, % cmd, % CtrlVarname
+}
+
+GuiControl_Show(GuiName, CtrlVarname, is_show)
+{
+	dev_assert(Gui_IsValidVar(CtrlVarname))
+	cmd := is_show ? "Show" : "Hide"
+	if(GuiName)
+		cmd := Format("{}:{}", GuiName, cmd)
+
+	GuiControl, % cmd, % CtrlVarname
+}
+
+GuiControl_GetHwnd(GuiName, CtrlVarname)
+{
+	dev_assert(Gui_IsValidVar(CtrlVarname))
+	cmd := "Hwnd"
+	if(GuiName)
+		cmd := Format("{}:{}", GuiName, cmd)
+
+	GuiControlGet, outputHwnd, % cmd, % CtrlVarname
+	return outputHwnd
+}
+
+GuiControl_GetText(GuiName, CtrlVarname)
+{
+	dev_assert(Gui_IsValidVar(CtrlVarname))
+	cmd := GuiName ? GuiName ":" : ""
+	GuiControlGet, outvar, % cmd, % CtrlVarname
+	return outvar
+}
+
+GuiControl_SetText(GuiName, CtrlVarname, text)
+{
+	dev_assert(Gui_IsValidVar(CtrlVarname))
+	cmd := GuiName ? GuiName ":" : ""
+	GuiControl, % cmd, % CtrlVarname, % text
+}
+
+GuiControl_GetPos(GuiName, CtrlVarname)
+{
+	dev_assert(Gui_IsValidVar(CtrlVarname))
+	cmd := "Pos"
+	if(GuiName)
+		cmd := Format("{}:{}", GuiName, cmd)
+
+	GuiControlGet, outvar, % cmd, % CtrlVarname
+	
+	return {"x":outvarX, "y":outvarY, "w":outvarW, "h":outvarH}
+}
+
+GuiControl_SetPos(GuiName, CtrlVarname, x:=-1, y:=-1, w:=-1, h:=-1, force_redraw:=true)
+{
+	; -1 : Don't change current value
+	
+	dev_assert(Gui_IsValidVar(CtrlVarname))
+	cmd := force_redraw ? "MoveDraw" : "Move"
+	if(GuiName)
+		cmd := Format("{}:{}", GuiName, cmd)
+
+	r := GuiControl_GetPos(GuiName, CtrlVarname)
+
+	GuiControl, % cmd, % CtrlVarname, % Format("x{} y{} w{} h{}"
+		, x==-1 ? r.x : x
+		, y==-1 ? r.y : y
+		, w==-1 ? r.w : w
+		, h==-1 ? r.h : h)
+}
+
+dev_Listbox_Clear(hwndListbox, entries:=100)
+{
+	Loop, % entries
+	{
+		Control, Delete, % entries+1-A_Index, , ahk_id %hwndListbox%
+	}
 }
 
 ;==============================================================================
