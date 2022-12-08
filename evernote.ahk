@@ -87,7 +87,6 @@ global gc_evp_GUIDefWidth := gc_evpGapX*2 + gc_evpCol1Width + gc_evpImgpaneDefWi
 
 global gar_evpScalePcts := [ 100, 75, 50, 40, 30, 20 ]
 
-global gc_evpGuiDefaultWidth_XXX := 600 ; TODO remove, would be calculated from gc_evpImgpaneDefWidth
 global gc_evpMarginX := 10 ; const
 global gc_evpMarginY := 10 ; const
 global g_evpWindowBorder := 14 ; assume, may not be accurate yes
@@ -281,7 +280,6 @@ Evp_ShowGui()
 
 	Evp_TimerOn()
 
-;	Evp_SyncGuiByBaseImage("D:\test\PIL2-png256-with-purple.png", 1092, 663) ; temp XXX
 	g_evpIsGuiVisible := true
 	g_evpConvertsAfterUIShown := 0
 }
@@ -346,8 +344,6 @@ Evp_CreateGui()
 	fullwidth := Evp_CalCtrlFullWidth()
 	Gui_Add_Editbox( "EVP", "gu_evpEdrFootline", fullwidth, "xm Readonly", "Footline")
 
-;Gui, EVP:Add, Progress, xp w100 vgut_progressbar, % "progressbar" ; to-delete XXX
-	
 	; Fill gu_evpCbxScalePct combobox
 	for index,value in gar_evpScalePcts
 	{
@@ -462,8 +458,6 @@ Evp_LaunchBatchConvert(fpFromImage:="", scale_pct:=100)
 
 	imgsig := Evp_GenImageSigByTimestamp()
 
-;Msgbox, % "fpFromImage=" fpFromImage "  scale_pct=" scale_pct ; xxx debug
-
 	fpBaseImage := Evp_GenerateBaseImage(fpFromImage, scale_pct, imgsig, imgw, imgh) ; imgw, imgh is output-var
 		; -- filepath of the base-image, example:
 		; C:\Users\win7evn\AppData\Local\Temp\Everpic\everpic-20221204_150000.png
@@ -572,7 +566,7 @@ Evp_GenerateBaseImage(fpFromImage, scale_pct, imgsig, byref imgw, byref imgh)
 		if(!fpFromImage && bitmap_filepath)
 			fpFromImage := bitmap_filepath
 
-		if(fpFromImage) ; XXX to-test
+		if(fpFromImage)
 		{
 			; fpFromImage can be any format(bmp, jpg, gif, png etc)
 			; We need to first save it as 32-bit png, via Gdip libray.
@@ -908,9 +902,7 @@ Evp_SyncGuiByBaseImage(imgfilepath, imgw, imgh)
 		
 		stock_width := 2*gc_evpMarginX + gc_evpCol1Width + gc_evpGapX
 		gui_wreq := stock_width + imgw_gui_units
-		if(gui_wreq<=gc_evpGuiDefaultWidth_XXX)
-			gui_wreq := gc_evpGuiDefaultWidth_XXX
-		else if(gui_wreq > max_gui_width)
+		if(gui_wreq > max_gui_width)
 			gui_wreq := max_gui_width ; not execeed primary monitor workarea width
 
 		wimgpane := imgw_gui_units
@@ -1076,7 +1068,7 @@ Evp_BtnOK()
 
 Evp_CleanupOldTemp()
 {
-	; Cleanup old everpic-xxx files in C:\Users\win7evn\AppData\Local\Temp\Everpic
+	; Cleanup old everpic-... files in C:\Users\win7evn\AppData\Local\Temp\Everpic
 
 	Loop, Files, % g_evpTempDir . "\*"
 	{
