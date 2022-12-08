@@ -103,7 +103,7 @@ global gu_evpBtnConvert := ""  ; The top-left corner "Batch convert" button
 global gu_evpTxtScale   := ""  ; the small "Scale:" text label
 global gu_evpCbxScalePct := 0  ; The image-scale percent combobox
 global gu_evpLbxImages   := 0  ; Image-candidates list listbox 
-global gu_evpTxtLoadStat := "" ; Small text label, result statistics, e.g, "640*480, 0.2s"
+global gu_evpEdrLoadStat := "" ; Small text label, result statistics, e.g, "640*480, 0.2s"
 ;
 ; Second column controls:
 ;
@@ -332,7 +332,7 @@ Evp_CreateGui()
 	Gui_Add_Combobox("EVP", "gu_evpCbxScalePct", col1w-lwScale-gc_evpGapX
 		, Format("x+{} yp-2 AltSubmit g{}", gc_evpGapX, "Evp_RefreshImgpane"))
 	Gui_Add_Listbox( "EVP", "gu_evpLbxImages",    col1w, Format("xs r12 AltSubmit g{}", "Evp_RefreshImgpane"))
-	Gui_Add_TxtLabel("EVP", "gu_evpTxtLoadStat",  col1w, "", "")
+	Gui_Add_Editbox("EVP", "gu_evpEdrLoadStat",  col1w, "Readonly -E0x200", "")
 	Gui_Add_Button(  "EVP", "gu_evpBtnOK",        col1w, "default g" . "Evp_BtnOK", "&Use This (or press Enter)")
 
 	; ==== Create Column2 controls. ====
@@ -377,7 +377,7 @@ Evp_ShowAllControls(is_show:=true)
 
 	s_prev_shown := is_show
 
-	ctls := ["gu_evpTxtScale", "gu_evpCbxScalePct", "gu_evpLbxImages", "gu_evpTxtLoadStat"
+	ctls := ["gu_evpTxtScale", "gu_evpCbxScalePct", "gu_evpLbxImages", "gu_evpEdrLoadStat"
 		, "gu_evpBtnOK"
 		, "gu_evpEdrImgFilepath", "gu_evpPic", "gu_evpEdrFootline" ] 
 	
@@ -837,11 +837,12 @@ Evp_CheckConvertingProgressUpdateUI()
 		
 		zoomhint := ""
 		if(g_evpImageZoom!=1)
-			zoomhint := "(Zoom " . floor(g_evpImageZoom*100) . "%) " ; note Zoom-pct is not Scale-pct
+			zoomhint := Format("({}% zoom)",floor(g_evpImageZoom*100)) ; note Zoom-pct is not Scale-pct
 		
-		GuiControl_SetText("EVP", "gu_evpTxtLoadStat"
-			, Format("{}*{} {}, {}.{:03}s"
-				, g_evpImgpaneWidth, g_evpImgpaneHeight, zoomhint, msecs/1000, Mod(msecs,1000)))
+		GuiControl_SetText("EVP", "gu_evpEdrLoadStat"
+			, Format("{}*{} , {}.{:03}s {}"
+				, g_evpImgpaneWidth, g_evpImgpaneHeight, floor(msecs/1000), Mod(msecs,1000)
+				, zoomhint))
 		
 ;		Evp_ShowAllControls(true) ; already done
 		
@@ -943,8 +944,8 @@ Evp_SyncGuiByBaseImage(imgfilepath, imgw, imgh)
 	
 	GuiControl_SetPos("EVP", "gu_evpPic", ximgpane, rlistbox.y, wimgpane, himgpane) ; same vertical pos
 
-	g_evpImgpaneWidth := wimgpane
-	g_evpImgpaneHeight := himgpane
+	g_evpImgpaneWidth := round(wimgpane)
+	g_evpImgpaneHeight := round(himgpane)
 	;
 	g_evpBaseImageFilepath := imgfilepath
 	g_evpImageWidth := imgw
