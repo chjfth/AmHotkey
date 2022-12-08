@@ -159,8 +159,17 @@ SourceURL:file:///C:/Users/win7evn/AppData/Local/Temp/prettify_output.html
 	htmlraw := SubStr(htmlcc, foundpos)
 	
 	; Cope with problem(A)
+	;
 	htmlraw := StrReplace(htmlraw, "`r`n", "`n")
-	htmlraw := StrReplace(htmlraw, "`n</span>", "</span><br/>`n")
+	;
+	; Move all "</span>" at start-of-line to previous-line tail, and add <br/> after the </span> .
+	; We need to do it in a loop, bcz if </span>'s previous-line is a blank line, do it once is not enough.
+	;
+	Loop
+	{
+		htmlraw := StrReplace(htmlraw, "`n</span>", "</span><br/>`n", nReplaced)
+		
+	} Until (nReplaced==0)
 	
 	dev_ClipboardSetHTML(htmlraw)
 }
