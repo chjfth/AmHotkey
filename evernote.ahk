@@ -818,7 +818,7 @@ Evp_CheckConvertingProgressUpdateUI()
 	
 	dev_assert(g_evpTimerStage=="ConvertStarted")
 	
-	dev_assert(progtext) ; Todo: what about previous dev_FileReadLine() failed, due to file being locked by background process.
+	ignore_err := false
 
 	; Check file content in fpProgress to see whether the background
 	; image-list generation has completed. Sample file:
@@ -831,30 +831,35 @@ Evp_CheckConvertingProgressUpdateUI()
 	;
 	; If 9/9 is reached, it means completed.
 
-;	if(!FileExist(fpProgress))
-;	{
-;		Evp_SecondLineShowMsg(Format("Waiting for progress file creation: {}", fpProgress))
-;		return 
-;	}
-
-	nums := StrSplit(progtext, "/")
-	nDone := nums[1]
-	nTotal := nums[2]
+	if(progtext)
+	{
+		nums := StrSplit(progtext, "/")
+		nDone := nums[1]
+		nTotal := nums[2]
+	}
+	else
+	{
+		; Possible situation: Above dev_FileReadLine() failed, due to file being written(file locked)
+		; by background converting process. So we just ignore it.
+		nDone := "?"
+		nTotal := "?"
+		ignore_err := true 
+	}
 
 ;dev_TooltipAutoClear("### " A_TickCount-g_evpTickLastActivity "%%% " Format("{}/{}", nDone, nTotal)) ; yes counting
 
-	if(!nTotal)
+	if(!ignore_err && !nTotal)
 	{
 		dev_MsgBoxError("Something Wrong!", "Bad content in progress file: " fpProgress)
 		return
 	}
 	
-	if(nDone<nTotal)
+	if(ignore_err || nDone<nTotal)
 	{
 		GuiControl_SetText("EVP", "gu_evpTxtClipbState"
 			, Format("Converting {}/{} ...", nDone, nTotal))
 		
-		if(nDone>s_prev_nDone)
+		if(!ignore_err && nDone>s_prev_nDone)
 		{
 			g_evpTickLastActivity := A_TickCount
 			s_prev_nDone := nDone

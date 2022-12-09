@@ -32,6 +32,7 @@ https://www.evernote.com/shard/s21/nl/2425275/61130b53-504e-45f2-8bca-834e32261f
 https://www.evernote.com/shard/s21/nl/2425275/7dd94f40-6dcd-43d2-b0d3-eed6fb3030ed , Windows一般话题:WinPE
 https://www.evernote.com/shard/s21/nl/2425275/b60a8772-afb4-4cb3-9728-00d230fa7c09 , Windows一般话题:WinToGo , Windows-To-Go
 https://www.evernote.com/shard/s21/nl/2425275/6a06a3d1-d5f4-4af9-98f3-12ed3daff442 , Windows一般话题:BOOTMGR , Vista+ Boot manager
+https://www.evernote.com/shard/s21/nl/2425275/397dede7-1823-42eb-bd37-40ad1f9bd0f2 , Windows一般话题:Win10Memo , Win10/11 相关话题
 https://www.evernote.com/shard/s21/nl/2425275/cc6deee7-0d6a-4f4b-a0cd-49c0a03c94fa , Windows一般话题:Win10WSL , Windows Subsystem for Linux
 https://www.evernote.com/shard/s21/nl/2425275/c0a9ab2e-bebe-45b8-a2f2-61effca286fa , Windows一般话题:WinPwrcfg , Windows 睡眠/休眠/唤醒
 https://www.evernote.com/shard/s21/nl/2425275/a59ec410-ec8a-413b-8a35-ee280bbc41fa , Windows一般话题:taskschd , Windows 内置计划任务功能
