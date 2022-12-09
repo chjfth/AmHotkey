@@ -109,7 +109,7 @@ global gu_evpEdrLoadStat := "" ; Small text label, result statistics, e.g, "640*
 ;
 global gu_evpTxtClipbState := "" ; Text label showing clipboard state.
 global gu_evpEdrImgFilepath := "" ; Currently previewing image filepath (readonly editbox)
-global gu_evpPic ; gui-assoc, Picture control
+global gu_evpPicPreview ; gui-assoc, Picture control
 ;
 global gu_evpBtnOK := "" ; Left-bottom "Use This" button
 
@@ -325,9 +325,10 @@ Evp_CreateGui()
 	; ==== Create Column1 controls. ====
 	;
 	col1w := gc_evpCol1Width
-	Gui_Add_Button(  "EVP", "gu_evpBtnConvert",  col1w, "Section xm ym g" . "Evp_evtBatchConvert" , "Batch &Convert")
+	Gui_Add_Button(  "EVP", "gu_evpBtnConvert",  col1w, "Section xm ym g" . "Evp_evtBatchConvert" , "&Convert from Clipboard")
+	;
 	lwScale := 42 ; label-width
-	Gui_Add_TxtLabel("EVP", "gu_evpTxtScale", lwScale, "", "Scale:")
+	Gui_Add_TxtLabel("EVP", "gu_evpTxtScale", lwScale, "y+25", "Scale:")
 	Gui_Add_Combobox("EVP", "gu_evpCbxScalePct", col1w-lwScale-gc_evpGapX
 		, Format("x+{} yp-2 AltSubmit g{}", gc_evpGapX, "Evp_RefreshImgpane"))
 	Gui_Add_Listbox( "EVP", "gu_evpLbxImages",    col1w, Format("xs r12 AltSubmit g{}", "Evp_RefreshImgpane"))
@@ -338,8 +339,8 @@ Evp_CreateGui()
 	;
 	col2w := gc_evpImgpaneDefWidth
 	Gui_Add_TxtLabel("EVP", "gu_evpTxtClipbState",  col2w, Format("xs+{} ys+5 +0x8000", col1w+gc_evpGapX), "Clipboard state")
-	Gui_Add_Editbox( "EVP", "gu_evpEdrImgFilepath", col2w, "y+15 Readonly -E0x200", "imgfilepath")
-	Gui_Add_Picbox(  "EVP", "gu_evpPic",            col2w, "h" g_evpImgpaneHeight)
+	Gui_Add_Editbox( "EVP", "gu_evpEdrImgFilepath", col2w, "y+31 Readonly -E0x200", "imgfilepath")
+	Gui_Add_Picture( "EVP", "gu_evpPicPreview",     col2w, "h" g_evpImgpaneHeight)
 	
 	; FootLine
 	fullwidth := Evp_CalCtrlFullWidth()
@@ -376,7 +377,7 @@ Evp_ShowAllControls(is_show:=true)
 
 	ctls := ["gu_evpTxtScale", "gu_evpCbxScalePct", "gu_evpLbxImages", "gu_evpEdrLoadStat"
 		, "gu_evpBtnOK"
-		, "gu_evpEdrImgFilepath", "gu_evpPic", "gu_evpEdrFootline" ] 
+		, "gu_evpEdrImgFilepath", "gu_evpPicPreview", "gu_evpEdrFootline" ] 
 	
 	for index,value in ctls
 	{
@@ -993,7 +994,7 @@ Evp_SyncGuiByBaseImage(imgfilepath, imgw, imgh, scale_pct)
 
 	rlistbox := GuiControl_GetPos("EVP", "gu_evpLbxImages")
 	
-	GuiControl_SetPos("EVP", "gu_evpPic", ximgpane, rlistbox.y, wimgpane, himgpane) ; same vertical pos
+	GuiControl_SetPos("EVP", "gu_evpPicPreview", ximgpane, rlistbox.y, wimgpane, himgpane) ; same vertical pos
 
 	g_evpBaseImageFilepath := imgfilepath
 	g_evpImageWidth  := imgw
@@ -1007,7 +1008,7 @@ Evp_SyncGuiByBaseImage(imgfilepath, imgw, imgh, scale_pct)
 	GuiControl_SetPos("EVP", "gu_evpTxtClipbState", -1, -1, col2w, -1)
 	GuiControl_SetPos("EVP", "gu_evpEdrImgFilepath", -1, -1, col2w, -1)
 	
-	GuiControl_SetText("EVP", "gu_evpPic", imgfilepath) ; this actually changes Pic control's picture appearance
+	GuiControl_SetText("EVP", "gu_evpPicPreview", imgfilepath) ; this actually changes Pic control's picture appearance
 
 	GuiControl_SetPos("EVP", "gu_evpEdrFootline"
 		, -1, rlistbox.y + dev_max(gc_evpImgpaneDefHeight, himgpane) + gc_evpGapY
@@ -1056,7 +1057,7 @@ Evp_RefreshPreviewAllGui()
 	
 	; Choose and display PNG-32bit by default
 	GuiControl, EVP:Choose, gu_evpLbxImages, 1
-	GuiControl, EVP:, gu_evpPic, % g_evp_arImageStore[1].path
+	GuiControl, EVP:, gu_evpPicPreview, % g_evp_arImageStore[1].path
 	GuiControl, EVP:Focus, gu_evpLbxImages
 	
 	GuiControl_Enable("EVP","gu_evpBtnOK", true)
@@ -1069,7 +1070,7 @@ Evp_RefreshImgpane()
 
 	cur_imagefile := g_evp_arImageStore[gu_evpLbxImages].path
 	
-	GuiControl_SetText("EVP", "gu_evpPic",  cur_imagefile)
+	GuiControl_SetText("EVP", "gu_evpPicPreview",  cur_imagefile)
 	
 	GuiControl_SetText("EVP", "gu_evpEdrFootline", cur_imagefile)
 }

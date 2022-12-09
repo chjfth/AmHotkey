@@ -3323,11 +3323,11 @@ Gui_Add_Button(GuiName, CtrlVarname, width, format, btntext)
 	Gui, % cmdadd, Button, % Format("v{} w{} {}", CtrlVarname, width, format), % btntext
 }
 
-Gui_Add_Picbox(GuiName, CtrlVarname, width, format, imgfilepath:="")
+Gui_Add_Picture(GuiName, CtrlVarname, width, format, imgfilepath:="")
 {
 	dev_assert(Gui_IsValidVar(CtrlVarname))
 	cmdadd := GuiName ? (GuiName ":Add") : "Add"
-	Gui, % cmdadd, Pic, % Format("v{} w{} {}", CtrlVarname, width, format), % imgfilepath
+	Gui, % cmdadd, Picture, % Format("v{} w{} {}", CtrlVarname, width, format), % imgfilepath
 }
 
 Gui_Add_Editbox(GuiName, CtrlVarname, width, format, init_text:="")
