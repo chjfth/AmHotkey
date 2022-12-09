@@ -3275,6 +3275,26 @@ Gui_Show(GuiName, options, title:="AHKGUI")
 	Gui, % cmd, % options, % title
 }
 
+Gui_Switch_Font(GuiName, sizept=0, rgbhex="", fontface:="", weight:=400)
+{
+	; Set new font for next control, influencing Button, TxtLabel, Editbox etc.
+	;	Gui, EVTBL:Font, s9 cBlack, Tahoma
+
+	; rgbhex: "FF9977" or "Blue" , fontface: "Tahoma"
+	
+	cmd := "Font"
+	if(GuiName)
+		cmd := Format("{}:{}", GuiName, cmd)
+
+	opt_sizept := sizept ? ("s" sizept) : ""
+	opt_rgbhex := rgbhex ? ("c" rgbhex) : ""
+	opt_weight := weight ? ("w" weight) : ""
+	
+	optall := opt_sizept " " opt_rgbhex " " opt_weight
+
+	Gui, % cmd, % optall, % fontface
+}
+
 GuiControl_ChangeOpt(GuiName, CtrlVarname, opt)
 {
 	; Example:

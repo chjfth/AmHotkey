@@ -62,7 +62,13 @@ global g_evtblColorPresets := [ "#f0f0f0,清淡灰"
 global g_evpTempDir := A_Temp "\Everpic" ; 2022.12
 global gc_evpBatchConvertExecpath := A_ScriptDir "\exe\everpic-batch-prepare.bat"
 
-global g_evpBaseImageFilepath ; key switch
+
+global g_evpBaseImageFilepath_100pct
+	; If user choose a new scale, we use g_evpBaseImageFilepath_100pct to re-generate
+	; new scaled images, instead of re-generate from clipboard.
+	; Note: The so-called "BaseImage", is always in g_evpTempDir.
+;global g_evpBaseImageFilepath_scaled ; no use
+
 global g_evpImageWidth
 global g_evpImageHeight
 
@@ -98,9 +104,10 @@ global gc_evp_CF_BITMAP := 2
 
 ; First column controls:
 ;
-global gu_evpBtnConvert := ""  ; The top-left corner "Batch convert" button
+global gu_evpBtnCvtFromClipbrd := ""  ; The top-left corner "Convert from Clipboard" button
 global gu_evpTxtScale   := ""  ; the small "Scale:" text label
 global gu_evpCbxScalePct := 0  ; The image-scale percent combobox
+global gu_evpBtnCvtFromBaseImg := ""  ; The Refresh button that converts from existing Base-image
 global g_evpCurrentScalePct := 100
 global gu_evpLbxImages   := 0  ; Image-candidates list listbox 
 global gu_evpEdrLoadStat := "" ; Small text label, result statistics, e.g, "640*480, 0.2s"
@@ -124,10 +131,6 @@ global g_evpTimerStage := "Monitoring"
 	; "ConvertStarted"  : <basename>.progress.done.txt detected, checking its content for progress.
 global g_evpTickLastActivity := 0
 global g_evpTickConvertStart := 0
-
-global g_evp100pctBaseImage ; Filepath of the 100% zoom base-image, as a cache.
-	; If user choose a new scale, we can use this, instead of re-generate from clipboard.
-	; Note: The so-called "BaseImage", is always in g_evpTempDir.
 
 global gc_evpFileSuffix_progressdone := ".progress.done.txt"
 global gc_evpFileSuffix_imagelist    := ".imagelist.txt"
@@ -325,15 +328,19 @@ Evp_CreateGui()
 	; ==== Create Column1 controls. ====
 	;
 	col1w := gc_evpCol1Width
-	Gui_Add_Button(  "EVP", "gu_evpBtnConvert",  col1w, "Section xm ym g" . "Evp_evtBatchConvert" , "&Convert from Clipboard")
+	Gui_Add_Button(  "EVP", "gu_evpBtnCvtFromClipbrd", col1w, "Section xm ym g" . "Evp_evtBatchConvert" , "&Convert from Clipboard")
 	;
 	lwScale := 42 ; label-width
+	lwRefresh := 30
 	Gui_Add_TxtLabel("EVP", "gu_evpTxtScale", lwScale, "y+25", "Scale:")
-	Gui_Add_Combobox("EVP", "gu_evpCbxScalePct", col1w-lwScale-gc_evpGapX
-		, Format("x+{} yp-2 AltSubmit g{}", gc_evpGapX, "Evp_RefreshImgpane"))
-	Gui_Add_Listbox( "EVP", "gu_evpLbxImages",    col1w, Format("xs r12 AltSubmit g{}", "Evp_RefreshImgpane"))
+	Gui_Add_Combobox("EVP", "gu_evpCbxScalePct", col1w-lwScale-lwRefresh-gc_evpGapX
+		, Format("x+{} yp-2 AltSubmit g{}", 0, "Evp_RefreshImgpane"))
+	Gui_Add_Button(  "EVP", "gu_evpBtnCvtFromBaseImg", lwRefresh
+		, Format("x+{} yp-1 g{}", gc_evpGapX, "Evp_evtCvtFromBaseImg"), "→") ; "↻" (the Refresh Unicode char) is rendered ugly, so use right-arrow instead
+	;
+	Gui_Add_Listbox( "EVP", "gu_evpLbxImages",   col1w, Format("xs r12 AltSubmit g{}", "Evp_RefreshImgpane"))
 	Gui_Add_Editbox("EVP", "gu_evpEdrLoadStat",  col1w, "Readonly -E0x200", "")
-	Gui_Add_Button(  "EVP", "gu_evpBtnOK",        col1w, "default g" . "Evp_BtnOK", "&Use This (or press Enter)")
+	Gui_Add_Button(  "EVP", "gu_evpBtnOK",       col1w, "default g" . "Evp_BtnOK", "&Use This (or press Enter)")
 
 	; ==== Create Column2 controls. ====
 	;
@@ -358,7 +365,7 @@ Evp_CreateGui()
 	
 	; Set default states of the controls:
 	;
-	GuiControl_Enable("EVP","gu_evpBtnConvert", false) ; Not enabled until image in clipboard
+	GuiControl_Enable("EVP","gu_evpBtnCvtFromClipbrd", false) ; Not enabled until image in clipboard
 	GuiControl_Enable("EVP","gu_evpBtnOK", false) ; Not enabled until image previews all generated
 	;
 	Evp_ShowAllControls(false)
@@ -375,7 +382,8 @@ Evp_ShowAllControls(is_show:=true)
 
 	s_prev_shown := is_show
 
-	ctls := ["gu_evpTxtScale", "gu_evpCbxScalePct", "gu_evpLbxImages", "gu_evpEdrLoadStat"
+	ctls := ["gu_evpTxtScale", "gu_evpCbxScalePct", "gu_evpBtnCvtFromBaseImg"
+		, "gu_evpLbxImages", "gu_evpEdrLoadStat"
 		, "gu_evpBtnOK"
 		, "gu_evpEdrImgFilepath", "gu_evpPicPreview", "gu_evpEdrFootline" ] 
 	
@@ -384,7 +392,7 @@ Evp_ShowAllControls(is_show:=true)
 		GuiControl_Show("EVP", value, is_show)
 	}
 	
-	GuiControl_SetText("EVP", "gu_evpEdrImgFilepath", "Base-image: " g_evpBaseImageFilepath)
+;	GuiControl_SetText("EVP", "gu_evpEdrImgFilepath", "Base-image: " g_evpBaseImageFilepath_100pct) ; move to ...
 	
 	Evp_AutosizeNowUI()
 }
@@ -471,15 +479,31 @@ Evp_evtBatchConvert(CtrlHwnd, GuiEvent, EventInfo, ErrLevel:="")
 	Evp_LaunchBatchConvert_UseUIParam()
 }
 
-Evp_LaunchBatchConvert_UseUIParam()
+Evp_GetUIScalePct()
 {
 	GuiControl_ChangeOpt("EVP", "gu_evpCbxScalePct", "-AltSubmit")
 	text := GuiControl_GetText("EVP", "gu_evpCbxScalePct")
 	GuiControl_ChangeOpt("EVP", "gu_evpCbxScalePct", "+AltSubmit")
 	
 	scale_pct := dev_str2num(text)
-	
+	return scale_pct
+}
+
+Evp_LaunchBatchConvert_UseUIParam()
+{
+	scale_pct := Evp_GetUIScalePct()
 	Evp_LaunchBatchConvert("", scale_pct>0 ? scale_pct : 100)
+}
+
+Evp_evtCvtFromBaseImg(CtrlHwnd, GuiEvent, EventInfo, ErrLevel:="")
+{
+	dev_assert(g_evpBaseImageFilepath_100pct)
+;MsgBox, % "Base: " g_evpBaseImageFilepath_100pct
+	scale_pct := Evp_GetUIScalePct()
+	if(scale_pct>0)
+	{
+		Evp_LaunchBatchConvert(g_evpBaseImageFilepath_100pct, scale_pct)
+	}
 }
 
 Evp_LaunchBatchConvert(fpFromImage:="", scale_pct:=100)
@@ -498,20 +522,26 @@ Evp_LaunchBatchConvert(fpFromImage:="", scale_pct:=100)
 
 	imgsig := Evp_GenImageSigByTimestamp()
 
-	fpBaseImage := Evp_GenerateBaseImage(fpFromImage, scale_pct, imgsig, imgw, imgh) ; imgw, imgh is output-var
+	fpimg100pct := Evp_GenerateBaseImage(fpFromImage, scale_pct, imgsig
+		, imgw, imgh, fpimgScaled) ; these three are output-vars
 		; -- filepath of the base-image, example:
 		; C:\Users\win7evn\AppData\Local\Temp\Everpic\everpic-20221204_150000.png
 	
-	if(!fpBaseImage)
-		return ""
+	if(!fpimg100pct)
+		return "" ; Error should have been pop-up-ed in Evp_GenerateBaseImage()
+	
+	dev_assert(FileExist(fpimgScaled))
+	
+	; Note: fpimgScaled has wide meaning including 100% or less-than-100% scaling.
+	; We will pass this fpimgScaled image to .bat .
 		
-	fpImageStem := dev_SplitExtname(fpBaseImage)
+	fpImageStem := dev_SplitExtname(fpimgScaled)
 		
 	fpImageList := fpImageStem . gc_evpFileSuffix_imagelist
 	
-	FileGetSize, filekb, % fpBaseImage, K
+	FileGetSize, filekb, % fpimgScaled, K
 	
-	stageline_png32b := Format("PNG (32-bit),{}KB,{}`r`n", filekb, fpBaseImage)
+	stageline_png32b := Format("PNG (32-bit),{}KB,{}`r`n", filekb, fpimgScaled)
 
 	FileDelete, % fpImageList
 	FileAppend, % stageline_png32b, % fpImageList
@@ -520,7 +550,7 @@ Evp_LaunchBatchConvert(fpFromImage:="", scale_pct:=100)
 	fpbatlog := fpbat ".log"
 	
 	; TODO: this batchcmd is NOT space-char-tolerable in its path.
-	batchcmd := Format("cmd /c ""{} {} > {}""", fpbat, fpBaseImage, fpbatlog)
+	batchcmd := Format("cmd /c ""{} {} > {}""", fpbat, fpimgScaled, fpbatlog)
 ;	dev_MsgBoxInfo(batchcmd) ; debug
 
 	; We use `Run`, not `RunWait`, to avoid blocking ourselves. 
@@ -544,8 +574,13 @@ Evp_LaunchBatchConvert(fpFromImage:="", scale_pct:=100)
 	}
 	
 	g_evpImageSig := imgsig
-	g_evpBaseImageFilepath := fpBaseImage
+	g_evpBaseImageFilepath_100pct := fpimg100pct
+;	g_evpBaseImageFilepath_scaled := fpimgScaled
+	g_evpCurrentScalePct := scale_pct
+	g_evpImageWidth  := imgw
+	g_evpImageHeight := imgh
 	g_evpImglistTxtPath := fpImageList
+	
 	g_evpBatchProgressFilepath := fpImageStem . gc_evpFileSuffix_progressdone
 	if(FileExist(g_evpBatchProgressFilepath))
 		FileDelete, % g_evpBatchProgressFilepath
@@ -556,7 +591,7 @@ Evp_LaunchBatchConvert(fpFromImage:="", scale_pct:=100)
 	
 	GuiControl_SetText("EVP", "gu_evpTxtClipbState", "Convert starting...")
 	
-	Evp_SyncGuiByBaseImage(fpBaseImage, imgw, imgh, scale_pct)
+	Evp_SyncGuiByBaseImage(fpimgScaled, imgw*scale_pct//100, imgh*scale_pct//100)
 	
 	Evp_ShowAllControls(true)
 	
@@ -566,32 +601,33 @@ Evp_LaunchBatchConvert(fpFromImage:="", scale_pct:=100)
 	return true
 }
 
-Evp_GenerateBaseImage(fpFromImage, scale_pct, imgsig, byref imgw, byref imgh)
+Evp_GenerateBaseImage(fpFromImage, scale_pct, imgsig, byref imgw, byref imgh, byref ofpScaled)
 {
 	; If fpFromImage is empty, generate the base .png image from clipboard.
 	; Else, fpFromImage is the existing image file to use.
-	; Return that .png filepath, empty string if fail.
+	; Return that 100pct .png filepath, empty string if fail.
 	;
-	; Memo: Whether scale_pct is 100, we always generate 100pct image 
-	; and cache it into g_evp100pctBaseImage, so that when user changes scale,
-	; we can scale it down from g_evp100pctBaseImage.
+	; Return in `ofpScaled` the scaled 32-bit png filepath. 'o' implied output var.
+	;
+	; Memo: Whether scale_pct is 100, we always generate 100pct image, so that when 
+	; user changes scale,we can use that 100pct image instead of re-generate from clipboard.
+	;
+	; This function does NOT change global vars.
 
 	ofpprefix := Evp_BaseImageFilepathPrefix(imgsig)
 	fp_100pctimg := ofpprefix ".png"
 	fp_scaledimg := Format("{}-z{}.png", ofpprefix, scale_pct)
 
-	fpBaseImage := scale_pct==100 ? fp_100pctimg : fp_scaledimg
+	ofpScaled := scale_pct==100 ? fp_100pctimg : fp_scaledimg
 
-	if(FileExist(fpBaseImage))
+	if(FileExist(fp_100pctimg) && FileExist(ofpScaled))
 	{
-		dev_TooltipAutoClear("BaseImage already exists: " fpBaseImage)
-		return fpBaseImage
+		dev_TooltipAutoClear("BaseImage already exists: " ofpScaled)
+		return fp_100pctimg
 	}
 
 	is_100pct_succ := false ; assume fail
 	
-	g_evp100pctBaseImage := ""
-
 	if(!FileExist(fp_100pctimg))
 	{
 		If !pToken := Gdip_Startup()
@@ -658,14 +694,11 @@ Evp_GenerateBaseImage(fpFromImage, scale_pct, imgsig, byref imgw, byref imgh)
 		if(scale_pct!=100 && !FileExist(fp_scaledimg))
 		{
 			succ := Evp_ScaleDownImage(scale_pct, fp_100pctimg, fp_scaledimg)
-				; It Reports error via MsgBox inside.
 			if(!succ)
-				return ""
+				return "" ; Error should have been reported in Evp_ScaleDownImage()
 		}
 
-		g_evp100pctBaseImage := fp_100pctimg
-		
-		return fpBaseImage
+		return fp_100pctimg
 	}
 	else
 	{
@@ -679,6 +712,10 @@ Evp_WM_MOUSEMOVE()
 	if(A_GuiControl=="gu_evpBtnOK")
 	{
 		dev_TooltipAutoClear("Shift+click to keep this dialog-box on screen." , 5000)
+	}
+	else if(A_GuiControl=="gu_evpBtnCvtFromBaseImg")
+	{
+		dev_TooltipAutoClear("Convert from current Base-image with new Scale." , 3000)
 	}
 	else if(A_Gui=="EVP")
 	{
@@ -761,19 +798,19 @@ Evp_CheckClipboardStateUpdateUI()
 {
 	hint := ""
 	if( Evp_IsBitmapInClipboard(bitmap_filepath) )
-		hint := "Bitmap in Clipboard. You can now [Batch Convert]."
+		hint := "Bitmap in Clipboard. You can now [Convert from Clipboard]."
 	else if(bitmap_filepath)
 		hint := "Clipboard has filepath: " bitmap_filepath
 
 	if(hint)
 	{
-		GuiControl_Enable("EVP","gu_evpBtnConvert", true)
+		GuiControl_Enable("EVP","gu_evpBtnCvtFromClipbrd", true)
 		fgcolor := "8888cc"
 ;		Evp_ShowAllControls(true) ; not so fast
 	}
 	else 
 	{
-		GuiControl_Enable("EVP","gu_evpBtnConvert", false)
+		GuiControl_Enable("EVP","gu_evpBtnCvtFromClipbrd", false)
 		hint := "Copy an image, or a filepath into system Clipboard so to convert it."
 		fgcolor := "CC8888"
 	}
@@ -919,25 +956,22 @@ Evp_BatchConvertDone(is_succ)
 	if(is_succ)
 	{
 		g_evpConvertsAfterUIShown += 1
+
+		GuiControl_SetText("EVP", "gu_evpEdrImgFilepath", "Base-image: " g_evpBaseImageFilepath_100pct)
+
+		Evp_RefreshImgpane()
 	}
 }
 
-Evp_SyncGuiByBaseImage(imgfilepath, imgw, imgh, scale_pct)
+Evp_SyncGuiByBaseImage(imgfilepath, imgw_scaled, imgh_scaled)
 {
 	; This function adjusts(Increase or decrease)  EVP GUI's window size 
 	; so that the image can be display at 100% Zoom level. 
 	; But if the image is larger than monitor area, I have to shrink it. 
 	;
-	; imgfilepath and be empty, this will change the UI to its default(blank) size.
+	; imgfilepath can be empty, this will change the UI to its default(blank) size.
 	;
-	; This function changes global vars:
-	; g_evpBaseImageFilepath, g_evpImageWidth, g_evpImageHeight,
-	; g_evpCurrentScalePct, g_evpImgpaneWidth, g_evpImgpaneWidth
-	
-	dev_assert(scale_pct>1 || scale_pct<=100)
-	
-	imgw_scaled := imgw * scale_pct // 100
-	imgh_scaled := imgh * scale_pct // 100
+	; This function changes global vars: g_evpImgpaneWidth, g_evpImgpaneWidth
 	
 	; //// Reset UI controls first ////
 	
@@ -972,7 +1006,7 @@ Evp_SyncGuiByBaseImage(imgfilepath, imgw, imgh, scale_pct)
 		{	
 		; shrink wimgpane to fit in monitor
 			wimgpane := round(gui_wreq - stock_width) ; preview(pic control) width
-			himgpane := round(wimgpane * imgh/imgw) ; preview height
+			himgpane := round(wimgpane * imgh_scaled/imgw_scaled) ; preview height
 			
 			g_evpImageZoom := wimgpane / imgw_gui_units
 		}
@@ -986,6 +1020,7 @@ Evp_SyncGuiByBaseImage(imgfilepath, imgw, imgh, scale_pct)
 	}
 	else ; imgfilepath is empty, reset UI to default
 	{
+;		dev_assert(0) ;  XXX dead code? No, use at init stage
 		wimgpane := gc_evpImgpaneDefWidth
 		himgpane := gc_evpImgpaneDefHeight
 	}
@@ -996,12 +1031,7 @@ Evp_SyncGuiByBaseImage(imgfilepath, imgw, imgh, scale_pct)
 	
 	GuiControl_SetPos("EVP", "gu_evpPicPreview", ximgpane, rlistbox.y, wimgpane, himgpane) ; same vertical pos
 
-	g_evpBaseImageFilepath := imgfilepath
-	g_evpImageWidth  := imgw
-	g_evpImageHeight := imgh
-	g_evpCurrentScalePct := scale_pct
-	;
-	g_evpImgpaneWidth := round(wimgpane)
+	g_evpImgpaneWidth := round(wimgpane) 
 	g_evpImgpaneHeight := round(himgpane)
 
 	col2w := dev_max(wimgpane, gc_evpImgpaneDefWidth)
@@ -1066,9 +1096,9 @@ Evp_RefreshPreviewAllGui()
 
 Evp_RefreshImgpane()
 {
-	GuiControlGet, gu_evpLbxImages
-
-	cur_imagefile := g_evp_arImageStore[gu_evpLbxImages].path
+	idx := GuiControl_GetText("EVP", "gu_evpLbxImages")
+	
+	cur_imagefile := g_evp_arImageStore[idx].path
 	
 	GuiControl_SetText("EVP", "gu_evpPicPreview",  cur_imagefile)
 	
