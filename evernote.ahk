@@ -754,7 +754,9 @@ Evp_WM_MOUSEMOVE()
 	}
 	else if(A_GuiControl=="gu_evpCkbKeepPngTrans")
 	{
-		dev_TooltipAutoClear("This takes effect next time you Convert from Clipboard.")
+		dev_TooltipAutoClear("If ticked, an input png file's transparent pixels remains transparent in output pngs.`n"
+			. "If not tick, input transparent pixels becomes white pixels in output pngs.`n`n"
+			. "This takes effect next time you Convert from Clipboard.")
 	}
 	else if(A_Gui=="EVP")
 	{
