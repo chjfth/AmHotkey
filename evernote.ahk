@@ -115,6 +115,7 @@ global gu_evpEdrLoadStat := "" ; Small text label, result statistics, e.g, "640*
 ; Second column controls:
 ;
 global gu_evpTxtClipbState := "" ; Text label showing clipboard state.
+global gu_evpIcnWarnNoTranspixel := "" ; Icon warning "no transparent pixel in png"
 global gu_evpCkbKeepPngTrans := ""
 
 global gu_evpEdrImgFilepath := "" ; Currently previewing image filepath (readonly editbox)
@@ -147,7 +148,7 @@ global g_evpImageZoom := 1
 global gut_progressbar := ""
 
 global g_isKeepPngTransparent
-global gc_KeepPngTransparent := true
+global gc_KeepPngTransparent := true ; as synonym for true
 
 global g_evpIsFullUIExpaned := -1 ; -1 means unset
 
@@ -346,14 +347,16 @@ Evp_CreateGui()
 		, Format("x+{} yp-1 g{}", gc_evpGapX, "Evp_evtCvtFromBaseImg"), "→") ; "↻" (the Refresh Unicode char) is rendered ugly, so use right-arrow instead
 	;
 	Gui_Add_Listbox( "EVP", "gu_evpLbxImages",   col1w, Format("xs r12 AltSubmit g{}", "Evp_RefreshImgpane"))
-	Gui_Add_Editbox("EVP", "gu_evpEdrLoadStat",  col1w, "Readonly -E0x200", "")
+	Gui_Add_Editbox( "EVP", "gu_evpEdrLoadStat",  col1w, "Readonly -E0x200", "")
 	Gui_Add_Button(  "EVP", "gu_evpBtnOK",       col1w, "default g" . "Evp_BtnOK", "&Use This (or press Enter)")
 
 	; ==== Create Column2 controls. ====
 	;
 	col2w := gc_evpImgpaneDefWidth
 	Gui_Add_TxtLabel("EVP", "gu_evpTxtClipbState",  col2w, Format("xs+{} ys+5 +0x8000", col1w+gc_evpGapX), "Clipboard state")
-	Gui_Add_Checkbox("EVP", "gu_evpCkbKeepPngTrans",col2w, "c666666", "Keep transparent pixels when converting png file.")
+	Gui_Add_Picture( "EVP", "gu_evpIcnWarnNoTranspixel", 16, "h16 +0x100") ; 0x100: SS_NOTIFY, for hovering tooltip
+	Gui_Add_Checkbox("EVP", "gu_evpCkbKeepPngTrans", -1, "x+4 yp+1 c666666 g" . "Evp_ToggleKeepPngTransparent"
+		, "Keep transparent pixels when converting png file.")
 	;
 	Gui_Add_Editbox( "EVP", "gu_evpEdrImgFilepath", col2w, "y+31 Readonly -E0x200", "imgfilepath")
 	Gui_Add_Picture( "EVP", "gu_evpPicPreview",     col2w, "h" g_evpImgpaneHeight)
@@ -392,7 +395,9 @@ Evp_ShowAllControls(is_show:=true)
 	ctls := ["gu_evpTxtScale", "gu_evpCbxScalePct", "gu_evpBtnCvtFromBaseImg"
 		, "gu_evpLbxImages", "gu_evpEdrLoadStat"
 		, "gu_evpBtnOK"
-		, "gu_evpEdrImgFilepath", "gu_evpCkbKeepPngTrans", "gu_evpPicPreview", "gu_evpEdrFootline" ] 
+		, "gu_evpEdrImgFilepath"
+		, "gu_evpCkbKeepPngTrans", "gu_evpIcnWarnNoTranspixel"
+		, "gu_evpPicPreview", "gu_evpEdrFootline" ] 
 	
 	for index,value in ctls
 	{
@@ -505,10 +510,19 @@ Evp_GetUIScalePct()
 	return scale_pct
 }
 
+Evp_ToggleKeepPngTransparent()
+{
+	is_checked := GuiControl_GetValue("EVP", "gu_evpCkbKeepPngTrans")
+	g_isKeepPngTransparent := is_checked ? true : false
+}
+
 Evp_LaunchBatchConvert_UseUIParam()
 {
 	scale_pct := Evp_GetUIScalePct()
-	g_isKeepPngTransparent := GuiControl_GetValue("EVP", "gu_evpCkbKeepPngTrans")
+	
+	GuiControl_Show("EVP", "gu_evpIcnWarnNoTranspixel", false)
+	;	GuiControl_SetText("EVP", "gu_evpIcnWarnNoTranspixel" , "") ; make it show blank
+
 	
 	Evp_LaunchBatchConvert("", scale_pct>0 ? scale_pct : 100)
 }
@@ -657,11 +671,23 @@ Evp_GenerateBaseImage(fpFromImage, scale_pct, imgsig, is_keeppngtrans
 		}
 
 		Evp_IsBitmapInClipboard(bitmap_filepath)
+		
 		if(!fpFromImage && bitmap_filepath)
 			fpFromImage := bitmap_filepath
 
 		if(fpFromImage)
 		{
+			if(!FileExist(fpFromImage))	{
+				dev_MsgBoxError("Image file does not exist:`n`n" . fpFromImage)
+				goto EVP_CLEANUP_20221204
+			}
+			
+			if(StrIsEndsWith(fpFromImage, ".png", true) && is_keeppngtrans)
+			{
+				fn := Func("Evp_TimerProcCheckPngfileTranspixel").Bind(fpFromImage)
+				SetTimer, % fn, -10 ; one-time timer
+			}
+		
 			; fpFromImage can be any format(bmp, jpg, gif, png etc)
 			; We need to first save it as 32-bit png, via Gdip libray.
 
@@ -673,7 +699,7 @@ Evp_GenerateBaseImage(fpFromImage, scale_pct, imgsig, is_keeppngtrans
 
 			Gdip_GetImageDimensions(bitmap, imgw, imgh)
 
-			dev_assert(StrIsEndsWith(fp_100pctimg, ".png"))
+			dev_assert(StrIsEndsWith(fp_100pctimg, ".png", true))
 			
 			if(is_keeppngtrans)
 			{
@@ -722,8 +748,7 @@ Evp_GenerateBaseImage(fpFromImage, scale_pct, imgsig, is_keeppngtrans
 		
 	} ; if(!FileExist(fp_100pctimg))
 
-;Msgbox, % "33333-" . is_100pct_succ " fp_scaledimg=" fp_scaledimg
-	
+
 	if(is_100pct_succ)
 	{
 		if(scale_pct!=100 && !FileExist(fp_scaledimg))
@@ -750,7 +775,7 @@ Evp_WM_MOUSEMOVE()
 	}
 	else if(A_GuiControl=="gu_evpBtnCvtFromBaseImg")
 	{
-		dev_TooltipAutoClear("Convert from current Base-image with new Scale.")
+		dev_TooltipAutoClear("Convert from current Base-image using new Scale value.")
 	}
 	else if(A_GuiControl=="gu_evpCkbKeepPngTrans")
 	{
@@ -810,11 +835,12 @@ Evp_IsImagefileSuffix(filepath)
 	
 	for index,extname in arsuffix
     {
-    	if(StrIsEndsWith(filepath, "." extname))
+    	if(StrIsEndsWith(filepath, "." extname, true))
     		return extname
     }
     return ""
 }
+
 
 Evp_IsBitmapInClipboard(byref filepath_bitmap)
 {
@@ -835,6 +861,92 @@ Evp_IsBitmapInClipboard(byref filepath_bitmap)
 	
 }
 
+gdip_BitmapFindTransparentPixel(bitmap, xstart, ystart, xend_, yend_, xskip, yskip, msec_limit)
+{
+	; x/y param is 0-based, Gdip-style.
+	; return an object(.is_found .x .y) telling the position of the first-found transparent pixel
+	
+	msec_start := A_TickCount
+	
+	y := ystart
+	Loop ; y-loop
+	{
+		x := xstart
+		Loop ; x-loop 
+		{
+			
+			ARGB := Gdip_GetPixel(bitmap, x, y) ; Gdip
+			if( (ARGB & 0xFF000000) != 0xFF000000 ) 
+				return {"is_found":true, "x":x , "y":y}
+			
+			x += xskip
+			if(x>=xend_)
+				break
+		}
+		
+		y += yskip
+		if(y>=yend_)
+			break
+	
+		if(A_TickCount-msec_start >= msec_limit)
+			break
+	}
+	
+	return {"is_found":false, "x":0, "y":y} ; y tells "next"-y to continue search
+}
+
+Evp_HasTransparentPixel(fpimg)
+{
+	If !pToken := Gdip_Startup()
+	{
+		dev_MsgBoxWarning("Evp_HasTransparentPixel(): Gdip_Startup FAIL.")
+		return false
+	}
+
+	bitmap := Gdip_CreateBitmapFromFile(fpimg)
+	if(bitmap<=0) {
+		dev_MsgBoxError(Format("Gdip_CreateBitmapFromFile(""{}"") fail, errcode={}.", fpimg, bitmap))
+		return
+	}
+
+	Gdip_GetImageDimensions(bitmap, imgw, imgh)
+
+	skip := 2
+	scan_result := gdip_BitmapFindTransparentPixel(bitmap, 0,0, imgw, imgh, skip, skip, 1000)
+	if(scan_result.is_found==false)
+	{
+		dev_assert(scan_result.y>0)
+;		dev_TooltipAutoClear("Phase-two scan from image-y (0-based): " . scan_result.y, 5000) ; debug
+		
+		; Now we search "image left-side"(100-pixel column) 
+		scan_width := 100
+		scan_result := gdip_BitmapFindTransparentPixel(bitmap
+			, 0,           scan_result.y
+			, scan_width,  imgh
+			, skip,        skip
+			, 500)
+	}
+	
+	Gdip_DisposeImage(bitmap)
+	Gdip_Shutdown(pToken)
+
+	return scan_result.is_found
+}
+
+Evp_TimerProcCheckPngfileTranspixel(pngfilepath)
+{
+;	threadid := DllCall("kernel32.dll\GetCurrentThreadId")
+;	dev_MsgBoxInfo(Format("threadid={} , A_ThisLabel={}", threadid, A_ThisLabel)) ; A_ThisLabel is empty
+	
+	if(not Evp_HasTransparentPixel(pngfilepath))
+	{
+		GuiControl_Show("EVP", "gu_evpIcnWarnNoTranspixel", true)
+		Gui_Picture_SetIconFromDll("EVP", "gu_evpIcnWarnNoTranspixel", "user32.dll", 2) ; 2: yellow exclamation triangle
+	}
+}
+
+
+
 Evp_CheckClipboardStateUpdateUI()
 {
 	hint := ""
@@ -846,7 +958,7 @@ Evp_CheckClipboardStateUpdateUI()
 	{
 		hint := "Clipboard has filepath: " bitmap_filepath
 		
-		if(StrIsEndsWith(bitmap_filepath, ".png"))
+		if(StrIsEndsWith(bitmap_filepath, ".png", true))
 			is_pngpath := true
 	}
 

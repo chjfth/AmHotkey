@@ -1196,9 +1196,16 @@ dev_StrIsEqualI(s1, s2) ; case insensitive compare
 		return false
 }
 
-StrIsStartsWith(str, prefix, is_case_sensitive:=false)
+StrIsStartsWith(str, prefix, anycase:=false)
 {
 	; Check if the string str starts with prefix
+	
+	if(anycase)
+	{
+		StringLower, str, str
+		StringLower, prefix, prefix
+	}
+	
 	pfxlen := strlen(prefix)
 	if(pfxlen<=0)
 		return false
@@ -1214,8 +1221,14 @@ StrIsStartsWith(str, prefix, is_case_sensitive:=false)
 		return false
 }
 
-StrIsEndsWith(str, suffix)
+StrIsEndsWith(str, suffix, anycase:=false)
 {
+	if(anycase)
+	{
+		StringLower, str, str
+		StringLower, prefix, prefix
+	}
+	
 	suffix_len := strlen(suffix)
 	if(suffix_len==0)
 		return false
@@ -3325,7 +3338,10 @@ Gui_Add_TxtLabel(GuiName, CtrlVarname, width, format, text:="")
 
 	dev_assert(Gui_IsValidVar(CtrlVarname))
 	cmdadd := GuiName ? (GuiName ":Add") : "Add"
-	Gui, % cmdadd, Text, % Format("v{} w{} {}", CtrlVarname, width, format), % text
+	
+	w_width := width>=0 ? "w" width : "" ; so width==-1 will make it auto-width by text length
+	
+	Gui, % cmdadd, Text, % Format("v{} {} {}", CtrlVarname, w_width, format), % text
 }
 
 GuiControl_SetColor(GuiName, CtrlVarname, fgcolor:="", bgcolor:="")
@@ -3359,14 +3375,22 @@ Gui_Add_Picture(GuiName, CtrlVarname, width, format, imgfilepath:="")
 	Gui, % cmdadd, Picture, % Format("v{} w{} {}", CtrlVarname, width, format), % imgfilepath
 }
 
+Gui_Picture_SetIconFromDll(GuiName, CtrlVarname, dllpath, icon_group_idx)
+{
+	iconpath := Format("*icon{} {}", icon_group_idx, dllpath)
+	GuiControl_SetText(GuiName, CtrlVarname, iconpath)
+}
+
 Gui_Add_Checkbox(GuiName, CtrlVarname, width, format, btntext)
 {
 	; format: "Checked"
 
 	dev_assert(Gui_IsValidVar(CtrlVarname))
 	cmdadd := GuiName ? (GuiName ":Add") : "Add"
+
+	w_width := width>=0 ? "w" width : ""
 	
-	Gui, % cmdadd, Checkbox, % Format("v{} w{} {}", CtrlVarname, width, format), % btntext
+	Gui, % cmdadd, Checkbox, % Format("v{} {} {}", CtrlVarname, w_width, format), % btntext
 }
 
 Gui_Add_Editbox(GuiName, CtrlVarname, width, format, init_text:="")
