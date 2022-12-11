@@ -115,6 +115,8 @@ global gu_evpEdrLoadStat := "" ; Small text label, result statistics, e.g, "640*
 ; Second column controls:
 ;
 global gu_evpTxtClipbState := "" ; Text label showing clipboard state.
+global gu_evpCkbKeepPngTrans := ""
+
 global gu_evpEdrImgFilepath := "" ; Currently previewing image filepath (readonly editbox)
 global gu_evpPicPreview ; gui-assoc, Picture control
 ;
@@ -143,6 +145,11 @@ global g_evp_arImageStore := [] ; g_evp_arImageStore[1] refers to the first prev
 global g_evpImageZoom := 1
 
 global gut_progressbar := ""
+
+global g_isKeepPngTransparent
+global gc_KeepPngTransparent := true
+
+global g_evpIsFullUIExpaned := -1 ; -1 means unset
 
 ; =======
 
@@ -332,7 +339,7 @@ Evp_CreateGui()
 	;
 	lwScale := 42 ; label-width
 	lwRefresh := 30
-	Gui_Add_TxtLabel("EVP", "gu_evpTxtScale", lwScale, "y+25", "Scale:")
+	Gui_Add_TxtLabel("EVP", "gu_evpTxtScale", lwScale, "y+45", "&Scale:")
 	Gui_Add_Combobox("EVP", "gu_evpCbxScalePct", col1w-lwScale-lwRefresh-gc_evpGapX
 		, Format("x+{} yp-2 AltSubmit g{}", 0, "Evp_RefreshImgpane"))
 	Gui_Add_Button(  "EVP", "gu_evpBtnCvtFromBaseImg", lwRefresh
@@ -346,6 +353,8 @@ Evp_CreateGui()
 	;
 	col2w := gc_evpImgpaneDefWidth
 	Gui_Add_TxtLabel("EVP", "gu_evpTxtClipbState",  col2w, Format("xs+{} ys+5 +0x8000", col1w+gc_evpGapX), "Clipboard state")
+	Gui_Add_Checkbox("EVP", "gu_evpCkbKeepPngTrans",col2w, "c666666", "Keep transparent pixels when converting png file.")
+	;
 	Gui_Add_Editbox( "EVP", "gu_evpEdrImgFilepath", col2w, "y+31 Readonly -E0x200", "imgfilepath")
 	Gui_Add_Picture( "EVP", "gu_evpPicPreview",     col2w, "h" g_evpImgpaneHeight)
 	
@@ -375,24 +384,20 @@ Evp_CreateGui()
 
 Evp_ShowAllControls(is_show:=true)
 {
-	static s_prev_shown := -1
-
-	if(is_show==s_prev_shown)
+	if(is_show==g_evpIsFullUIExpaned)
 		return
 
-	s_prev_shown := is_show
+	g_evpIsFullUIExpaned := is_show
 
 	ctls := ["gu_evpTxtScale", "gu_evpCbxScalePct", "gu_evpBtnCvtFromBaseImg"
 		, "gu_evpLbxImages", "gu_evpEdrLoadStat"
 		, "gu_evpBtnOK"
-		, "gu_evpEdrImgFilepath", "gu_evpPicPreview", "gu_evpEdrFootline" ] 
+		, "gu_evpEdrImgFilepath", "gu_evpCkbKeepPngTrans", "gu_evpPicPreview", "gu_evpEdrFootline" ] 
 	
 	for index,value in ctls
 	{
 		GuiControl_Show("EVP", value, is_show)
 	}
-	
-;	GuiControl_SetText("EVP", "gu_evpEdrImgFilepath", "Base-image: " g_evpBaseImageFilepath_100pct) ; move to ...
 	
 	Evp_AutosizeNowUI()
 }
@@ -433,11 +438,9 @@ Evp_BaseImageFilepathPrefix(imgsig)
 	return Format("{}\{}", g_evpTempDir, imgsig)
 }
 
-Evp_ScaleDownImage(scale_pct, srcimgpath, dstimgpath)
+Evp_ScaleDownImage(scale_pct, srcimgpath, dstimgpath, isKeepPngTransparent)
 {
 	; 2022.12.09 https://www.autohotkey.com/board/topic/52033-convertresize-image-with-gdip-solved/
-
-;	convert_resize(source_file,out_file,function="",value=1)
 
 	If !pToken := Gdip_Startup()
 		return false
@@ -456,6 +459,19 @@ Evp_ScaleDownImage(scale_pct, srcimgpath, dstimgpath)
 
 	dBitmap := Gdip_CreateBitmap(dWidth, dHeight)
 	G := Gdip_GraphicsFromImage(dBitmap)
+	
+	if(!isKeepPngTransparent)
+	{
+		; If not isKeepPngTransparent, we set white background for it.
+	
+		pBrushClear := Gdip_BrushCreateSolid(0xFFffffff) 
+		; -- Fill ARGB(255,255,255,255), alpha-value=255 is required.
+		;    Otherwise, the default ARGB is (0,0,0,0), which will result in black bg onto jpg.
+		Gdip_FillRectangle(G, pBrushClear, 0, 0, dWidth, dHeight)
+		Gdip_DeleteBrush(pBrushClear)
+	}
+	
+	
 	Gdip_DrawImage(G, sBitmap, 0, 0, dWidth, dHeight, 0, 0, sWidth, sHeight)
 	
 	err := Gdip_SaveBitmapToFile(dBitmap, dstimgpath)
@@ -492,13 +508,15 @@ Evp_GetUIScalePct()
 Evp_LaunchBatchConvert_UseUIParam()
 {
 	scale_pct := Evp_GetUIScalePct()
+	g_isKeepPngTransparent := GuiControl_GetValue("EVP", "gu_evpCkbKeepPngTrans")
+	
 	Evp_LaunchBatchConvert("", scale_pct>0 ? scale_pct : 100)
 }
 
 Evp_evtCvtFromBaseImg(CtrlHwnd, GuiEvent, EventInfo, ErrLevel:="")
 {
 	dev_assert(g_evpBaseImageFilepath_100pct)
-;MsgBox, % "Base: " g_evpBaseImageFilepath_100pct
+
 	scale_pct := Evp_GetUIScalePct()
 	if(scale_pct>0)
 	{
@@ -522,7 +540,7 @@ Evp_LaunchBatchConvert(fpFromImage:="", scale_pct:=100)
 
 	imgsig := Evp_GenImageSigByTimestamp()
 
-	fpimg100pct := Evp_GenerateBaseImage(fpFromImage, scale_pct, imgsig
+	fpimg100pct := Evp_GenerateBaseImage(fpFromImage, scale_pct, imgsig, g_isKeepPngTransparent
 		, imgw, imgh, fpimgScaled) ; these three are output-vars
 		; -- filepath of the base-image, example:
 		; C:\Users\win7evn\AppData\Local\Temp\Everpic\everpic-20221204_150000.png
@@ -601,7 +619,8 @@ Evp_LaunchBatchConvert(fpFromImage:="", scale_pct:=100)
 	return true
 }
 
-Evp_GenerateBaseImage(fpFromImage, scale_pct, imgsig, byref imgw, byref imgh, byref ofpScaled)
+Evp_GenerateBaseImage(fpFromImage, scale_pct, imgsig, is_keeppngtrans
+	, byref imgw, byref imgh, byref ofpScaled)
 {
 	; If fpFromImage is empty, generate the base .png image from clipboard.
 	; Else, fpFromImage is the existing image file to use.
@@ -613,10 +632,11 @@ Evp_GenerateBaseImage(fpFromImage, scale_pct, imgsig, byref imgw, byref imgh, by
 	; user changes scale,we can use that 100pct image instead of re-generate from clipboard.
 	;
 	; This function does NOT change global vars.
-
+	
 	ofpprefix := Evp_BaseImageFilepathPrefix(imgsig)
-	fp_100pctimg := ofpprefix ".png"
-	fp_scaledimg := Format("{}-z{}.png", ofpprefix, scale_pct)
+	ptp_suffix := "-ptp"
+	fp_100pctimg := ofpprefix . (is_keeppngtrans ? ptp_suffix  : "") ".png"
+	fp_scaledimg := dev_AppendToStemname(fp_100pctimg, "-s" scale_pct)  ;fp_scaledimg := Format("{}-z{}.png", ofpprefix, scale_pct)
 
 	ofpScaled := scale_pct==100 ? fp_100pctimg : fp_scaledimg
 
@@ -654,10 +674,23 @@ Evp_GenerateBaseImage(fpFromImage, scale_pct, imgsig, byref imgw, byref imgh, by
 			Gdip_GetImageDimensions(bitmap, imgw, imgh)
 
 			dev_assert(StrIsEndsWith(fp_100pctimg, ".png"))
-			err := Gdip_SaveBitmapToFile(bitmap, fp_100pctimg)
-			if(err) {
-				dev_MsgBoxError(Format("Gdip_SaveBitmapToFile(""{}"") fail, errcode={}.", fp_100pctimg, err))
-				goto EVP_CLEANUP_20221204
+			
+			if(is_keeppngtrans)
+			{
+				err := Gdip_SaveBitmapToFile(bitmap, fp_100pctimg) ; this does not destroy png transparent pixels.
+				if(err) {
+					dev_MsgBoxError(Format("Gdip_SaveBitmapToFile(""{}"") fail, errcode={}.", fp_100pctimg, err))
+					goto EVP_CLEANUP_20221204
+				}
+			}
+			else 
+			{
+				; Inside Evp_ScaleDownImage, we call Gdip_DrawImage(), which will remove all png transparent pixels.
+				; so fp_100pctimg will be non-transparent.
+				succ := Evp_ScaleDownImage(100, fpFromImage, fp_100pctimg, !gc_KeepPngTransparent)
+				if(!succ) {
+					goto EVP_CLEANUP_20221204 ; error reported in Evp_ScaleDownImage()
+				}
 			}
 			
 			is_100pct_succ := true
@@ -688,14 +721,16 @@ Evp_GenerateBaseImage(fpFromImage, scale_pct, imgsig, byref imgw, byref imgh, by
 		Gdip_Shutdown(pToken)
 		
 	} ; if(!FileExist(fp_100pctimg))
+
+;Msgbox, % "33333-" . is_100pct_succ " fp_scaledimg=" fp_scaledimg
 	
 	if(is_100pct_succ)
 	{
 		if(scale_pct!=100 && !FileExist(fp_scaledimg))
 		{
-			succ := Evp_ScaleDownImage(scale_pct, fp_100pctimg, fp_scaledimg)
+			succ := Evp_ScaleDownImage(scale_pct, fp_100pctimg, fp_scaledimg, is_keeppngtrans)
 			if(!succ)
-				return "" ; Error should have been reported in Evp_ScaleDownImage()
+				return "" ; Error should have been reported inside Evp_ScaleDownImage()
 		}
 
 		return fp_100pctimg
@@ -711,11 +746,15 @@ Evp_WM_MOUSEMOVE()
 {
 	if(A_GuiControl=="gu_evpBtnOK")
 	{
-		dev_TooltipAutoClear("Shift+click to keep this dialog-box on screen." , 5000)
+		dev_TooltipAutoClear("Shift+click to keep this dialog-box on screen.")
 	}
 	else if(A_GuiControl=="gu_evpBtnCvtFromBaseImg")
 	{
-		dev_TooltipAutoClear("Convert from current Base-image with new Scale." , 3000)
+		dev_TooltipAutoClear("Convert from current Base-image with new Scale.")
+	}
+	else if(A_GuiControl=="gu_evpCkbKeepPngTrans")
+	{
+		dev_TooltipAutoClear("This takes effect next time you Convert from Clipboard.")
 	}
 	else if(A_Gui=="EVP")
 	{
@@ -797,10 +836,17 @@ Evp_IsBitmapInClipboard(byref filepath_bitmap)
 Evp_CheckClipboardStateUpdateUI()
 {
 	hint := ""
+	is_pngpath := false
+	
 	if( Evp_IsBitmapInClipboard(bitmap_filepath) )
 		hint := "Bitmap in Clipboard. You can now [Convert from Clipboard]."
 	else if(bitmap_filepath)
+	{
 		hint := "Clipboard has filepath: " bitmap_filepath
+		
+		if(StrIsEndsWith(bitmap_filepath, ".png"))
+			is_pngpath := true
+	}
 
 	if(hint)
 	{
@@ -817,6 +863,8 @@ Evp_CheckClipboardStateUpdateUI()
 	
 	GuiControl_SetColor("EVP", "gu_evpTxtClipbState", fgcolor)
 	GuiControl_SetText( "EVP", "gu_evpTxtClipbState", hint)
+	
+	GuiControl_Show("EVP", "gu_evpCkbKeepPngTrans", (is_pngpath && g_evpIsFullUIExpaned) ? true : false)
 }
 
 Evp_CheckConvertingProgressUpdateUI()

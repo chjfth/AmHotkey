@@ -3082,11 +3082,20 @@ dev_SplitPath(input, byref Filename:="")
 	return OutDir
 }
 
-dev_SplitExtname(input, byref dotext:="")
+dev_SplitExtname(input, byref dot_ext:="")
 {
-	SplitPath, input, Filename, OutDir, OutExt, OutNameNoExt
-	dotext := "." OutExt
-	return Format("{}\{}", OutDir, OutNameNoExt) ; the stempath
+	SplitPath, input, outname_nouse, OutDir, OutExt, OutNameNoExt
+	dot_ext := "." OutExt
+	if(OutDir)
+		return Format("{}\{}", OutDir, OutNameNoExt) ; the stempath(no extname)
+	else
+		return OutNameNoExt
+}
+
+dev_AppendToStemname(input, stemname_suffix)
+{
+	stem := dev_SplitExtname(input, dot_ext)
+	return stem . stemname_suffix . dot_ext
 }
 
 dev_FindVacantFilename(path_ptn, start_seq:=1, max_seq:=10000)
@@ -3350,6 +3359,16 @@ Gui_Add_Picture(GuiName, CtrlVarname, width, format, imgfilepath:="")
 	Gui, % cmdadd, Picture, % Format("v{} w{} {}", CtrlVarname, width, format), % imgfilepath
 }
 
+Gui_Add_Checkbox(GuiName, CtrlVarname, width, format, btntext)
+{
+	; format: "Checked"
+
+	dev_assert(Gui_IsValidVar(CtrlVarname))
+	cmdadd := GuiName ? (GuiName ":Add") : "Add"
+	
+	Gui, % cmdadd, Checkbox, % Format("v{} w{} {}", CtrlVarname, width, format), % btntext
+}
+
 Gui_Add_Editbox(GuiName, CtrlVarname, width, format, init_text:="")
 {
 	; format: 
@@ -3417,6 +3436,13 @@ GuiControl_GetText(GuiName, CtrlVarname)
 	GuiControlGet, outvar, % cmd, % CtrlVarname
 	return outvar
 }
+
+GuiControl_GetValue(GuiName, CtrlVarname)
+{
+	text := GuiControl_GetText(GuiName, CtrlVarname)
+	return dev_str2num(text)
+}
+
 
 GuiControl_SetText(GuiName, CtrlVarname, text)
 {
