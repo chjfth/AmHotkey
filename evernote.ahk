@@ -345,7 +345,7 @@ Evp_CreateGui()
 	lwRefresh := 30
 	Gui_Add_TxtLabel("EVP", "gu_evpTxtScale", lwScale, "y+45", "&Scale:")
 	Gui_Add_Combobox("EVP", "gu_evpCbxScalePct", col1w-lwScale-lwRefresh-gc_evpGapX
-		, Format("x+{} yp-2 AltSubmit g{}", 0, "Evp_RefreshImgpane"))
+		, Format("x+{} yp-2 AltSubmit g{}", 0, "Evp_evtCbxScalepctChanged"))
 	Gui_Add_Button(  "EVP", "gu_evpBtnCvtFromBaseImg", lwRefresh
 		, Format("x+{} yp-1 g{}", gc_evpGapX, "Evp_evtCvtFromBaseImg"), "→") ; "↻" (the Refresh Unicode char) is rendered ugly, so use right-arrow instead
 	;
@@ -572,6 +572,15 @@ Evp_LaunchConvert_fromBaseImage(fpBaseImage)
 	Evp_LaunchBatchConvert(fpBaseImage, scale_pct)
 }
 
+Evp_LaunchConvertResetUI()
+{
+	; Clear listbox
+	hwndListbox := GuiControl_GetHwnd("EVP", "gu_evpLbxImages")
+	dev_assert(hwndListbox)
+	dev_Listbox_Clear(hwndListbox)
+
+	GuiControl_Enable("EVP", "gu_evpLbxImages", true)
+}
 
 Evp_LaunchBatchConvert(fpFromImage:="", scale_pct:=100)
 {
@@ -597,11 +606,7 @@ Evp_LaunchBatchConvert(fpFromImage:="", scale_pct:=100)
 	
 	dev_assert(FileExist(fpimgScaled))
 
-	; Clear listbox
-	hwndListbox := GuiControl_GetHwnd("EVP", "gu_evpLbxImages")
-	dev_assert(hwndListbox)
-	dev_Listbox_Clear(hwndListbox)
-
+	Evp_LaunchConvertResetUI()
 	
 	; Note: fpimgScaled has wide meaning including 100% or less-than-100% scaling.
 	; We will pass this fpimgScaled image to .bat .
@@ -998,7 +1003,7 @@ Evp_HasTransparentPixel(fpimg)
 
 	if(scan_result.is_found)
 	{
-		Dbgwin_Output(Format("{}: transpx at {},{}", fpimg, scan_result.x, scan_result.y)) ; debug
+;		Dbgwin_Output(Format("{}: transpx at {},{}", fpimg, scan_result.x, scan_result.y)) ; debug
 	}
 
 	return scan_result.is_found
@@ -1330,6 +1335,15 @@ Evp_RefreshPreviewAllGui()
 	GuiControl_Enable("EVP","gu_evpBtnOK", true)
 }
 
+Evp_evtCbxScalepctChanged()
+{
+	scale_pct := Evp_GetUIScalePct()
+	
+	if(scale_pct==g_evpCurrentScalePct)
+		GuiControl_Enable("EVP", "gu_evpLbxImages", true)
+	else
+		GuiControl_Enable("EVP", "gu_evpLbxImages", false)
+}
 
 Evp_RefreshImgpane()
 {
