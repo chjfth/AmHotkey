@@ -126,7 +126,8 @@ global gu_evpBtnOK := "" ; Left-bottom "Use This" button
 global gu_evpEdrFootline   := "" ; current select image filepath
 
 global g_evpIsGuiVisible := false
-global g_evpConvertsAfterUIShown := 0 ; Reset to 0 after each UI hide-and-show. 
+global g_evpConvertStartCount := 0 ; increase one each time Launch convert.
+global g_evpConvertSuccCount := 0
 
 global g_evpTimerStage := "Monitoring" 
 	; "Monitoring" : Periodically check(monitor) the clipboard for image or CF_BITMAP or image-filepath.
@@ -297,7 +298,6 @@ Evp_ShowGui()
 	Evp_TimerOn()
 
 	g_evpIsGuiVisible := true
-	g_evpConvertsAfterUIShown := 0
 }
 
 Evp_CleanupUI()
@@ -357,7 +357,8 @@ Evp_CreateGui()
 	;
 	col2w := gc_evpImgpaneDefWidth
 	Gui_Add_TxtLabel("EVP", "gu_evpTxtClipbState",  col2w, Format("xs+{} ys+5 section +0x8000", col1w+gc_evpGapX), "Clipboard state")
-	Gui_Add_Picture( "EVP", "gu_evpIcnWarnNoTranspixel", 16, "h16 +0x100") ; 0x100: SS_NOTIFY, for hovering tooltip
+	Gui_Add_Picture( "EVP", "gu_evpIcnWarnNoTranspixel", 16, "h16 hidden +0x100") ; 0x100: SS_NOTIFY, for hovering tooltip
+		Gui_Picture_SetIconFromDll("EVP", "gu_evpIcnWarnNoTranspixel", "user32.dll", 2) ; 2: yellow exclamation triangle
 	Gui_Add_Checkbox("EVP", "gu_evpCkbKeepPngTrans", -1, "x+4 yp+1 c666666 g" . "Evp_ToggleKeepPngTransparent"
 		, "&Keep transparent pixels when converting png file.")
 	;
@@ -386,6 +387,9 @@ Evp_CreateGui()
 	Evp_ShowAllControls(false)
 	
 	Gui_Show("EVP", "xCenter yCenter", Evp_WinTitle()) ; only center it when first created
+	
+	g_evpConvertStartCount := 0
+	g_evpConvertSuccCount := 0	
 }
 
 Evp_ShowAllControls(is_show:=true)
@@ -399,7 +403,7 @@ Evp_ShowAllControls(is_show:=true)
 		, "gu_evpLbxImages", "gu_evpEdrLoadStat"
 		, "gu_evpBtnOK"
 		, "gu_evpEdrImgFilepath"
-		, "gu_evpCkbKeepPngTrans", "gu_evpIcnWarnNoTranspixel"
+		, "gu_evpCkbKeepPngTrans",
 		, "gu_evpPicPreview", "gu_evpEdrFootline" ] 
 	
 	for index,value in ctls
@@ -574,6 +578,8 @@ Evp_LaunchConvert_fromBaseImage(fpBaseImage)
 
 Evp_LaunchConvertResetUI()
 {
+	g_evpConvertStartCount++
+
 	; Clear listbox
 	hwndListbox := GuiControl_GetHwnd("EVP", "gu_evpLbxImages")
 	dev_assert(hwndListbox)
@@ -596,6 +602,9 @@ Evp_LaunchBatchConvert(fpFromImage:="", scale_pct:=100)
 
 	imgsig := Evp_GenImageSigByTimestamp()
 
+	Evp_LaunchConvertResetUI()
+	
+
 	fpimg100pct := Evp_GenerateBaseImage(fpFromImage, scale_pct, imgsig, g_isKeepPngTransparent
 		, imgw, imgh, fpimgScaled) ; these three are output-vars
 		; -- filepath of the base-image, example:
@@ -606,8 +615,6 @@ Evp_LaunchBatchConvert(fpFromImage:="", scale_pct:=100)
 	
 	dev_assert(FileExist(fpimgScaled))
 
-	Evp_LaunchConvertResetUI()
-	
 	; Note: fpimgScaled has wide meaning including 100% or less-than-100% scaling.
 	; We will pass this fpimgScaled image to .bat .
 		
@@ -671,8 +678,10 @@ Evp_LaunchBatchConvert(fpFromImage:="", scale_pct:=100)
 	
 	Evp_ShowAllControls(true)
 	
-	if(g_evpConvertsAfterUIShown==0)
+	if(g_evpConvertStartCount==1)
+	{	; Center the UI only at the first run.
 		Gui_Show("EVP", "xCenter yCenter", Evp_WinTitle())
+	}
 	
 	SetTimer, Evp_TimerProcCleanupTempDir, -10
 
@@ -809,7 +818,7 @@ Evp_GenerateBaseImage(fpFromImage, scale_pct, imgsig, is_keeppngtrans
 	;
 	if(is_succ && StrIsEndsWith(fpFromImage, ".png", true) && is_keeppngtrans)
 	{
-		fn := Func("Evp_TimerProcCheckPngfileTranspixel").Bind(fpFromImage)
+		fn := Func("Evp_TimerProcCheckPngfileTranspixel").Bind(fpFromImage, g_evpConvertStartCount)
 		SetTimer, % fn, -99 ; one-time timer, start after(99 ms)
 	}
 	
@@ -1009,27 +1018,25 @@ Evp_HasTransparentPixel(fpimg)
 	return scan_result.is_found
 }
 
-Evp_TimerProcCheckPngfileTranspixel(pngfilepath)
+Evp_TimerProcCheckPngfileTranspixel(pngfilepath, from_startcount)
 {
+	if(from_startcount!=g_evpConvertStartCount)
+	{
+		; We have been lagged, input pngfilepath no longer match "latest", so nothing to do here.
+;		Dbgwin_Output(Format("### from_startcount={} , g_evpConvertStartCount={}", from_startcount, g_evpConvertStartCount)) ; debug
+		return
+	}
+
 	Gui_ChangeOpt(  "EVP", "+OwnDialogs")
 
-;Dbgwin_Output("BgTransChk >>>>>>>> " . pngfilepath)
-
-	static s_count := 0
-	s_count += 1
-	
-	threadid := dev_GetThreadId()
-;	dev_MsgBoxInfo(Format("threadid={} , A_ThisLabel={}", threadid, A_ThisLabel)) ; A_ThisLabel is empty
+;	Dbgwin_Output("Evp_TimerProcCheckPngfileTranspixel(), " . pngfilepath) ; debug
 	
 	hastranspx := Evp_HasTransparentPixel(pngfilepath)
+
+;	Dbgwin_Output("Evp_TimerProcCheckPngfileTranspixel() = " . (hastranspx?"Yes":"No")) ; debug
 	
-;	Dbgwin_Output(Format("<<<<<<<< {}): {}", pngfilepath, hastranspx ? "Yes" : "No"))
-	
-	if(not hastranspx)
-	{
-		GuiControl_Show("EVP", "gu_evpIcnWarnNoTranspixel", true)
-		Gui_Picture_SetIconFromDll("EVP", "gu_evpIcnWarnNoTranspixel", "user32.dll", 2) ; 2: yellow exclamation triangle
-	}
+	; show warning icon if not hastranspx.
+	GuiControl_Show("EVP", "gu_evpIcnWarnNoTranspixel", !hastranspx?true:false)
 }
 
 
@@ -1065,7 +1072,10 @@ Evp_CheckClipboardStateUpdateUI()
 	GuiControl_SetColor("EVP", "gu_evpTxtClipbState", fgcolor)
 	GuiControl_SetText( "EVP", "gu_evpTxtClipbState", hint)
 	
-	GuiControl_Show("EVP", "gu_evpCkbKeepPngTrans", (is_pngpath && g_evpIsFullUIExpaned) ? true : false)
+	uivis_pngtrans := (is_pngpath && g_evpIsFullUIExpaned) ? true : false
+	GuiControl_Show("EVP", "gu_evpCkbKeepPngTrans", uivis_pngtrans)
+	if(not uivis_pngtrans)
+		GuiControl_Show("EVP", "gu_evpIcnWarnNoTranspixel", false)
 }
 
 Evp_CheckConvertingProgressUpdateUI()
@@ -1204,7 +1214,7 @@ Evp_BatchConvertDone(is_succ)
 
 	if(is_succ)
 	{
-		g_evpConvertsAfterUIShown += 1
+		g_evpConvertSuccCount++
 
 		GuiControl_SetText("EVP", "gu_evpEdrImgFilepath", "Base-image: " g_evpBaseImageFilepath_100pct)
 
