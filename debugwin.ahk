@@ -2,15 +2,23 @@
 ; in order for the Unicode characters to be recognized by Autohotkey engine.
 
 AUTOEXEC_debugwin_ahk: ; Workaround for Autohotkey's ugly auto-exec feature. Don't delete.
-	; When duplicate, you MUST: Change the above ahk label to a unique one, such as AUTOEXEC_foobar_ahk.
 
-; Something to place here.
-; * Customize these global vars according to your running machine:
-; * Call the run-once functions.
+/* APIs:
+
+Dbgwin_Output("Your debug message.")
+	; This debug-message window will be created automatically.
+	
+Dbgwin_ShowGui(true)
+	; Show the Gui, in case it was hidden.
+	; Parameter: `true` to bring it to front; `false` to keep it background(not have keyboard focus).
+*/
 
 global g_dbgwinHwnd
 
-global gu_dbgwinMLE
+global gu_dbgwinHint := ""
+global gu_dbgwinMLE := ""
+
+global g_dbgwinMsgCount := 0
 
 global gc_dbgwinIniFile := "debugwin.ini"
 global gc_dbgwinIniSection := "cfg"
@@ -40,7 +48,7 @@ Dbgwin_Output(msg)
 	static s_start_msec   := A_TickCount
 	static s_start_ymdhms := A_Now
 	static s_prev_msec    := s_start_msec
-
+	
 	now_tick := A_TickCount
 	msec_from_prev := now_tick - s_prev_msec
 	
@@ -86,6 +94,11 @@ Dbgwin_Output(msg)
     SendMessage, % EM_SETSEL, % pos, % pos, , ahk_id %hwndEdit%
     SendMessage, % EM_REPLACESEL, 0, &soutput, , ahk_id %hwndEdit%
     
+   	g_dbgwinMsgCount += 1
+	;
+    GuiControl_SetText("Dbgwin", "gu_dbgwinHint"
+    	, Format("{} Messages from Dbgwin_Output():", g_dbgwinMsgCount))
+
     s_prev_msec := now_tick
 }	
 
@@ -93,27 +106,29 @@ Dbgwin_Output(msg)
 Dbgwin_CreateGui()
 {
 	Gui, Dbgwin:New ; Destroy old window if any
-	Gui_ChangeOpt("Dbgwin", "+Resize +MinSize +E0x0080 +E0x40000")
+	Gui_ChangeOpt("Dbgwin", "+Resize +MinSize300x150 +E0x0080 +E0x40000")
 	; -- +E0x0080: WS_EX_TOOLWINDOW (thin title);  +E0x40000: WS_EX_APPWINDOW (want taskbar thumbnail)
 	
 	Gui_AssociateHwndVarname("Dbgwin", "g_dbgwinHwnd")
 	Gui_Switch_Font("Dbgwin", 8, "Black", "Tahoma") 
 	
-	Gui_Add_StaticLabel("Dbgwin", "Message from Dbgwin_Output():")
+	Gui_Add_TxtLabel("Dbgwin", "gu_dbgwinHint", 400, "", "Message from Dbgwin_Output():")
 	Gui_Add_Editbox("Dbgwin", "gu_dbgwinMLE", 400, "r10")
+
+	g_dbgwinMsgCount := 0
 
 	Gui_Show("Dbgwin")
 	Dbgwin_LoadWindowPos()
 }
 
-Dbgwin_ShowGui()
+Dbgwin_ShowGui(bring_to_front:=false)
 {
 	if(!g_dbgwinHwnd)
 	{
 		Dbgwin_CreateGui()
 	}
 	
-	Gui_Show("Dbgwin", "NoActivate", "AmHotkey Dbgwin")
+	Gui_Show("Dbgwin", bring_to_front ? "" : "NoActivate", "AmHotkey Dbgwin")
 }
 
 Dbgwin_HideGui()
