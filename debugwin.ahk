@@ -78,7 +78,8 @@ Dbgwin_Output(msg)
 
 	Dbgwin_ShowGui()
 	
-	; We we append msg to end of curent multiline-editbox. Using WinAPI like this:
+	; We we append msg to end of curent multiline-editbox. (AppendText)
+	; Using WinAPI like this:
 	;
     ; int pos = GetWindowTextLength (hedit);
     ;
@@ -86,13 +87,13 @@ Dbgwin_Output(msg)
     ; Edit_ReplaceSel(hedit, text);
     
     hwndEdit := GuiControl_GetHwnd("Dbgwin", "gu_dbgwinMLE")
-;	msgbox,  % "hwndEdit=" hwndEdit
+
     pos := DllCall("GetWindowTextLength", "Ptr", hwndEdit)
     
     EM_SETSEL := 0x00B1
     EM_REPLACESEL := 0x00C2
-    SendMessage, % EM_SETSEL, % pos, % pos, , ahk_id %hwndEdit%
-    SendMessage, % EM_REPLACESEL, 0, &soutput, , ahk_id %hwndEdit%
+    dev_SendMessage(hwndEdit, EM_SETSEL, pos, pos)
+    dev_SendMessage(hwndEdit, EM_REPLACESEL, 0, &soutput)
     
    	g_dbgwinMsgCount += 1
 	;

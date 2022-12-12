@@ -271,7 +271,7 @@ Evp_LaunchUI()
 {
 	Evp_ShowGui()
 
-	Evp_LaunchBatchConvert_UseUIParam()
+	Evp_LaunchConvert_fromClipboard()
 }
 
 Evp_ShowGui()
@@ -335,7 +335,7 @@ Evp_CreateGui()
 	; ==== Create Column1 controls. ====
 	;
 	col1w := gc_evpCol1Width
-	Gui_Add_Button(  "EVP", "gu_evpBtnCvtFromClipbrd", col1w, "Section xm ym g" . "Evp_evtBatchConvert" , "&Convert from Clipboard")
+	Gui_Add_Button(  "EVP", "gu_evpBtnCvtFromClipbrd", col1w, "Section xm ym g" . "Evp_evtCvtFromClipboard" , "&Convert from Clipboard")
 	;
 	lwScale := 42 ; label-width
 	lwRefresh := 30
@@ -355,7 +355,7 @@ Evp_CreateGui()
 	Gui_Add_TxtLabel("EVP", "gu_evpTxtClipbState",  col2w, Format("xs+{} ys+5 section +0x8000", col1w+gc_evpGapX), "Clipboard state")
 	Gui_Add_Picture( "EVP", "gu_evpIcnWarnNoTranspixel", 16, "h16 +0x100") ; 0x100: SS_NOTIFY, for hovering tooltip
 	Gui_Add_Checkbox("EVP", "gu_evpCkbKeepPngTrans", -1, "x+4 yp+1 c666666 g" . "Evp_ToggleKeepPngTransparent"
-		, "Keep transparent pixels when converting png file.")
+		, "&Keep transparent pixels when converting png file.")
 	;
 	Gui_Add_Editbox( "EVP", "gu_evpEdrImgFilepath", col2w, "xs y+31 Readonly -E0x200", "Base-image file path (to fill)")
 	Gui_Add_Picture( "EVP", "gu_evpPicPreview",     col2w, "h" g_evpImgpaneHeight)
@@ -494,9 +494,18 @@ Evp_ScaleDownImage_END:
 }
 
 
-Evp_evtBatchConvert(CtrlHwnd, GuiEvent, EventInfo, ErrLevel:="")
+Evp_evtCvtFromClipboard(CtrlHwnd, GuiEvent, EventInfo, ErrLevel:="")
 {
-	Evp_LaunchBatchConvert_UseUIParam()
+;	Dbgwin_Output(Format("tid={} Evp_evtCvtFromClipboard().", dev_GetThreadId())) ; debug
+
+	Evp_LaunchConvert_fromClipboard()
+}
+
+Evp_evtCvtFromBaseImg(CtrlHwnd, GuiEvent, EventInfo, ErrLevel:="")
+{
+	dev_assert(g_evpBaseImageFilepath_100pct)
+
+	Evp_LaunchConvert_fromBaseImage(g_evpBaseImageFilepath_100pct)
 }
 
 Evp_GetUIScalePct()
@@ -515,27 +524,50 @@ Evp_ToggleKeepPngTransparent()
 	g_isKeepPngTransparent := is_checked ? true : false
 }
 
-Evp_LaunchBatchConvert_UseUIParam()
+Evp_CheckAndWarnConvertBusy()
 {
-	scale_pct := Evp_GetUIScalePct()
-	
-	GuiControl_Show("EVP", "gu_evpIcnWarnNoTranspixel", false)
-	;	GuiControl_SetText("EVP", "gu_evpIcnWarnNoTranspixel" , "") ; make it show blank
-
-	
-	Evp_LaunchBatchConvert("", scale_pct>0 ? scale_pct : 100)
-}
-
-Evp_evtCvtFromBaseImg(CtrlHwnd, GuiEvent, EventInfo, ErrLevel:="")
-{
-	dev_assert(g_evpBaseImageFilepath_100pct)
-
-	scale_pct := Evp_GetUIScalePct()
-	if(scale_pct>0)
-	{
-		Evp_LaunchBatchConvert(g_evpBaseImageFilepath_100pct, scale_pct)
+	if(g_evpTimerStage!="Monitoring") {
+		dev_MsgBoxWarning("Previous converting is in progress, please retry later.")
+		return true
 	}
+	else
+		return false
 }
+
+Evp_LaunchConvert_fromClipboard()
+{
+;	Dbgwin_Output(Format("tid={} Evp_LaunchConvert_fromClipboard().", dev_GetThreadId())) ; debug
+
+	Gui_ChangeOpt(  "EVP", "+OwnDialogs")
+
+	if(Evp_CheckAndWarnConvertBusy())
+		return ""
+
+	scale_pct := Evp_GetUIScalePct()
+	
+	; make it show blank
+	GuiControl_Show("EVP", "gu_evpIcnWarnNoTranspixel", false)
+	; -- Memo: Using 
+	;		GuiControl_SetText("EVP", "gu_evpIcnWarnNoTranspixel" , "") 
+	; is problematic, bcz it will make the control-window become 0-width,
+	; so when we next do Gui_Picture_SetIconFromDll(), its width *changes* to 
+	; icon's actual width(no longer 16).
+	
+	Evp_LaunchBatchConvert("", scale_pct)
+}
+
+Evp_LaunchConvert_fromBaseImage(fpBaseImage)
+{
+	Gui_ChangeOpt(  "EVP", "+OwnDialogs")
+
+	if(Evp_CheckAndWarnConvertBusy())
+		return ""
+
+	scale_pct := Evp_GetUIScalePct()
+	
+	Evp_LaunchBatchConvert(fpBaseImage, scale_pct)
+}
+
 
 Evp_LaunchBatchConvert(fpFromImage:="", scale_pct:=100)
 {
@@ -546,10 +578,8 @@ Evp_LaunchBatchConvert(fpFromImage:="", scale_pct:=100)
 		return ""
 	}
 	
-	if(g_evpTimerStage!="Monitoring") {
-		dev_MsgBoxWarning("Last converting is in progress, please retry later.")
+	if(Evp_CheckAndWarnConvertBusy())
 		return ""
-	}
 
 	imgsig := Evp_GenImageSigByTimestamp()
 
@@ -562,6 +592,12 @@ Evp_LaunchBatchConvert(fpFromImage:="", scale_pct:=100)
 		return "" ; Error should have been pop-up-ed in Evp_GenerateBaseImage()
 	
 	dev_assert(FileExist(fpimgScaled))
+
+	; Clear listbox
+	hwndListbox := GuiControl_GetHwnd("EVP", "gu_evpLbxImages")
+	dev_assert(hwndListbox)
+	dev_Listbox_Clear(hwndListbox)
+
 	
 	; Note: fpimgScaled has wide meaning including 100% or less-than-100% scaling.
 	; We will pass this fpimgScaled image to .bat .
@@ -681,12 +717,6 @@ Evp_GenerateBaseImage(fpFromImage, scale_pct, imgsig, is_keeppngtrans
 				goto EVP_CLEANUP_20221204
 			}
 			
-			if(StrIsEndsWith(fpFromImage, ".png", true) && is_keeppngtrans)
-			{
-				fn := Func("Evp_TimerProcCheckPngfileTranspixel").Bind(fpFromImage)
-				SetTimer, % fn, -10 ; one-time timer
-			}
-		
 			; fpFromImage can be any format(bmp, jpg, gif, png etc)
 			; We need to first save it as 32-bit png, via Gdip libray.
 
@@ -747,7 +777,10 @@ Evp_GenerateBaseImage(fpFromImage, scale_pct, imgsig, is_keeppngtrans
 		
 	} ; if(!FileExist(fp_100pctimg))
 
-
+	is_succ := false ; Re-assume faile
+	
+	;;; Do scale_pct if required to
+	;
 	if(is_100pct_succ)
 	{
 		if(scale_pct!=100 && !FileExist(fp_scaledimg))
@@ -757,12 +790,19 @@ Evp_GenerateBaseImage(fpFromImage, scale_pct, imgsig, is_keeppngtrans
 				return "" ; Error should have been reported inside Evp_ScaleDownImage()
 		}
 
-		return fp_100pctimg
+		is_succ := true
 	}
-	else
+	
+	;;; Launch timer to check for png-transparent.
+	; This checking is very slow, and we do NOT want to block here, so use a timer.
+	;
+	if(is_succ && StrIsEndsWith(fpFromImage, ".png", true) && is_keeppngtrans)
 	{
-		return ""
+		fn := Func("Evp_TimerProcCheckPngfileTranspixel").Bind(fpFromImage)
+		SetTimer, % fn, -99 ; one-time timer, start after(99 ms)
 	}
+	
+	return is_succ ?  fp_100pctimg : ""
 }
 
 
@@ -781,6 +821,10 @@ Evp_WM_MOUSEMOVE()
 		dev_TooltipAutoClear("If ticked, an input png file's transparent pixels remains transparent in output pngs.`n"
 			. "If not tick, input transparent pixels becomes white pixels in output pngs.`n`n"
 			. "This takes effect next time you Convert from Clipboard.")
+	}
+	else if(A_GuiControl=="gu_evpIcnWarnNoTranspixel")
+	{
+		dev_TooltipAutoClear("This png file does NOT seem to have transparent pixels. So ticking or not makes no difference.")
 	}
 	else if(A_Gui=="EVP")
 	{
@@ -812,6 +856,8 @@ Evp_TimerOff()
 
 Evp_TimerProc()
 {
+	Gui_ChangeOpt(  "EVP", "+OwnDialogs")
+
 	if(g_evpTimerStage=="Monitoring")
 		Evp_CheckClipboardStateUpdateUI()
 	else if(g_evpTimerStage=="ConvertStarting" || g_evpTimerStage=="ConvertStarted")
@@ -896,6 +942,12 @@ gdip_BitmapFindTransparentPixel(bitmap, xstart, ystart, xend_, yend_, xskip, ysk
 
 Evp_HasTransparentPixel(fpimg)
 {
+	; Baffle: This function runs very slow, but I don't know why.
+	; Weird: The CPU usage during the run is far less from a whole core.
+	; Due to its slowness, I have to limit the time-cost, so not every pixel is checked.
+	scan1_msec_limit := 500
+	scan2_msec_limit := 300
+
 	If !pToken := Gdip_Startup()
 	{
 		dev_MsgBoxWarning("Evp_HasTransparentPixel(): Gdip_Startup FAIL.")
@@ -905,39 +957,64 @@ Evp_HasTransparentPixel(fpimg)
 	bitmap := Gdip_CreateBitmapFromFile(fpimg)
 	if(bitmap<=0) {
 		dev_MsgBoxError(Format("Gdip_CreateBitmapFromFile(""{}"") fail, errcode={}.", fpimg, bitmap))
-		return
+		return false
 	}
 
+	imgw := 0 , imgh := 0
 	Gdip_GetImageDimensions(bitmap, imgw, imgh)
+	if(imgw==0 || imgh==0)
+		dev_MsgBoxError("In Evp_HasTransparentPixel(), Gdip_GetImageDimensions() fails!")
 
 	skip := 2
-	scan_result := gdip_BitmapFindTransparentPixel(bitmap, 0,0, imgw, imgh, skip, skip, 1000)
-	if(scan_result.is_found==false)
+	scan_result := gdip_BitmapFindTransparentPixel(bitmap, 0,0, imgw, imgh, skip, skip, scan1_msec_limit)
+
+	if(scan_result.is_found==false and scan_result.y<imgh)
 	{
 		dev_assert(scan_result.y>0)
+		
+;		if(scan_result.y>=imgh) { ; test
+;			dev_assert(scan_result.y<imgh)
+;		}
+		
 ;		dev_TooltipAutoClear("Phase-two scan from image-y (0-based): " . scan_result.y, 5000) ; debug
 		
-		; Now we search "image left-side"(100-pixel column) 
+		; Now we search "image left-side"(100-pixel column)
 		scan_width := 100
 		scan_result := gdip_BitmapFindTransparentPixel(bitmap
 			, 0,           scan_result.y
 			, scan_width,  imgh
 			, skip,        skip
-			, 500)
+			, scan2_msec_limit)
 	}
 	
 	Gdip_DisposeImage(bitmap)
 	Gdip_Shutdown(pToken)
+
+	if(scan_result.is_found)
+	{
+		Dbgwin_Output(Format("{}: transpx at {},{}", fpimg, scan_result.x, scan_result.y)) ; debug
+	}
 
 	return scan_result.is_found
 }
 
 Evp_TimerProcCheckPngfileTranspixel(pngfilepath)
 {
-;	threadid := DllCall("kernel32.dll\GetCurrentThreadId")
+	Gui_ChangeOpt(  "EVP", "+OwnDialogs")
+
+;Dbgwin_Output("BgTransChk >>>>>>>> " . pngfilepath)
+
+	static s_count := 0
+	s_count += 1
+	
+	threadid := dev_GetThreadId()
 ;	dev_MsgBoxInfo(Format("threadid={} , A_ThisLabel={}", threadid, A_ThisLabel)) ; A_ThisLabel is empty
 	
-	if(not Evp_HasTransparentPixel(pngfilepath))
+	hastranspx := Evp_HasTransparentPixel(pngfilepath)
+	
+;	Dbgwin_Output(Format("<<<<<<<< {}): {}", pngfilepath, hastranspx ? "Yes" : "No"))
+	
+	if(not hastranspx)
 	{
 		GuiControl_Show("EVP", "gu_evpIcnWarnNoTranspixel", true)
 		Gui_Picture_SetIconFromDll("EVP", "gu_evpIcnWarnNoTranspixel", "user32.dll", 2) ; 2: yellow exclamation triangle
@@ -1134,14 +1211,7 @@ Evp_SyncGuiByBaseImage(imgfilepath, imgw_scaled, imgh_scaled)
 	;
 	; This function changes global vars: g_evpImgpaneWidth, g_evpImgpaneWidth
 	
-	; //// Reset UI controls first ////
 	
-	
-	; Clear listbox
-	hwndListbox := GuiControl_GetHwnd("EVP", "gu_evpLbxImages")
-	dev_assert(hwndListbox)
-	dev_Listbox_Clear(hwndListbox)
-
 	; //// Set new content into controls according to imgfilepath ////
 	
 	if(imgfilepath)
@@ -1181,7 +1251,7 @@ Evp_SyncGuiByBaseImage(imgfilepath, imgw_scaled, imgh_scaled)
 	}
 	else ; imgfilepath is empty, reset UI to default
 	{
-;		dev_assert(0) ;  XXX dead code? No, use at init stage
+;		dev_assert(0) ; dead code? No, use at init stage
 		wimgpane := gc_evpImgpaneDefWidth
 		himgpane := gc_evpImgpaneDefHeight
 	}

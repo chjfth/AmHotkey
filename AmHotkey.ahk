@@ -219,6 +219,17 @@ dev_max(a, b)
 	return a>b ? a : b
 }
 
+dev_SendMessage(hwnd, wm_xxx, wparam, lparam)
+{
+    SendMessage, % wm_xxx, % wparam, % lparam, , ahk_id %hwnd%
+}
+
+dev_PostMessage(hwnd, wm_xxx, wparam, lparam)
+{
+    PostMessage, % wm_xxx, % wparam, % lparam, , ahk_id %hwnd%
+}
+
+
 SystrayMenu_Add_MuteClicking()
 {
 	Menu, TRAY, add, %g_amstrMute%, dev_AmMute  ; Creates a new menu item.
@@ -903,7 +914,13 @@ dev_LocalTimeZoneMinutesStr()
 		return Format("-{:02X}{:02X}", (-tzminutes)/60, Mod(-tzminutes, 60))
 }
 
+dev_GetThreadId()
+{
+	threadid := DllCall("kernel32.dll\GetCurrentThreadId")
+	return threadid
+}
 
+; ===============================================================================================
 
 ; [2015-02-07] The great dynamically hotkey defining function. (tested on AHK 1.1.13.01)
 ; BIG Thanks to: http://stackoverflow.com/a/17932358
@@ -3576,12 +3593,10 @@ GuiControl_SetPos(GuiName, CtrlVarname, x:=-1, y:=-1, w:=-1, h:=-1, force_redraw
 		, h==-1 ? r.h : h)
 }
 
-dev_Listbox_Clear(hwndListbox, entries:=100)
+dev_Listbox_Clear(hwndListbox)
 {
-	Loop, % entries
-	{
-		Control, Delete, % entries+1-A_Index, , ahk_id %hwndListbox%
-	}
+	LB_RESETCONTENT := 0x0184 
+	dev_SendMessage(hwndListbox, LB_RESETCONTENT, 0, 0)
 }
 
 GuiControl_ComboboxGetText(GuiName, CtrlVarname)
