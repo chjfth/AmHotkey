@@ -280,7 +280,11 @@ Evp_ShowGui()
 		return
 
 	if(!g_HwndEVPGui) {
+		
 		Evp_CreateGui()
+		
+		SetTimer, Evp_TimerProcCleanupTempDir, -10
+		
 	} else {
 ;		MsgBox, % "Skip Evp_CreateGui()"
 	}
@@ -665,6 +669,8 @@ Evp_LaunchBatchConvert(fpFromImage:="", scale_pct:=100)
 	if(g_evpConvertsAfterUIShown==0)
 		Gui_Show("EVP", "xCenter yCenter", Evp_WinTitle())
 	
+	SetTimer, Evp_TimerProcCleanupTempDir, -10
+
 	return true
 }
 
@@ -1382,13 +1388,30 @@ Evp_BtnOK()
 		Evp_CleanupUI()
 		dev_ClipboardSetHTML(html, true, g_evpHwndToPaste)
 
-		Evp_CleanupOldTemp()
+		Evp_CleanupTempDir()
 	}
 }
 
-Evp_CleanupOldTemp()
+Evp_TimerProcCleanupTempDir()
 {
-	; Cleanup old everpic-... files in C:\Users\win7evn\AppData\Local\Temp\Everpic
+	static s_msecPrevCleanup := 0
+	
+	; To reduce disk access, we do a cleanup only after 5 minutes has elapsed since last cleanup.
+	
+	msec_now := A_TickCount
+	msec_since_prev_cleanup := msec_now - s_msecPrevCleanup
+	
+	if(msec_since_prev_cleanup >= 5*60*1000)
+	{
+		Evp_CleanupTempDir()
+	
+		s_msecPrevCleanup := msec_now
+	}
+}
+
+Evp_CleanupTempDir()
+{
+	; Cleanup stale everpic-... files in C:\Users\win7evn\AppData\Local\Temp\Everpic
 
 	Loop, Files, % g_evpTempDir . "\*"
 	{
