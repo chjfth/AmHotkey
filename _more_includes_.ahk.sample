@@ -8,6 +8,8 @@
 ; #Include libs\CtlColorStatic.ahk
 ; #Include libs\Gdip_All.ahk ; need by evernote.ahk
 
+#Include *i debugwin.ahk
+
 #Include *i quick-switch-app.ahk
 
 #Include *i keymouse.ahk

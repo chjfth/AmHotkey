@@ -2,20 +2,21 @@
 ; in order for the Unicode characters to be recognized by Autohotkey engine.
 
 AUTOEXEC_customize_ahk: ; Workaround for Autohotkey's ugly auto-exec feature. Don't delete.
-	; When duplicate, you MUST: Change the above ahk label to a unique one, such as AUTOEXEC_foobar_ahk.
+	; When duplicating this file, you MUST: Change the above ahk label to a unique one, 
+	; such as AUTOEXEC_foobar_ahk.
 
 ; Something to place here.
 ; * Customize these global vars according to your running machine:
 ; * Call the run-once functions.
 
-Init_MyCustomizedEnv() 
+Init_MyCustomizedEnv()
 ; -- This function's body is defined after the first "return",
-;    but we have to call it before the first "return".
+;    but we have to call it *before* the first "return".
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; If you define any global variables, you MUST define them ABOVE this line.
 ;
-return ; End of auto-execute section.
+return ; The first return in this ahk. It marks the End of auto-execute section.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 Init_MyCustomizedEnv()

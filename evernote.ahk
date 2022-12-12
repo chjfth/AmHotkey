@@ -328,10 +328,9 @@ Evp_CreateGui()
 	; then user can pick the "best" one to use(paste it into Evernote).
 
 	Gui, EVP:New ; Destroy old window if any
-	Gui, EVP:+Hwndg_HwndEVPGui ; Gui hwnd generated in g_HwndEVPGui
-
-	Gui, EVP:Margin, %gc_evpMarginX%, %gc_evpMarginY%
-	Gui, EVP:Font, s9 cBlack, Tahoma
+	Gui_AssociateHwndVarname("EVP", "g_HwndEVPGui") ; Gui hwnd generated in g_HwndEVPGui
+	Gui_SetXYMargin("EVP", gc_evpMarginX, gc_evpMarginY)
+	Gui_Switch_Font("EVP", 9, "Black", "Tahoma") ; Gui, EVP:Font, s9 cBlack, Tahoma
 	
 	; ==== Create Column1 controls. ====
 	;
@@ -353,12 +352,12 @@ Evp_CreateGui()
 	; ==== Create Column2 controls. ====
 	;
 	col2w := gc_evpImgpaneDefWidth
-	Gui_Add_TxtLabel("EVP", "gu_evpTxtClipbState",  col2w, Format("xs+{} ys+5 +0x8000", col1w+gc_evpGapX), "Clipboard state")
+	Gui_Add_TxtLabel("EVP", "gu_evpTxtClipbState",  col2w, Format("xs+{} ys+5 section +0x8000", col1w+gc_evpGapX), "Clipboard state")
 	Gui_Add_Picture( "EVP", "gu_evpIcnWarnNoTranspixel", 16, "h16 +0x100") ; 0x100: SS_NOTIFY, for hovering tooltip
 	Gui_Add_Checkbox("EVP", "gu_evpCkbKeepPngTrans", -1, "x+4 yp+1 c666666 g" . "Evp_ToggleKeepPngTransparent"
 		, "Keep transparent pixels when converting png file.")
 	;
-	Gui_Add_Editbox( "EVP", "gu_evpEdrImgFilepath", col2w, "y+31 Readonly -E0x200", "imgfilepath")
+	Gui_Add_Editbox( "EVP", "gu_evpEdrImgFilepath", col2w, "xs y+31 Readonly -E0x200", "Base-image file path (to fill)")
 	Gui_Add_Picture( "EVP", "gu_evpPicPreview",     col2w, "h" g_evpImgpaneHeight)
 	
 	; FootLine

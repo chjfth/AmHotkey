@@ -883,6 +883,27 @@ dev_GetDateTimeStrCompact(sep:="_")
 	return dt
 }
 
+dev_LocalTimeZoneInMinutes()
+{
+	; For China, it returns 480 (8*60)
+	
+	VarSetCapacity(Tzinfo, 200, 0)
+	DllCall("GetTimeZoneInformation", Ptr,&Tzinfo)
+	
+	tzminutes := NumGet(&Tzinfo, 0, "Int")
+	return -tzminutes
+}
+
+dev_LocalTimeZoneMinutesStr()
+{
+	tzminutes := dev_LocalTimeZoneInMinutes()
+	if(tzminutes>=0)
+		return Format("+{:02X}{:02X}", tzminutes/60, Mod(tzminutes, 60))
+	else
+		return Format("-{:02X}{:02X}", (-tzminutes)/60, Mod(-tzminutes, 60))
+}
+
+
 
 ; [2015-02-07] The great dynamically hotkey defining function. (tested on AHK 1.1.13.01)
 ; BIG Thanks to: http://stackoverflow.com/a/17932358
@@ -1386,6 +1407,26 @@ dev_MsgBoxYesNo_Warning(text, default_yes:=true, parent_winid:=0)
 	return dev_MsgBoxYesNo(text, default_yes, parent_winid, 48)
 }
 
+dev_WinMoveHwnd(hwnd, x:="", y:="", w:="", h="")
+{
+	wold := "bad"
+
+	WinGetPos, xold,yold,wold,hold, ahk_id %hwnd%
+	
+	if(wold=="bad")
+		return
+
+	if(x=="")
+		x := xold
+	if(y=="")
+		y := yold
+	if(w=="")
+		w := wold
+	if(h=="")
+		h := hold
+	
+	WinMove, ahk_id %hwnd%, , % x, % y, % w, % h
+}
 
 dev_IsClassnnFocused_regex(regex)
 {
@@ -3234,26 +3275,6 @@ dev_JoinStrings(ar_strings, join_with:=",")
 	return ret
 }
 
-dev_LocalTimeZoneInMinutes()
-{
-	; For China, it returns 480 (8*60)
-	
-	VarSetCapacity(Tzinfo, 200, 0)
-	DllCall("GetTimeZoneInformation", Ptr,&Tzinfo)
-	
-	tzminutes := NumGet(&Tzinfo, 0, "Int")
-	return -tzminutes
-}
-
-dev_LocalTimeZoneMinutesStr()
-{
-	tzminutes := dev_LocalTimeZoneInMinutes()
-	if(tzminutes>=0)
-		return Format("+{:02X}{:02X}", tzminutes/60, Mod(tzminutes, 60))
-	else
-		return Format("-{:02X}{:02X}", (-tzminutes)/60, Mod(-tzminutes, 60))
-}
-
 dev_IsShiftKeyDown()
 {
 	if(GetKeyState("Shift", "P"))
@@ -3263,7 +3284,28 @@ dev_IsShiftKeyDown()
 
 }
 
+dev_IniRead(inifilepath, section, key, default_val:="")
+{
+	IniRead, outvar, % inifilepath, % section, % key, % default_val
+	return outvar
+}
+
+dev_IniWrite(inifilepath, section, key, val)
+{
+	IniWrite, % val, % inifilepath, % section, % key
+}
+
+;===================================
 ;======== Gui & GuiControl =========
+;===================================
+
+
+Gui_AssociateHwndVarname(GuiName, HwndVarname)
+{
+	dev_assert(GuiName)
+
+	Gui, % Format("{}:+Hwnd{}", GuiName, HwndVarname)
+}
 
 Gui_IsValidVar(varname)
 {
@@ -3288,13 +3330,36 @@ Gui_IsValidVar(varname)
 		return false
 }
 
-Gui_Show(GuiName, options, title:="AHKGUI")
+Gui_Show(GuiName, options="", title:="AHKGUI")
 {
 	cmd := "Show"
 	if(GuiName)
 		cmd := Format("{}:{}", GuiName, cmd)
 
 	Gui, % cmd, % options, % title
+}
+
+Gui_Hide(GuiName)
+{
+	cmd := "Hide"
+	if(GuiName)
+		cmd := Format("{}:{}", GuiName, cmd)
+
+	Gui, % cmd
+}
+
+Gui_ChangeOpt(GuiName, optstr)
+{
+	Gui, % (GuiName ? GuiName ":" : "") . optstr
+}
+
+Gui_SetXYMargin(GuiName, xmargin, ymargin)
+{
+	cmd := "Margin"
+	if(GuiName)
+		cmd := Format("{}:{}", GuiName, cmd)
+
+	Gui, % cmd , % xmargin, % ymargin
 }
 
 Gui_Switch_Font(GuiName, sizept=0, rgbhex="", fontface:="", weight:=400)
@@ -3327,7 +3392,7 @@ GuiControl_ChangeOpt(GuiName, CtrlVarname, opt)
 	GuiControl, % cmd, % CtrlVarname, % opt
 }
 
-Gui_Add_TxtLabel(GuiName, CtrlVarname, width, format, text:="")
+Gui_Add_TxtLabel(GuiName, CtrlVarname:="", width:=-1, format="", text:="")
 {
 	; format: 
 	; +0x8000 (SS_PATHELLIPSIS)
@@ -3342,6 +3407,11 @@ Gui_Add_TxtLabel(GuiName, CtrlVarname, width, format, text:="")
 	w_width := width>=0 ? "w" width : "" ; so width==-1 will make it auto-width by text length
 	
 	Gui, % cmdadd, Text, % Format("v{} {} {}", CtrlVarname, w_width, format), % text
+}
+
+Gui_Add_StaticLabel(GuiName, text)
+{
+	Gui_Add_TxtLabel(GuiName, "", -1, "", text)
 }
 
 GuiControl_SetColor(GuiName, CtrlVarname, fgcolor:="", bgcolor:="")
@@ -3396,6 +3466,7 @@ Gui_Add_Checkbox(GuiName, CtrlVarname, width, format, btntext)
 Gui_Add_Editbox(GuiName, CtrlVarname, width, format, init_text:="")
 {
 	; format: 
+	; r10
 	; Readonly
 	; -E0x200 (turn off WS_EX_CLIENTEDGE, remove editbox border thin line)
 
