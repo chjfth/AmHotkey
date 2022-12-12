@@ -128,6 +128,7 @@ global gu_evpEdrFootline   := "" ; current select image filepath
 global g_evpIsGuiVisible := false
 global g_evpConvertStartCount := 0 ; increase one each time Launch convert.
 global g_evpConvertSuccCount := 0
+global g_evpCurPngHasTranspx := false ; Current png has transparent pixel?
 
 global g_evpTimerStage := "Monitoring" 
 	; "Monitoring" : Periodically check(monitor) the clipboard for image or CF_BITMAP or image-filepath.
@@ -560,6 +561,8 @@ Evp_LaunchConvert_fromClipboard()
 	; is problematic, bcz it will make the control-window become 0-width,
 	; so when we next do Gui_Picture_SetIconFromDll(), its width *changes* to 
 	; icon's actual width(no longer 16).
+	
+	g_evpCurPngHasTranspx := false
 	
 	Evp_LaunchBatchConvert("", scale_pct)
 }
@@ -1037,6 +1040,9 @@ Evp_TimerProcCheckPngfileTranspixel(pngfilepath, from_startcount)
 	
 	; show warning icon if not hastranspx.
 	GuiControl_Show("EVP", "gu_evpIcnWarnNoTranspixel", !hastranspx?true:false)
+	
+	if(hastranspx)
+		g_evpCurPngHasTranspx := true
 }
 
 
@@ -1375,6 +1381,9 @@ Evp_BtnOK()
 	imgsizekb := g_evp_arImageStore[gu_evpLbxImages].sizekb
 
 	dev_assert(StrIsStartsWith(imgfilename, g_evpImageSig))
+	
+	if(StrIsEndsWith(imgfilename, ".png", true) && g_evpCurPngHasTranspx==true)
+		imghint .= "(PTP)" ; =Preserve Transparent Pixels
 
 	html_fmt = 
 (
