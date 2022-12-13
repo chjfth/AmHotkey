@@ -121,6 +121,7 @@ global gu_evpCkbKeepPngTrans := ""
 
 global gu_evpEdrBaseImgFilepath := "" ; Currently previewing image filepath (readonly editbox)
 global gu_evpPicPreview ; gui-assoc, Picture control
+global g_evpCurPngHasTranspx := false ; Current png has transparent pixel? Detected by Evp_TimerProcCheckPngfileTranspixel()
 ;
 global gu_evpBtnOK := "" ; Left-bottom "Use This" button
 
@@ -129,7 +130,6 @@ global gu_evpEdrFootline   := "" ; current select image filepath
 global g_evpIsGuiVisible := false
 global g_evpConvertStartCount := 0 ; increase one each time Launch convert.
 global g_evpConvertSuccCount := 0
-global g_evpCurPngHasTranspx := false ; Current png has transparent pixel?
 
 global g_evpTimerStage := "Monitoring" 
 	; "Monitoring" : Periodically check(monitor) the clipboard for image or CF_BITMAP or image-filepath.
@@ -856,7 +856,7 @@ Evp_WM_MOUSEMOVE()
 	}
 	else if(A_GuiControl=="gu_evpIcnWarnNoTranspixel")
 	{
-		dev_TooltipAutoClear("This png file does NOT seem to have transparent pixels. So ticking or not makes no difference.")
+		dev_TooltipAutoClear("This input png file does NOT seem to have transparent pixels.")
 	}
 	else if(A_Gui=="EVP")
 	{
@@ -1089,6 +1089,7 @@ Evp_CheckClipboardStateUpdateUI()
 	
 	uivis_pngtrans := (is_pngpath && g_evpIsFullUIExpaned) ? true : false
 	GuiControl_Show("EVP", "gu_evpCkbKeepPngTrans", uivis_pngtrans)
+	
 	if(not uivis_pngtrans)
 		GuiControl_Show("EVP", "gu_evpIcnWarnNoTranspixel", false)
 }
