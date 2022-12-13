@@ -5,9 +5,19 @@ AUTOEXEC_customize_ahk: ; Workaround for Autohotkey's ugly auto-exec feature. Do
 	; When duplicating this file, you MUST: Change the above ahk label to a unique one, 
 	; such as AUTOEXEC_foobar_ahk.
 
-; Something to place here.
+; Something to place here:
 ; * Customize these global vars according to your running machine:
 ; * Call the run-once functions.
+
+; Something NOT to place here:
+; * Hotkey definition, like 
+;		#!t:: DoSomething()
+; * Function definition.
+;
+; If you violate this "NOT" rule, .e.g, you define foo(){...} , then all `global`s 
+; after this foo will be ignored.
+
+global g_myglobal1 := 123
 
 Init_MyCustomizedEnv()
 ; -- This function's body is defined after the first "return",
@@ -17,7 +27,11 @@ Init_MyCustomizedEnv()
 ; If you define any global variables, you MUST define them ABOVE this line.
 ;
 return ; The first return in this ahk. It marks the End of auto-execute section.
+;
+; After this line, you can define hotkeys and functions, 
+; or #Include somebody else's AHK partial file(s).
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 
 Init_MyCustomizedEnv()
 {
