@@ -875,10 +875,13 @@ Evp_WM_COMMAND(wParam, lParam, msg, hwnd)
 	hctrl := lParam
 	notify_code := wParam >> 16
 
+;	Dbgwin_Output(Format("Evp_WM_COMMAND: hwndctrl=0x{:08X} , notify_code={}", hctrl, notify_code)) ; debug
+	; -- Yes, we will see lots of WM_COMMAND activity.
+
 ;	if(hctrl==g_evtblHwndComboColor && notify_code==4) ; CBN_KILLFOCUS=4
-	{
+;	{
 ;	    Evtbl_ColorComboSetColorDualFormat()
-	}   
+;	}   
 }
 
 

@@ -338,6 +338,9 @@ CallAutoexecLabels()
 		{
 			module_count++
 			msglistmodules .=  module_count . ". " . autolabel.filename . " [" . label_varname . "]`n"
+			
+			; Jump to one AUTOEXEC_xxx_ahk label:
+			;
 			GoSub, %label_varname%
 		}
 		else
@@ -349,8 +352,8 @@ CallAutoexecLabels()
 	
 	if(module_count==0) ; no modules loaded, probably _more_includes_.ahk not generated yet
 	{
-		srcfile := A_ScriptDir . "\" . "_more_includes_.ahk.sample"
-		dstfile := A_ScriptDir . "\" . "_more_includes_.ahk"
+		srcfile := Format("{}\{}", A_ScriptDir, "_more_includes_.ahk.sample")
+		dstfile := Format("{}\{}", A_ScriptDir, "_more_includes_.ahk")
 
 	;	MsgBox, % Format("filecopy {} -- {}", srcfile, dstfile)
 		
@@ -880,6 +883,12 @@ IsDictEmpty(dict)
 		break
 	}
 	return empty
+}
+
+dev_GetCurrentDatetime(format)
+{
+	FormatTime, outvar, , %format%
+	return outvar
 }
 
 dev_GetDateTimeStrNow()
@@ -3141,12 +3150,6 @@ dev_Menu_DoNone()
 {
 }
 
-dev_GetCurrentDatetime(format)
-{
-	FormatTime, outvar, , %format%
-	return outvar
-}
-
 dev_SplitPath(input, byref Filename:="")
 {
 	SplitPath, input, Filename, OutDir
@@ -3323,6 +3326,22 @@ dev_CreateDirIfNotExist(dirpath)
 		return false
 	}
 	return true
+}
+
+dev_OnMessage_Register(wm_xxx, str_funcname)
+{
+	s := str_funcname
+	dev_assert(s) ; If user pass in function name without double-quotes, this will fail
+	
+	OnMessage(wm_xxx, Func(str_funcname))
+}
+
+dev_OnMessage_Unregister(wm_xxx, str_funcname)
+{
+	s := str_funcname
+	dev_assert(s) ; If user pass in function name without double-quotes, this will fail
+
+	OnMessage(wm_xxx, Func(str_funcname), 0)
 }
 
 ;===================================
@@ -3571,6 +3590,9 @@ GuiControl_GetValue(GuiName, CtrlVarname)
 
 GuiControl_SetText(GuiName, CtrlVarname, text)
 {
+	; CtrlVarname can also be an HWND value.
+	; If it is an HWND, GuiName can be empty string.
+
 	dev_assert(Gui_IsValidVar(CtrlVarname))
 	cmd := GuiName ? GuiName ":" : ""
 	GuiControl, % cmd, % CtrlVarname, % text
