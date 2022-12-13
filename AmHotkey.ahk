@@ -3312,6 +3312,19 @@ dev_IniWrite(inifilepath, section, key, val)
 	IniWrite, % val, % inifilepath, % section, % key
 }
 
+
+dev_CreateDirIfNotExist(dirpath)
+{
+	; If dirpath already exists and is a directory or a junction (not file),
+	; it will return true(=succ).
+	try {
+		FileCreateDir, % dirpath
+	} catch e {
+		return false
+	}
+	return true
+}
+
 ;===================================
 ;======== Gui & GuiControl =========
 ;===================================

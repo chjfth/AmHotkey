@@ -277,6 +277,12 @@ Evp_WinTitle()
 
 Evp_LaunchUI()
 {
+	if(!dev_CreateDirIfNotExist(g_evpTempDir))
+	{
+		dev_MsgBoxError("Error. Cannot create folder: " g_evpTempDir)
+		return
+	}
+	
 	Evp_ShowGui()
 
 	Evp_LaunchConvert_fromClipboard()
