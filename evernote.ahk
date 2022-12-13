@@ -105,6 +105,7 @@ global gc_evp_CF_BITMAP := 2
 ; First column controls:
 ;
 global gu_evpBtnCvtFromClipbrd := ""  ; The top-left corner "Convert from Clipboard" button
+global gu_evpCkbAutoConvert    := 0
 global gu_evpTxtScale   := ""  ; the small "Scale:" text label
 global gu_evpCbxScalePct := 0  ; The image-scale percent combobox
 global gu_evpBtnCvtFromBaseImg := ""  ; The Refresh button that converts from existing Base-image
@@ -118,7 +119,7 @@ global gu_evpTxtClipbState := "" ; Text label showing clipboard state.
 global gu_evpIcnWarnNoTranspixel := "" ; Icon warning "no transparent pixel in png"
 global gu_evpCkbKeepPngTrans := ""
 
-global gu_evpEdrImgFilepath := "" ; Currently previewing image filepath (readonly editbox)
+global gu_evpEdrBaseImgFilepath := "" ; Currently previewing image filepath (readonly editbox)
 global gu_evpPicPreview ; gui-assoc, Picture control
 ;
 global gu_evpBtnOK := "" ; Left-bottom "Use This" button
@@ -269,6 +270,11 @@ return ; End of auto-execute section.
 ; so Ctrl+V pasting it into Evernote saves quite much space (Evernote defaultly gives you very big PNG-32).
 AppsKey & c:: Evp_LaunchUI()
 
+Evp_WinTitle()
+{
+	return "Everpic v2022.12"
+}
+
 Evp_LaunchUI()
 {
 	Evp_ShowGui()
@@ -336,15 +342,19 @@ Evp_CreateGui()
 	Gui_AssociateHwndVarname("EVP", "g_HwndEVPGui") ; Gui hwnd generated in g_HwndEVPGui
 	Gui_SetXYMargin("EVP", gc_evpMarginX, gc_evpMarginY)
 	Gui_Switch_Font("EVP", 9, "Black", "Tahoma") ; Gui, EVP:Font, s9 cBlack, Tahoma
+
+	fullwidth := Evp_CalCtrlFullWidth()
 	
 	; ==== Create Column1 controls. ====
 	;
 	col1w := gc_evpCol1Width
 	Gui_Add_Button(  "EVP", "gu_evpBtnCvtFromClipbrd", col1w, "Section xm ym g" . "Evp_evtCvtFromClipboard" , "&Convert from Clipboard")
+	Gui_Add_Checkbox("EVP", "gu_evpCkbAutoConvert",    col1w, "xm+16 y+5 Hidden", "&Auto Convert")
+	Gui_Add_Editbox( "EVP", "gu_evpEdrBaseImgFilepath", fullwidth, "xm y+34 Readonly -E0x200", "Base-image file path (to fill)")
 	;
 	lwScale := 42 ; label-width
 	lwRefresh := 30
-	Gui_Add_TxtLabel("EVP", "gu_evpTxtScale", lwScale, "y+45", "&Scale:")
+	Gui_Add_TxtLabel("EVP", "gu_evpTxtScale", lwScale, "xm+2 y+4", "&Scale:")
 	Gui_Add_Combobox("EVP", "gu_evpCbxScalePct", col1w-lwScale-lwRefresh-gc_evpGapX
 		, Format("x+{} yp-2 AltSubmit g{}", 0, "Evp_evtCbxScalepctChanged"))
 	Gui_Add_Button(  "EVP", "gu_evpBtnCvtFromBaseImg", lwRefresh
@@ -358,16 +368,15 @@ Evp_CreateGui()
 	;
 	col2w := gc_evpImgpaneDefWidth
 	Gui_Add_TxtLabel("EVP", "gu_evpTxtClipbState",  col2w, Format("xs+{} ys+5 section +0x8000", col1w+gc_evpGapX), "Clipboard state")
+	;
 	Gui_Add_Picture( "EVP", "gu_evpIcnWarnNoTranspixel", 16, "h16 hidden +0x100") ; 0x100: SS_NOTIFY, for hovering tooltip
 		Gui_Picture_SetIconFromDll("EVP", "gu_evpIcnWarnNoTranspixel", "user32.dll", 2) ; 2: yellow exclamation triangle
-	Gui_Add_Checkbox("EVP", "gu_evpCkbKeepPngTrans", -1, "x+4 yp+1 c666666 g" . "Evp_ToggleKeepPngTransparent"
+	Gui_Add_Checkbox("EVP", "gu_evpCkbKeepPngTrans", -1, "x+4 yp+1 c666666 Hidden g" . "Evp_ToggleKeepPngTransparent"
 		, "&Keep transparent pixels when converting png file.")
 	;
-	Gui_Add_Editbox( "EVP", "gu_evpEdrImgFilepath", col2w, "xs y+31 Readonly -E0x200", "Base-image file path (to fill)")
-	Gui_Add_Picture( "EVP", "gu_evpPicPreview",     col2w, "h" g_evpImgpaneHeight)
+	Gui_Add_Picture( "EVP", "gu_evpPicPreview",     col2w, "h" g_evpImgpaneHeight) ; y will be adjusted in Evp_SyncGuiByBaseImage().
 	
 	; FootLine
-	fullwidth := Evp_CalCtrlFullWidth()
 	Gui_Add_Editbox( "EVP", "gu_evpEdrFootline", fullwidth, "xm Readonly", "Footline")
 
 	; Fill gu_evpCbxScalePct combobox
@@ -400,11 +409,12 @@ Evp_ShowAllControls(is_show:=true)
 
 	g_evpIsFullUIExpaned := is_show
 
-	ctls := ["gu_evpTxtScale", "gu_evpCbxScalePct", "gu_evpBtnCvtFromBaseImg"
+	ctls := [ "gu_evpCkbAutoConvert"
+		, "gu_evpTxtScale", "gu_evpCbxScalePct", "gu_evpBtnCvtFromBaseImg"
 		, "gu_evpLbxImages", "gu_evpEdrLoadStat"
 		, "gu_evpBtnOK"
-		, "gu_evpEdrImgFilepath"
-		, "gu_evpCkbKeepPngTrans",
+		, "gu_evpEdrBaseImgFilepath"
+;		, "gu_evpCkbKeepPngTrans"
 		, "gu_evpPicPreview", "gu_evpEdrFootline" ] 
 	
 	for index,value in ctls
@@ -418,11 +428,6 @@ Evp_ShowAllControls(is_show:=true)
 Evp_AutosizeNowUI()
 {
 	Gui_Show("EVP", "AutoSize", Evp_WinTitle())
-}
-
-Evp_WinTitle()
-{
-	return "Everpic"
 }
 
 
@@ -835,6 +840,10 @@ Evp_WM_MOUSEMOVE()
 	{
 		dev_TooltipAutoClear("Shift+click to keep this dialog-box on screen.")
 	}
+	else if(A_GuiControl=="gu_evpCkbAutoConvert")
+	{
+		dev_TooltipAutoClear("Auto convert when new content in clipboard is detected.")
+	}
 	else if(A_GuiControl=="gu_evpBtnCvtFromBaseImg")
 	{
 		dev_TooltipAutoClear("Convert from current Base-image using new Scale value.")
@@ -842,7 +851,7 @@ Evp_WM_MOUSEMOVE()
 	else if(A_GuiControl=="gu_evpCkbKeepPngTrans")
 	{
 		dev_TooltipAutoClear("If ticked, an input png file's transparent pixels remains transparent in output pngs.`n"
-			. "If not tick, input transparent pixels becomes white pixels in output pngs.`n`n"
+			. "If not ticked, input transparent pixels becomes white pixels in output pngs.`n`n"
 			. "This takes effect next time you Convert from Clipboard.")
 	}
 	else if(A_GuiControl=="gu_evpIcnWarnNoTranspixel")
@@ -1222,7 +1231,7 @@ Evp_BatchConvertDone(is_succ)
 	{
 		g_evpConvertSuccCount++
 
-		GuiControl_SetText("EVP", "gu_evpEdrImgFilepath", "Base-image: " g_evpBaseImageFilepath_100pct)
+		GuiControl_SetText("EVP", "gu_evpEdrBaseImgFilepath", "Base-image: " g_evpBaseImageFilepath_100pct)
 
 		Evp_RefreshImgpane()
 	}
@@ -1285,22 +1294,25 @@ Evp_SyncGuiByBaseImage(imgfilepath, imgw_scaled, imgh_scaled)
 	
 	ximgpane := gc_evpMarginX + gc_evpCol1Width + gc_evpGapX
 
-	rlistbox := GuiControl_GetPos("EVP", "gu_evpLbxImages")
+	rScaleLabel := GuiControl_GetPos("EVP", "gu_evpTxtScale")
+	yRef := rScaleLabel.y
 	
-	GuiControl_SetPos("EVP", "gu_evpPicPreview", ximgpane, rlistbox.y, wimgpane, himgpane) ; same vertical pos
+	GuiControl_SetPos("EVP", "gu_evpPicPreview", ximgpane, yRef, wimgpane, himgpane) ; same vertical pos
 
 	g_evpImgpaneWidth := round(wimgpane) 
 	g_evpImgpaneHeight := round(himgpane)
 
 	col2w := dev_max(wimgpane, gc_evpImgpaneDefWidth)
+	gui_fullwidth := dev_max(Evp_CalCtrlFullWidth(), gc_evp_GUIDefWidth)
+	
 	GuiControl_SetPos("EVP", "gu_evpTxtClipbState", -1, -1, col2w, -1)
-	GuiControl_SetPos("EVP", "gu_evpEdrImgFilepath", -1, -1, col2w, -1)
+	GuiControl_SetPos("EVP", "gu_evpEdrBaseImgFilepath", -1, -1, gui_fullwidth, -1)
 	
 	GuiControl_SetText("EVP", "gu_evpPicPreview", imgfilepath) ; this actually changes Pic control's picture appearance
 
 	GuiControl_SetPos("EVP", "gu_evpEdrFootline"
-		, -1, rlistbox.y + dev_max(gc_evpImgpaneDefHeight, himgpane) + gc_evpGapY
-		, dev_max(Evp_CalCtrlFullWidth(), gc_evp_GUIDefWidth), -1)
+		, -1, yRef + dev_max(gc_evpImgpaneDefHeight, himgpane) + gc_evpGapY
+		, gui_fullwidth, -1)
 
 	rFootline := GuiControl_GetPos("EVP", "gu_evpEdrFootline")
 	GuiControl_SetPos("EVP", "gu_evpBtnOK"
