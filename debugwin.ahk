@@ -9,14 +9,17 @@ Dbgwin_Output("Your debug message.")
 	; This debug-message window will be created automatically.
 	
 Dbgwin_ShowGui(true)
-	; Show the Gui, in case it was hidden.
+	; Show the Gui, in case it was hidden(closed by user).
 	; Parameter: `true` to bring it to front; `false` to keep it background(not have keyboard focus).
 */
 
 global g_dbgwinHwnd
 
+global gu_dbgwinBtnCopy := ""
 global gu_dbgwinHint := ""
+global gu_dbgwinBtnClear := ""
 global gu_dbgwinMLE := ""
+
 
 global g_dbgwinMsgCount := 0
 
@@ -113,8 +116,10 @@ Dbgwin_CreateGui()
 	Gui_AssociateHwndVarname("Dbgwin", "g_dbgwinHwnd")
 	Gui_Switch_Font("Dbgwin", 8, "Black", "Tahoma") 
 	
-	Gui_Add_TxtLabel("Dbgwin", "gu_dbgwinHint", 400, "", "Message from Dbgwin_Output():")
-	Gui_Add_Editbox("Dbgwin", "gu_dbgwinMLE", 400, "r10")
+	Gui_Add_Button("Dbgwin", "gu_dbgwinBtnCopy" , 40, "Section g" "Dbgwin_evtBtnCopy", "&Copy")
+	Gui_Add_TxtLabel("Dbgwin", "gu_dbgwinHint", 200, "x+5 yp+4", "Message from Dbgwin_Output():")
+	Gui_Add_Button("Dbgwin", "gu_dbgwinBtnClear", 40, "ys x+115 g" "Dbgwin_evtClear", "Clea&r")
+	Gui_Add_Editbox("Dbgwin", "gu_dbgwinMLE", 400, "xm r10")
 
 	g_dbgwinMsgCount := 0
 
@@ -171,6 +176,24 @@ DbgwinGuiSize()
 {
 ;	dev_TooltipAutoClear("DbgwinGuiSize()...")
 	rsdict := {}
-	rsdict.gu_dbgwinMLE:= "0,0,100,100" ; Left/Top/Right/Bottom
+	rsdict.gu_dbgwinMLE := "0,0,100,100" ; Left/Top/Right/Bottom
+	rsdict.gu_dbgwinBtnClear := "100,0,100,0"
 	dev_GuiAutoResize("Dbgwin", rsdict, A_GuiWidth, A_GuiHeight)
+}
+
+Dbgwin_evtBtnCopy()
+{
+	text := GuiControl_GetText("Dbgwin", "gu_dbgwinMLE")
+	
+	if(text)
+	{
+		Clipboard := text
+		slen := strlen(text)
+		dev_TooltipAutoClear(Format("Copied to clipboard, {} chars", slen))
+	}
+}
+
+Dbgwin_evtClear()
+{
+	GuiControl_SetText("Dbgwin", "gu_dbgwinMLE", "")
 }

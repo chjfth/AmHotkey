@@ -31,7 +31,10 @@ F11:: Send !c!s
 ; (2) Alt+V then N . This is effective only if MSDN menu is display(the case for MSDN Oct 2001).
 ; So we try (1) first. In case no effect(windows size not changed) then try (2).
 ; But if neither [Option] button or MSDN menu exist, F12 will not take any effect.
-F12:: Send !c!i ; Favorites tab
+
+;F12:: Send !c!i ; Favorites tab
+
+F12:: Chm_SetFocusToRightPane() ; 2022.12
 
 ^F12:: ; Hide/Show navigation pane
   WinGetPos, x, y, old_width, height, A
