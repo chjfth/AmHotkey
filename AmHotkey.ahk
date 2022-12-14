@@ -125,7 +125,7 @@ dev_CheckActiveWindowInfo()
 	dev_CheckWindowInfo(Awinid)
 }
 
-dev_GetActiveWinID()
+dev_GetActiveHwnd()
 {
 	WinGet, Awinid, ID, A
 	return Awinid
@@ -135,10 +135,10 @@ dev_ActivateLastSeenWindow()
 {
 	; Usage scenario: 
 	; When a Systray Autohotkey menu item wants to operate current active window, 
-	; there may not be an active window(``WinGet, Awinid, ID, A`` reports Awinid==null),
+	; there may not be an active window(``Awinid := dev_GetActiveHwnd()`` reports Awinid==null),
 	; so we can use this function to bring up the last seen active window.
 
-	WinGet, Awinid, ID, A ; cache active window unique id
+	Awinid := dev_GetActiveHwnd() ; cache active window unique id
 	
 	if(!Awinid)
 	{
@@ -146,7 +146,7 @@ dev_ActivateLastSeenWindow()
 		
 		Loop, 10
 		{
-			WinGet, Awinid, ID, A
+			Awinid := dev_GetActiveHwnd()
 			if(Awinid)
 				break
 			Sleep, 100
@@ -1678,7 +1678,7 @@ RightClickAndPlaySound(sound:=true)
 dev_WinHideWithPrompt(Awinid:=0)
 {
 	if(Awinid==0)
-		WinGet, Awinid, ID, A ; cache active window unique id
+		Awinid := dev_GetActiveHwnd() ; cache active window unique id
 
 	WinGetTitle, title, ahk_id %Awinid%
 	
@@ -1812,7 +1812,7 @@ dev_WinMove_with_backup(_newx, _newy, _new_width, _new_height, Awinid:=0, is_for
 	; Note: 0 is different with "" .
 
 	if(Awinid==0)
-		WinGet, Awinid, ID, A ; cache active window unique id
+		Awinid := dev_GetActiveHwnd() ; cache active window unique id
 
 	WinGetPos old_winx, old_winy, old_winwidth, old_winheight, ahk_id %Awinid%
 	; MsgBox New value is new_width, %new_height%
@@ -2017,7 +2017,7 @@ dev_SetWindowSize_StickCorner(hwnd, newwidth, newheight, escape_taskbar:=false)
 Am_SetTransparentWithTip(tranparent_level)
 {
 	static s_hint_timeout := 5000
-	WinGet, Awinid, ID, A ; cache active window unique id
+	Awinid := dev_GetActiveHwnd() ; cache active window unique id
 	
 	if(tranparent_level>=0)
 	{
@@ -2070,7 +2070,7 @@ SetAlwaysOnTopWithTip()
 ^#/:: devui_ChangeWindowPosition()
 devui_ChangeWindowPosition()
 {
-	WinGet, Awinid, ID, A ; cache active window unique id
+	Awinid := dev_GetActiveHwnd() ; cache active window unique id
 	WinGetPos x, y, width, height, ahk_id %Awinid%
 	x2 := x + width
 	y2 := y + height
@@ -2352,7 +2352,7 @@ MouseActInActiveControl(classnn, ux,xomode, uy,yomode, is_movemouse:=true, is_cl
 
 dev_ListActiveWindowChildren()
 {
-	WinGet, Awinid, ID, A ; cache active window unique id
+	Awinid := dev_GetActiveHwnd() ; cache active window unique id
 	WinGet, ControlList, ControlList, ahk_id %Awinid%
 
 	filepath := "ChildrenList.txt"
@@ -2956,7 +2956,7 @@ dev_IsExeActive(exefile)
 	; or 
 	;   "D:\portableapps\MPC-HC-Portable\App\MPC-HC\mpc-hc.exe"
 	
-	WinGet, Awinid, ID, A ; cache active window unique id
+	Awinid := dev_GetActiveHwnd() ; cache active window unique id
 	WinGet, exepath, ProcessPath, ahk_id %Awinid%
 
 	if(InStr(exefile, "\"))
@@ -2979,7 +2979,7 @@ dev_IsExeActive(exefile)
 
 dev_IsExePathMatchRegex(regex)
 {
-	WinGet, Awinid, ID, A ; cache active window unique id
+	Awinid := dev_GetActiveHwnd() ; cache active window unique id
 	WinGet, exepath, ProcessPath, ahk_id %Awinid%
 
 	foundpos := RegExMatch(exepath, regex)

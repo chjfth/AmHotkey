@@ -291,7 +291,7 @@ Evp_LaunchUI()
 	}
 	
 	; Remember current active window, will be paste target later
-	g_evpHwndToPaste := dev_GetActiveWinID()
+	g_evpHwndToPaste := dev_GetActiveHwnd()
 	
 	Evp_ShowGui()
 
@@ -1557,7 +1557,7 @@ EverTable_LaunchUI()
 	Evtbl_FixIE(11) ; gradient background is supported only in IE11.
 	
 	; Remember current active window, will be paste target later
-	g_evtblHwndToPaste := dev_GetActiveWinID()
+	g_evtblHwndToPaste := dev_GetActiveHwnd()
 	
 	Evtbl_ShowGui()
 }
