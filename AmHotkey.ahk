@@ -463,7 +463,10 @@ Get_HCtrlFromClassNN(classnn, wintitle)
 }
 
 
-!#f:: ; Try to set focus to the control beneath current mouse pointer.
+; !#f:: devtest_TryFocusUicBeneathMouse() 
+devtest_TryFocusUicBeneathMouse()
+{
+	; Try to set focus to the control beneath current mouse pointer.
 	MouseGetPos, _mx, _my, hwnd, target_classnn
 	ControlFocus, %target_classnn%, A ; [2015-02-10] Strange, without explicity A param, it will not succeed.
 	if not ErrorLevel {
@@ -471,7 +474,7 @@ Get_HCtrlFromClassNN(classnn, wintitle)
 	} else {
 		MsgBox, % "ControlFocus reports ErrorLevel = " . ErrorLevel
 	}
-return
+}
 
 Get_DPIScale()
 {
