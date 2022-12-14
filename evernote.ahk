@@ -155,6 +155,11 @@ global gc_KeepPngTransparent := true ; as synonym for true
 
 global g_evpIsFullUIExpaned := -1 ; -1 means unset
 
+global g_evp_hClipmon ; Clipboard monitor handle
+global g_evp_ClipmonSeqNow := 0 ; Clipboard change sequence-number
+global g_evp_ClipmonSeqAct := 0 ; The sequence-number on which we have done image-conversion.
+;global g_evpPrevBitmapFilepathFromClipboard := ""
+
 ; =======
 
 global g_HwndEvtbl
@@ -264,7 +269,7 @@ evernote_SpecialPaste_InitMenu()
 return ; End of auto-execute section.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
+#Include libs\ClipboardMonitor.ahk
 
 ; App+C to convert in-clipboard image to your preferred format(png/jpg) and put CF_HTML content into clipboard,
 ; so Ctrl+V pasting it into Evernote saves quite much space (Evernote defaultly gives you very big PNG-32).
@@ -297,25 +302,29 @@ Evp_ShowGui()
 		
 		Evp_CreateGui()
 		
-		SetTimer, Evp_TimerProcCleanupTempDir, -10
-		
 	} else {
 ;		MsgBox, % "Skip Evp_CreateGui()"
 	}
 
 	Evp_AutosizeNowUI() ; Gui, EVP:Show inside
 
+	g_evpIsGuiVisible := true
+	
 	OnMessage(0x200, Func("Evp_WM_MOUSEMOVE"))
     OnMessage(0x111, Func("Evp_WM_COMMAND"))
 
+	g_evp_hClipmon := Clipmon_CreateMonitor(Func("Evp_ClipmonCallback"))
+	g_evp_ClipmonSeqNow := 0
+	g_evp_ClipmonSeqAct := 0
+	
 	Evp_TimerOn()
-
-	g_evpIsGuiVisible := true
 }
 
 Evp_CleanupUI()
 {
 	Evp_TimerOff()
+	
+	Clipmon_DeleteMonitor(g_evp_hClipmon)
 	
 	OnMessage(0x200, Func("Evp_WM_MOUSEMOVE"), 0) ; remove message hook
     OnMessage(0x111, Func("Evp_WM_COMMAND"), 0)
@@ -433,7 +442,11 @@ Evp_ShowAllControls(is_show:=true)
 
 Evp_AutosizeNowUI()
 {
-	Gui_Show("EVP", "AutoSize", Evp_WinTitle())
+	is_auto := GuiControl_GetValue("EVP", "gu_evpCkbAutoConvert")
+
+	showopt := "AutoSize" . (is_auto ? " NoActivate" : "")
+
+	Gui_Show("EVP", showopt, Evp_WinTitle())
 }
 
 
@@ -563,8 +576,6 @@ Evp_LaunchConvert_fromClipboard()
 	if(Evp_CheckAndWarnConvertBusy())
 		return ""
 
-	scale_pct := Evp_GetUIScalePct()
-	
 	; make it show blank
 	GuiControl_Show("EVP", "gu_evpIcnWarnNoTranspixel", false)
 	; -- Memo: Using 
@@ -575,7 +586,7 @@ Evp_LaunchConvert_fromClipboard()
 	
 	g_evpCurPngHasTranspx := false
 	
-	Evp_LaunchBatchConvert("", scale_pct)
+	Evp_LaunchBatchConvert()
 }
 
 Evp_LaunchConvert_fromBaseImage(fpBaseImage)
@@ -585,9 +596,7 @@ Evp_LaunchConvert_fromBaseImage(fpBaseImage)
 	if(Evp_CheckAndWarnConvertBusy())
 		return ""
 
-	scale_pct := Evp_GetUIScalePct()
-	
-	Evp_LaunchBatchConvert(fpBaseImage, scale_pct)
+	Evp_LaunchBatchConvert(fpBaseImage)
 }
 
 Evp_LaunchConvertResetUI()
@@ -602,9 +611,13 @@ Evp_LaunchConvertResetUI()
 	GuiControl_Enable("EVP", "gu_evpLbxImages", true)
 }
 
-Evp_LaunchBatchConvert(fpFromImage:="", scale_pct:=100)
+Evp_LaunchBatchConvert(fpFromImage:="", scale_pct:=0)
 {
 	; Return BaseImage filepath, empty string if launching fail.
+	
+	if(scale_pct==0) {
+		scale_pct := Evp_GetUIScalePct()
+	}
 
 	if(scale_pct<=1 || scale_pct>100) {
 		dev_MsgBoxError("Bad Scale percent value(should be 2 ~ 100): " scale_pct)
@@ -614,18 +627,22 @@ Evp_LaunchBatchConvert(fpFromImage:="", scale_pct:=100)
 	if(Evp_CheckAndWarnConvertBusy())
 		return ""
 
+	g_evp_ClipmonSeqAct := g_evp_ClipmonSeqNow ; even if fpimg100pct fails
+
 	imgsig := Evp_GenImageSigByTimestamp()
 
 	Evp_LaunchConvertResetUI()
-	
 
 	fpimg100pct := Evp_GenerateBaseImage(fpFromImage, scale_pct, imgsig, g_isKeepPngTransparent
 		, imgw, imgh, fpimgScaled) ; these three are output-vars
 		; -- filepath of the base-image, example:
 		; C:\Users\win7evn\AppData\Local\Temp\Everpic\everpic-20221204_150000.png
-	
+
+;	g_evpPrevBitmapFilepathFromClipboard := fpFromImage
+
 	if(!fpimg100pct)
 		return "" ; Error should have been pop-up-ed in Evp_GenerateBaseImage()
+
 	
 	dev_assert(FileExist(fpimgScaled))
 
@@ -697,8 +714,6 @@ Evp_LaunchBatchConvert(fpFromImage:="", scale_pct:=100)
 		Gui_Show("EVP", "xCenter yCenter", Evp_WinTitle())
 	}
 	
-	SetTimer, Evp_TimerProcCleanupTempDir, -10
-
 	return true
 }
 
@@ -789,7 +804,10 @@ Evp_GenerateBaseImage(fpFromImage, scale_pct, imgsig, is_keeppngtrans
 			bitmap := Gdip_CreateBitmapFromClipboard()
 			if(bitmap<=0)
 			{
-				dev_MsgBoxWarning("No bitmap in clipboard yet. Everpic can do nothing.")
+				if(g_evpConvertStartCount>1)
+				{
+					dev_MsgBoxWarning("No bitmap in clipboard yet. Everpic can do nothing.")
+				}
 				goto EVP_CLEANUP_20221204
 			}
 
@@ -900,13 +918,42 @@ Evp_TimerProc()
 	Gui_ChangeOpt(  "EVP", "+OwnDialogs")
 
 	if(g_evpTimerStage=="Monitoring")
+	{
 		Evp_CheckClipboardStateUpdateUI()
+		
+		; ==== Check whether do Auto-convert. ====
+		
+		is_auto := GuiControl_GetValue("EVP", "gu_evpCkbAutoConvert")
+
+		isnewclip := g_evp_ClipmonSeqNow > g_evp_ClipmonSeqAct ? true : false
+		
+		if(is_auto && isnewclip)
+		{
+			hasbm := Evp_IsBitmapInClipboard(bitmap_filepath)
+
+			if(hasbm || bitmap_filepath)
+			{
+;				Dbgwin_Output(Format("Auto-convert again, act={} seq={} ...", g_evp_ClipmonSeqAct, g_evp_ClipmonSeqNow)) ; debug
+				Evp_LaunchBatchConvert()
+			}
+		}
+	}
 	else if(g_evpTimerStage=="ConvertStarting" || g_evpTimerStage=="ConvertStarted")
+	{
 		Evp_CheckConvertingProgressUpdateUI()
-	else {
+	}
+	else 
+	{
 		dev_MsgBoxError("Bad value of g_evpTimerStage: " g_evpTimerStage)
 		dev_assert(("Bad value of g_evpTimerStage") ?0:0)
 	}
+	
+	Evp_CleanupTempDir_withInterval()
+}
+
+Evp_ClipmonCallback()
+{
+	g_evp_ClipmonSeqNow++
 }
 
 Evp_IsImagefileSuffix(filepath)
@@ -930,6 +977,10 @@ Evp_IsImagefileSuffix(filepath)
 
 Evp_IsBitmapInClipboard(byref filepath_bitmap)
 {
+	; Two output values:
+	; Return value: whether CF_BITMAP in clipboard.
+	; [out] filepath_bitmap: will be a image filepath if there is one in clipboard text.
+	
 	filepath_bitmap := ""
 	if( WinClipAPI.IsClipboardFormatAvailable(gc_evp_CF_BITMAP) )
 	{
@@ -944,7 +995,6 @@ Evp_IsBitmapInClipboard(byref filepath_bitmap)
 		}
 		return false
 	}
-	
 }
 
 gdip_BitmapFindTransparentPixel(bitmap, xstart, ystart, xend_, yend_, xskip, yskip, msec_limit)
@@ -1064,14 +1114,15 @@ Evp_TimerProcCheckPngfileTranspixel(pngfilepath, from_startcount)
 }
 
 
-
 Evp_CheckClipboardStateUpdateUI()
 {
 	hint := ""
 	is_pngpath := false
 	
 	if( Evp_IsBitmapInClipboard(bitmap_filepath) )
+	{
 		hint := "Bitmap in Clipboard. You can now [Convert from Clipboard]."
+	}
 	else if(bitmap_filepath)
 	{
 		hint := "Clipboard has filepath: " bitmap_filepath
@@ -1447,7 +1498,7 @@ Evp_BtnOK()
 	}
 }
 
-Evp_TimerProcCleanupTempDir()
+Evp_CleanupTempDir_withInterval()
 {
 	static s_msecPrevCleanup := 0
 	

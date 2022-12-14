@@ -14,7 +14,6 @@ global g_clipmonSeeDebugMsg
 
 class CClipboardMonitor
 {
-									;	_GuiName := ""
 	_GuiHwnd := 0
 	_hwndNextClipViewer := 0 ; the Win32 detail from WM_CHANGECBCHAIN
 	_testmember := 7
@@ -25,7 +24,6 @@ class CClipboardMonitor
 	_nChanges := -1 ; instance member
 	
 	_clients := {} ; Each client is identified by a random key.
-	
 	
 	__New()
 	{
@@ -139,8 +137,6 @@ class CClipboardMonitor
 		
 		this._clients[clientid] := { "fnobj":fnobj, "datetime":dev_GetDateTimeStrNow() }
 
-;this.dbg("this._clients keys(1) = " dev_mapping_count(this._clients))
-
 		this.dbg(Format("CClipboardMonitor.AddClient() returns clientid: {}", clientid))
 
 		this.UIRefreshClients()
@@ -192,8 +188,6 @@ class CClipboardMonitor
 		GuiControl_SetText("", this._hctlTxtChanges
 			, "WM_DRAWCLIPBOARD received: " this._nChanges) ; GuiName="" is ok, bcz we use explicit hwnd
 
-;this.dbg("this._clients keys = " dev_mapping_count(this._clients))
-
 		for key,client in this._clients
 		{
 			this.dbg(Format("Do_WM_DRAWCLIPBOARD client: key={} , datetime={}", key, client.datetime))
@@ -229,7 +223,21 @@ Clipmon_WM_DRAWCLIPBOARD(wParam, lParam, msg, hwnd)
 
 Clipmon_CreateMonitor(fnobj)
 {
-	; Todo: check that fnobj is not a string.
+	; Check for bad parameter format:
+	if(!IsObject(fnobj)) 
+	{
+		fnname := fnobj . ""
+		
+		fnname := strlen(fnname)>0 ? fnname : "MyCallbackFunction"
+	
+		callstack := dev_getCallStack()
+	
+		dev_MsgBoxError(Format("In {}(), fnobj parameter invalid! You should pass in a function-object, like this:`r`n`r`n"
+			. "Func(""{}"") `r`n`r`n"
+			. "Callstack below:`r`n{}"
+			, A_ThisFunc, fnname, callstack))
+		return ""
+	}
 
 	if(!g_clipmon)
 		new CClipboardMonitor()
