@@ -145,7 +145,7 @@ global gc_evpStartingTimeoutSec := 2
 global gc_evpStartedTimeoutSec  := 3
 
 global g_evp_arImageStore := [] ; g_evp_arImageStore[1] refers to the first previewed image.
-	; members: .hint .sizekb .path
+	; members: .hint .filelen_desc .path
 global g_evpImageZoom := 1
 
 global gut_progressbar := ""
@@ -653,9 +653,7 @@ Evp_LaunchBatchConvert(fpFromImage:="", scale_pct:=0)
 		
 	fpImageList := fpImageStem . gc_evpFileSuffix_imagelist
 	
-	FileGetSize, filekb, % fpimgScaled, K
-	
-	stageline_png32b := Format("PNG (32-bit),{}KB,{}`r`n", filekb, fpimgScaled)
+	stageline_png32b := Format("PNG (32-bit)*{}`r`n", fpimgScaled)
 
 	FileDelete, % fpImageList
 	FileAppend, % stageline_png32b, % fpImageList
@@ -1404,16 +1402,21 @@ Evp_RefreshPreviewAllGui()
 	
 	Loop, Read, % g_evpImglistTxtPath
 	{
-		field := StrSplit(A_LoopReadLine, ",")
+		field := StrSplit(A_LoopReadLine, "*")
 		desc := field[1]	; Example: "PNG (32-bit), 80KB"
-		filesizeKB := field[2]
-		imgfile := field[3]
+		imgfile := field[2]
+		
+		filelen := dev_FileGetSize(imgfile)
+		if(filelen>=1024)
+			filelen_desc := Format("{} KB", filelen//1024)
+		else 
+			filelen_desc := Format("{} B", filelen)
 		
 		; Add desc(image variant description) to listbox
-		GuiControl, EVP:, gu_evpLbxImages, % Format("{}, {}", desc, filesizeKB)
+		GuiControl, EVP:, gu_evpLbxImages, % Format("{}, {}", desc, filelen_desc)
 		
-		g_evp_arImageStore[A_Index] := {"hint":desc, "sizekb":filesizeKB, "path":imgfile}
-		; -- hint will be displayed as small-font footnote beneath each image inserted into Evernote clip.
+		g_evp_arImageStore[A_Index] := {"hint":desc, "filelen_desc":filelen_desc, "path":imgfile}
+		; -- hint will be displayed as small-font footnote beneath each image in Evernote clip.
 	}
 	
 	; Choose and display PNG-32bit by default
@@ -1451,7 +1454,7 @@ Evp_BtnOK()
 	imgfilepath := g_evp_arImageStore[gu_evpLbxImages].path
 	dev_SplitPath(imgfilepath, imgfilename)
 	imghint := g_evp_arImageStore[gu_evpLbxImages].hint ; "PNG(32-bit)" etc
-	imgsizekb := g_evp_arImageStore[gu_evpLbxImages].sizekb
+	filelen_desc := g_evp_arImageStore[gu_evpLbxImages].filelen_desc
 
 	dev_assert(StrIsStartsWith(imgfilename, g_evpImageSig))
 	
@@ -1468,7 +1471,7 @@ Evp_BtnOK()
 	html := Format(html_fmt
 		, imgfilename ; {1}
 		, Evp_ImgScaledWidth(), Evp_ImgScaledHeight() ; {2}, {3} width and height
-		, imgsizekb ; {4} "33KB" etc
+		, filelen_desc ; {4} "33 KB" etc
 		, imghint ; {5} 
 		, g_evpImageSig ; {6}
 		, dev_LocalTimeZoneMinutesStr()) ;{7} timezone 

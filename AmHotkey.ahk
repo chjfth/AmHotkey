@@ -3219,6 +3219,12 @@ dev_IsSameFiletime(file1, file2)
 		return false
 }
 
+dev_FileGetSize(filepath)
+{
+	FileGetSize, outlen, % filepath
+	return outlen
+}
+
 dev_IsBinaryFile(filepath, bytes_to_check:=8192)
 {
 	; Note: UTF-16 text files will be considered as binary.

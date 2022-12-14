@@ -68,9 +68,7 @@ for %%A in (%pngCfgs%) do (
 	call :EchoAndExec pngquant.exe !colors! --force --output "!fpoutput!" -- "%fpinput%"
 	if errorlevel 1 exit /b 4
 	
-	call :getfilesize_KB filekb "!fpoutput!"
-	
-	set stageline=PNG ^(!colors! colors^),!filekb! KB,!fpoutput!
+	set stageline=PNG ^(!colors! colors^)*!fpoutput!
 	
 	echo !stageline!
 	echo !stageline!>> "%fpImageList%"
@@ -86,9 +84,7 @@ for %%A in (%jpgQuals%) do (
 	call :EchoAndExec cjpeg-static.exe -quality %%A -outfile "!fpoutput!" "%fpinput%"
 	if errorlevel 1 exit /b 4
 
-	call :getfilesize_KB filekb "!fpoutput!"
-	
-	set stageline=JPG ^(%%A%%^),!filekb! KB,!fpoutput!
+	set stageline=JPG ^(%%A%%^)*!fpoutput!
 	echo !stageline!
 	echo !stageline!>> "%fpImageList%"
 	
