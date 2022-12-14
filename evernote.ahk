@@ -4,7 +4,7 @@ AUTOEXEC_Evernote: ; Workaround for Autohotkey's ugly auto-exec feature. Don't d
 /* APIs:
 Evp_LaunchUI()
 ;
-EverTable_Start()
+EverTable_LaunchUI()
 PreviewHtml_ShowGui(html)
 ColorMatrix_ShowGui()
 ;
@@ -207,6 +207,8 @@ global g_evtblIsPaddingDense
 global g_evtblBtnOK
 global g_evtblChkboxTSV
 
+global g_evtblHwndToPaste
+
 global g_HwndPreviewHtml ; GuiName: PvHtml
 global g_PvhtmlEdit
 global g_PvhtmlClipboard
@@ -287,6 +289,9 @@ Evp_LaunchUI()
 		dev_MsgBoxError("Error. Cannot create folder: " g_evpTempDir)
 		return
 	}
+	
+	; Remember current active window, will be paste target later
+	g_evpHwndToPaste := dev_GetActiveWinID()
 	
 	Evp_ShowGui()
 
@@ -1547,9 +1552,12 @@ Evp_CleanupTempDir()
 
 ; ========================= EverTable(Evtbl) code starts =========================
 
-EverTable_Start()
+EverTable_LaunchUI()
 {
 	Evtbl_FixIE(11) ; gradient background is supported only in IE11.
+	
+	; Remember current active window, will be paste target later
+	g_evtblHwndToPaste := dev_GetActiveWinID()
 	
 	Evtbl_ShowGui()
 }
@@ -1617,7 +1625,7 @@ Evtbl_HideGui(html_clipboard:="")
 	{
 		; We should do clipboard paste *after* Evtbl GUI has been hidden,
 		; otherwise, the selected-text in Combobox may probably be cleared.
-		dev_ClipboardSetHTML(html_clipboard, true)
+		dev_ClipboardSetHTML(html_clipboard, true, g_evtblHwndToPaste)
 	}
 }
 
@@ -3400,7 +3408,7 @@ Evernote_TSVtoHtml(input_string, sepchar:="", hexcolor1="", hexcolor2="")
 
 
 ; App+T to bring up DIV/TABLE html generating dialog.
-AppsKey & t:: EverTable_Start()
+AppsKey & t:: EverTable_LaunchUI()
 
 #If ; Evernote_IsMainFrameOrSingleActive()
 

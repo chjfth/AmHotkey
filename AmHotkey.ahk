@@ -125,6 +125,12 @@ dev_CheckActiveWindowInfo()
 	dev_CheckWindowInfo(Awinid)
 }
 
+dev_GetActiveWinID()
+{
+	WinGet, Awinid, ID, A
+	return Awinid
+}
+
 dev_ActivateLastSeenWindow()
 {
 	; Usage scenario: 
