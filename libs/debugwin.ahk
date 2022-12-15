@@ -1,7 +1,7 @@
 ﻿; Note: If this file contains non-ASCII characters, you must saved it in UTF8 with BOM,
 ; in order for the Unicode characters to be recognized by Autohotkey engine.
 
-AUTOEXEC_debugwin_ahk: ; Workaround for Autohotkey's ugly auto-exec feature. Don't delete.
+AUTOEXEC_debugwin: ; Workaround for Autohotkey's ugly auto-exec feature. Don't delete.
 
 /* APIs:
 
@@ -134,7 +134,7 @@ Dbgwin_ShowGui(bring_to_front:=false)
 		Dbgwin_CreateGui()
 	}
 	
-	Gui_Show("Dbgwin", bring_to_front ? "" : "NoActivate", "AmHotkey Dbgwin")
+	Gui_Show("Dbgwin", bring_to_front ? "" : "NoActivate", "AmHotkey Debugwin")
 }
 
 Dbgwin_HideGui()

@@ -1,6 +1,6 @@
 ﻿; Note: This file is saved with UTF8 with BOM, which is the best encoding choice to write Unicode chars here.
 
-AUTOEXEC_pdfreader_ahk: ; Workaround for Autohotkey's ugly auto-exec feature. Don't delete.
+AUTOEXEC_pdfreader: ; Workaround for Autohotkey's ugly auto-exec feature. Don't delete.
 
 ; Something to place here.
 ; * Customize these global vars according to your running machine:

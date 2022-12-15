@@ -1,7 +1,7 @@
 ﻿; Note: If this file contains non-ASCII characters, you must saved it in UTF8 with BOM,
 ; in order for the Unicode characters to be recognized by Autohotkey engine.
 
-AUTOEXEC_customize_ahk: ; Workaround for Autohotkey's ugly auto-exec feature. Don't delete.
+AUTOEXEC_customize: ; Workaround for Autohotkey's ugly auto-exec feature. Don't delete.
 	; When duplicating this file, you MUST: Change the above ahk label to a unique one, 
 	; such as AUTOEXEC_foobar_ahk.
 

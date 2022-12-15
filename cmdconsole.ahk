@@ -1,5 +1,5 @@
 ﻿
-AUTOEXEC_cmdconsole_ahk: ; Workaround for Autohotkey's ugly auto-exec feature. Don't delete.
+AUTOEXEC_cmdconsole: ; Workaround for Autohotkey's ugly auto-exec feature. Don't delete.
 
 
 global g_putty_isMousePressed := false

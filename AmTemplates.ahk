@@ -4,7 +4,7 @@
 ; * A file named "AmTemplate.cfg.ini" marks the existence of a template folder.
 ; * Once user selects a template folder, a dialogbox pops out asking for substitution parameters.
 
-AUTOEXEC_AmTemplates_ahk: ; Workaround for Autohotkey's ugly auto-exec feature. Don't delete.
+AUTOEXEC_AmTemplates: ; Workaround for Autohotkey's ugly auto-exec feature. Don't delete.
 
 /* APIs:
 Amt_LaunchMenu()

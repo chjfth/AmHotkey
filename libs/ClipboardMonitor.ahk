@@ -195,7 +195,7 @@ class CClipboardMonitor
 
 		for key,client in this._clients
 		{
-			this.dbg(Format("Do_WM_DRAWCLIPBOARD client: key={} , datetime={}", key, client.datetime))
+			this.dbg(Format("Do_WM_DRAWCLIPBOARD clientid={} , since={}", key, client.datetime))
 			client.fnobj()
 		}
 

@@ -1,6 +1,6 @@
 ﻿; Note: This file is saved with UTF8 with BOM, which is the best encoding choice to write Unicode chars here.
 
-AUTOEXEC_mediaplayer_ahk: ; Workaround for Autohotkey's ugly auto-exec feature. Don't delete.
+AUTOEXEC_mediaplayer: ; Workaround for Autohotkey's ugly auto-exec feature. Don't delete.
 
 global g_mpc_seekbar_xborder := 10 ; const, eye-estimated
 
