@@ -2886,6 +2886,9 @@ dev_ClipboardSetHTML(html, is_paste_now:=false, wait_hwnd:=0)
 		if(wait_hwnd)
 		{
 			dev_TooltipAutoClear(Format("Wait for paste-target window to be active. Hwnd={}", wait_hwnd))
+			
+			dev_WinActivateHwnd(wait_hwnd)
+			
 			WinWaitActive, % "ahk_id " wait_hwnd, , 1.0
 
 			if not ErrorLevel 
@@ -2905,6 +2908,11 @@ dev_ClipboardSetHTML(html, is_paste_now:=false, wait_hwnd:=0)
 		
 		WinClip.Paste()
 	}
+}
+
+dev_WinActivateHwnd(hwnd)
+{
+	WinActivate, ahk_id %hwnd%
 }
 
 dev_IsWinclassExist(classname)

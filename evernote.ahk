@@ -124,6 +124,8 @@ global gu_evpPicPreview ; gui-assoc, Picture control
 global g_evpCurPngHasTranspx := false ; Current png has transparent pixel? Detected by Evp_TimerProcCheckPngfileTranspixel()
 ;
 global gu_evpBtnOK := "" ; Left-bottom "Use This" button
+global gu_evpCkbAutoPaste  := ""
+global gu_evpCkbKeepWindow := ""
 
 global gu_evpEdrFootline   := "" ; current select image filepath
 
@@ -383,6 +385,10 @@ Evp_CreateGui()
 	Gui_Add_Listbox( "EVP", "gu_evpLbxImages",   col1w, Format("xs r12 AltSubmit g{}", "Evp_RefreshImgpane"))
 	Gui_Add_Editbox( "EVP", "gu_evpEdrLoadStat",  col1w, "Readonly -E0x200", "")
 	Gui_Add_Button(  "EVP", "gu_evpBtnOK",       col1w, "default g" . "Evp_BtnOK", "&Use This (or press Enter)")
+	;
+	; Two checkboxes beside BtnOK
+	Gui_Add_Checkbox("EVP", "gu_evpCkbAutoPaste", -1, "x+5 yp+5 Checked", "Auto &paste")
+	Gui_Add_Checkbox("EVP", "gu_evpCkbKeepWindow",-1, "x+5 yp", "Keep &window")
 
 	; ==== Create Column2 controls. ====
 	;
@@ -394,11 +400,13 @@ Evp_CreateGui()
 	Gui_Add_Checkbox("EVP", "gu_evpCkbKeepPngTrans", -1, "x+4 yp+1 c666666 Hidden g" . "Evp_ToggleKeepPngTransparent"
 		, "&Keep transparent pixels when converting png file.")
 	;
-	Gui_Add_Picture( "EVP", "gu_evpPicPreview",     col2w, "h" g_evpImgpaneHeight) ; y will be adjusted in Evp_SyncGuiByBaseImage().
+	Gui_Add_Picture( "EVP", "gu_evpPicPreview",     col2w, "h" g_evpImgpaneHeight) 
 	
 	; FootLine
 	Gui_Add_Editbox( "EVP", "gu_evpEdrFootline", fullwidth, "xm Readonly", "Footline")
-
+	
+	; The above GUI control layout will later be updated by Evp_SyncGuiByBaseImage()
+	
 	; Fill gu_evpCbxScalePct combobox
 	for index,value in gar_evpScalePcts
 	{
@@ -432,7 +440,7 @@ Evp_ShowAllControls(is_show:=true)
 	ctls := [ "gu_evpCkbAutoConvert"
 		, "gu_evpTxtScale", "gu_evpCbxScalePct", "gu_evpBtnCvtFromBaseImg"
 		, "gu_evpLbxImages", "gu_evpEdrLoadStat"
-		, "gu_evpBtnOK"
+		, "gu_evpBtnOK", "gu_evpCkbAutoPaste", "gu_evpCkbKeepWindow"
 		, "gu_evpEdrBaseImgFilepath"
 ;		, "gu_evpCkbKeepPngTrans"
 		, "gu_evpPicPreview", "gu_evpEdrFootline" ] 
@@ -505,12 +513,16 @@ Evp_ScaleDownImage(scale_pct, srcimgpath, dstimgpath, isKeepPngTransparent)
 	if(!isKeepPngTransparent)
 	{
 		; If not isKeepPngTransparent, we set white background for it.
+;pBrush2 := Gdip_BrushCreateSolid(0x80FF2000)
 	
 		pBrushClear := Gdip_BrushCreateSolid(0xFFffffff) 
 		; -- Fill ARGB(255,255,255,255), alpha-value=255 is required.
 		;    Otherwise, the default ARGB is (0,0,0,0), which will result in black bg onto jpg.
 		Gdip_FillRectangle(G, pBrushClear, 0, 0, dWidth, dHeight)
+;Gdip_FillRectangle(G, pBrush2, 0, 0, dWidth, dHeight)
+
 		Gdip_DeleteBrush(pBrushClear)
+;Gdip_DeleteBrush(pBrush2)
 	}
 	
 	
@@ -861,11 +873,20 @@ Evp_GenerateBaseImage(fpFromImage, scale_pct, imgsig, is_keeppngtrans
 }
 
 
-Evp_WM_MOUSEMOVE()
+Evp_WM_MOUSEMOVE(wParam, lParam, msg, hwnd)
 {
-	if(A_GuiControl=="gu_evpBtnOK")
+	static s_prev_tooltiping_uic := 0
+
+	is_from_tooltiping_uic := true ; assume message is from a GuiControl
+
+	if(A_GuiControl=="gu_evpCkbAutoPaste")
 	{
-		dev_TooltipAutoClear("Shift+click to keep this dialog-box on screen.")
+		dev_TooltipAutoClear("""Use this"" button will paste the selected image into where you have come from(e.g. Evernote window).`r`n"
+			. "If not ticked, you have to strike Ctrl+V to paste into your target application.")
+	}
+	else if(A_GuiControl=="gu_evpCkbKeepWindow")
+	{
+		dev_TooltipAutoClear("After clicking ""Use this"" button, this Everpic window will remain visible instead of close itself.")
 	}
 	else if(A_GuiControl=="gu_evpCkbAutoConvert")
 	{
@@ -885,9 +906,26 @@ Evp_WM_MOUSEMOVE()
 	{
 		dev_TooltipAutoClear("This input png file does NOT seem to have transparent pixels.")
 	}
-	else if(A_Gui=="EVP")
+	else
+		is_from_tooltiping_uic := false
+	
+	if(A_Gui=="EVP")
 	{
-		tooltip ; hide
+		; If mouse has *just* moved off a tooltiping UIC, we turn off the tooltip.
+		; We cannot blindly turn off tooltip here, bcz we would get constant WM_MOUSEMOVE 
+		; even if we do not move the mouse; turning off tooltip blindly would cause 
+		; other function's dev_TooltipAutoClear() to vanish immediately.
+		;
+		if(is_from_tooltiping_uic)
+			s_prev_tooltiping_uic := A_GuiControl
+		else if(s_prev_tooltiping_uic) {
+			tooltip ; turn off tooltip
+			s_prev_tooltiping_uic := 0
+		}
+
+;		xmouse := lParam & 0xFFFF , ymouse := (lParam >> 16) & 0xFFFF 
+;		Dbgwin_Output(Format("In Evp_WM_MOUSEMOVE(), A_Gui==EVP, A_GuiControl={}, xmouse={}, ymouse={}. (sPrev={})"
+;			, A_GuiControl, xmouse, ymouse, s_prev_tooltiping_uic))
 	}
 }
 
@@ -1379,9 +1417,12 @@ Evp_SyncGuiByBaseImage(imgfilepath, imgw_scaled, imgh_scaled)
 		, gui_fullwidth, -1)
 
 	rFootline := GuiControl_GetPos("EVP", "gu_evpEdrFootline")
+	yBtnOK := rFootline.y + rFootline.h + gc_evpGapY
 	GuiControl_SetPos("EVP", "gu_evpBtnOK"
-		, -1, rFootline.y + rFootline.h + gc_evpGapY
+		, -1, yBtnOK
 		, -1, -1)
+	GuiControl_SetPos("EVP", "gu_evpCkbAutoPaste" , -1, yBtnOK+5, -1, -1)
+	GuiControl_SetPos("EVP", "gu_evpCkbKeepWindow", -1, yBtnOK+5, -1, -1)
 	
 	Evp_AutosizeNowUI()
 
@@ -1489,21 +1530,27 @@ Evp_BtnOK()
 	if(ErrorLevel) {
 		; Note: We did a non-overwrite copy, if destination file exist, we get ErrorLevel.
 		dev_MsgBoxInfo("Unexpect: Fail to copy your image file to " . dir_everpic_save)
+		return
 	}
 	
-	if(dev_IsShiftKeyDown())
+	is_autopaste  := GuiControl_GetValue("EVP", "gu_evpCkbAutoPaste")
+	is_keepwindow := GuiControl_GetValue("EVP", "gu_evpCkbKeepWindow")
+	
+	dev_ClipboardSetHTML(html
+		, is_autopaste ? true : false
+		, g_evpHwndToPaste)
+	
+	if(!is_autopaste && is_keepwindow)
 	{
-		dev_ClipboardSetHTML(html, false) ; Keep Everpic UI on screen
-		
-		dev_MsgBoxInfo("HTML content referring to this image has been placed into Clipboard.")
+		dev_TooltipAutoClear("HTML content with this image has been placed into Clipboard.", 3000)
 	}
-	else
+
+	if(!is_keepwindow)
 	{
 		Evp_CleanupUI()
-		dev_ClipboardSetHTML(html, true, g_evpHwndToPaste)
-
-		Evp_CleanupTempDir()
 	}
+
+	Evp_CleanupTempDir()
 }
 
 Evp_CleanupTempDir_withInterval()
