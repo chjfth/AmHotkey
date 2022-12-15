@@ -160,7 +160,6 @@ global g_evpIsFullUIExpaned := -1 ; -1 means unset
 global g_evp_hClipmon ; Clipboard monitor handle
 global g_evp_ClipmonSeqNow := 0 ; Clipboard change sequence-number
 global g_evp_ClipmonSeqAct := 0 ; The sequence-number on which we have done image-conversion.
-;global g_evpPrevBitmapFilepathFromClipboard := ""
 
 ; =======
 
@@ -292,10 +291,32 @@ Evp_LaunchUI()
 		return
 	}
 	
-	; Remember current active window, will be paste target later
+	; Remember current active window, it becomes paste target later
 	g_evpHwndToPaste := dev_GetActiveHwnd()
 	
+	was_gui_visible := g_evpIsGuiVisible
+
 	Evp_ShowGui()
+
+	Gui_Show("EVP", "", Evp_WinTitle()) ; This ensures EVP is brought to front(not passing "NoActive" option)
+
+	; If the EVP GUI has been on screen, and user calls up Evp_LaunchUI(), and there is currently
+	; no bitmap in the clipboard, our UI will keep *silent* (=not popping a msgbox saying clipboard is empty).
+	; This decision matches such a usage scenario: 
+	; * User ticks [Keep window], wanting to keep EVP GUI on the screen (perhaps on his secondary monitor);
+	; * Then user picks "png (8 colors)" to paste into Evernote, leaving EVP GUI on screen;
+	;   (Now, clipboard has CF_HTML, not a bitmap or bitmap-filepath.)
+	; * After some Evernote editing, user calls up Evp_LaunchUI( AppsKey&c ), this time, he probably wants 
+	;   to pick another image vairant to use, "jpg (60%)" for example. 
+	; -- At this point, we'd better not telling the user "No bitmap in clipboard", instead we'd better 
+	;    keep the EVP UI silent so the user can pick "jpg (60%") from last time.
+	
+	if(was_gui_visible)
+	{
+		hasbm := Evp_IsBitmapInClipboard(bitmap_filepath)
+		if(!hasbm and !bitmap_filepath)
+			return ; keep EVP UI silent
+	}
 
 	Evp_LaunchConvert_fromClipboard()
 }
@@ -586,7 +607,7 @@ Evp_CheckAndWarnConvertBusy()
 
 Evp_LaunchConvert_fromClipboard()
 {
-;	Dbgwin_Output(Format("tid={} Evp_LaunchConvert_fromClipboard().", dev_GetThreadId())) ; debug
+;	Dbgwin_Output(Format("Evp_LaunchConvert_fromClipboard().")) ; debug
 
 	Gui_ChangeOpt(  "EVP", "+OwnDialogs")
 
@@ -648,19 +669,16 @@ Evp_LaunchBatchConvert(fpFromImage:="", scale_pct:=0)
 
 	imgsig := Evp_GenImageSigByTimestamp()
 
-	Evp_LaunchConvertResetUI()
-
 	fpimg100pct := Evp_GenerateBaseImage(fpFromImage, scale_pct, imgsig, g_isKeepPngTransparent
 		, imgw, imgh, fpimgScaled) ; these three are output-vars
 		; -- filepath of the base-image, example:
 		; C:\Users\win7evn\AppData\Local\Temp\Everpic\everpic-20221204_150000.png
 
-;	g_evpPrevBitmapFilepathFromClipboard := fpFromImage
-
 	if(!fpimg100pct)
 		return "" ; Error should have been pop-up-ed in Evp_GenerateBaseImage()
 
-	
+	Evp_LaunchConvertResetUI()
+
 	dev_assert(FileExist(fpimgScaled))
 
 	; Note: fpimgScaled has wide meaning including 100% or less-than-100% scaling.
@@ -814,14 +832,14 @@ Evp_GenerateBaseImage(fpFromImage, scale_pct, imgsig, is_keeppngtrans
 			
 			is_100pct_succ := true
 		}
-		else ; will get from Clipboard
+		else ; will get CF_BITMAP from Clipboard
 		{
 			bitmap := Gdip_CreateBitmapFromClipboard()
 			if(bitmap<=0)
 			{
-				if(g_evpConvertStartCount>1)
+				if(g_evpConvertStartCount>0)
 				{
-					dev_MsgBoxWarning("No bitmap in clipboard yet. Everpic can do nothing.")
+					dev_MsgBoxWarning("No bitmap in clipboard yet. Nothing to convert by Everpic.")
 				}
 				goto EVP_CLEANUP_20221204
 			}

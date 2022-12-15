@@ -932,7 +932,7 @@ dev_LocalTimeZoneMinutesStr()
 		return Format("-{:02X}{:02X}", (-tzminutes)/60, Mod(-tzminutes, 60))
 }
 
-dev_GetThreadId()
+dev_GetWin32ThreadId()
 {
 	threadid := DllCall("kernel32.dll\GetCurrentThreadId")
 	return threadid
