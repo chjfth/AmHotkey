@@ -1,4 +1,9 @@
 /*
+2022.12.14 Created by Jimm Chen. AHK API to monitor Windows Clipboard change.
+    Implementation: via Windows API SetClipboardViewer, ChangeClipboardChain.
+    Usage: You register a callback function to this API, and it will be 
+    called back when Clipboard change is detected.
+
 APIs:
 * clientid := Clipmon_CreateMonitor(fnobj)
 * Clipmon_DeleteMonitor(clientid)

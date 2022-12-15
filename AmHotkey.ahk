@@ -252,9 +252,9 @@ dev_AmMute()
 	}
 }
 
-GetFirstNoncommentLine(ahkfname)
+GetFirstNoncommentLine(ahkfilepath)
 {
-	Loop, read, %ahkfname%
+	Loop, read, %ahkfilepath%
 	{
 		if(Trim(A_LoopReadLine)=="")
 			continue ; this is a blank line
@@ -270,21 +270,22 @@ GetFirstNoncommentLine(ahkfname)
 
 AddAutoExecAhk(ahkdir, filename)
 {
-	ahkfname := ahkdir . "\" . filename
+	ahkfilepath := ahkdir . "\" . filename
 
 	; check duplicate
-	if(g_dictAutoexecExistingFname.HasKey(ahkfname)) {
+	if(g_dictAutoexecExistingFname.HasKey(ahkfilepath)) {
 		return
 	}
 
 	; Check whether the first non comment line is in pattern AUTOEXEC_xxx:
-	chkline := GetFirstNoncommentLine(ahkfname)
+	chkline := GetFirstNoncommentLine(ahkfilepath)
 	
 	foundpos := RegExMatch(chkline, "^(AUTOEXEC_[a-zA-Z0-9_.]+)\:", subpat)
 	if( foundpos>0 )
 	{
-		g_arAutoexecLabels.Insert( {"filename":filename , "label":subpat1} )
-		g_dictAutoexecExistingFname[ahkfname] := "yes"
+		filepath := dev_StripPrefix(ahkfilepath, A_ScriptDir "\")
+		g_arAutoexecLabels.Insert( {"filename":filepath , "label":subpat1} )
+		g_dictAutoexecExistingFname[ahkfilepath] := "yes"
 	}
 }
 
@@ -303,7 +304,7 @@ ScanAhkFilesForAutoexecLabel()
 	AddAutoExecAhk(A_ScriptDir , "keymouse.ahk")
 	AddAutoExecAhk(A_ScriptDir , "quick-switch-app.ahk")
 	
-	Loop, %A_ScriptDir%\*.ahk
+	Loop, Files, %A_ScriptDir%\*.ahk, R
 	{
 		; Loop, %A_ScriptDir%\*.ahk ; this matches XXX.ahkx , XXX.ahky etc (AHK bug?)
 		; so I have to filter it once more.
@@ -321,7 +322,7 @@ ScanAhkFilesForAutoexecLabel()
 		if(InStr(A_LoopFileName, " "))
 			continue ; reject those with spaces in filename
 		
-		AddAutoExecAhk(A_ScriptDir, A_LoopFileName)
+		AddAutoExecAhk(A_LoopFileDir, A_LoopFileName)
 	}
 	
 	AddAutoExecAhk(A_ScriptDir, g_customize_ahk)
@@ -343,7 +344,7 @@ CallAutoexecLabels()
 		if(IsLabel(label_varname)) 
 		{
 			module_count++
-			msglistmodules .=  module_count . ". " . autolabel.filename . " [" . label_varname . "]`n"
+			msglistmodules .=  module_count ". " autolabel.filename " [" label_varname "]`n"
 			
 			; Jump to one AUTOEXEC_xxx_ahk label:
 			;
@@ -3336,6 +3337,7 @@ dev_IniRead(inifilepath, section, key, default_val:="")
 dev_IniWrite(inifilepath, section, key, val)
 {
 	IniWrite, % val, % inifilepath, % section, % key
+	return ErrorLevel ? false : true
 }
 
 

@@ -147,12 +147,16 @@ Dbgwin_HideGui()
 Dbgwin_SaveWindowPos()
 {
 	WinGetPos, x,y,w,h, ahk_id %g_dbgwinHwnd%
-;Msgbox, % "g_dbgwinHwnd=" g_dbgwinHwnd " x=" x " y=" y " w=" w " h=" h
+
 	if(w!=0 and h!=0)
 	{
 		xywh := Format("{},{},{},{}", x,y,w,h)
-		dev_IniWrite(gc_dbgwinIniFile, gc_dbgwinIniSection, "WinposXYWH", xywh)
+		succ := dev_IniWrite(gc_dbgwinIniFile, gc_dbgwinIniSection, "WinposXYWH", xywh)
+		if(!succ)
+			dev_MsgBoxWarning(Format("Dbgwin_SaveWindowPos(): Fail to save ini file: {}", gc_dbgwinIniFile))
 	}
+
+;	Msgbox, % "gc_dbgwinIniFile=" gc_dbgwinIniFile
 }
 
 Dbgwin_LoadWindowPos()

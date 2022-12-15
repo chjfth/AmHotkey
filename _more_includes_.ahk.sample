@@ -3,12 +3,11 @@
 ;  A Line starting with semicolon is a comment line.
 ;  *i means "ignore if that .ahk does not exist"
 
+#Include libs\debugwin.ahk
 #Include libs\WinClipAPI.ahk
 #Include libs\WinClip.ahk
 ; #Include libs\CtlColorStatic.ahk
 ; #Include libs\Gdip_All.ahk ; need by evernote.ahk
-
-#Include *i debugwin.ahk
 
 #Include *i quick-switch-app.ahk
 
