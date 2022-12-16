@@ -23,9 +23,6 @@ global gu_dbgwinMLE := ""
 
 global g_dbgwinMsgCount := 0
 
-global gc_dbgwinIniFile := "debugwin.ini"
-global gc_dbgwinIniSection := "cfg"
-
 Init_DebugwinEnv()
 ; -- This function's body is defined after the first "return",
 ;    but we have to call it before the first "return".
@@ -35,6 +32,16 @@ Init_DebugwinEnv()
 ;
 return ; End of auto-execute section.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+
+class Dbgwin 
+{
+	; We define Dbgwin class, in order to define these "global constant"
+	; without the help of AUTOEXEC_debugwin label.
+	;
+	static IniFilename := "debugwin.ini"
+	static IniSection  := "cfg"
+}
 
 Init_DebugwinEnv()
 {
@@ -151,17 +158,17 @@ Dbgwin_SaveWindowPos()
 	if(w!=0 and h!=0)
 	{
 		xywh := Format("{},{},{},{}", x,y,w,h)
-		succ := dev_IniWrite(gc_dbgwinIniFile, gc_dbgwinIniSection, "WinposXYWH", xywh)
+		succ := dev_IniWrite(Dbgwin.IniFilename, Dbgwin.IniSection, "WinposXYWH", xywh)
 		if(!succ)
-			dev_MsgBoxWarning(Format("Dbgwin_SaveWindowPos(): Fail to save ini file: {}", gc_dbgwinIniFile))
+			dev_MsgBoxWarning(Format("Dbgwin_SaveWindowPos(): Fail to save ini file: {}", Dbgwin.IniFilename))
 	}
 
-;	Msgbox, % "gc_dbgwinIniFile=" gc_dbgwinIniFile
+;	Msgbox, % "Dbgwin.IniFilename=" Dbgwin.IniFilename
 }
 
 Dbgwin_LoadWindowPos()
 {
-	xywh := dev_IniRead(gc_dbgwinIniFile, gc_dbgwinIniSection, "WinposXYWH")
+	xywh := dev_IniRead(Dbgwin.IniFilename, Dbgwin.IniSection, "WinposXYWH")
 	num := StrSplit(xywh, ",")
 	x := num[1] , y := num[2] , w := num[3] , h := num[4]
 	if(w>0 and h>0)
