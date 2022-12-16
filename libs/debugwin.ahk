@@ -15,10 +15,10 @@ Dbgwin_ShowGui(true)
 
 global g_dbgwinHwnd
 
-global gu_dbgwinBtnCopy := ""
-global gu_dbgwinHint := ""
-global gu_dbgwinBtnClear := ""
-global gu_dbgwinMLE := ""
+global gu_dbgwinBtnCopy
+global gu_dbgwinHint
+global gu_dbgwinBtnClear
+global gu_dbgwinMLE
 
 
 global g_dbgwinMsgCount := 0

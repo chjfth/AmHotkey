@@ -3388,22 +3388,27 @@ Gui_AssociateHwndVarname(GuiName, HwndVarname)
 
 Gui_IsValidVar(varname)
 {
-	; If varname is not defined, return false.
-	; User note: When passed in, your varname should be surround by double-quotes.
-	; Example:
-	;	Gui_IsValidVar("g_count")    ; may get true
-	;	Gui_IsValidVar("NoSuchVar")  ; will get false
-	;
-	; In order for a `global` var to pass this test, please initialize 
-	; your global var with a explicit value, like this:
-	; 	global g_count := 0
-	; 	global g_errmsg := ""
+	; [2022-12-16] This is a fake function that always succeeds.
+	; Currently, no solution for this semantic yet.
+
+	; Wrong comment >>>
+			; If varname is not defined, return false.
+			; User note: When passed in, your varname should be surround by double-quotes.
+			; Example:
+			;	Gui_IsValidVar("g_count")    ; may get true
+			;	Gui_IsValidVar("NoSuchVar")  ; will get false
+			;
+			; In order for a `global` var to pass this test, please initialize 
+			; your global var with a explicit value, like this:
+			; 	global g_count := 0
+			; 	global g_errmsg := ""
+	; Wrong comment <<<
 
 	if(%varname%)
 		return true
 	else if(%varname%==0)
 		return true
-	else if(%varname%=="")
+	else if(%varname%=="") ; [2022-12-16] This will be true even if varname is not defined.
 		return true
 	else
 		return false

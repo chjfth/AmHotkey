@@ -77,6 +77,9 @@ global g_amtDefaultOutdirUser0 := g_amtDefaultOutdirUser
 
 ; AmTemplates_InitHotkeys()
 
+;Dbgwin_Output("AmTemplate............AUTOEXEC")
+;Dbgwin_Output("gu_dbgwinTEST4 ? " . Gui_IsValidVar("gu_dbgwinTEST4") ". =" gu_dbgwinTEST4)
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 return ; End of auto-execute section.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
