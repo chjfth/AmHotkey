@@ -993,8 +993,8 @@ in_dev_DefineHotkey(is_on, hk_userform, fn_name, args) ; will define global hotk
 	; funs["F1"][fn_name].pr      => function parameters for the .fn function
 
 	static funs := {}
-
-;	dev_WriteLogFile("dev_DefineHotkey.txt", fn_name . "`n") ; debug
+	
+;	Dbgwin_Output(Format("In in_dev_DefineHotkey({}): hk_userform={}", is_on?"on":"off", hk_userform)) ; debug
 	
 	if(!fn_name) {
 		dev_MsgBoxError("Error: dev_DefineHotkey() pass in fn_name=null !")
@@ -1003,10 +1003,7 @@ in_dev_DefineHotkey(is_on, hk_userform, fn_name, args) ; will define global hotk
 	
 	hk := hk_userform
 	; 
-	if(StrIsStartsWith(hk_userform, "~")) {
-		; We need to strip off the "~" because later A_ThisHotkey *sometimes* does not contain that "~".
-		hk := SubStr(hk_userform, 2)
-	}
+	hk := _tweak_ThisHotkeyStripPrefix(hk)
 	
 	if(is_on)
 	{
@@ -1037,15 +1034,17 @@ in_dev_DefineHotkey(is_on, hk_userform, fn_name, args) ; will define global hotk
 	return
 
 Hotkey_Handler_global:
-;tooltip, % "Hotkey_Handler_global() [" . A_ThisHotkey . "] ........"
 
 	ThisHotkey_fix := A_ThisHotkey
+	
+	; We need to strip off "~" and "$", because later A_ThisHotkey *sometimes* does not contain that "~" and "$".
+	; For example "$NumpadDiv" becomes "NumpadDiv", but "$NumpadLeft" remains "$NumpadLeft".
+	; (maybe an AHK engine bug)
 	;
-	if(StrIsStartsWith(A_ThisHotkey, "~")) {
-		; We need to strip off the "~" because later A_ThisHotkey *sometimes* does not contain that "~".
-		ThisHotkey_fix := SubStr(A_ThisHotkey, 2)
-	}
+	ThisHotkey_fix := _tweak_ThisHotkeyStripPrefix(ThisHotkey_fix)
 
+;	Dbgwin_Output(Format("Hotkey_Handler_global: A_ThisHotkey={} , fixed={}", A_ThisHotkey, ThisHotkey_fix)) ; debug
+	
 	dict_fnpr := funs[ThisHotkey_fix]
 	if(dict_fnpr)
 	{
@@ -1057,12 +1056,18 @@ Hotkey_Handler_global:
 	}
 	else
 	{
-		tooltip, Bad! funs[%ThisHotkey_fix%] is null!!!!!
+		tooltip, % Format("Bad! funs[{}] is null !!!!!", ThisHotkey_fix)
 	}
 
 	return
 }
 
+_tweak_ThisHotkeyStripPrefix(ahkname)
+{
+	ahkname := dev_StripPrefix(ahkname, "~")
+	ahkname := dev_StripPrefix(ahkname, "$")
+	return ahkname
+}
 
 dev_UnDefineHotkeyWithCondition(hk, cond)
 {

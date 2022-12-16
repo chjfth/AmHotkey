@@ -282,6 +282,11 @@ km_LoadIni()
 		dev_DefineHotkey("$NumpadEnd", "km_KeypadNudge_do", "NumpadEnd", -1, 1)
 		dev_DefineHotkey("$NumpadDown", "km_KeypadNudge_do", "NumpadDown", 0, 1)
 		dev_DefineHotkey("$NumpadPgDn", "km_KeypadNudge_do", "NumpadPgDn", 1, 1)
+
+		; Use Numpad / to simulate mouse Lbutton pressing down, * to release Lbutton.
+		; This helps a lot when we need pixel accurate mouse movement.s
+		dev_DefineHotkey("$NumpadDiv", "km_KeypadNudge_do", "NumpadDiv", 0, 0)
+		dev_DefineHotkey("$NumpadMult", "km_KeypadNudge_do", "NumpadMult", 0, 0)
 	}
 
 	;;;;
@@ -554,7 +559,8 @@ km_WM_MOUSEMOVE()
 	
 	if(A_GuiControl=="km_isKeypadNudge")
 	{
-		tooltip, % "When NumLock is off, press Numpad area arrow keys to nudge mouse."
+		tooltip, % "When NumLock is off, press Numpad area arrow keys to nudge mouse.`r`n"
+			. "And even better, use [Numpad /] to simulate LButton pressing down and [Numpad *] to release LButton."
 	}
 	else if(A_GuiControl=="km_isNumpadSpecial")
 	{
@@ -620,8 +626,23 @@ km_RShiftNudge_do(arrowname, dx, dy)
 
 km_KeypadNudge_do(ahkname, dx, dy)
 {
+;	Dbgwin_Output(Format("In km_KeypadNudge_do(), dx={} dy={}.", dx, dy)) ; debug
+	
 	if(km_isKeypadNudge) {
-		MouseNudge(dx, dy, km_KeypadNudgeUnit)
+		
+		if(ahkname=="NumpadDiv") {
+;			Dbgwin_Output("Simulate mouse LButton down.") ; debug
+			Send {LButton down}
+			dev_TooltipAutoClear("Simulated mouse LButton down.")
+		}
+		else if(ahkname=="NumpadMult") {
+;			Dbgwin_Output("Simulate mouse LButton up.") ; debug
+			Send {LButton up}
+			dev_TooltipAutoClear("Simulated mouse LButton up.")
+		}
+		else {
+			MouseNudge(dx, dy, km_KeypadNudgeUnit)
+		}
 	}
 	else {
 		MsgBox, % "In " . A_ThisFunc . "(), this should not be seen, probably a bug! (ahkname=" . ahkname . ")"
