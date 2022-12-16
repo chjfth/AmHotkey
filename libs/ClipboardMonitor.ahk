@@ -162,7 +162,9 @@ class CClipboardMonitor
 		
 		if(dev_mapping_count(this._clients)==0)
 		{
-			g_clipmon := "" ; destroy the CClipboardMonitor instance, __Delete() gets called, `this` vanishes.
+			g_clipmon := "" 
+			; -- destroy the CClipboardMonitor instance, 
+			; __Delete() gets called internally, `this` vanishes.
 		}
 	}
 	
@@ -199,6 +201,7 @@ class CClipboardMonitor
 			client.fnobj()
 		}
 
+;		Dbgwin_Output(Format("Clipmon: Relay WM_DRAWCLIPBOARD from hwnd=0x{:08X} to hwnd=0x{:08X}", hwnd, this._hwndNextClipViewer)) ;debug
 		dev_SendMessage(this._hwndNextClipViewer, msg, wParam, lParam)
 	}
 }
