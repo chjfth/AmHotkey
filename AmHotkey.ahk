@@ -41,6 +41,9 @@ global g_func_IMEToggleZhonwen := "ToggleZhongwenStatus_PinyinJiaJia"
 
 global g_UntitledNotpad := "Untitled - Notepad"
 
+;global gc_AutoexecLabelsFilename := ""
+global gc_AutoexecLablesFilepath := A_ScriptDir "\autoexec-labels.list"
+
 global gtc_last_RCtrl = 0 ; Last RCtrl release tickcount
 global Eme_Fn_idle = true ; no need to configure
 
@@ -292,8 +295,36 @@ AddAutoExecAhk(ahkdir, filename)
 Amhotkey_LoadMoreIncludes()
 {
 	; "Call" auto-exec sections collected(for those ahks with AUTOEXEC_xxx: label at start of file)
-	ScanAhkFilesForAutoexecLabel()
-	CallAutoexecLabels()
+
+	if(!A_IsCompiled)
+	{
+		ScanAhkFilesForAutoexecLabel()
+		CallAutoexecLabels()
+	}
+	else
+	{
+		; For AHK2EXE-compiled AmHotkey.exe
+		
+		filetext := dev_FileRead(gc_AutoexecLablesFilepath)
+		if(!filetext)
+		{
+			dev_MsgBoxError("Missing configuration file: " gc_AutoexecLablesFilepath)
+			ExitApp
+		}
+		
+		arlabels := StrSplit(filetext, "`n")
+
+		for i,label in arlabels
+		{
+			label := dev_StripSuffix(label, "`r")
+			if(IsLabel(label))
+			{
+;				Dbgwin_Output("Found existed label: " label) ; debug
+				GoSub, %label%
+			}
+		}
+	}
+
 }
 
 ScanAhkFilesForAutoexecLabel()
@@ -330,6 +361,15 @@ ScanAhkFilesForAutoexecLabel()
 		; global vars defined by other modules.
 	
 ;	msgbox, % "g_arAutoexecLabels maxindex=" . g_arAutoexecLabels.MaxIndex()
+
+	; [2022-12-18] AHK2EXE support code:
+	;
+	strlabels := ""
+	for i,label in g_arAutoexecLabels
+	{
+		strlabels .= label.label "`r`n"
+	}
+	dev_WriteWholeFile(gc_AutoexecLablesFilepath, strlabels)
 }
 
 CallAutoexecLabels()
@@ -758,6 +798,11 @@ return
 ;##############################################################################
 ;#################### Environment checking functions ##########################
 ;##############################################################################
+
+IsWinXP()
+{
+	return IsWin5x()
+}
 
 IsWin5x()
 {
@@ -1331,6 +1376,16 @@ dev_StripPrefix(str, prefix, is_case_sensitive:=false)
 	
 }
 
+dev_StripSuffix(str, suffix, is_case_sensitive:=false)
+{
+	if(StrIsEndsWith(str, suffix, is_case_sensitive))
+		return SubStr(str, 1, StrLen(str)-StrLen(suffix))
+	else
+		return str
+	
+}
+
+
 dev_TooltipAutoClear(text, keep_millisec:=2000)
 {
 	tooltip, %text%
@@ -1353,7 +1408,7 @@ lb_TooltipDelayHide:
 	return
 }
 
-dev_WriteLogFile(filepath, text, is_append:=true)
+dev_WriteFile(filepath, text, is_append)
 {
 	; memo: Use "`n" in text to represent a new line.
 	;
@@ -1365,6 +1420,17 @@ dev_WriteLogFile(filepath, text, is_append:=true)
 	
 	FileAppend, %text%, %filepath%
 }
+
+dev_WriteLogFile(filepath, text, is_append:=true)
+{
+	dev_WriteFile(filepath, text, is_append)
+}
+
+dev_WriteWholeFile(filepath, text)
+{
+	dev_WriteFile(filepath, text, false)
+}
+
 
 dev_RunWaitOne(command, is_hidewindow:=false, working_dir:="") 
 {
@@ -3130,6 +3196,12 @@ dev_getCallStack(deepness = 20, is_print_code = true)
 		stack .= (stack ? "`n" : "") . Format("#{1}： ",A_Index-lv_first_print+1) . "File '" oEx.file "', Line " oEx.line (oExPrev.What = lvl-1 ? "" : ", in " oExPrev.What) (is_print_code ? ":`n" line : "") "`n"
 	}
 	return stack
+}
+
+dev_FileRead(filepath)
+{
+	FileRead, outvar, % filepath
+	return outvar
 }
 
 dev_FileReadLine(filepath, idxline)

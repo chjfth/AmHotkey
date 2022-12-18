@@ -899,12 +899,12 @@ Evp_WM_MOUSEMOVE(wParam, lParam, msg, hwnd)
 
 	if(A_GuiControl=="gu_evpCkbAutoPaste")
 	{
-		dev_TooltipAutoClear("""Use this"" button will paste the selected image into where you have come from(e.g. Evernote window).`r`n"
+		dev_TooltipAutoClear("If ticked, ""Use this"" button will paste the selected image into where you have come from(e.g. Evernote window).`r`n"
 			. "If not ticked, you have to strike Ctrl+V to paste into your target application.")
 	}
 	else if(A_GuiControl=="gu_evpCkbKeepWindow")
 	{
-		dev_TooltipAutoClear("After clicking ""Use this"" button, this Everpic window will remain visible instead of close itself.")
+		dev_TooltipAutoClear("If ticked, after clicking ""Use this"" button, this Everpic window will remain visible instead of close itself.")
 	}
 	else if(A_GuiControl=="gu_evpCkbAutoConvert")
 	{

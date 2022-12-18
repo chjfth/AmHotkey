@@ -421,12 +421,3 @@ sample_DefineQuickSwitchApps() ; as template for actual users
 	QSA_DefineActivateGroupFlex_Caps("0", QSA_NO_WNDCLASS, "^HwndWrapper", "Microsoft Visual Studio( \(Administrator\))*$", "VS2010_or_above")
 }
 
-
-; Bind Win+1, Win+2 ... for WinXP, 2003 (example)
-#If IsWin5x()
-
-#1:: WinActivate, ahk_class CalcFrame
-;#2:: WinActivate, ahk_class CalcFrame
-;#3:: WinActivate, ahk_class CalcFrame
-
-#If ; IsWin5x()
