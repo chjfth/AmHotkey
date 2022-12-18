@@ -26,7 +26,9 @@ return ; End of auto-execute section.
 
 QSA_ModuleInit()
 {
-	QSA_MonitorLiteralKeyTick()
+
+; Temp disable this
+;	QSA_MonitorLiteralKeyTick()
 }
 
 

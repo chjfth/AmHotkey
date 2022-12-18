@@ -2861,7 +2861,7 @@ ToggleZhongwenStatus_PinyinJiaJia(is_zhongwen_on)
 }
 
 
-ClipboardGet_HTML( byref Data ) 
+ClipboardGet_HTML( byref Data ) ; [2022-12-17] No one use it yet, just keep for reference.
 { ; https://autohotkey.com/board/topic/59058-convert-clipboard-data-to-html/#entry373078
  If CBID := DllCall( "RegisterClipboardFormat", Str,"HTML Format", UInt )
   If DllCall( "IsClipboardFormatAvailable", UInt,CBID ) <> 0
