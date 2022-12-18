@@ -1,8 +1,6 @@
 ﻿; Note: If this file contains non-ASCII characters, you must saved it in UTF8 with BOM,
 ; in order for the Unicode characters to be recognized by Autohotkey engine.
 
-AUTOEXEC_debugwin: ; Workaround for Autohotkey's ugly auto-exec feature. Don't delete.
-
 /* APIs:
 
 Dbgwin_Output("Your debug message.")
@@ -23,14 +21,14 @@ global gu_dbgwinMLE
 
 global g_dbgwinMsgCount := 0
 
-Init_DebugwinEnv()
+;Init_DebugwinEnv()
 ; -- This function's body is defined after the first "return",
 ;    but we have to call it before the first "return".
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; If you define any global variables, you MUST define them ABOVE this line.
 ;
-return ; End of auto-execute section.
+;return ; End of auto-execute section.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
@@ -169,6 +167,7 @@ Dbgwin_SaveWindowPos()
 Dbgwin_LoadWindowPos()
 {
 	xywh := dev_IniRead(Dbgwin.IniFilename, Dbgwin.IniSection, "WinposXYWH")
+
 	num := StrSplit(xywh, ",")
 	x := num[1] , y := num[2] , w := num[3] , h := num[4]
 	if(w>0 and h>0)
@@ -177,11 +176,17 @@ Dbgwin_LoadWindowPos()
 	}
 }
 
-DbgwinGuiClose:
-DbgwinGuiEscape:
+DbgwinGuiClose()
+{
+	Dbgwin_HideGui()
+}
+
+DbgwinGuiEscape()
+{
 	; This enables ESC to close AHK window.
 	Dbgwin_HideGui()
-	return 
+}
+
 
 DbgwinGuiSize()
 {
