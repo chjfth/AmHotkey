@@ -3,8 +3,7 @@
 #include ..\AmUtils-gui.ahk
 #include ..\libs\debugwin.ahk
 
-;global gar_customize_filenames 
-; -- typical value: ["_more_includes_.ahk", "customize.ahk"]
+#include *i #Include %A_LineFile%\..\other.ahk.
 
 Do_Packer()
 
@@ -21,24 +20,35 @@ Do_Packer()
 
 	dirProject := Format("{}\{}", A_ScriptDir, project)
 	dirAmroot  := dev_GetParentDir(A_ScriptDir)
-	
+
 	dbg("dirProject = " project)
 
 	if( Instr(FileExist(dirProject), "D")==0 )
 	{
 		dbgfail("The given project dir does NOT exist: " dirProject)
 	}
-	
+
 	custfilenames := GetCustFilenames(dirProject)
-	
+
 	CopyCustToAmroot(custfilenames, dirProject, dirAmroot)
-	
-	exeout_dir := Format("{1}\{1}-ahk2exe", project) ; relative to packer.ahk's dir
-	dev_CreateDirIfNotExist(exeout_dir)
+
+	exeout_dirname := get_exeout_dirname(project)
+	exeout_dir := Format("{}\{}", project, exeout_dirname) ; relative to packer.ahk's dir
 	exeout_filepath := Format("{}\{}", exeout_dir, project ".exe")
+
+	; Remove old output dir first.
+	if(FileExist(exeout_dir))
+	{
+		if(not dev_FileRemoveDir(exeout_dir, true))
+			dbgfail("Cannot delete old output dir: " exeout_dir)
+	}
+
+	dev_CreateDirIfNotExist(exeout_dir)
 	
-	if(not dev_FileDelete(exeout_filepath))
-		dbgfail("Cannot delete old output exe: " exeout_filepath)
+	llfile := "\autoexec-labels.list"
+	succ := dev_Copy1File(dirAmroot . llfile , exeout_dir . llfile, true)
+	
+	PackerCopyFilesByIni(dirAmroot, dirProject)
 	
 	ahk2exe_cmd := Format("..\Compiler\Ahk2Exe.exe "
 		. "/in   ..\AmHotkey.ahk "
@@ -46,25 +56,26 @@ Do_Packer()
 		. "/icon {1}\{1}.ico "
 		. "/base ""..\Compiler\Unicode 32-bit.bin"""
 		, project, exeout_filepath)
-	
+
 	dbg("Run cmd: " ahk2exe_cmd)
-	
+
 	RunWait, % ahk2exe_cmd
 	if(ErrorLevel)
 	{
 		dbgfail("ahk2exe execution fail, with exitcode=" ErrorLevel)
 	}
-	
+
 	if(not FileExist(exeout_filepath))
 	{
 		dbgfail("Unexpect! ahk2exe reports success, but output file does not exist: " exeout_filepath)
 	}
-	
+
 	dbg("EXE generated successfully: " exeout_filepath)
+
 	dev_MsgBoxInfo("EXE generated successfully: `r`n`r`n" exeout_filepath)
-	
+
 	RestoreCustAtAmRoot(custfilenames, dirAmroot)
-	
+
 	ExitApp 0
 }
 
@@ -73,7 +84,7 @@ GetCustFilenames(dir)
 {
 	checkfns := ["_more_includes_.ahk", "customize.ahk"]
 	foundfns := []
-	
+
 	for i,chkfn in checkfns
 	{
 		filepath := Format("{}\{}", dir, chkfn)
@@ -82,7 +93,7 @@ GetCustFilenames(dir)
 			foundfns.Push(chkfn)
 		}
 	}
-	
+
 	return foundfns
 }
 
@@ -92,16 +103,16 @@ CopyCustToAmroot(arfilenames, srcdir, dstdir)
 	{
 		srcfilepath := srcdir "\" filename
 		dstfilepath := dstdir "\" filename
-	
+
 		Dbgwin_Output("Preparing custfile: " dstfilepath)
-	
+
 		; Make a backup of dst-file first.
 		;
 		dstbackup := dstfilepath ".bak"
 		succ := dev_Copy1File(dstfilepath, dstbackup, true)
-		if(!succ) 
+		if(!succ)
 			dbgfail("Cannot generate backup file: " dstbackup)
-		
+
 		succ := dev_Copy1File(srcfilepath, dstfilepath, true)
 		if(!succ)
 			dbgfail("Cannot generate customization file: " dstfilepath)
@@ -111,20 +122,83 @@ CopyCustToAmroot(arfilenames, srcdir, dstdir)
 RestoreCustAtAmRoot(arfilenames, dstdir)
 {
 	; Copy XXX.ahk.bak to XXX.ahk
-	
+
 	for i,filename in arfilenames
 	{
 		orgfilepath := dstdir "\" filename
 		bakfilepath := orgfilepath ".bak"
-	
+
 		Dbgwin_Output("Restoring: " orgfilepath)
-	
+
 		succ := dev_Copy1File(bakfilepath, orgfilepath, true)
-		if(!succ) 
+		if(!succ)
 			dbgfail("Cannot restore: " orgfilepath)
 	}
 }
 
+PackerCopyFilesByIni(amroot, prjdir)
+{
+	; Copy files according to %prjdir%\packer.ini
+
+	inifile := prjdir . "\packer.ini"
+
+	CopyFiles := dev_IniRead(inifile, "CopyFiles")
+	copylines := StrSplit(CopyFiles, "`n")
+
+	for i,linetext in copylines
+	{
+		pair := StrSplit(linetext, "=")
+		srcpath := pair[1]
+		dstpath := pair[2]
+
+		srcpath := Packer_ReplaceDirPrefix(srcpath, amroot, prjdir)
+		dstpath := Packer_ReplaceDirPrefix(dstpath, amroot, prjdir)
+
+		; If dstpath from .ini ends with \ , then we append source filename to it.
+		if(StrIsEndsWith(dstpath, "\"))
+		{
+			dev_SplitPath(srcpath, srcfilename)
+			dstpath .= srcfilename
+		}
+
+		dbg("Copy file: `r`n"
+			. "  SRC: " srcpath "`r`n"
+			. "  DST: " dstpath)
+		
+		if(not FileExist(srcpath))
+			dbgfail(Format("From {}, `r`n`r`nSRC file does not exist: {}", inifile, srcpath))
+		
+		if(not dev_IsDiskFile(srcpath))
+			dbgfail(Format("From {}, `r`n`r`nSRC is not a file: {}", inifile, srcpath))
+		
+		succ := dev_Copy1File(srcpath, dstpath, true)
+		if(!succ)
+			dbgfail("Cannot create file: " dstpath)
+	}
+}
+
+Packer_ReplaceDirPrefix(path1, amroot, prjdir)
+{
+	; $R : AmHotkey Root dir
+	; $P : Project dir
+	; $E : Exe output dir
+
+	path1 := RegExReplace(path1, "^\$R\\", amroot "\")
+
+	path1 := RegExReplace(path1, "^\$P\\", prjdir "\")
+
+	dev_SplitPath(prjdir, prjname)
+
+	path1 := RegExReplace(path1, "^\$E\\"
+		, Format("{}\{}\", prjdir, get_exeout_dirname(prjname)))
+
+	return path1
+}
+
+get_exeout_dirname(prjname)
+{
+	return prjname "-ahk2exe"
+}
 
 dbg(s)
 {

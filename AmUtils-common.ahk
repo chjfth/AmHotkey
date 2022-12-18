@@ -128,10 +128,21 @@ dev_PostMessage(hwnd, wm_xxx, wparam, lparam)
 }
 
 
-dev_IniRead(inifilepath, section, key, default_val:="")
+dev_IniRead(inifilepath, section, key:="", default_val:="")
 {
+	; key=="" to return whole section content
+
+	default_magic := "20221219.dev_IniRead.default"
+	if(default_val=="")
+		default_val := default_magic
+
 	IniRead, outvar, % inifilepath, % section, % key, % default_val
-	return outvar
+	
+	if(outvar==default_magic)
+		return "" ; User just want a empty string as default
+	else
+		return outvar
+	
 }
 
 dev_IniWrite(inifilepath, section, key, val)
@@ -221,6 +232,15 @@ dev_FileDelete(filepath)
 	return ErrorLevel ? false : true
 }
 
+dev_FileRemoveDir(dirpath, is_recurse)
+{
+	FileRemoveDir, % dirpath, % (is_recurse?1:0)
+	if(ErrorLevel)
+		return false
+	else
+		return true
+}
+
 dev_WriteFile(filepath, text, is_append)
 {
 	; memo: Use "`n" in text to represent a new line.
@@ -259,6 +279,9 @@ dev_Copy1File(srcfilepath, dstfilepath, is_overwrite:=false)
 	if(InStr(FileExist(dstfilepath), "D")>0) 
 		return false ; dst must not be a folder
 	
+	dstdir := dev_SplitPath(dstfilepath)
+	dev_CreateDirIfNotExist(dstdir)
+	
 	FileCopy, % srcfilepath, % dstfilepath, % (is_overwrite?"1":"")
 	
 	if(ErrorLevel)
@@ -289,6 +312,105 @@ dev_IsDiskFolder(dirpath)
 {
 	attr := FileExist(dirpath)
 	if( InStr(attr, "D") )
+		return true
+	else
+		return false
+}
+
+
+dev_InterpretHotkeySpec(spec)
+{
+	; spec is like "^#c", will return "Ctrl+Win+c"
+	
+
+	if(InStr(spec,"^") || InStr(spec,"#") || InStr(spec,"!"))
+	{
+		desc := ""
+		if(InStr(spec,"^"))
+			desc .= "Ctrl+"
+		if(InStr(spec,"#"))
+			desc .= "Win+"
+		if(InStr(spec,"!"))
+			desc .= "Alt+"
+		
+		desc .= LTrim(spec, "^#!")
+		return desc
+	}
+	else
+	{
+		return spec
+	}
+}
+
+dev_SplitPath(input, byref Filename:="")
+{
+	SplitPath, input, Filename, OutDir
+	return OutDir
+}
+
+dev_SplitExtname(input, byref dot_ext:="")
+{
+	SplitPath, input, outname_nouse, OutDir, OutExt, OutNameNoExt
+	dot_ext := "." OutExt
+	if(OutDir)
+		return Format("{}\{}", OutDir, OutNameNoExt) ; the stempath(no extname)
+	else
+		return OutNameNoExt
+}
+
+dev_AppendToStemname(input, stemname_suffix)
+{
+	stem := dev_SplitExtname(input, dot_ext)
+	return stem . stemname_suffix . dot_ext
+}
+
+dev_StrIsEqualI(s1, s2) ; case insensitive compare
+{
+	StringUpper, s1u, s1
+	StringUpper, s2u, s2
+	if(s1u==s2u)
+		return true
+	else
+		return false
+}
+
+StrIsStartsWith(str, prefix, anycase:=false)
+{
+	; Check if the string str starts with prefix
+	
+	if(anycase)
+	{
+		StringLower, str, str
+		StringLower, prefix, prefix
+	}
+	
+	pfxlen := strlen(prefix)
+	if(pfxlen<=0)
+		return false
+	
+	s1 := substr(str, 1, pfxlen)
+	
+	StringUpper, s1_u, s1
+	StringUpper, s2_u, prefix
+	
+	if(s1_u==s2_u)
+		return true
+	else
+		return false
+}
+
+StrIsEndsWith(str, suffix, anycase:=false)
+{
+	if(anycase)
+	{
+		StringLower, str, str
+		StringLower, prefix, prefix
+	}
+	
+	suffix_len := strlen(suffix)
+	if(suffix_len==0)
+		return false
+	if(substr(str, 1-suffix_len)==suffix)
 		return true
 	else
 		return false

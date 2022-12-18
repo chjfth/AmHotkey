@@ -301,7 +301,7 @@ Amhotkey_LoadMoreIncludes()
 
 		for i,label in arlabels
 		{
-			label := dev_StripSuffix(label, "`r")
+			label := Trim(label, "`r")
 			if(IsLabel(label))
 			{
 ;				Dbgwin_Output("Found existed label: " label) ; debug
@@ -1278,57 +1278,6 @@ GetWindowInfo(_hGui
 	return true
 }
 
-dev_StrIsEqualI(s1, s2) ; case insensitive compare
-{
-	StringUpper, s1u, s1
-	StringUpper, s2u, s2
-	if(s1u==s2u)
-		return true
-	else
-		return false
-}
-
-StrIsStartsWith(str, prefix, anycase:=false)
-{
-	; Check if the string str starts with prefix
-	
-	if(anycase)
-	{
-		StringLower, str, str
-		StringLower, prefix, prefix
-	}
-	
-	pfxlen := strlen(prefix)
-	if(pfxlen<=0)
-		return false
-	
-	s1 := substr(str, 1, pfxlen)
-	
-	StringUpper, s1_u, s1
-	StringUpper, s2_u, prefix
-	
-	if(s1_u==s2_u)
-		return true
-	else
-		return false
-}
-
-StrIsEndsWith(str, suffix, anycase:=false)
-{
-	if(anycase)
-	{
-		StringLower, str, str
-		StringLower, prefix, prefix
-	}
-	
-	suffix_len := strlen(suffix)
-	if(suffix_len==0)
-		return false
-	if(substr(str, 1-suffix_len)==suffix)
-		return true
-	else
-		return false
-}
 
 StrCountLines(str)
 {
@@ -2970,28 +2919,6 @@ dev_Menu_DeleteAll(menuname)
 
 dev_Menu_DoNone()
 {
-}
-
-dev_SplitPath(input, byref Filename:="")
-{
-	SplitPath, input, Filename, OutDir
-	return OutDir
-}
-
-dev_SplitExtname(input, byref dot_ext:="")
-{
-	SplitPath, input, outname_nouse, OutDir, OutExt, OutNameNoExt
-	dot_ext := "." OutExt
-	if(OutDir)
-		return Format("{}\{}", OutDir, OutNameNoExt) ; the stempath(no extname)
-	else
-		return OutNameNoExt
-}
-
-dev_AppendToStemname(input, stemname_suffix)
-{
-	stem := dev_SplitExtname(input, dot_ext)
-	return stem . stemname_suffix . dot_ext
 }
 
 dev_FindVacantFilename(path_ptn, start_seq:=1, max_seq:=10000)

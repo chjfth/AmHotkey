@@ -32,18 +32,32 @@ return ; The first return in this ahk. It marks the End of auto-execute section.
 ; or #Include somebody else's AHK partial file(s).
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+#SingleInstance force
 
 Init_ExeEverpicEnv()
 {
 	; Write your initialization statements here.
 
-	dev_MsgBoxInfo("Type hotkey Ctrl+Win+c to call up Everpic UI."
-		,"Everpic Launch tip")
+	hotkeyspec := Load_HotkeyFromIni()
+
+	if(!hotkeyspec)
+		hotkeyspec := "^#c"
+
+	dev_DefineHotkey(hotkeyspec, "Evp_LaunchUI")
 	
-	dev_DefineHotkey("^#c", "Evp_LaunchUI")
+	desc := dev_InterpretHotkeySpec(hotkeyspec)
+	
+	dev_MsgBoxInfo("Hotkey to bring up Everpic UI:`r`n`r`n    " desc
+		, "Everpic Launch tip")
+	
 	Evp_LaunchUI()
 }
 
+
+Load_HotkeyFromIni()
+{
+	return dev_IniRead("Everpic.ini", "cfg", "hotkey")
+}
 
 
 ; :::: Add your OWN hotkey definition below ::::
