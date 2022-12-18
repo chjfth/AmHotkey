@@ -212,6 +212,15 @@ lb_TooltipDelayHide:
 	return
 }
 
+dev_FileDelete(filepath)
+{
+	if(!FileExist(filepath))
+		return true
+
+	FileDelete, % filepath
+	return ErrorLevel ? false : true
+}
+
 dev_WriteFile(filepath, text, is_append)
 {
 	; memo: Use "`n" in text to represent a new line.
@@ -233,5 +242,55 @@ dev_WriteLogFile(filepath, text, is_append:=true)
 dev_WriteWholeFile(filepath, text)
 {
 	dev_WriteFile(filepath, text, false)
+}
+
+dev_Copy1File(srcfilepath, dstfilepath, is_overwrite:=false)
+{
+	dev_assert(InStr(srcfilepath, "*")==0)
+	
+	srcfileattr := FileExist(srcfilepath)
+
+	if(srcfileattr=="")
+		return false ; srcfile not exist
+	
+	if(InStr(srcfileattr, "D")>0)
+		return false ; src must not be a folder
+	
+	if(InStr(FileExist(dstfilepath), "D")>0) 
+		return false ; dst must not be a folder
+	
+	FileCopy, % srcfilepath, % dstfilepath, % (is_overwrite?"1":"")
+	
+	if(ErrorLevel)
+		return false
+	else
+		return true
+}
+
+dev_GetParentDir(path)
+{
+	dev_assert(InStr(path, "\")>0)
+	
+	foundpos := RegExMatch(path, "^(.+)\\.+$", subpat)
+	
+	return subpat1
+}
+
+dev_IsDiskFile(filepath)
+{
+	attr := FileExist(filepath)
+	if( InStr(attr, "A") || InStr(attr, "N") ) ; but never see "N"
+		return true
+	else
+		return false
+}
+
+dev_IsDiskFolder(dirpath)
+{
+	attr := FileExist(dirpath)
+	if( InStr(attr, "D") )
+		return true
+	else
+		return false
 }
 
