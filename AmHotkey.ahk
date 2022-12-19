@@ -1028,7 +1028,7 @@ in_dev_DefineHotkey(is_on, hk_userform, fn_name, args) ; will define global hotk
 ;	Dbgwin_Output(Format("In in_dev_DefineHotkey({}): hk_userform={}", is_on?"on":"off", hk_userform)) ; debug
 	
 	if(!fn_name) {
-		dev_MsgBoxError("Error: dev_DefineHotkey() pass in fn_name=null !")
+		dev_MsgBoxError("Error: dev_DefineHotkey() pass in fn_name=null! Be aware, function name should be passed in string form.")
 		return
 	}
 	
@@ -1053,6 +1053,13 @@ in_dev_DefineHotkey(is_on, hk_userform, fn_name, args) ; will define global hotk
 	}
 	else 
 	{
+		if(not funs.HasKey(hk))
+		{
+			; User calls dev_UnDefineHotkey() before dev_DefineHotkey(),
+			; this should be allowed and ignore.
+			return
+		}
+	
 		funs[hk].Delete(fn_name)
 		
 		if( IsDictEmpty(funs[hk]) )
@@ -1148,6 +1155,8 @@ dev_DefineHotkeyWithCondition(hk, cond, fn_name, args*)
 	; condfuns["F1"]["Spc_IsActive"].fn_name => yet another object
 	; condfuns["F1"]["Spc_IsActive"].fn      => Function object for Spc_IsActive() true condition
 	; condfuns["F1"]["Spc_IsActive"].pr      => function parameters for the .fn function
+	
+	; [2022-12-19] TODO: Apply _tweak_ThisHotkeyStripPrefix() and dev_getCallStack() report, as in in_dev_DefineHotkey().
 	
 	if(cond=="")
 	{
