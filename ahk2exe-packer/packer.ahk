@@ -5,6 +5,8 @@
 
 #include *i #Include %A_LineFile%\..\other.ahk.
 
+global g_packer_BakFiles := [] ; These files will be restored on premature ExitApp
+
 Do_Packer()
 
 Do_Packer()
@@ -28,10 +30,6 @@ Do_Packer()
 		dbgfail("The given project dir does NOT exist: " dirProject)
 	}
 
-	custfilenames := GetCustFilenames(dirProject)
-
-	CopyCustToAmroot(custfilenames, dirProject, dirAmroot)
-
 	exeout_dirname := get_exeout_dirname(project)
 	exeout_dir := Format("{}\{}", project, exeout_dirname) ; relative to packer.ahk's dir
 	exeout_filepath := Format("{}\{}", exeout_dir, project ".exe")
@@ -49,6 +47,12 @@ Do_Packer()
 	succ := dev_Copy1File(dirAmroot . llfile , exeout_dir . llfile, true)
 	
 	PackerCopyFilesByIni(dirAmroot, dirProject)
+
+	custfilenames := GetCustFilenames(dirProject)
+	CopyCustToAmroot(custfilenames, dirProject, dirAmroot)
+	; -- This temporarily modify customize.ahk and _more_includes_.ahk in 
+	;    Amroot dir, with project-specific files of the same names.
+	;    The two files will be restored on exit.
 	
 	ahk2exe_cmd := Format("..\Compiler\Ahk2Exe.exe "
 		. "/in   ..\AmHotkey.ahk "
@@ -74,8 +78,6 @@ Do_Packer()
 
 	dev_MsgBoxInfo("EXE generated successfully: `r`n`r`n" exeout_filepath)
 
-	RestoreCustAtAmRoot(custfilenames, dirAmroot)
-
 	ExitApp 0
 }
 
@@ -99,6 +101,16 @@ GetCustFilenames(dir)
 
 CopyCustToAmroot(arfilenames, srcdir, dstdir)
 {
+	; Clear all old .bak files first
+	for i,filename in arfilenames
+	{
+		bakfilepath := dstdir "\" filename ".bak"
+		if(!dev_FileDelete(bakfilepath))
+			dbgfail("Cannot remove old file: " bakfilepath)
+	}
+
+	OnExit("RestoreCustAtAmRoot")
+
 	for i,filename in arfilenames
 	{
 		srcfilepath := srcdir "\" filename
@@ -112,6 +124,8 @@ CopyCustToAmroot(arfilenames, srcdir, dstdir)
 		succ := dev_Copy1File(dstfilepath, dstbackup, true)
 		if(!succ)
 			dbgfail("Cannot generate backup file: " dstbackup)
+			
+		g_packer_BakFiles.Push(dstbackup)
 
 		succ := dev_Copy1File(srcfilepath, dstfilepath, true)
 		if(!succ)
@@ -119,20 +133,23 @@ CopyCustToAmroot(arfilenames, srcdir, dstdir)
 	}
 }
 
-RestoreCustAtAmRoot(arfilenames, dstdir)
+RestoreCustAtAmRoot()
 {
-	; Copy XXX.ahk.bak to XXX.ahk
+	; For files in g_packer_BakFiles[], copy XXX.ahk.bak to XXX.ahk
 
-	for i,filename in arfilenames
+	for i,bakfilepath in g_packer_BakFiles
 	{
-		orgfilepath := dstdir "\" filename
-		bakfilepath := orgfilepath ".bak"
+		orgfilepath := dev_StripSuffix(bakfilepath, ".bak")
+		dev_assert(orgfilepath!=bakfilepath)
 
 		Dbgwin_Output("Restoring: " orgfilepath)
 
 		succ := dev_Copy1File(bakfilepath, orgfilepath, true)
 		if(!succ)
-			dbgfail("Cannot restore: " orgfilepath)
+		{
+			dev_MsgBoxWarning("[PANIC!] Cannot restore: " orgfilepath)
+			; -- Don't quit, try to restore next file
+		}
 	}
 }
 
@@ -199,6 +216,7 @@ get_exeout_dirname(prjname)
 {
 	return prjname "-ahk2exe"
 }
+
 
 dbg(s)
 {

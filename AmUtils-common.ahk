@@ -7,11 +7,14 @@
 #Include %A_LineFile%\..\AmUtils-const.ahk
 
 
-dev_assert(torf)
+dev_assert(torf, exitcode_now:=1)
 {
 	if(!torf)
 	{
 		dev_MsgBoxError(dev_getCallStack(), "AHK Assertion Fail! Stacktrace >>>")
+		
+		if(exitcode_now)
+			ExitApp, % exitcode_now
 	}
 }
 
@@ -414,5 +417,23 @@ StrIsEndsWith(str, suffix, anycase:=false)
 		return true
 	else
 		return false
+}
+
+dev_StripPrefix(str, prefix, is_case_sensitive:=false)
+{
+	if(StrIsStartsWith(str, prefix, is_case_sensitive))
+		return SubStr(str, StrLen(prefix)+1)
+	else
+		return str
+	
+}
+
+dev_StripSuffix(str, suffix, is_case_sensitive:=false)
+{
+	if(StrIsEndsWith(str, suffix, is_case_sensitive))
+		return SubStr(str, 1, StrLen(str)-StrLen(suffix))
+	else
+		return str
+	
 }
 
