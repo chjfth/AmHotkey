@@ -78,7 +78,7 @@ global g_evpImageSig := ""
 	; need it as "signature" in Evernote image footnote. by Evp_GenImageSigByTimestamp().
 	; Example: "everpic-20221205_150413"
 
-global gc_evpCleanupTempDirDays := 1
+global g_evpTempPreserveMinutes := 60*24 ; default to one day
 
 global g_evpHwndToPaste
 
@@ -161,10 +161,10 @@ global g_evp_hClipmon ; Clipboard monitor handle
 global g_evp_ClipmonSeqNow := 0 ; Clipboard change sequence-number
 global g_evp_ClipmonSeqAct := 0 ; The sequence-number on which we have done image-conversion.
 
+
 ; =======
 
 global g_HwndEvtbl
-
 
 global text_ColorPreview := "Color Preview"
 
@@ -408,8 +408,8 @@ Evp_CreateGui()
 	Gui_Add_Button(  "EVP", "gu_evpBtnOK",       col1w, "default g" . "Evp_BtnOK", "&Use This (or press Enter)")
 	;
 	; Two checkboxes beside BtnOK
-	Gui_Add_Checkbox("EVP", "gu_evpCkbAutoPaste", -1, "x+5 yp+5 Checked", "Auto &paste")
-	Gui_Add_Checkbox("EVP", "gu_evpCkbKeepWindow",-1, "x+5 yp", "Keep &window")
+	Gui_Add_Checkbox("EVP", "gu_evpCkbAutoPaste", -1, "x+5 yp+5 Checked", "Auto &paste") ; Auto paste
+	Gui_Add_Checkbox("EVP", "gu_evpCkbKeepWindow",-1, "x+5 yp", "Keep &window") ; Keep window
 
 	; ==== Create Column2 controls. ====
 	;
@@ -1605,8 +1605,8 @@ Evp_CleanupTempDir()
 			EnvSub diff_seconds, file_datetime, Seconds
 ;			dev_MsgBoxInfo("Diff seconds: " diff_seconds)
 			
-			N := gc_evpCleanupTempDirDays
-			if(diff_seconds >= 3600*24*N) ; if older than N days 
+			N := g_evpTempPreserveMinutes
+			if(diff_seconds >= N*60)
 			{
 				FileDelete, % g_evpTempDir "\" filename
 			}

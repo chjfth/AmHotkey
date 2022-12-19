@@ -36,27 +36,48 @@ return ; The first return in this ahk. It marks the End of auto-execute section.
 
 Init_ExeEverpicEnv()
 {
-	; Write your initialization statements here.
+	; Add a systray menu item
+	Menu, tray, add  ; Creates a separator line.
+	Menu, tray, add, % "Bring up Everpic UI", Evp_LaunchUI
 
-	hotkeyspec := Load_HotkeyFromIni()
+	;
+
+	hotkeyspec := EverpicExe_ReadInikey("hotkey")
 
 	if(!hotkeyspec)
 		hotkeyspec := "^#c"
 
 	dev_DefineHotkey(hotkeyspec, "Evp_LaunchUI")
 	
+	if(g_evpTempPreserveMinutes>0) 
+	{
+		; evernote.ahk should have set this value.
+		val := EverpicExe_ReadInikey("TempPreserveMinutes")
+		minutes := dev_str2num(val)
+		if(minutes>0)
+			g_evpTempPreserveMinutes := minutes
+	}
+	else
+	{
+		dev_MsgBoxWarning("Code out-of-sync. g_evpTempPreserveMinutes is 0 !")
+	}
+		
 	desc := dev_InterpretHotkeySpec(hotkeyspec)
 	
-	dev_MsgBoxInfo("Hotkey to bring up Everpic UI:`r`n`r`n    " desc
+	dev_MsgBoxInfo("Hotkey to bring up Everpic UI:`r`n`r`n    " desc "`r`n`r`n"
+		. "You can configure this hotkey in Everpic.ini ." 
 		, "Everpic Launch tip")
 	
 	Evp_LaunchUI()
+	
+	GuiControl_SetValue("EVP", "gu_evpCkbKeepWindow", 1)
+	; -- this should be done after Evp_LaunchUI()
 }
 
 
-Load_HotkeyFromIni()
+EverpicExe_ReadInikey(keyname)
 {
-	return dev_IniRead("Everpic.ini", "cfg", "hotkey")
+	return dev_IniRead("Everpic.ini", "cfg", keyname)
 }
 
 

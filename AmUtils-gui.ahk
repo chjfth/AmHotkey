@@ -260,6 +260,11 @@ GuiControl_SetText(GuiName, CtrlVarname, text)
 	GuiControl, % cmd, % CtrlVarname, % text
 }
 
+GuiControl_SetValue(GuiName, CtrlVarname, text)
+{
+	GuiControl_SetText(GuiName, CtrlVarname, text)
+}
+
 GuiControl_GetPos(GuiName, CtrlVarname)
 {
 	dev_assert(Gui_IsValidVar(CtrlVarname))
