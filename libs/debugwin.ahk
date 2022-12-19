@@ -190,7 +190,7 @@ DbgwinGuiEscape()
 
 DbgwinGuiSize()
 {
-	Dbgwin_Output(Format("In DbgwinGuiSize(), A_GuiWidth={}, A_GuiHeight={}", A_GuiWidth, A_GuiHeight))
+;	Dbgwin_Output(Format("In DbgwinGuiSize(), A_GuiWidth={}, A_GuiHeight={}", A_GuiWidth, A_GuiHeight))
 	
 	rsdict := {}
 	rsdict.gu_dbgwinMLE := "0,0,100,100" ; Left/Top/Right/Bottom
@@ -208,9 +208,13 @@ Dbgwin_evtBtnCopy()
 		slen := strlen(text)
 		dev_TooltipAutoClear(Format("Copied to clipboard, {} chars", slen))
 	}
+
+	Dbgwin_SaveWindowPos()
 }
 
 Dbgwin_evtClear()
 {
 	GuiControl_SetText("Dbgwin", "gu_dbgwinMLE", "")
+
+	Dbgwin_SaveWindowPos()
 }
