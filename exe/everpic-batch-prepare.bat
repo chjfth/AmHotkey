@@ -66,7 +66,7 @@ for %%A in (%pngCfgs%) do (
 	
 	set fpoutput=%fpPrefix%.!middle!.png
 	call :EchoAndExec pngquant.exe !colors! --force --output "!fpoutput!" -- "%fpinput%"
-	if errorlevel 1 exit /b 4
+	if not !errorlevel!==0 exit /b 4
 	
 	set stageline=PNG ^(!colors! colors^)*!fpoutput!
 	
@@ -82,7 +82,7 @@ for %%A in (%jpgQuals%) do (
 
 	set fpoutput=%fpPrefix%.q%%A.jpg
 	call :EchoAndExec cjpeg-static.exe -quality %%A -outfile "!fpoutput!" "%fpinput%"
-	if errorlevel 1 exit /b 4
+	if not !errorlevel!==0 exit /b 4
 
 	set stageline=JPG ^(%%A%%^)*!fpoutput!
 	echo !stageline!
