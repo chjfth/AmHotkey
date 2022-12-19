@@ -13,6 +13,8 @@
 
 #Include *i keymouse.ahk
 
+#Include *i evernote.ahk
+
 ;#Include *i hotstrings.ahk
 
 ;#Include *i winshell.ahk
@@ -23,13 +25,11 @@
 
 ;#Include *i windev.ahk
 
-#Include *i evernote.ahk
-
 ;#Include *i chmviewer.ahk
 
 ;#Include *i emeditor.ahk
 
-#Include *i mediaplayer.ahk
+;#Include *i mediaplayer.ahk
 
 ;#Include *i hypersnap.ahk
 

@@ -3479,67 +3479,6 @@ AppsKey & t:: EverTable_LaunchUI()
 
 
 
-#If Evernote_IsSingleNoteActive() and WinExist("ahk_class MediaPlayerClassicW") 
-F3::        MPC_Bg_PausePlay(true)
-F1::        MPC_Bg_PausePlay_front(true)
-; NumpadSub:: MPC_Bg_PausePlay_front(true)
-F2::         Evernote_MPC_PasteCurrentPlaytime("{F2}") ; F2 defaults to Evernote clip rename
-; NumpadAdd::  Evernote_MPC_PasteCurrentPlaytime()
-F4::        MPC_Bg_Back5sec(true)
-NumpadDiv:: MPC_Bg_Back5sec(true)
-F5::         MPC_Bg_Forward5sec(true)
-NumpadMult:: MPC_Bg_Forward5sec(true)
-
-Evernote_MPC_PasteCurrentPlaytime(bypass_hotkey="")
-{
-	if(MPC_IsRunning()) 
-		MPC_PasteCurrentPlaytime()
-	else if(bypass_hotkey) {
-;		dev_TooltipAutoClear("bypass_hotkey=" . bypass_hotkey) ; debug
-		Send % bypass_hotkey
-	}
-}
-
-
-NumpadSub:: Evernote_MoveYClick(-24) ; in hope to click onto prev table Row
-NumpadAdd:: Evernote_MoveYClick(24)  ; in hope to click onto next table Row
-Evernote_MoveYClick(movey)
-{
-	WinGet, Awinid, ID, A ; cache active window unique id
-	MouseGetPos, mx, my, mwin
-
-	if (Awinid != mwin)
-	{	; move the mouse into Evernote window, so that we won't `Click` to activate other window
-		MouseMoveInActiveWindow(A_CaretX, A_CaretY)
-	}
-	
-	MouseMove, 0, %movey%, , R
-	Click
-}
-
-^\:: 
-	; close the "Find Text" bottom bar.
-	; I have to use this bcz ESC has been disabled by me for ENSingleNoteView.
-	ClickInActiveWindow(18, -48, false) 
-return
-
-#If
-
-
-
-; CapsLock & ,:: Evernote_BringupMyShortcut() ; [2021-12-03] This is outdated, after I have EverTable.
-Evernote_BringupMyShortcut()
-{
-	; [2017-11-18] Evernote 6.5.4:
-	; I name my frequently-using clips "#ENS Color Divs", "#ENS Tables" etc.
-	; Poping these notes in their standlone windows; 
-	; then, I can use ``CapsLock & ,`` to quickly access them.
-	
-;	DetectHiddenWindows, On
-	MyActivateWindowGroupFlex("ENSingleNoteView", QSA_NO_WNDCLS_REGEX, "^#ENS", "Evernote ENS# quick note")
-;	DetectHiddenWindows, Off
-}
-
 ;
 ; [2021-12-24] Load EvernotePopupLinks.csv.txt and popup a live menu for user to select a shortcut link,
 ; then send the corresponding html snippet to clipboard so to paste into Evernote, the final result is: 
