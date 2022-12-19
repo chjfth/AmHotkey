@@ -161,6 +161,7 @@ global g_evp_hClipmon ; Clipboard monitor handle
 global g_evp_ClipmonSeqNow := 0 ; Clipboard change sequence-number
 global g_evp_ClipmonSeqAct := 0 ; The sequence-number on which we have done image-conversion.
 
+global g_evp_isDbgCleanupTimer := false
 
 ; =======
 
@@ -1575,12 +1576,15 @@ Evp_CleanupTempDir_withInterval()
 {
 	static s_msecPrevCleanup := 0
 	
-	; To reduce disk access, we do a cleanup only after 5 minutes has elapsed since last cleanup.
+	; To reduce disk access, we do a cleanup only after one minute has elapsed since last cleanup.
 	
 	msec_now := A_TickCount
 	msec_since_prev_cleanup := msec_now - s_msecPrevCleanup
 	
-	if(msec_since_prev_cleanup >= 5*60*1000)
+	Evp_DbgCleanup(Format("EVP-cleantemp(every {} seconds): prev={}, now={}, diff={}", g_evpTempPreserveMinutes*60, msec_now//1000, s_msecPrevCleanup//1000, msec_since_prev_cleanup//1000)) ; debug
+	
+	one := 1
+	if(msec_since_prev_cleanup >= one*60*1000)
 	{
 		Evp_CleanupTempDir()
 	
@@ -1603,16 +1607,26 @@ Evp_CleanupTempDir()
 			
 			diff_seconds := A_Now
 			EnvSub diff_seconds, file_datetime, Seconds
-;			dev_MsgBoxInfo("Diff seconds: " diff_seconds)
 			
 			N := g_evpTempPreserveMinutes
+
 			if(diff_seconds >= N*60)
 			{
-				FileDelete, % g_evpTempDir "\" filename
+				pathdel := g_evpTempDir "\" filename
+			
+				Evp_DbgCleanup("Evp_CleanupTempDir(), FileDelete: " pathdel) ; debug
+				
+				FileDelete, % pathdel
 			}
 		}
 
 	}
+}
+
+Evp_DbgCleanup(msg)
+{
+	if(g_evp_isDbgCleanupTimer)
+		Dbgwin_Output(msg)
 }
 
 ; ========================= EverTable(Evtbl) code starts =========================

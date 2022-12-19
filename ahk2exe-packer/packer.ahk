@@ -38,7 +38,7 @@ Do_Packer()
 	if(FileExist(exeout_dir))
 	{
 		if(not dev_FileRemoveDir(exeout_dir, true))
-			dbgfail("Cannot delete old output dir: " exeout_dir)
+			dbgfail(Format("Cannot delete old output dir: {}\{}", dirProject, exeout_dir))
 	}
 
 	dev_CreateDirIfNotExist(exeout_dir)
