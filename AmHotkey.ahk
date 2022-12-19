@@ -5,6 +5,9 @@
 
 #InstallKeybdHook
 
+; Switch #include base-dir to A_ScriptDir:
+#Include %A_ScriptDir%
+
 #Include *i custom_env.ahk ; optional 
 
 global NOERROR_0 := 0
