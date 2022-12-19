@@ -4,8 +4,6 @@
 ;====== AHK Gui & GuiControl =======
 ;===================================
 
-
-
 Gui_AssociateHwndVarname(GuiName, HwndVarname)
 {
 	dev_assert(GuiName)
@@ -13,33 +11,6 @@ Gui_AssociateHwndVarname(GuiName, HwndVarname)
 	Gui, % Format("{}:+Hwnd{}", GuiName, HwndVarname)
 }
 
-Gui_IsValidVar(varname)
-{
-	; [2022-12-16] This is a fake function that always succeeds.
-	; Currently, no solution for this semantic yet.
-
-	; Wrong comment >>>
-			; If varname is not defined, return false.
-			; User note: When passed in, your varname should be surround by double-quotes.
-			; Example:
-			;	Gui_IsValidVar("g_count")    ; may get true
-			;	Gui_IsValidVar("NoSuchVar")  ; will get false
-			;
-			; In order for a `global` var to pass this test, please initialize 
-			; your global var with a explicit value, like this:
-			; 	global g_count := 0
-			; 	global g_errmsg := ""
-	; Wrong comment <<<
-
-	if(%varname%)
-		return true
-	else if(%varname%==0)
-		return true
-	else if(%varname%=="") ; [2022-12-16] This will be true even if varname is not defined.
-		return true
-	else
-		return false
-}
 
 Gui_Show(GuiName, options="", title:="AHKGUI")
 {
@@ -302,9 +273,10 @@ GuiControl_ComboboxGetText(GuiName, CtrlVarname)
 }
 
 
-
 dev_GuiAutoResize(GuiName, rsdict, gui_nowwidth, gui_nowheight, force_redraw:=false, qmargin:="")
 {
+	static g_devGuiAutoResizeDict := {}
+
 	; gui_nowwidth, gui_nowheight tells the GUI's client area size
 	
 	if(qmargin) ; q implies quad
@@ -329,6 +301,7 @@ dev_GuiAutoResize(GuiName, rsdict, gui_nowwidth, gui_nowheight, force_redraw:=fa
 		nowheight := gui_nowheight
 	}
 	
+	
 ;	MsgBox, % Format("nowwidth={} nowheight={} x0m={} y0m={}", nowwidth, nowheight, x0m, y0m)
 	
 	if( ! g_devGuiAutoResizeDict[GuiName] )
@@ -352,18 +325,18 @@ dev_GuiAutoResize(GuiName, rsdict, gui_nowwidth, gui_nowheight, force_redraw:=fa
 			ctrl_rsinfo.pct_bottom := token[4]/100
 			
 			GuiControlGet, rect, %GuiName%:Pos, %ctrlvar%
-;			MsgBox, % Format("dev_GuiAutoResize({}.{}) Init:  rectX={}, rectY={}, rectW={}, rectH={}", GuiName, ctrlvar, rectX, rectY, rectW, rectH)
+;			Dbgwin_Output(Format("dev_GuiAutoResize({}.{}) Init: X={}, Y={}, W={}, H={}", GuiName, ctrlvar, rectX, rectY, rectW, rectH)) ; debug
 			
-			ctrl_rsinfo.ofs_left := (rectX-x0m) - nowwidth * ctrl_rsinfo.pct_left
-			ctrl_rsinfo.ofs_top  := (rectY-y0m) - nowheight * ctrl_rsinfo.pct_top
-			ctrl_rsinfo.ofs_right := (rectX-x0m + rectW) - nowwidth * ctrl_rsinfo.pct_right
-			ctrl_rsinfo.ofs_bottom := (rectY-y0m + rectH) - nowheight * ctrl_rsinfo.pct_bottom
+			ctrl_rsinfo.ofs_left := round( (rectX-x0m) - nowwidth * ctrl_rsinfo.pct_left )
+			ctrl_rsinfo.ofs_top  := round( (rectY-y0m) - nowheight * ctrl_rsinfo.pct_top )
+			ctrl_rsinfo.ofs_right := round( (rectX-x0m + rectW) - nowwidth * ctrl_rsinfo.pct_right )
+			ctrl_rsinfo.ofs_bottom := round( (rectY-y0m + rectH) - nowheight * ctrl_rsinfo.pct_bottom )
 
-;			MsgBox, % Format("dev_GuiAutoResize({}.{}) Init:  ofs:{},{},{},{}", GuiName, ctrlvar, ctrl_rsinfo.ofs_left, ctrl_rsinfo.ofs_top, ctrl_rsinfo.ofs_right, ctrl_rsinfo.ofs_bottom)
+;			Dbgwin_Output(Format("dev_GuiAutoResize({}.{}) Init: ofs: L={}, T={}, R={}, B={}", GuiName, ctrlvar, ctrl_rsinfo.ofs_left, ctrl_rsinfo.ofs_top, ctrl_rsinfo.ofs_right, ctrl_rsinfo.ofs_bottom)) ; debug
 		}
 
 		; Mark this GuiName "created".
-		g_devGuiAutoResizeDict[GuiName] := gui_rsinfo ; to modify
+		g_devGuiAutoResizeDict[GuiName] := gui_rsinfo
 
 	}
 	else
@@ -375,12 +348,12 @@ dev_GuiAutoResize(GuiName, rsdict, gui_nowwidth, gui_nowheight, force_redraw:=fa
 		for ctrlvar, ctrl_rsinfo in gui_rsinfo
 		{
 			; Calculate new positions for this ctrl
-			newX := nowwidth * ctrl_rsinfo.pct_left + ctrl_rsinfo.ofs_left +x0m
-			newY := nowheight * ctrl_rsinfo.pct_top + ctrl_rsinfo.ofs_top +y0m
-			newW := nowwidth * ctrl_rsinfo.pct_right + ctrl_rsinfo.ofs_right - newX +x0m
-			newH := nowheight * ctrl_rsinfo.pct_bottom + ctrl_rsinfo.ofs_bottom - newY +y0m
+			newX := round( nowwidth * ctrl_rsinfo.pct_left + ctrl_rsinfo.ofs_left +x0m )
+			newY := round( nowheight * ctrl_rsinfo.pct_top + ctrl_rsinfo.ofs_top +y0m )
+			newW := round( nowwidth * ctrl_rsinfo.pct_right + ctrl_rsinfo.ofs_right - newX +x0m )
+			newH := round( nowheight * ctrl_rsinfo.pct_bottom + ctrl_rsinfo.ofs_bottom - newY +y0m )
 
-;			MsgBox, % Format("dev_GuiAutoResize Newpos({}:{}) is {},{} | {},{}", GuiName, ctrlvar, newX, newY, newW, newH)
+;			Dbgwin_Output(Format("dev_GuiAutoResize Newpos({}.{}) is {},{} | {},{}", GuiName, ctrlvar, newX, newY, newW, newH)) ; debug
 
 			; Move this ctrl
 			newpos := Format("x{} y{} w{} h{}", newX, newY, newW, newH)

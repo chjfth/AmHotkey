@@ -83,8 +83,6 @@ global msgboxoption_SystemModal := 0x1000
 global msgboxoption_TaskModal := 0x2000
 global msgboxoption_Topmost := 0x40000
 
-global g_devGuiAutoResizeDict := {}
-
 global g_amstrMute := "AM: Mute clicking sound"
 
 global g_DefineHotkeyLogfile := "DefineHotkeys.log"

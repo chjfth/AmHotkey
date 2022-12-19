@@ -190,7 +190,8 @@ DbgwinGuiEscape()
 
 DbgwinGuiSize()
 {
-;	dev_TooltipAutoClear("DbgwinGuiSize()...")
+	Dbgwin_Output(Format("In DbgwinGuiSize(), A_GuiWidth={}, A_GuiHeight={}", A_GuiWidth, A_GuiHeight))
+	
 	rsdict := {}
 	rsdict.gu_dbgwinMLE := "0,0,100,100" ; Left/Top/Right/Bottom
 	rsdict.gu_dbgwinBtnClear := "100,0,100,0"
