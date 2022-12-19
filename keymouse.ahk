@@ -83,7 +83,7 @@ global km_EasymouseSouth_radiosel
 global km_EasymouseSouth_fraction := "0.7"
 
 ; Systray menu-items
-global km_menutext_MouseWiggle := "Mouse wiggle enabled"
+global km_menutext_MouseWiggle := "Enable Mouse-wiggle"
 
 km_AddSystrayMenuItem()
 
@@ -739,15 +739,8 @@ km_menu_ToggleMouseWiggle()
 	
 	if(s_on_or_off==false)
 	{
-		s_on_or_off := true
-	
-		Menu, tray, check, %km_menutext_MouseWiggle%
-		
-		km_Start_MouseWiggle()
-	
 		if(!s_prompted)
 		{
-			s_prompted := true
 			info = 
 			(
 The mouse will wiggle back and forth every one second from now on.
@@ -756,10 +749,22 @@ If you want to simulate constant mouse moving activity from a human user, you ca
 
 You can Start/Stop this behavior from AmHotkey tray menu item.
 
-Note on high-DPI monitor: If you tell Windows to set monitor-DPI-scaling >100`%, this AHK script may position your mouse pointer erroneously. To work around, bring up Property dialog of this exe/lnk -> [Compatibility] -> [High-DPI setting] -> Let this application`(Autohotkey itself`) scale the UI by itself, instead of by System.
+Note on high-DPI monitor: If you tell Windows to set monitor-DPI-scaling >100`%, this AHK script may position your mouse pointer erroneously. To work around, bring up Property dialog of this exe/lnk -> [Compatibility] -> [High-DPI setting] -> Let this application`(Autohotkey program itself`) scale the UI by itself, instead of by System.
+
+Enable this feature now?
 			)
-			dev_MsgBoxInfo(info)
+
+			is_yes := dev_MsgBoxYesNo_title("Mouse-wiggle feature", info)
+			if(!is_yes)
+				return ; do nothing
 		}
+
+		s_prompted := true
+		s_on_or_off := true
+	
+		Menu, tray, check, %km_menutext_MouseWiggle%
+		
+		km_Start_MouseWiggle()
 	}
 	else
 	{

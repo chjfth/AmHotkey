@@ -100,18 +100,23 @@ dev_MsgBoxError(text, wintitle:="") ; with a red (x) icon
 	MsgBox, 16, % wintitle, % text
 }
 
-dev_MsgBoxYesNo(text, default_yes:=true, icon:=64)
+dev_MsgBoxYesNo_title(title, text, default_yes:=true, icon:=64)
 {
 	; hope to display the message box at the center of parent_winid window...(pending)
 
 	opt := icon + Amhk.mbopt_YesNo + (default_yes ? 0 : Amhk.mbopt_2nddefault)
-	MsgBox, % opt, , %text%
+	MsgBox, % opt, % title, %text%
 		; [2016-02-09] I can't use ``%opt%`` for ``% opt`` here(dialogbox would display 260), don't know why.
 	
 	IfMsgBox, Yes
 		return true
 	Else
 		return false
+}
+
+dev_MsgBoxYesNo(text, default_yes:=true, icon:=64)
+{
+	dev_MsgBoxYesNo_title("", text, default_yes, icon)
 }
 
 dev_MsgBoxYesNo_Warning(text, default_yes:=true)
