@@ -29,17 +29,6 @@ Bcam4_Init()
 return ; End of auto-execute section.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-#Ins:: CF_HTML_PasteCodeBlock("//")
-#;:: CF_HTML_PasteCodeBlock(";")
-
-CF_HTML_PasteCodeBlock(comment_start)
-{
-	codetext := Clipboard
-	html := genhtml_simple_code2pre(codetext, comment_start)
-	dev_ClipboardSetHTML(html, true)
-}
-
-
 
 ;==============================================================================
 ; Some hotstring auto-replace

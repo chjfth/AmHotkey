@@ -3707,7 +3707,21 @@ Evernote_PastePlainText_exwait()
 
 ; ^!b:: Evernote_PasteSingleLineCode_SelectBg()
 
-Ins:: Evernote_PopupPasteMenu()
+Ins up:: Evernote_PopupPasteMenu()
+
+#Ins:: CF_HTML_PasteCodeBlock("//", ["/*","*/"])
+
+Ins & 1:: CF_HTML_PasteCodeBlock("//", ["/*","*/"])
+Ins & 2:: CF_HTML_PasteCodeBlock(";", ["/*","*/"])
+Ins & 3:: CF_HTML_PasteCodeBlock("#" , ["""""""",""""""""])
+
+CF_HTML_PasteCodeBlock(line_comment, block_comment:="")
+{
+	codetext := Clipboard
+	html := genhtml_simple_code2pre(codetext, line_comment, block_comment)
+	dev_ClipboardSetHTML(html, true)
+}
+
 
 #If
 
