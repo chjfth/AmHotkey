@@ -111,16 +111,9 @@ Fix_prettyprint_html_pre_for_Evernote()
 {
 	htmlcc := WinClip.GetHtml() ; cc: clipboard content
 	
-	if(!htmlcc) {
-		; maybe no "HTML Format" in clipboard
-		dev_TooltipAutoClear("Fix_prettyprint_html_pre_for_Evernote(): WinClip.GetHtml() got empty string.")
-		return false
-	}
-	
 	; When a piece of code is prettyprinted into foo.html, and we open foo.html in Chrome/Firefox,
 	; Ctrl+A, then Ctrl+C to copy the HTML content into Clipboard, we will get htmlcc like this:
 /* 
-
 Version:0.9
 StartHTML:0000000181
 EndHTML:0000001598
@@ -137,6 +130,13 @@ SourceURL:file:///C:/Users/win7evn/AppData/Local/Temp/prettify_output.html
 </html> 
 
 */
+
+	if(!htmlcc) {
+		; maybe no "HTML Format" in clipboard
+		dev_TooltipAutoClear("Fix_prettyprint_html_pre_for_Evernote(): WinClip.GetHtml() got empty string.")
+		return false
+	}
+	
 	; [2015~2022] The problem(A) is: If we just paste current clipboard into Evernote,
 	; some line breaks are lost... bcz there is "</span>" at start of some html line,
 	; and Evernote do NOT like this, so the line break there is lost.
@@ -148,7 +148,7 @@ SourceURL:file:///C:/Users/win7evn/AppData/Local/Temp/prettify_output.html
 	; the .py function linenums_extra() cannot be achieved by AHK, so prettyprint's
 	; line-number mode html cannot be copied to Evernote yet.
 	
-	; We need to strip the "format header" and only care for content from "<html>".
+	; We need to strip the "Version:0.9" format header and only care for content from "<html>".
 
 	foundpos := InStr(htmlcc, "<html>")
 	if(foundpos==0) {
@@ -170,6 +170,11 @@ SourceURL:file:///C:/Users/win7evn/AppData/Local/Temp/prettify_output.html
 		htmlraw := StrReplace(htmlraw, "`n</span>", "</span><br/>`n", nReplaced)
 		
 	} Until (nReplaced==0)
+	
+	; Surround whole <pre> with a pair of '-' to make further editing room in Evernote clip.
+	
+	htmlraw := StrReplace(htmlraw, "<pre", "-<pre")
+	htmlraw := StrReplace(htmlraw, "/pre>", "/pre>-")
 	
 	dev_ClipboardSetHTML(htmlraw)
 }
