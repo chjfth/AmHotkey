@@ -1,10 +1,24 @@
 #Include %A_LineFile%\..\..\AmUtils-common.ahk
 
+/* API:
+
+genhtml_simple_code2pre()
+
+*/
+
 genhtml_simple_code2pre(codetext, line_comment:="//", block_comment:="", tab_spaces:=4)
 {
+	; block_comment sample: ["/*", "*/"]
+
 	if(codetext==""){
 		dev_MsgBoxWarning("No text in Clipboard.")
-		return
+		return ""
+	}
+
+	if(block_comment and block_comment.Length()!=2)
+	{
+		dev_MsgBoxError("In genhtml_simple_code2pre(), Error: block_comment[] array length is not 2 !")
+		return ""
 	}
 
 	html := dev_EscapeHtmlChars(codetext)
@@ -15,11 +29,49 @@ genhtml_simple_code2pre(codetext, line_comment:="//", block_comment:="", tab_spa
 
 	; Split into lines
 	html := StrReplace(html, "`r`n", "`n")
-	lines := StrSplit(html, "`n")
 
+	if(!block_comment)
+	{
+		html := genhtml_pre_colorize_eachline(html, line_comment)
+	}
+	else if(InStr(block_comment[1], "'")>0 || InStr(block_comment[1], """")>0 
+		|| InStr(block_comment[2], "'")>0 || InStr(block_comment[2], """")>0 )
+	{
+		; The Python case: whose block comment """...""" contains single-quotes or double-quotes.
+		; I need to process block-comment first, then process each line, a bit complex. 
+		
+		html := genhtml_pre_colorize_block(html, block_comment, true)
+
+		html := genhtml_pre_colorize_eachline(html, line_comment)
+	}
+	else 
+	{
+		; The C++ case, simpler.
+
+		html := genhtml_pre_colorize_eachline(html, line_comment)
+
+		; Cope with block_comment(multi-line comment), like C++ /* ... */
+		html := genhtml_pre_colorize_block(html, block_comment, false)
+	}
+	
+	;
+	; Wrap whole content in <pre> tag
+	;
+	prestyle := "white-space:pre-wrap; border:1px solid #ddd; background-color:#f6f6f6; font-family:consolas,monospace; padding:0.4em; margin:0.2em 0;"
+	html := Format("-<pre style='{}'>{}</pre>-"
+		, prestyle, html)
+
+	dev_WriteWholeFile("stage3.html", html)
+
+	return html
+}
+
+genhtml_pre_colorize_eachline(html, line_comment)
+{
+	lines := StrSplit(html, "`n")
+	
 	; Process each line
 	outlines := []
-
 	for i,linetext in lines
 	{
 		outline := genhtml_pre_colorize_1line(linetext, line_comment)
@@ -28,16 +80,6 @@ genhtml_simple_code2pre(codetext, line_comment:="//", block_comment:="", tab_spa
 
 	; Join each result line
 	html := dev_JoinStrings(outlines, "`r`n")
-
-	; Cope with block_comment(multi-line comment), like C++ /* ... */
-	html := genhtml_pre_colorize_block(html, block_comment)
-	;
-	; Wrap whole content in <pre> tag
-	;
-	prestyle := "white-space:pre-wrap; border:1px solid #ddd; background-color:#f6f6f6; font-family:consolas,monospace; padding:0.4em; margin:0.2em 0;"
-	html := Format("-<pre style='{}'>{}</pre>-"
-		, prestyle, html)
-
 
 	return html
 }
@@ -86,6 +128,12 @@ genhtml_pre_colorize_1line(linetext, line_comment)
 				. piecetext
 				. "</span>"
 		}
+		else if(type=="HTAG") {
+			; Do not touch the HTAG piece, bcz the html-tag can have tag attributes, 
+			; which many contain quotes, and these quotes must be preserved as is.
+			; e.g. <span style='color:#393'>&quot;&quot;&quot; ... &quot;&quot;&quot;</span>
+			otext .= piecetext
+		}
 		else {
 			dev_assert(0) ; Buggy! None of "NORM", "QSTR", "CMMT"
 		}
@@ -104,14 +152,16 @@ genhtml_Get1Piece(istr, line_comment, byref piecelen)
 	sqpos := InStr(istr, "'")
 	dqpos := InStr(istr, """")
 	cmpos := InStr(istr, line_comment)
+	tagopen_pos := InStr(istr, "<")
 
-	mino := dev_mino(sqpos?sqpos:99999, dqpos?dqpos:99999, cmpos?cmpos:99999)
+	mino := dev_mino(sqpos?sqpos:99999, dqpos?dqpos:99999, cmpos?cmpos:99999, tagopen_pos?tagopen_pos:99999)
 
 	if(mino.val==1)
 	{
 		; istr starts with a non-normal piece
 
 		if(mino.idx==1 || mino.idx==2) {
+			; find closing quote
 			piecelen := InStr(istr, mino.idx==1?"'":"""", true, 2)
 			if(piecelen==0) ; no closing quote, fix it
 				 piecelen := ilen
@@ -120,6 +170,12 @@ genhtml_Get1Piece(istr, line_comment, byref piecelen)
 		else if(mino.idx==3) {
 			piecelen := ilen
 			return "CMMT"
+		}
+		else if(mino.idx==4) {
+			; find html-tag's closing bracket
+			piecelen := InStr(istr, ">", true, 2)
+			dev_assert(piecelen>0) ; Buggy! Html-tag closing braket lost.
+			return "HTAG"
 		}
 	}
 	else
@@ -131,7 +187,7 @@ genhtml_Get1Piece(istr, line_comment, byref piecelen)
 	
 }
 
-genhtml_pre_colorize_block(mltext, block_comment)
+genhtml_pre_colorize_block(mltext, block_comment, is_smash_quotes)
 {
 	otext := ""
 	Loop 
@@ -145,12 +201,20 @@ genhtml_pre_colorize_block(mltext, block_comment)
 		}
 		else if(type=="CMMT") {
 		
-			; For piecetext, we need to find all child <span> element inside, and remove them,
-			; bcz, we don't want the childs to <span>-set their own text color.
+			if(is_smash_quotes)
+			{
+				piecetext := StrReplace(piecetext, "'", "&apos;")
+				piecetext := StrReplace(piecetext, """", "&quot;")
+			}
+			else
+			{
+				; For piecetext, we need to find all child <span> element inside, and remove them,
+				; bcz, we don't want the childs to <span>-set their own text color.
+				
+				piecetext := RegExReplace(piecetext, "<span.*?>", "")
+				piecetext := RegExReplace(piecetext, "</span>", "")
+			}
 			
-			piecetext := RegExReplace(piecetext, "<span.*?>", "")
-			piecetext := RegExReplace(piecetext, "</span>", "")
-		
 			otext .= "<span style='color:#393;'>"
 				. piecetext
 				. "</span>"
@@ -183,7 +247,7 @@ genhtml_GetML1Piece(istr, block_comment, byref piecelen)
 	}
 	else if(bcstart_pos==1) 
 	{
-		bcend_pos := InStr(istr, bc_end, strlen(bc_start))
+		bcend_pos := InStr(istr, bc_end, true, strlen(bc_start))
 		piecelen := bcend_pos + strlen(bc_end) - 1
 		return "CMMT"
 	}
