@@ -273,7 +273,8 @@ evernote_SpecialPaste_InitMenu()
 return ; End of auto-execute section.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-#Include libs\ClipboardMonitor.ahk
+#Include %A_LineFile%\..\libs\GenHtmlSnippet.ahk
+#Include %A_LineFile%\..\libs\ClipboardMonitor.ahk
 
 ; App+C to convert in-clipboard image to your preferred format(png/jpg) and put CF_HTML content into clipboard,
 ; so Ctrl+V pasting it into Evernote saves quite much space (Evernote defaultly gives you very big PNG-32).

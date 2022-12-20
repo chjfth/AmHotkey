@@ -29,6 +29,17 @@ Bcam4_Init()
 return ; End of auto-execute section.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+#Ins:: CF_HTML_PasteCodeBlock("//")
+#;:: CF_HTML_PasteCodeBlock(";")
+
+CF_HTML_PasteCodeBlock(comment_start)
+{
+	codetext := Clipboard
+	html := genhtml_simple_code2pre(codetext, comment_start)
+	dev_ClipboardSetHTML(html, true)
+}
+
+
 
 ;==============================================================================
 ; Some hotstring auto-replace
@@ -206,6 +217,7 @@ chjmisc_InitSystryMenus()
 	Menu, tray, add  ; Creates a separator line.
 	SystrayMenu_Add_MuteClicking()
 }
+
 
 chj_StartMultiPageScreenGrabber(screenshot_hotkey, pgdn_hotkey, image_dir, pages, pgdn_wait_millisec:=500)
 {
