@@ -6,7 +6,7 @@ genhtml_simple_code2pre()
 
 */
 
-genhtml_simple_code2pre(codetext, line_comment:="//", block_comment:="", tab_spaces:=4)
+genhtml_simple_code2pre(codetext, line_comment:="//", block_comment:="", tab_spaces:=4, workaround_evernote_bug:=true)
 {
 	; block_comment sample: ["/*", "*/"]
 
@@ -27,7 +27,7 @@ genhtml_simple_code2pre(codetext, line_comment:="//", block_comment:="", tab_spa
 	spaces := "        "
 	html := StrReplace(html, "`t", SubStr(spaces, 1, tab_spaces))
 
-	; Split into lines
+	; Want pure \n as separator
 	html := StrReplace(html, "`r`n", "`n")
 
 	if(!block_comment)
@@ -57,11 +57,30 @@ genhtml_simple_code2pre(codetext, line_comment:="//", block_comment:="", tab_spa
 	;
 	; Wrap whole content in <pre> tag
 	;
-	prestyle := "white-space:pre-wrap; border:1px solid #ddd; background-color:#f6f6f6; font-family:consolas,monospace; padding:0.4em; margin:0.2em 0;"
+	prestyle := "white-space:pre-wrap; border:1px solid #ddd; background-color:#f6f6f6; font-family:consolas,monospace; padding:0.3em; margin:0.3em 0;"
 	html := Format("-<pre style='{}'>{}</pre>-"
 		, prestyle, html)
 
-	dev_WriteWholeFile("stage3.html", html)
+	; Fix for Evernote 6.5.4 bug:
+	; If line N ends with </span> and line N+1 starts with <span ...>, the line-break between 
+	; is LOST on rendering. Workaround: add extra <br/> at end of line N.
+	;
+	if(workaround_evernote_bug)
+	{
+		lines := StrSplit(html, "`n")
+		Loop, % lines.Length()-1
+		{
+			if(StrIsEndsWith(lines[A_Index], "</span>") 
+				&& StrIsStartsWith(lines[A_Index+1], "<span"))
+			{
+				lines[A_Index] .= "<br/>"
+			}
+		}
+		
+		html := dev_JoinStrings(lines, "`n")
+	}
+
+;	dev_WriteWholeFile("stage3.html", html) ; debug
 
 	return html
 }
@@ -79,7 +98,7 @@ genhtml_pre_colorize_eachline(html, line_comment)
 	}
 
 	; Join each result line
-	html := dev_JoinStrings(outlines, "`r`n")
+	html := dev_JoinStrings(outlines, "`n")
 
 	return html
 }
