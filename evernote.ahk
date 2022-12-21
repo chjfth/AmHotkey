@@ -3703,7 +3703,23 @@ Evernote_PastePlainText_exwait()
 	}
 }
 
-^Ins up:: Evernote_PasteSingleLineCode()
+^Ins up:: Evernote_PasteSingleLineCode_DynBg()
+
+Evernote_PasteSingleLineCode_DynBg()
+{
+	codetext := Clipboard
+	ilen := strlen(codetext)
+	if(ilen==1)
+		bgcolor := "#c0c0c0"
+	else if(ilen==2)
+		bgcolor := "#d0d0d0"
+	else 
+		bgcolor := "#e0e0e0"
+	
+	Evernote_PasteSingleLineCode(bgcolor)
+}
+
+
 
 ; ^!b:: Evernote_PasteSingleLineCode_SelectBg()
 
