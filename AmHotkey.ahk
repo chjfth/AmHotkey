@@ -104,8 +104,8 @@ return
 ;################################### Global-exec section ENDS ################################### 
 ;################################################################################################ 
 
-#include AmUtils-common.ahk
-#include AmUtils-gui.ahk
+#include %A_LineFile%\..\libs\AmUtils-common.ahk
+#include %A_LineFile%\..\libs\AmUtils-gui.ahk
 
 AmDoInit()
 {
