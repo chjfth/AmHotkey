@@ -448,12 +448,12 @@ Click OK to continue.
 		Reload
 	}
 	;
-	MsgBox, 0x40, Autohotkey script loading info, 
+	start_msgbox_info =
 (
 %A_ScriptDir%\%A_ScriptName% has loaded the following modules:`n
 %msglistmodules%
 )
-
+	dev_MsgBoxInfo(start_msgbox_info, "AmHotkey script loading info")
 }
 
 
