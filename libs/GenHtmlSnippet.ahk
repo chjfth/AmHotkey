@@ -2,11 +2,25 @@
 
 /* API:
 
-genhtml_code2pre_2022()
+genhtml_code2pre_pure() ; no color highlight, just wrap in <pre>
+
+genhtml_code2pre_2022() ; wrap in <pre> and colorize.
 
 */
 
+genhtml_code2pre_pure(codetext, tab_spaces:=4)
+{
+	return in_genhtml_code2pre_2022(codetext, false, "", "", tab_spaces, false)
+}
+
 genhtml_code2pre_2022(codetext, line_comment:="//", block_comment:=""
+	, tab_spaces:=4, workaround_evernote_bug:=true)
+{
+	return in_genhtml_code2pre_2022(codetext, true, line_comment, block_comment
+		, tab_spaces, workaround_evernote_bug)
+}
+
+in_genhtml_code2pre_2022(codetext, is_color:=false, line_comment:="//", block_comment:=""
 	, tab_spaces:=4, workaround_evernote_bug:=true)
 {
 	; block_comment sample: ["/*", "*/"]
@@ -28,31 +42,17 @@ genhtml_code2pre_2022(codetext, line_comment:="//", block_comment:=""
 	spaces := "        "
 	html := StrReplace(html, "`t", SubStr(spaces, 1, tab_spaces))
 
-	; Want pure \n as separator
-	html := StrReplace(html, "`r`n", "`n")
+	if(is_color)
+	{
+		; Want pure \n as separator
+		html := StrReplace(html, "`r`n", "`n")
 
-	if(!block_comment)
-	{
-		html := genhtml_pre_colorize_eachline(html, line_comment)
-	}
-	else if(InStr(block_comment[1], "'")>0 || InStr(block_comment[1], """")>0 
-		|| InStr(block_comment[2], "'")>0 || InStr(block_comment[2], """")>0 )
-	{
-		; The Python case: whose block comment """...""" contains single-quotes or double-quotes.
-		; I need to process block-comment first, then process each line, a bit complex. 
+		if(block_comment)
+		{
+			html := genhtml_pre_colorize_block(html, block_comment, true)
+		}
 		
-		html := genhtml_pre_colorize_block(html, block_comment, true)
-
 		html := genhtml_pre_colorize_eachline(html, line_comment)
-	}
-	else 
-	{
-		; The C++ case, simpler.
-
-		html := genhtml_pre_colorize_eachline(html, line_comment)
-
-		; Cope with block_comment(multi-line comment), like C++ /* ... */
-		html := genhtml_pre_colorize_block(html, block_comment, false)
 	}
 	
 	;
@@ -167,14 +167,18 @@ genhtml_pre_colorize_1line(linetext, line_comment)
 
 genhtml_Get1Piece(istr, line_comment, byref piecelen)
 {
+	; Performance can be improved by eliminating redundant search. Pending.
+
 	ilen := strlen(istr)
 
 	sqpos := InStr(istr, "'")
 	dqpos := InStr(istr, """")
 	cmpos := InStr(istr, line_comment)
-	tagopen_pos := InStr(istr, "<")
+	tagopen_pos := InStr(istr, "<") ; html tag open bracket
+	hntopen_pos := InStr(istr, "&") ; html entity charref like &amp;
 
-	mino := dev_mino(sqpos?sqpos:99999, dqpos?dqpos:99999, cmpos?cmpos:99999, tagopen_pos?tagopen_pos:99999)
+	mino := dev_mino(sqpos?sqpos:99999, dqpos?dqpos:99999, cmpos?cmpos:99999
+		, tagopen_pos?tagopen_pos:99999, hntopen_pos?hntopen_pos:99999)
 
 	if(mino.val==1)
 	{
@@ -195,6 +199,12 @@ genhtml_Get1Piece(istr, line_comment, byref piecelen)
 			; find html-tag's closing bracket
 			piecelen := InStr(istr, ">", true, 2)
 			dev_assert(piecelen>0) ; Buggy! Html-tag closing braket lost.
+			return "HTAG"
+		}
+		else if(mino.idx==5) {
+			; find html-entity's closing bracket
+			piecelen := InStr(istr, ";", true, 2)
+			dev_assert(piecelen>0) ; Buggy! Html-entity charref closing semicolon lost.
 			return "HTAG"
 		}
 	}

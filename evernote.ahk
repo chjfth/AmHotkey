@@ -3709,11 +3709,18 @@ Evernote_PastePlainText_exwait()
 
 Ins up:: Evernote_PopupPasteMenu()
 
-#Ins up:: CF_HTML_PasteCodeBlock("//", ["/*","*/"])
+#Ins up:: CF_HTML_PasteCodeBlockPure()
 
 Ins & 1:: CF_HTML_PasteCodeBlock("//", ["/*","*/"])
 Ins & 2:: CF_HTML_PasteCodeBlock(";", ["/*","*/"])
 Ins & 3:: CF_HTML_PasteCodeBlock("#" , ["""""""",""""""""])
+
+CF_HTML_PasteCodeBlockPure()
+{
+	codetext := Clipboard
+	html := genhtml_code2pre_pure(codetext)
+	dev_ClipboardSetHTML(html, true)
+}
 
 CF_HTML_PasteCodeBlock(line_comment, block_comment:="")
 {
