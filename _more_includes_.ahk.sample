@@ -1,7 +1,6 @@
 
 ; Note: 
 ;  A Line starting with semicolon is a comment line.
-;  *i means "ignore if that .ahk does not exist"
 
 #Include libs\debugwin.ahk
 #Include libs\WinClipAPI.ahk
@@ -9,25 +8,25 @@
 ; #Include libs\CtlColorStatic.ahk ; need by evernote.ahk
 ; #Include libs\Gdip_All.ahk       ; need by evernote.ahk
 
-#Include *i quick-switch-app.ahk
+#Include quick-switch-app.ahk
 
-#Include *i keymouse.ahk
+#Include keymouse.ahk
 
-#Include *i cmdconsole.ahk
+#Include cmdconsole.ahk
 
-#Include *i chmviewer.ahk
+#Include chmviewer.ahk
 
-#Include *i emeditor.ahk
+#Include emeditor.ahk
 
-; #Include *i winshell.ahk
+; #Include winshell.ahk
 
-; #Include *i windev.ahk
+; #Include windev.ahk
 
-;#Include *i mediaplayer.ahk
-;#Include *i pdfreader.ahk
-;#Include *i evernote.ahk
+; #Include mediaplayer.ahk
+; #Include pdfreader.ahk
+; #Include evernote.ahk
 
-#Include *i devmgmt.ahk
+#Include devmgmt.ahk
 
 ; #Include hypersnap.ahk
 ; #Include hotstrings.ahk
@@ -36,16 +35,14 @@
 ; #Include zjb-helper.ahk
 ; #include <Vis2> ; Equivalent to #include .\lib\Vis2.ahk
 
-; #Include *i chjmisc.ahk
+; #Include chjmisc.ahk
 
-; #Include *i AmTemplates.ahk
+; #Include AmTemplates.ahk
 ; #Include menus.ahk
+
 ; #Include mstsc.ahk ; Microsoft terminal service client
 ; #Include Teclast_X98.ahk
 ; #Include numpad_tweak_as_R7.ahk
 
-#Include *i customize.ahk
+#Include customize.ahk
 
-; [2015-11-05] To fix: If some foobar.ahk with unique AUTOEXEC_foobar exists but not gets #Included here,
-; reloading DEV.ahk will tell that foobar.ahk is loaded, but actually foobar's statements does not take effect.
-; (1.1.19.02)
