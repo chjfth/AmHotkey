@@ -44,5 +44,7 @@
 ; #Include Teclast_X98.ahk
 ; #Include numpad_tweak_as_R7.ahk
 
-#Include customize.ahk
+; This customize.ahk is optional.
+; *i means "ignore if that .ahk does not exist"
+#Include *i customize.ahk
 

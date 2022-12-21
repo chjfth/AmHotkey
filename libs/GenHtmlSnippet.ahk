@@ -58,7 +58,7 @@ in_genhtml_code2pre_2022(codetext, is_color:=false, line_comment:="//", block_co
 	;
 	; Wrap whole content in <pre> tag
 	;
-	prestyle := "white-space:pre-wrap; border:1px solid #ddd; background-color:#f6f6f6; font-family:consolas,monospace; padding:0.3em; margin:0.3em 0;"
+	prestyle := "white-space:pre-wrap; border:1px solid #ddd; background-color:#f6f6f6; font-family:consolas,monospace; padding:0.3em; margin:0.3em 0; border-radius:3px"
 	html := Format("-<pre style='{}'>{}</pre>-"
 		, prestyle, html)
 
