@@ -49,7 +49,7 @@ in_genhtml_code2pre_2022(codetext, is_color:=false, line_comment:="//", block_co
 
 		if(block_comment)
 		{
-			html := genhtml_pre_colorize_block(html, block_comment, true)
+			html := genhtml_pre_colorize_block(html, block_comment)
 		}
 		
 		html := genhtml_pre_colorize_eachline(html, line_comment)
@@ -217,7 +217,7 @@ genhtml_Get1Piece(istr, line_comment, byref piecelen)
 	
 }
 
-genhtml_pre_colorize_block(mltext, block_comment, is_smash_quotes)
+genhtml_pre_colorize_block(mltext, block_comment)
 {
 	otext := ""
 	Loop 
@@ -231,19 +231,8 @@ genhtml_pre_colorize_block(mltext, block_comment, is_smash_quotes)
 		}
 		else if(type=="CMMT") {
 		
-			if(is_smash_quotes)
-			{
-				piecetext := StrReplace(piecetext, "'", "&apos;")
-				piecetext := StrReplace(piecetext, """", "&quot;")
-			}
-			else
-			{
-				; For piecetext, we need to find all child <span> element inside, and remove them,
-				; bcz, we don't want the childs to <span>-set their own text color.
-				
-				piecetext := RegExReplace(piecetext, "<span.*?>", "")
-				piecetext := RegExReplace(piecetext, "</span>", "")
-			}
+			piecetext := StrReplace(piecetext, "'", "&apos;")
+			piecetext := StrReplace(piecetext, """", "&quot;")
 			
 			otext .= "<span style='color:#393;'>"
 				. piecetext
