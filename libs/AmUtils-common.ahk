@@ -611,3 +611,14 @@ dev_JoinStrings(ar_strings, join_with:=",")
 	return ret
 }
 
+dev_StringUpper(s)
+{
+	StringUpper, s, s
+	return s
+}
+
+dev_StringLower(s)
+{
+	StringLower, s, s
+	return s
+}

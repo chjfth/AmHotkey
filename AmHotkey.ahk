@@ -66,7 +66,7 @@ global g_winx, g_winy, g_winwidth=-1, g_winheight
 
 global g_arAutoexecLabels := []
 global g_dictAutoexecExistingFname := {} ; for checking duplicate
-global g_customize_ahk := "customize.ahk"
+global gc_customize_ahk := "customize.ahk"
 
 ; Constant used in dev_MsgBoxYesNo() etc.
 global msgboxoption_Ok := 0
@@ -88,6 +88,9 @@ global g_amstrMute := "AM: Mute clicking sound"
 global g_DefineHotkeyLogfile := "DefineHotkeys.log"
 
 global g_tmpMonitorsLayout := {}
+
+global g_AmHotkeyFilepath := A_LineFile ; Record my real filepath at runtime.
+global g_AmHotkeyDirpath  := dev_SplitPath(g_AmHotkeyFilepath)
 
 ;==========;==========;==========;==========;==========;==========;==========;==========;
 ; All global vars should be defined ABOVE this line, otherwise, they will be null.
@@ -292,14 +295,17 @@ Amhotkey_LoadMoreIncludes()
 			dev_MsgBoxError("Missing configuration file: " gc_AutoexecLablesFilepath)
 			ExitApp
 		}
+
+		dict_DoneLabels := {}
 		
 		arlabels := StrSplit(filetext, "`n")
 
 		for i,label in arlabels
 		{
 			label := Trim(label, "`r")
-			if(IsLabel(label))
+			if(!dict_DoneLabels.HasKey(label) && IsLabel(label))
 			{
+				dict_DoneLabels[label] := true
 ;				Dbgwin_Output("Found existed label: " label) ; debug
 				GoSub, %label%
 			}
@@ -312,34 +318,38 @@ ScanAhkFilesForAutoexecLabel()
 {
 	; Scan all ahk files in the same folder as the master ahk file.
 
-	; some stock ahk first
-	AddAutoExecAhk(A_ScriptDir , "keymouse.ahk")
-	AddAutoExecAhk(A_ScriptDir , "quick-switch-app.ahk")
+	; some stock ahk first // 2022.12.21, no longer forced
+;	AddAutoExecAhk(A_ScriptDir , "keymouse.ahk") 
+;	AddAutoExecAhk(A_ScriptDir , "quick-switch-app.ahk")
 	
-	Loop, Files, %A_ScriptDir%\*.ahk, R
+	Loop, Files, % g_AmHotkeyDirpath "\*.ahk", R
 	{
 		; Loop, %A_ScriptDir%\*.ahk ; this matches XXX.ahkx , XXX.ahky etc (AHK bug?)
 		; so I have to filter it once more.
 		
-		if(not A_LoopFileName ~= ".ahk$" )
-			continue
-
-		if(A_LoopFileName==A_ScriptName)
-			continue ; skip self
-		
-		
-		if(A_LoopFileName==g_customize_ahk)
-			continue ; leave this at end
-			
-		if(InStr(A_LoopFileName, " "))
-			continue ; reject those with spaces in filename
-		
-		AddAutoExecAhk(A_LoopFileDir, A_LoopFileName)
+		if(amhk_IsAutoGlobalFilename(A_LoopFileName))
+		{
+			AddAutoExecAhk(A_LoopFileDir, A_LoopFileName)
+		}
 	}
 	
-	AddAutoExecAhk(A_ScriptDir, g_customize_ahk)
-		; Load this at the final stage, because it is intended to override some 
-		; global vars defined by other modules.
+	; If user has his own startup Script(instead of AmHotkey.ahk), we scan and load
+	; ahk modules there.
+	;
+	if(dev_StringLower(A_ScriptDir) != dev_StringLower(g_AmHotkeyDirpath))
+	{
+		Loop, Files, %A_ScriptDir%\*.ahk, R
+		{
+			if(amhk_IsAutoGlobalFilename(A_LoopFileName))
+			{
+				AddAutoExecAhk(A_LoopFileDir, A_LoopFileName)
+			}
+		}
+	}
+
+	AddAutoExecAhk(A_ScriptDir, gc_customize_ahk)
+	; -- Load this at the final stage, because it is intendeded to override some 
+	;    global vars defined by other modules.
 	
 ;	msgbox, % "g_arAutoexecLabels maxindex=" . g_arAutoexecLabels.MaxIndex()
 
@@ -353,6 +363,23 @@ ScanAhkFilesForAutoexecLabel()
 	dev_WriteWholeFile(gc_AutoexecLablesFilepath, strlabels)
 }
 
+amhk_IsAutoGlobalFilename(filenam)
+{
+	if(not filenam ~= ".ahk$" )
+		return false
+
+	if(filenam==A_ScriptName)
+		return false ; skip self
+	
+	if(filenam==gc_customize_ahk)
+		return false ; leave this at end
+		
+	if(InStr(filenam, " "))
+		return false ; reject those with spaces in filename
+	
+	return true
+}
+
 CallAutoexecLabels()
 {
 	module_count := 0
@@ -360,10 +387,14 @@ CallAutoexecLabels()
 	
 	for index, autolabel in g_arAutoexecLabels 
 	{
+		dict_DoneLabels := {}
+	
 		label_varname := autolabel.label
 
-		if(IsLabel(label_varname)) 
+		if(!dict_DoneLabels.HasKey(label_varname) && IsLabel(label_varname)) 
 		{
+			dict_DoneLabels[label_varname] := true
+		
 			module_count++
 			msglistmodules .=  module_count ". " autolabel.filename " [" label_varname "]`n"
 			
