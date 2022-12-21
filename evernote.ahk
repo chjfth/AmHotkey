@@ -2035,7 +2035,7 @@ Evtbl_GenHtml_Div(hexcolor1, hexcolor2)
 {
 	htmlptn = 
 (
-+<div style="padding: 1em; border: 1px solid rgb(220, 220, 220); {1};"><div><span>DIV</span></div></div><div>-</div>
++<div style="padding: 0.8em; border: 1px solid rgb(220, 220, 220); {1};"><div><span>DIV</span></div></div><div>-</div>
 ) ; will be feed to Format, {1} will be replaced
 	
 	css_bg_rule := make_css_bg_rule(hexcolor1, hexcolor2)
@@ -3689,7 +3689,7 @@ Evernote_PopupPasteMenu()
 
 F1:: Evernote_PastePlainText()
 
-+Ins:: Evernote_PastePlainText_exwait()
++Ins up:: Evernote_PastePlainText_exwait()
 Evernote_PastePlainText_exwait()
 {
 	KeyWait, Shift, T1
@@ -3703,13 +3703,13 @@ Evernote_PastePlainText_exwait()
 	}
 }
 
-^Ins:: Evernote_PasteSingleLineCode()
+^Ins up:: Evernote_PasteSingleLineCode()
 
 ; ^!b:: Evernote_PasteSingleLineCode_SelectBg()
 
 Ins up:: Evernote_PopupPasteMenu()
 
-#Ins:: CF_HTML_PasteCodeBlock("//", ["/*","*/"])
+#Ins up:: CF_HTML_PasteCodeBlock("//", ["/*","*/"])
 
 Ins & 1:: CF_HTML_PasteCodeBlock("//", ["/*","*/"])
 Ins & 2:: CF_HTML_PasteCodeBlock(";", ["/*","*/"])
@@ -3718,7 +3718,7 @@ Ins & 3:: CF_HTML_PasteCodeBlock("#" , ["""""""",""""""""])
 CF_HTML_PasteCodeBlock(line_comment, block_comment:="")
 {
 	codetext := Clipboard
-	html := genhtml_simple_code2pre(codetext, line_comment, block_comment)
+	html := genhtml_code2pre_2022(codetext, line_comment, block_comment)
 	dev_ClipboardSetHTML(html, true)
 }
 

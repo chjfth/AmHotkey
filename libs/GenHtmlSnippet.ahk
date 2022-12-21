@@ -2,11 +2,12 @@
 
 /* API:
 
-genhtml_simple_code2pre()
+genhtml_code2pre_2022()
 
 */
 
-genhtml_simple_code2pre(codetext, line_comment:="//", block_comment:="", tab_spaces:=4, workaround_evernote_bug:=true)
+genhtml_code2pre_2022(codetext, line_comment:="//", block_comment:=""
+	, tab_spaces:=4, workaround_evernote_bug:=true)
 {
 	; block_comment sample: ["/*", "*/"]
 
@@ -17,7 +18,7 @@ genhtml_simple_code2pre(codetext, line_comment:="//", block_comment:="", tab_spa
 
 	if(block_comment and block_comment.Length()!=2)
 	{
-		dev_MsgBoxError("In genhtml_simple_code2pre(), Error: block_comment[] array length is not 2 !")
+		dev_MsgBoxError("In genhtml_code2pre_2022(), Error: block_comment[] array length is not 2 !")
 		return ""
 	}
 
@@ -134,9 +135,9 @@ genhtml_pre_colorize_1line(linetext, line_comment)
 			else if(qstrlen<=16)
 				color := "#d0e"
 			else if(qstrlen<=64)
-				color := "#b0c"
+				color := "#c4d"
 			else
-				color := "#80a"
+				color := "#b6c"
 			
 			otext .= Format("<span style='color:{}'>", color)
 				. piecetext
