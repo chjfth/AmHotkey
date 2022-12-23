@@ -1,7 +1,7 @@
-
-#include ..\AmUtils-common.ahk
-#include ..\AmUtils-gui.ahk
-#include ..\libs\debugwin.ahk
+#include %A_LineFile%\..\..\libs
+#include AmUtils-common.ahk
+#include AmUtils-gui.ahk
+#include debugwin.ahk
 
 #include *i #Include %A_LineFile%\..\other.ahk.
 

@@ -59,6 +59,7 @@ https://www.evernote.com/shard/s21/nl/2425275/ade2d8f1-be74-43bc-895a-6781fe0556
 https://www.evernote.com/shard/s21/nl/2425275/b49be72e-4bbe-4949-b95b-a777b7ed23a0 , 编程语言:BATCMD , Windows batch script
 https://www.evernote.com/shard/s21/nl/2425275/47874f88-fdcf-4eca-84fe-2cb0ef05a4a0 , 编程语言:Autohotkey
 https://www.evernote.com/shard/s21/nl/2425275/0953e36a-32c0-404b-aa01-f0cdbd3e4200 , 编程语言:AHKv2, Autohotkey v2
+https://www.evernote.com/shard/s21/nl/2425275/4143c35a-fe40-4468-bc54-14ea0978ea5a , 编程语言:RUST
 https://www.evernote.com/shard/s21/nl/2425275/7d2237b7-62e2-4a2e-a2b1-4ffd776fb563 , 编程语言:PYTHON
 https://www.evernote.com/shard/s21/nl/2425275/35e458a1-d25e-45bb-83ab-b7358c4af4f5 , 编程语言:CSharp, C# language
 https://www.evernote.com/shard/s21/nl/2425275/98761ee8-a18f-4367-bb39-3fd31567d8e0 , 编程语言:AARDIO, 国产脚本语言兼Windows开发平台
