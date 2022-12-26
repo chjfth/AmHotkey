@@ -116,7 +116,7 @@ dev_MsgBoxYesNo_title(title, text, default_yes:=true, icon:=64)
 
 dev_MsgBoxYesNo(text, default_yes:=true, icon:=64)
 {
-	dev_MsgBoxYesNo_title("", text, default_yes, icon)
+	return dev_MsgBoxYesNo_title("", text, default_yes, icon)
 }
 
 dev_MsgBoxYesNo_Warning(text, default_yes:=true)
@@ -622,3 +622,28 @@ dev_StringLower(s)
 	StringLower, s, s
 	return s
 }
+
+dev_KillProcessByPid(pid, byref winerr:=0)
+{
+	hProcess := DllCall( "OpenProcess" 
+	                    , "uint", 0x1    ; PROCESS_TERMINATE
+	                    , "int", false 
+	                    , "uint", pid ) 
+
+	if(!hProcess) {
+		winerr := DllCall("GetLastError")
+		Dbgwin_Output(Format("OpenProcess(pid={}) fail. WinErr={}", pid, winerr))
+		return false
+	}
+	
+	is_succ := DllCall("TerminateProcess", "Ptr",hProcess, "uint",444)
+	if(!is_succ){
+		winerr := DllCall("GetLastError")
+		Dbgwin_Output(Format("TerminateProcess(pid={}) fail. WinErr={}", pid, winerr))
+	}
+	
+	DllCall("CloseHandle", "Ptr", hProcess)
+	
+	return is_succ
+}
+
