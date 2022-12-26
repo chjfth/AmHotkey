@@ -811,23 +811,6 @@ return
 ;#################### Environment checking functions ##########################
 ;##############################################################################
 
-IsWinXP()
-{
-	return IsWin5x()
-}
-
-IsWin5x()
-{
-	if A_OSVersion in WIN_2003,WIN_XP,WIN_2000
-	{
-	    return true
-	}
-	else
-	{
-		return false
-	}
-}
-
 GetMonitorWorkArea(monidx)
 {
 	; monidx 1 means first monitor, 2 means second ...
@@ -988,6 +971,11 @@ dev_LocalTimeZoneMinutesStr()
 		return Format("+{:02X}{:02X}", tzminutes/60, Mod(tzminutes, 60))
 	else
 		return Format("-{:02X}{:02X}", (-tzminutes)/60, Mod(-tzminutes, 60))
+}
+
+dev_SetEnvVar(varname, varvalue)
+{
+	EnvSet, % varname, % varvalue
 }
 
 dev_GetWin32ThreadId()
@@ -1400,6 +1388,7 @@ dev_SetClipboardWithTimeout(text, timeout_milisec:=1000)
 	
 	return is_ok
 }
+
 
 ;################### Windows GUI tweaking functions ###########################
 

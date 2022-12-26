@@ -623,6 +623,59 @@ dev_StringLower(s)
 	return s
 }
 
+
+IsWinXP()
+{
+	return IsWin5x()
+}
+
+IsWin5x()
+{
+	if A_OSVersion in WIN_2003,WIN_XP,WIN_2000
+	{
+	    return true
+	}
+	else
+	{
+		return false
+	}
+}
+
+
+dev_IsProcessAlive(pid)
+{
+	access := 0x1000 ; PROCESS_QUERY_LIMITED_INFORMATION
+	if(IsWinXP())
+		access := PROCESS_QUERY_INFORMATION
+
+	hProcess := DllCall( "OpenProcess" 
+	                    , "uint", access
+	                    , "int", false 
+	                    , "uint", pid ) 
+	if(hProcess)
+	{
+		DllCall("CloseHandle", "Ptr",hProcess)
+		return true
+	}
+	else
+		return false
+}
+
+dev_WaitUntilProcessExit(pid, timeout_millisec:=-1)
+{
+	waitmsec_start := A_TickCount
+	Loop
+	{
+		if(!dev_IsProcessAlive(pid))
+			return true
+		
+		if(timeout_millisec>0 && (A_TickCount-waitmsec_start)>timeout_millisec)
+			return false ; timeout
+		
+		Sleep, 100
+	}
+}
+
 dev_KillProcessByPid(pid, byref winerr:=0)
 {
 	hProcess := DllCall( "OpenProcess" 
@@ -632,14 +685,14 @@ dev_KillProcessByPid(pid, byref winerr:=0)
 
 	if(!hProcess) {
 		winerr := DllCall("GetLastError")
-		Dbgwin_Output(Format("OpenProcess(pid={}) fail. WinErr={}", pid, winerr))
+;		Dbgwin_Output(Format("OpenProcess(pid={}) fail. WinErr={}", pid, winerr))
 		return false
 	}
 	
 	is_succ := DllCall("TerminateProcess", "Ptr",hProcess, "uint",444)
 	if(!is_succ){
 		winerr := DllCall("GetLastError")
-		Dbgwin_Output(Format("TerminateProcess(pid={}) fail. WinErr={}", pid, winerr))
+;		Dbgwin_Output(Format("TerminateProcess(pid={}) fail. WinErr={}", pid, winerr))
 	}
 	
 	DllCall("CloseHandle", "Ptr", hProcess)

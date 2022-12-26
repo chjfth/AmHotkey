@@ -133,18 +133,19 @@ global g_evpIsGuiVisible := false
 global g_evpConvertStartCount := 0 ; increase one each time Launch convert.
 global g_evpConvertSuccCount := 0
 
+global gc_evpConvertBtnText := "&Convert from Clipboard"
 global g_evpTimerStage := "Monitoring" 
 	; "Monitoring" : Periodically check(monitor) the clipboard for image or CF_BITMAP or image-filepath.
 	; "ConvertStarting" : External everpic-batch-prepare.bat launched, waiting for <basename>.progress.done.txt .
 	; "ConvertStarted"  : <basename>.progress.done.txt detected, checking its content for progress.
-global g_evpTickLastActivity := 0
 global g_evpTickConvertStart := 0
+global g_evpIsCancelling := false
 
 global gc_evpFileSuffix_progressdone := ".progress.done.txt"
 global gc_evpFileSuffix_imagelist    := ".imagelist.txt"
 
-global gc_evpStartingTimeoutSec := 2
-global gc_evpStartedTimeoutSec  := 3
+global gc_evpStartingTimeoutSec := 3
+global g_evpBgCvtProcessId := 0
 
 global g_evp_arImageStore := [] ; g_evp_arImageStore[1] refers to the first previewed image.
 	; members: .hint .filelen_desc .path
@@ -393,7 +394,7 @@ Evp_CreateGui()
 	; ==== Create Column1 controls. ====
 	;
 	col1w := gc_evpCol1Width
-	Gui_Add_Button(  "EVP", "gu_evpBtnCvtFromClipbrd", col1w, "Section xm ym g" . "Evp_evtCvtFromClipboard" , "&Convert from Clipboard")
+	Gui_Add_Button(  "EVP", "gu_evpBtnCvtFromClipbrd", col1w, "Section xm ym g" . "Evp_evtCvtFromClipboard" , gc_evpConvertBtnText)
 	Gui_Add_Checkbox("EVP", "gu_evpCkbAutoConvert",    col1w, "xm+16 y+5 Hidden", "&Auto Convert")
 	Gui_Add_Editbox( "EVP", "gu_evpEdrBaseImgFilepath", fullwidth, "xm y+34 Readonly -E0x200", "Base-image file path (to fill)")
 	;
@@ -442,6 +443,7 @@ Evp_CreateGui()
 	
 	; Set default states of the controls:
 	;
+;Dbgwin_Output("gu_evpBtnCvtFromClipbrd DDDDDDDDDDisable")
 	GuiControl_Enable("EVP","gu_evpBtnCvtFromClipbrd", false) ; Not enabled until image in clipboard
 	GuiControl_Enable("EVP","gu_evpBtnOK", false) ; Not enabled until image previews all generated
 	;
@@ -599,9 +601,31 @@ Evp_ToggleKeepPngTransparent()
 
 Evp_CheckAndWarnConvertBusy()
 {
-	if(g_evpTimerStage!="Monitoring") {
-		dev_MsgBoxWarning("Previous converting is in progress, please retry later.")
-		return true
+	if(g_evpTimerStage!="Monitoring") 
+	{
+		is_yes := dev_MsgBoxYesNo("Previous converting is in progress. Really cancel?")
+		
+		if(g_evpTimerStage=="Monitoring")
+		{
+			; During the dialog displaying period, the conversion have been completed.
+			return true ; true means "was busy"
+		}
+
+		if(is_yes)
+		{
+			g_evpIsCancelling := true
+			
+			GuiControl_Enable("EVP", "gu_evpBtnCvtFromClipbrd", false)
+			; -- so to avoid "repetitive" user-cancel.
+	
+			is_succ := dev_KillProcessByPid(g_evpBgCvtProcessId, winerr)
+			if(!is_succ)
+			{
+				dev_MsgBoxWarning(Format("dev_KillProcessByPid(pid={}) fails with winerr={}", g_evpBgCvtProcessId, winerr))
+			}
+		}
+		
+		return true ; true means "was busy"
 	}
 	else
 		return false
@@ -699,8 +723,7 @@ Evp_LaunchBatchConvert(fpFromImage:="", scale_pct:=0)
 	fpbatlog := fpbat ".log"
 	
 	; TODO: this batchcmd is NOT space-char-tolerable in its path.
-	batchcmd := Format("cmd /c ""{} {} > {}""", fpbat, fpimgScaled, fpbatlog)
-;	dev_MsgBoxInfo(batchcmd) ; debug
+	batchcmd := Format("cmd /c ""{} {} > {}""", fpbat, fpimgScaled, fpbatlog) ; Debug-opt: whether to '> fpbatlog'
 
 	; We use `Run`, not `RunWait`, to avoid blocking ourselves. 
 	; `Run` reports success as long as CreateProcess() succeeds. That means,
@@ -715,12 +738,14 @@ Evp_LaunchBatchConvert(fpFromImage:="", scale_pct:=0)
 		return false
 	}
 	;
-	Run, % batchcmd, , UseErrorLevel Hide
+	Run, % batchcmd, , UseErrorLevel Hide, g_evpBgCvtProcessId ; Debug opt: [Hide]
 	if(ErrorLevel)
 	{	; Not likely to get this.
 		dev_MsgBoxError(Format("{} launch error.`n`nSee log file for reason:`n`n{}", fpbat, fpbatlog))
 		return false
 	}
+	
+;	Dbgwin_Output("Everpic launches bg-process with pid=" g_evpBgCvtProcessId)
 	
 	g_evpImageSig := imgsig
 	g_evpBaseImageFilepath_100pct := fpimg100pct
@@ -735,8 +760,11 @@ Evp_LaunchBatchConvert(fpFromImage:="", scale_pct:=0)
 		FileDelete, % g_evpBatchProgressFilepath
 	
 	g_evpTimerStage := "ConvertStarting"
-	g_evpTickLastActivity := A_TickCount
 	g_evpTickConvertStart := A_TickCount
+
+;Dbgwin_Output("gu_evpBtnCvtFromClipbrd EEEEEEEEEEEEEnable")
+	GuiControl_Enable ("EVP", "gu_evpBtnCvtFromClipbrd", true)
+	GuiControl_SetText("EVP", "gu_evpBtnCvtFromClipbrd", "Cancel converting")
 	
 	GuiControl_SetText("EVP", "gu_evpTxtClipbState", "Convert starting...")
 	
@@ -1217,13 +1245,34 @@ Evp_CheckClipboardStateUpdateUI()
 
 Evp_CheckConvertingProgressUpdateUI()
 {
-	static s_prev_nDone := 0
-
 	fpProgress := g_evpBatchProgressFilepath ; was set in Evp_LaunchBatchConvert()
 	; 	C:\Users\win7evn\AppData\Local\Temp\Everpic\everpic-20221204_165806.progress.done.txt
 	dev_assert(fpProgress) 
 
 	progtext := dev_FileReadLine(fpProgress, 1)
+	
+	if(g_evpTimerStage=="ConvertStarting"
+		&& A_TickCount-g_evpTickConvertStart > gc_evpStartingTimeoutSec*1000)
+	{
+		is_yes := dev_MsgBoxYesNo(Format("Unexpect! Background conversion process fails to start in {} seconds.`r`n`r`n"
+			. "Do you want to cancel conversion now?", gc_evpStartingTimeoutSec)
+			, true, Amhk.mbopt_IconExclamation)
+		if(is_yes)
+		{
+			dev_assert(g_evpBgCvtProcessId)
+			dev_KillProcessByPid(g_evpBgCvtProcessId)
+			
+			Evp_BatchConvertDone(false)
+		}
+	}
+
+	if(!progtext)
+	{
+		; Possible situation: Above dev_FileReadLine() failed, due to file being written(file locked)
+		; by background converting process. So we just neglect this case, and retry on next timer tick.
+		return
+	}
+	
 
 	if(g_evpTimerStage=="ConvertStarting")
 	{
@@ -1233,27 +1282,11 @@ Evp_CheckConvertingProgressUpdateUI()
 		if(progtext ~= "^[0-9]+/[0-9]+$")
 		{
 			g_evpTimerStage := "ConvertStarted"
-			s_prev_nDone := 0
-			g_evpTickLastActivity := A_TickCount
 			
 			GuiControl_SetText("EVP", "gu_evpTxtClipbState", "Converting " progtext " ...")
 		}
-		else if(A_TickCount-g_evpTickLastActivity > gc_evpStartingTimeoutSec*1000)
-		{
-			dev_MsgBoxError("ConvertStarting background execution timeout!`r`n`r`nCheck everpic-batch-prepare.bat.log for reason.")
-			
-			Evp_BatchConvertDone(false)
-			; todo: Reset UI ?
-			return
-		}
-		else
-			return ; Keep waiting in "ConvertStarting"
 	}
 	
-	dev_assert(g_evpTimerStage=="ConvertStarted")
-	
-	ignore_err := false
-
 	; Check file content in fpProgress to see whether the background
 	; image-list generation has completed. Sample file:
 	; 	C:\Users\win7evn\AppData\Local\Temp\Everpic\everpic-20221204_165806.progress.done.txt
@@ -1265,39 +1298,22 @@ Evp_CheckConvertingProgressUpdateUI()
 	;
 	; If 9/9 is reached, it means completed.
 
-	if(progtext)
-	{
-		nums := StrSplit(progtext, "/")
-		nDone := nums[1]
-		nTotal := nums[2]
-	}
-	else
-	{
-		; Possible situation: Above dev_FileReadLine() failed, due to file being written(file locked)
-		; by background converting process. So we just ignore it.
-		nDone := "?"
-		nTotal := "?"
-		ignore_err := true 
-	}
+	nums := StrSplit(progtext, "/")
+	nDone := nums[1]
+	nTotal := nums[2]
 
-;dev_TooltipAutoClear("### " A_TickCount-g_evpTickLastActivity "%%% " Format("{}/{}", nDone, nTotal)) ; yes counting
-
-	if(!ignore_err && !nTotal)
+	if(!nTotal)
 	{
-		dev_MsgBoxError("Something Wrong!", "Bad content in progress file: " fpProgress)
+		dev_MsgBoxError(Format("Bad content in progress file: {}`r`n`r`n{}", fpProgress, progtext)
+			, "Something Wrong!")
+		Evp_BatchConvertDone(false)
 		return
 	}
 	
-	if(ignore_err || nDone<nTotal)
+	if(nDone<nTotal)
 	{
 		GuiControl_SetText("EVP", "gu_evpTxtClipbState"
 			, Format("Converting {}/{} ...", nDone, nTotal))
-		
-		if(!ignore_err && nDone>s_prev_nDone)
-		{
-			g_evpTickLastActivity := A_TickCount
-			s_prev_nDone := nDone
-		}
 	}
 	else if(nDone==nTotal)
 	{
@@ -1315,8 +1331,6 @@ Evp_CheckConvertingProgressUpdateUI()
 				, floor(msecs/1000), Mod(msecs,1000)
 				, zoomhint))
 		
-;		Evp_ShowAllControls(true) ; already done
-		
 		Evp_RefreshPreviewAllGui()
 		
 		Evp_BatchConvertDone(true)
@@ -1324,9 +1338,16 @@ Evp_CheckConvertingProgressUpdateUI()
 		return
 	}
 	
-	if(A_TickCount-g_evpTickLastActivity > gc_evpStartedTimeoutSec*1000)
+	; Note: We have to check process-alive AFTER `if(nDone==nTotal)`, bcz `nDone==nTotal` signify success.
+	;
+	if(!dev_IsProcessAlive(g_evpBgCvtProcessId))
 	{
-		dev_MsgBoxError("ConvertStarted background execution timeout!`r`n`r`nCheck everpic-batch-prepare.bat.log for reason.")
+		if(!g_evpIsCancelling)
+		{
+			dev_MsgBoxError(Format("Unexpect! Background process has terminated, but image conversion is not finished.`r`n`r`n"
+				. "Error reason may be revealed from everpic-batch-prepare.bat.log ."))
+		}
+		
 		Evp_BatchConvertDone(false)
 	}
 }
@@ -1345,9 +1366,19 @@ Evp_BatchConvertDone(is_succ)
 {
 	; Set some shared-status after convert is done.
 
+	dev_assert(g_evpBgCvtProcessId!=0)
+	dev_WaitUntilProcessExit(g_evpBgCvtProcessId)
+	; -- This is important, bcz everpic-batch-prepare.bat process's exist ensures that 
+	;    everpic-batch-prepare.bat.log' file handle is closed by CMD shell's '>' operator,
+	;    so that the next run of everpic-batch-prepare.bat can be sure to success.
+	g_evpBgCvtProcessId := 0
+
 	g_evpTimerStage := "Monitoring"
-	g_evpTickLastActivity := 0
 	g_evpTickConvertStart := 0
+	g_evpIsCancelling := false
+
+	GuiControl_Enable ("EVP", "gu_evpBtnCvtFromClipbrd", true)
+	GuiControl_SetText("EVP", "gu_evpBtnCvtFromClipbrd", gc_evpConvertBtnText)
 
 	if(is_succ)
 	{
