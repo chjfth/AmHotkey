@@ -1280,7 +1280,7 @@ Evp_CheckClipboardStateUpdateUI()
 	}
 	else 
 	{
-;		GuiControl_Enable("EVP","gu_evpBtnCvtFromClipbrd", false)
+		GuiControl_Enable("EVP","gu_evpBtnCvtFromClipbrd", false)
 		hint := "Copy an image, or a filepath into system Clipboard so to convert it."
 		fgcolor := "CC8888"
 	}
