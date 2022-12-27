@@ -741,3 +741,31 @@ dev_OnMessageUnRegister(wm_xxx, user_callback)
 	return indev_OnMessage(wm_xxx, user_callback, 0)
 }
 
+
+dev_MenuAddItem(menuname, itemtext, target)
+{
+	dev_assert(target)
+
+	if(dev_IsString(target)) {
+		dev_assert(IsObject(Func(target))) ; target, if a string, must be an existing function name
+	}
+
+	Menu, % menuname, add, % itemtext, % target
+}
+
+dev_MenuShow(menuname, x:="", y:="")
+{
+	Menu, % menuname, show, % x, % y
+}
+
+dev_MenuRenameItem(menuname, itemtext_old, itemtext_new)
+{
+	Menu, % menuname, rename, % itemtext_old, % itemtext_new
+}
+
+dev_MenuTickItem(menuname, whichitem, is_tick)
+{
+	Menu, % menuname, % is_tick ? "Check" : "Uncheck", % whichitem
+}
+
+

@@ -162,8 +162,8 @@ global g_evp_hClipmon ; Clipboard monitor handle
 global g_evp_ClipmonSeqNow := 0 ; Clipboard change sequence-number
 global g_evp_ClipmonSeqAct := 0 ; The sequence-number on which we have done image-conversion.
 
-global g_evp_isDbgCleanupTimer := false
-
+global g_evpDbgCfg := {"showdbginfo":false, "showdbgcleanup":false, "showbgcmd":false}
+;
 ; =======
 
 global g_HwndEvtbl
@@ -284,6 +284,12 @@ AppsKey & c:: Evp_LaunchUI()
 Evp_WinTitle()
 {
 	return "Everpic v2022.12"
+}
+
+evpdbg(msg)
+{
+	if(g_evpDbgCfg.showdbginfo)
+		Dbgwin_Output(msg)
 }
 
 Evp_LaunchUI()
@@ -445,7 +451,7 @@ Evp_CreateGui()
 	
 	; Set default states of the controls:
 	;
-;Dbgwin_Output("gu_evpBtnCvtFromClipbrd DDDDDDDDDDisable")
+	evpdbg("UIC Disable: gu_evpBtnCvtFromClipbrd")
 	GuiControl_Enable("EVP","gu_evpBtnCvtFromClipbrd", false) ; Not enabled until image in clipboard
 	GuiControl_Enable("EVP","gu_evpBtnOK", false) ; Not enabled until image previews all generated
 	;
@@ -573,7 +579,7 @@ Evp_ScaleDownImage_END:
 
 Evp_evtCvtFromClipboard(CtrlHwnd, GuiEvent, EventInfo, ErrLevel:="")
 {
-;	Dbgwin_Output(Format("tid={} Evp_evtCvtFromClipboard().", dev_GetThreadId())) ; debug
+	evpdbg(Format("In Evp_evtCvtFromClipboard().")) ; debug
 
 	Evp_LaunchConvert_fromClipboard()
 }
@@ -635,7 +641,7 @@ Evp_CheckAndWarnConvertBusy()
 
 Evp_LaunchConvert_fromClipboard()
 {
-;	Dbgwin_Output(Format("Evp_LaunchConvert_fromClipboard().")) ; debug
+;	evpdbg("In Evp_LaunchConvert_fromClipboard().")
 
 	Gui_ChangeOpt(  "EVP", "+OwnDialogs")
 
@@ -693,6 +699,11 @@ Evp_LaunchBatchConvert(fpFromImage:="", scale_pct:=0)
 	if(Evp_CheckAndWarnConvertBusy())
 		return ""
 
+	evpdbg(Format("In Evp_LaunchBatchConvert(). `r`n"
+		. "    fpFromImage = {}`r`n"
+		. "    scale_pct = {}"
+		, fpFromImage, scale_pct))
+	
 	g_evp_ClipmonSeqAct := g_evp_ClipmonSeqNow ; even if fpimg100pct fails
 
 	imgsig := Evp_GenImageSigByTimestamp()
@@ -725,7 +736,12 @@ Evp_LaunchBatchConvert(fpFromImage:="", scale_pct:=0)
 	fpbatlog := fpbat ".log"
 	
 	; TODO: this batchcmd is NOT space-char-tolerable in its path.
-	batchcmd := Format("cmd /c ""{} {} > {}""", fpbat, fpimgScaled, fpbatlog) ; Debug-opt: whether to '> fpbatlog'
+	;
+	stdout_to_log := "> " fpbatlog
+	batchcmd := Format("cmd /c ""{} {} {}"""
+		, fpbat
+		, fpimgScaled
+		, g_evpDbgCfg.showbgcmd ? "" : stdout_to_log)
 
 	; We use `Run`, not `RunWait`, to avoid blocking ourselves. 
 	; `Run` reports success as long as CreateProcess() succeeds. That means,
@@ -740,14 +756,15 @@ Evp_LaunchBatchConvert(fpFromImage:="", scale_pct:=0)
 		return false
 	}
 	;
-	Run, % batchcmd, , UseErrorLevel Hide, g_evpBgCvtProcessId ; Debug opt: [Hide]
+	opt_hidewindow := g_evpDbgCfg.showbgcmd ? "" : "Hide"
+	Run, % batchcmd, , UseErrorLevel %opt_hidewindow%, g_evpBgCvtProcessId
 	if(ErrorLevel)
 	{	; Not likely to get this.
 		dev_MsgBoxError(Format("{} launch error.`n`nSee log file for reason:`n`n{}", fpbat, fpbatlog))
 		return false
 	}
 	
-;	Dbgwin_Output("Everpic launches bg-process with pid=" g_evpBgCvtProcessId)
+	evpdbg("Everpic has launched bg-process with pid=" g_evpBgCvtProcessId)
 	
 	g_evpImageSig := imgsig
 	g_evpBaseImageFilepath_100pct := fpimg100pct
@@ -764,7 +781,7 @@ Evp_LaunchBatchConvert(fpFromImage:="", scale_pct:=0)
 	g_evpTimerStage := "ConvertStarting"
 	g_evpTickConvertStart := A_TickCount
 
-;Dbgwin_Output("gu_evpBtnCvtFromClipbrd EEEEEEEEEEEEEnable")
+	evpdbg("UIC Enable: gu_evpBtnCvtFromClipbrd")
 	GuiControl_Enable ("EVP", "gu_evpBtnCvtFromClipbrd", true)
 	GuiControl_SetText("EVP", "gu_evpBtnCvtFromClipbrd", "Cancel converting")
 	
@@ -995,7 +1012,36 @@ Evp_WM_COMMAND(wParam, lParam, msg, hwnd)
 
 Evp_WM_RBUTTONUP(wParam, lParam, msg, hwnd)
 {
-	Dbgwin_Output("WM_RBUTTONUP triggered.")
+	menuname := "Everpic Right-click Menu object"
+	
+	Evp_CreateContextMenu(menuname)
+	dev_MenuShow(menuname)
+}
+
+Evp_CreateContextMenu(menuname)
+{
+	menuitem := "Show Debug info"
+	fnobj := Func("Evp_ToggleOnOff").Bind("g_evpDbgCfg", "showdbginfo")
+	dev_MenuAddItem(menuname, menuitem, fnobj)
+	dev_MenuTickItem(menuname, menuitem, g_evpDbgCfg.showdbginfo ? true : false)
+
+	menuitem := "Show TempDir cleanup debug info"
+	fnobj := Func("Evp_ToggleOnOff").Bind("g_evpDbgCfg", "showdbgcleanup")
+	dev_MenuAddItem(menuname, menuitem, fnobj)
+	dev_MenuTickItem(menuname, menuitem, g_evpDbgCfg.showdbgcleanup ? true : false)
+
+	menuitem := "Show background converting CMD window"
+	fnobj := Func("Evp_ToggleOnOff").Bind("g_evpDbgCfg", "showbgcmd")
+	dev_MenuAddItem(menuname, menuitem, fnobj)
+	dev_MenuTickItem(menuname, menuitem, g_evpDbgCfg.showbgcmd ? true : false)
+}
+
+Evp_ToggleOnOff(sobj, smember)
+{
+	; sobj and smember are both in string.
+
+	obj := %sobj%
+	obj[smember] := not obj[smember]
 }
 
 Evp_TimerOn()
@@ -1234,7 +1280,7 @@ Evp_CheckClipboardStateUpdateUI()
 	}
 	else 
 	{
-		GuiControl_Enable("EVP","gu_evpBtnCvtFromClipbrd", false)
+;		GuiControl_Enable("EVP","gu_evpBtnCvtFromClipbrd", false)
 		hint := "Copy an image, or a filepath into system Clipboard so to convert it."
 		fgcolor := "CC8888"
 	}
@@ -1371,6 +1417,8 @@ Evp_ImgScaledHeight()
 Evp_BatchConvertDone(is_succ)
 {
 	; Set some shared-status after convert is done.
+	
+	evpdbg("Evp_BatchConvertDone(), " (is_succ ? "success." : "fail!"))
 
 	dev_assert(g_evpBgCvtProcessId!=0)
 	dev_WaitUntilProcessExit(g_evpBgCvtProcessId)
@@ -1663,7 +1711,7 @@ Evp_CleanupTempDir()
 
 Evp_DbgCleanup(msg)
 {
-	if(g_evp_isDbgCleanupTimer)
+	if(g_evpDbgCfg.showdbgcleanup)
 		Dbgwin_Output(msg)
 }
 

@@ -25,6 +25,8 @@ REM 	foo.q80.jpg
 REM 	foo.q60.jpg
 REM 	...
 
+title %batfilenam%
+
 call :Echos Now time: %DATE% %TIME%
 
 set fpinput=%~1
