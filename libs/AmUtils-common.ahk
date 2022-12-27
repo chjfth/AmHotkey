@@ -7,8 +7,11 @@
 #Include %A_LineFile%\..\AmUtils-const.ahk
 
 
-dev_assert(torf, exitcode_now:=1)
+dev_assert(torf, exitcode_now:=false)
 {
+	; exitcode_now==false is convenient for user, bcz user can easily press Win+Alt+R to 
+	; "reload/restart" the script.
+
 	if(!torf)
 	{
 		dev_MsgBoxError(dev_getCallStack(), "AHK Assertion Fail! Stacktrace >>>")
@@ -698,5 +701,43 @@ dev_KillProcessByPid(pid, byref winerr:=0)
 	DllCall("CloseHandle", "Ptr", hProcess)
 	
 	return is_succ
+}
+
+dev_IsString(s)
+{
+	if(strlen(s)>0)
+		return true
+	else
+		return false
+}
+
+indev_OnMessage(wm_xxx, user_callback, maxthreads)
+{
+	dev_assert(user_callback)
+
+	if(dev_IsString(user_callback))
+	{
+		; So, user don't have to wrap `Func("function_name")` himself.
+		fnobj := Func(user_callback)
+		
+		dev_assert(IsObject(fnobj)) ; fails if `user_callback` is NOT a function name
+	}
+	else
+	{	
+		dev_assert(IsObject(user_callback))
+		fnobj := user_callback
+	}
+	
+	return OnMessage(wm_xxx, fnobj, maxthreads)
+}
+
+dev_OnMessageRegister(wm_xxx, user_callback)
+{
+	return indev_OnMessage(wm_xxx, user_callback, 1)
+}
+
+dev_OnMessageUnRegister(wm_xxx, user_callback)
+{
+	return indev_OnMessage(wm_xxx, user_callback, 0)
 }
 

@@ -341,8 +341,9 @@ Evp_ShowGui()
 
 	g_evpIsGuiVisible := true
 	
-	OnMessage(0x200, Func("Evp_WM_MOUSEMOVE"))
-    OnMessage(0x111, Func("Evp_WM_COMMAND"))
+	dev_OnMessageRegister(0x200, "Evp_WM_MOUSEMOVE")
+	dev_OnMessageRegister(0x111, "Evp_WM_COMMAND")
+	dev_OnMessageRegister(0x205, "Evp_WM_RBUTTONUP")
 
 	g_evp_hClipmon := Clipmon_CreateMonitor(Func("Evp_ClipmonCallback"))
 	g_evp_ClipmonSeqNow := 0
@@ -357,8 +358,9 @@ Evp_CleanupUI()
 	
 	Clipmon_DeleteMonitor(g_evp_hClipmon)
 	
-	OnMessage(0x200, Func("Evp_WM_MOUSEMOVE"), 0) ; remove message hook
-    OnMessage(0x111, Func("Evp_WM_COMMAND"), 0)
+	dev_OnMessageUnRegister(0x200, "Evp_WM_MOUSEMOVE")
+	dev_OnMessageUnRegister(0x111, "Evp_WM_COMMAND")
+	dev_OnMessageUnRegister(0x205, "Evp_WM_RBUTTONUP")
 	
 	Gui, EVP:Hide	; I will not do EVP:Destroy. If really want, just Reload the AHK script.
 	g_evpIsGuiVisible := false
@@ -991,6 +993,10 @@ Evp_WM_COMMAND(wParam, lParam, msg, hwnd)
 ;	}   
 }
 
+Evp_WM_RBUTTONUP(wParam, lParam, msg, hwnd)
+{
+	Dbgwin_Output("WM_RBUTTONUP triggered.")
+}
 
 Evp_TimerOn()
 {
