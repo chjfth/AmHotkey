@@ -162,7 +162,7 @@ global g_evp_hClipmon ; Clipboard monitor handle
 global g_evp_ClipmonSeqNow := 0 ; Clipboard change sequence-number
 global g_evp_ClipmonSeqAct := 0 ; The sequence-number on which we have done image-conversion.
 
-global g_evpDbgCfg := {"showdbginfo":false, "showdbgcleanup":false, "showbgcmd":false}
+global g_evpDbgCfg := {"showdbginfo":false, "showdbgcleanup":false, "showbgcmd":false, "slowbgcmd":0}
 ;
 ; =======
 
@@ -615,7 +615,7 @@ Evp_CheckAndWarnConvertBusy()
 		
 		if(g_evpTimerStage=="Monitoring")
 		{
-			; During the dialog displaying period, the conversion have been completed.
+			; During above dialog displaying period, the conversion have been completed.
 			return true ; true means "was busy"
 		}
 
@@ -757,6 +757,8 @@ Evp_LaunchBatchConvert(fpFromImage:="", scale_pct:=0)
 	}
 	;
 	opt_hidewindow := g_evpDbgCfg.showbgcmd ? "" : "Hide"
+	dev_SetEnvVar("EverpicSimulateSlowCmd", g_evpDbgCfg.slowbgcmd>0 ? g_evpDbgCfg.slowbgcmd : "") ; .bat code will check this env-var
+	;
 	Run, % batchcmd, , UseErrorLevel %opt_hidewindow%, g_evpBgCvtProcessId
 	if(ErrorLevel)
 	{	; Not likely to get this.
@@ -1034,6 +1036,11 @@ Evp_CreateContextMenu(menuname)
 	fnobj := Func("Evp_ToggleOnOff").Bind("g_evpDbgCfg", "showbgcmd")
 	dev_MenuAddItem(menuname, menuitem, fnobj)
 	dev_MenuTickItem(menuname, menuitem, g_evpDbgCfg.showbgcmd ? true : false)
+
+	menuitem := "Simulate slow background converting"
+	fnobj := Func("Evp_ToggleOnOff").Bind("g_evpDbgCfg", "slowbgcmd")
+	dev_MenuAddItem(menuname, menuitem, fnobj)
+	dev_MenuTickItem(menuname, menuitem, g_evpDbgCfg.slowbgcmd ? true : false)
 }
 
 Evp_ToggleOnOff(sobj, smember)
@@ -1362,8 +1369,12 @@ Evp_CheckConvertingProgressUpdateUI()
 		return
 	}
 	
+	msecs := A_TickCount - g_evpTickConvertStart
+	
 	if(nDone<nTotal)
 	{
+		GuiControl_SetText("EVP", "gu_evpBtnCvtFromClipbrd", Format("Cancel converting (+{}s)", msecs//1000))
+	
 		GuiControl_SetText("EVP", "gu_evpTxtClipbState"
 			, Format("Converting {}/{} ...", nDone, nTotal))
 	}
@@ -1371,8 +1382,6 @@ Evp_CheckConvertingProgressUpdateUI()
 	{
 		; All (background) image conversion done successfully.
 
-		msecs := A_TickCount - g_evpTickConvertStart
-		
 		zoomhint := ""
 		if(g_evpImageZoom!=1)
 			zoomhint := Format("({}% zoom)",floor(g_evpImageZoom*100)) ; note Zoom-pct is not Scale-pct

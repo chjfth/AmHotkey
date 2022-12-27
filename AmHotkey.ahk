@@ -924,65 +924,6 @@ GetActiveClassnnFromXY(x, y)
 	return classnn
 }
 
-IsDictEmpty(dict)
-{	
-	; A dict(dictionary) is an associative array.
-	empty := true
-	for k, v in dict {
-		empty := false
-		break
-	}
-	return empty
-}
-
-dev_GetCurrentDatetime(format)
-{
-	FormatTime, outvar, , %format%
-	return outvar
-}
-
-dev_GetDateTimeStrNow()
-{
-	FormatTime, dt, , % "yyyy-MM-dd.HH:mm:ss"
-	return dt
-}
-
-dev_GetDateTimeStrCompact(sep:="_")
-{
-	FormatTime, dt, , % "yyyyMMdd" . sep .  "HHmmss"
-	return dt
-}
-
-dev_LocalTimeZoneInMinutes()
-{
-	; For China, it returns 480 (8*60)
-	
-	VarSetCapacity(Tzinfo, 200, 0)
-	DllCall("GetTimeZoneInformation", Ptr,&Tzinfo)
-	
-	tzminutes := NumGet(&Tzinfo, 0, "Int")
-	return -tzminutes
-}
-
-dev_LocalTimeZoneMinutesStr()
-{
-	tzminutes := dev_LocalTimeZoneInMinutes()
-	if(tzminutes>=0)
-		return Format("+{:02X}{:02X}", tzminutes/60, Mod(tzminutes, 60))
-	else
-		return Format("-{:02X}{:02X}", (-tzminutes)/60, Mod(-tzminutes, 60))
-}
-
-dev_SetEnvVar(varname, varvalue)
-{
-	EnvSet, % varname, % varvalue
-}
-
-dev_GetWin32ThreadId()
-{
-	threadid := DllCall("kernel32.dll\GetCurrentThreadId")
-	return threadid
-}
 
 ; ===============================================================================================
 

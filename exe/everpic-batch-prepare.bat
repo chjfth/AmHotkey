@@ -93,7 +93,9 @@ for %%A in (%jpgQuals%) do (
 	set /a donecfgs=!donecfgs!+1
 	echo !donecfgs!/%totalcfgs%> "%fpProgressDone%"
 	
-REM	call :SleepSeconds 1
+	if defined EverpicSimulateSlowCmd (
+		call :SleepSeconds %EverpicSimulateSlowCmd%
+	)
 )
 
 exit /b %ERRORLEVEL%
