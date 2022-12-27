@@ -64,8 +64,6 @@ global g_winx, g_winy, g_winwidth=-1, g_winheight
 ; Cope with auto-exec section in sub-ahk. Thanks to:
 ; http://www.autohotkey.com/board/topic/9890-multiple-auto-execute-sections/ with IsLabel() fix
 
-global g_arAutoexecLabels := []
-global g_dictAutoexecExistingFname := {} ; for checking duplicate
 global gc_customize_ahk := "customize.ahk"
 
 ; Constant used in dev_MsgBoxYesNo() etc.
@@ -99,7 +97,7 @@ global g_AmHotkeyDirpath  := dev_SplitPath(g_AmHotkeyFilepath)
 AmDoInit()
 dev_DefineHotkeyLogClear()
 
-Amhotkey_LoadMoreIncludes()
+Amhotkey_ScanAndLoadAutoexecLabels()
 
 return 
 
@@ -255,12 +253,14 @@ GetFirstNoncommentLine(ahkfilepath)
 	return ""
 }
 
-AddAutoExecAhk(ahkdir, filename)
+amhk_AddAutoExecAhk(arAutoexecLabels, ahkdir, filename)
 {
+	static s_dictAutoexecExistingFname := {} ; for checking duplicate
+
 	ahkfilepath := ahkdir . "\" . filename
 
 	; check duplicate
-	if(g_dictAutoexecExistingFname.HasKey(ahkfilepath)) {
+	if(s_dictAutoexecExistingFname.HasKey(ahkfilepath)) {
 		return
 	}
 
@@ -271,19 +271,21 @@ AddAutoExecAhk(ahkdir, filename)
 	if( foundpos>0 )
 	{
 		filepath := dev_StripPrefix(ahkfilepath, A_ScriptDir "\")
-		g_arAutoexecLabels.Insert( {"filename":filepath , "label":subpat1} )
-		g_dictAutoexecExistingFname[ahkfilepath] := "yes"
+		arAutoexecLabels.Insert( {"filename":filepath , "label":subpat1} )
+		s_dictAutoexecExistingFname[ahkfilepath] := "yes"
 	}
 }
 
-Amhotkey_LoadMoreIncludes()
+Amhotkey_ScanAndLoadAutoexecLabels()
 {
 	; "Call" auto-exec sections collected(for those ahks with AUTOEXEC_xxx: label at start of file)
 
 	if(!A_IsCompiled)
 	{
-		ScanAhkFilesForAutoexecLabel()
-		CallAutoexecLabels()
+		arAutoexecLabels := []
+		
+		amhk_ScanAhkFilesForAutoexecLabels(arAutoexecLabels)
+		amhk_CallAutoexecLabels(arAutoexecLabels)
 	}
 	else
 	{
@@ -314,14 +316,11 @@ Amhotkey_LoadMoreIncludes()
 
 }
 
-ScanAhkFilesForAutoexecLabel()
+amhk_ScanAhkFilesForAutoexecLabels(arAutoexecLabels)
 {
-	; Scan all ahk files in the same folder as the master ahk file.
+	; Scan all ahk files in the same folder as the master(startup) ahk file,
+	; and store all found AUTOEXEC_xxx label info into arAutoexecLabels[] .
 
-	; some stock ahk first // 2022.12.21, no longer forced
-;	AddAutoExecAhk(A_ScriptDir , "keymouse.ahk") 
-;	AddAutoExecAhk(A_ScriptDir , "quick-switch-app.ahk")
-	
 	Loop, Files, % g_AmHotkeyDirpath "\*.ahk", R
 	{
 		; Loop, %A_ScriptDir%\*.ahk ; this matches XXX.ahkx , XXX.ahky etc (AHK bug?)
@@ -329,7 +328,7 @@ ScanAhkFilesForAutoexecLabel()
 		
 		if(amhk_IsAutoGlobalFilename(A_LoopFileName))
 		{
-			AddAutoExecAhk(A_LoopFileDir, A_LoopFileName)
+			amhk_AddAutoExecAhk(arAutoexecLabels, A_LoopFileDir, A_LoopFileName)
 		}
 	}
 	
@@ -342,21 +341,19 @@ ScanAhkFilesForAutoexecLabel()
 		{
 			if(amhk_IsAutoGlobalFilename(A_LoopFileName))
 			{
-				AddAutoExecAhk(A_LoopFileDir, A_LoopFileName)
+				amhk_AddAutoExecAhk(arAutoexecLabels, A_LoopFileDir, A_LoopFileName)
 			}
 		}
 	}
 
-	AddAutoExecAhk(A_ScriptDir, gc_customize_ahk)
+	amhk_AddAutoExecAhk(arAutoexecLabels, A_ScriptDir, gc_customize_ahk)
 	; -- Load this at the final stage, because it is intendeded to override some 
 	;    global vars defined by other modules.
 	
-;	msgbox, % "g_arAutoexecLabels maxindex=" . g_arAutoexecLabels.MaxIndex()
-
 	; [2022-12-18] AHK2EXE support code:
 	;
 	strlabels := ""
-	for i,label in g_arAutoexecLabels
+	for i,label in arAutoexecLabels
 	{
 		strlabels .= label.label "`r`n"
 	}
@@ -380,12 +377,12 @@ amhk_IsAutoGlobalFilename(filenam)
 	return true
 }
 
-CallAutoexecLabels()
+amhk_CallAutoexecLabels(arAutoexecLabels)
 {
 	module_count := 0
 	msglistmodules := ""
 	
-	for index, autolabel in g_arAutoexecLabels 
+	for index, autolabel in arAutoexecLabels 
 	{
 		dict_DoneLabels := {}
 	
