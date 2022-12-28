@@ -45,7 +45,10 @@ global g_func_IMEToggleZhonwen := "ToggleZhongwenStatus_PinyinJiaJia"
 global g_UntitledNotpad := "Untitled - Notepad"
 
 ;global gc_AutoexecLabelsFilename := ""
-global gc_AutoexecLablesFilepath := A_ScriptDir "\autoexec-labels.list"
+global gc_AutoexecLabelsFilepath := A_ScriptDir "\autoexec-labels.autogen.ahk"
+; #Include the very file right now, which is required by exerun.
+#Include *i %A_ScriptDir%\autoexec-labels.autogen.ahk
+
 
 global gtc_last_RCtrl = 0 ; Last RCtrl release tickcount
 global Eme_Fn_idle = true ; no need to configure
@@ -289,26 +292,23 @@ Amhotkey_ScanAndLoadAutoexecLabels()
 	}
 	else
 	{
-		; For AHK2EXE-compiled AmHotkey.exe
+		; For Ahk2Exe-compiled AmHotkey.exe
 		
-		filetext := dev_FileRead(gc_AutoexecLablesFilepath)
-		if(!filetext)
+		if(not AutoexecForExe.labels)
 		{
-			dev_MsgBoxError("Missing configuration file: " gc_AutoexecLablesFilepath)
+			dev_MsgBoxError("The file 'autoexec-labels.autogen.ahk' did NOT exist or had wrong content "
+				. "when compiling this AHK-exe. You have to re-compile this exe.")
 			ExitApp
 		}
 
 		dict_DoneLabels := {}
 		
-		arlabels := StrSplit(filetext, "`n")
-
-		for i,label in arlabels
+		for i,label in AutoexecForExe.labels
 		{
-			label := Trim(label, "`r")
 			if(!dict_DoneLabels.HasKey(label) && IsLabel(label))
 			{
 				dict_DoneLabels[label] := true
-;				Dbgwin_Output("Found existed label: " label) ; debug
+;				Dbgwin_Output("AHK-exe found existing label: " label) ; debug
 				GoSub, %label%
 			}
 		}
@@ -350,15 +350,28 @@ amhk_ScanAhkFilesForAutoexecLabels(arAutoexecLabels)
 	; -- Load this at the final stage, because it is intendeded to override some 
 	;    global vars defined by other modules.
 	
-	; [2022-12-18] AHK2EXE support code:
+	; [2022-12-28] Ahk2Exe support code:
 	;
+	autogen_content_fmt =
+(
+class AutoexecForExe
+{
+	static labels := [ "NullLabel_placeholder"
+{}, "NullLabel_placeholder"]
+}
+)
 	strlabels := ""
 	for i,label in arAutoexecLabels
 	{
-		strlabels .= label.label "`r`n"
+		; Prepare each line as an AutoexecForExe.labels[] element, as ahk array definition syntax.
+		strlabels .= Format("`t`t, ""{}""`r`n", label.label)
 	}
-	dev_WriteWholeFile(gc_AutoexecLablesFilepath, strlabels)
+	
+	autogen_content := Format(autogen_content_fmt, strlabels)
+	
+	dev_WriteWholeFile(gc_AutoexecLabelsFilepath, autogen_content)
 }
+
 
 amhk_IsAutoGlobalFilename(filenam)
 {

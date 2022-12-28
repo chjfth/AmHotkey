@@ -43,9 +43,6 @@ Do_Packer()
 
 	dev_CreateDirIfNotExist(exeout_dir)
 	
-	llfile := "\autoexec-labels.list"
-	succ := dev_Copy1File(dirAmroot . llfile , exeout_dir . llfile, true)
-	
 	PackerCopyFilesByIni(dirAmroot, dirProject)
 
 	custfilenames := GetCustFilenames(dirProject)
