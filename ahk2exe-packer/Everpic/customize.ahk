@@ -62,8 +62,6 @@ Init_ExeEverpicEnv()
 		dev_MsgBoxWarning("Code out-of-sync. g_evpTempPreserveMinutes is 0 !")
 	}
 	
-	g_evp_isDbgCleanupTimer := dev_str2num(EverpicExe_ReadInikey("DbgTimerMsgOn"))
-	
 	desc := dev_InterpretHotkeySpec(hotkeyspec)
 	
 	dev_MsgBoxInfo("Hotkey to bring up Everpic UI:`r`n`r`n    " desc "`r`n`r`n"
