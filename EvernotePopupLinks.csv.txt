@@ -75,8 +75,9 @@ https://www.evernote.com/shard/s21/nl/2425275/1a8f6e07-7afc-4020-af03-0043a303a8
 https://www.evernote.com/shard/s21/nl/2425275/4d0e88b8-43e8-4887-8c3d-7cb80735d20b , 软件主题:Apache2 , http server
 https://www.evernote.com/shard/s21/nl/2425275/b541de60-735a-475f-be07-715f55078704 , 软件主题:Evernote
 https://www.evernote.com/shard/s21/nl/2425275/4c473184-2eaa-41df-be37-4495a711f796 , 软件主题:Confluence 
-https://www.evernote.com/shard/s21/nl/2425275/1796e14d-54a5-47fc-9a9f-52822f8a9c87 , 软件主题:Krita
+; https://www.evernote.com/shard/s21/nl/2425275/1796e14d-54a5-47fc-9a9f-52822f8a9c87 , 软件主题:Krita
 ; https://www.evernote.com/shard/s21/nl/2425275/60f84ac4-388e-442f-9747-d15d15f37ad3 , 软件主题:Fiddler
+; https://www.evernote.com/shard/s21/nl/2425275/756db3fb-8b71-4731-a08e-9c17b1861c8f , 软件主题:KWF , Kerio Control
 https://www.evernote.com/shard/s21/nl/2425275/fe813636-1e19-4761-8bc7-08a5780f0952 , 软件主题:QEMU
 https://www.evernote.com/shard/s21/nl/2425275/9027fb71-b5c0-49a8-b844-7546bcbd9b03 , 软件主题:FFmpeg
 https://www.evernote.com/shard/s21/nl/2425275/a130bbdb-7d4e-498a-b4f4-84f712a62dc9 , 软件主题:MPC-HC , Media Player Classic
@@ -128,8 +129,9 @@ https://www.evernote.com/shard/s21/nl/2425275/d5771d04-29e7-4b23-a4ee-7403a7bb48
 https://www.evernote.com/shard/s21/nl/2425275/2ae180b6-5406-409a-a38d-debc58702270 , 自创主题:chjhotkey , 各软件常用热键备忘
 https://www.evernote.com/shard/s21/nl/2425275/a9416fe2-72d2-44ab-9e59-b297f2276ce4 , 自创主题:ThingRela , 信息分类关系
 https://www.evernote.com/shard/s21/nl/2425275/f12b2a42-e986-4e21-a2d4-daa69da7f3d3 , 自创主题:ZhihuPost , 知乎发帖
-https://www.evernote.com/shard/s21/nl/2425275/5cfb0da8-4f25-4300-9749-fa1c196c9ad3 , 自创主题:AMBIG , 歧义收集帖
 https://www.evernote.com/shard/s21/nl/2425275/5cfb0da8-4f25-4300-9749-fa1c196c9ad3 , 自创主题:歧义  , 歧义收集帖
+https://www.evernote.com/shard/s21/nl/2425275/5cfb0da8-4f25-4300-9749-fa1c196c9ad3 , 自创主题:AMBIG , 歧义收集帖
+https://www.evernote.com/shard/s21/nl/2425275/b5bb9f9e-15fd-4c85-937a-517f9755b587 , 自创主题:YouYouYou
 https://www.evernote.com/shard/s21/nl/2425275/0ec4ab0c-99b2-4b9b-8b71-38c828c4054d , 自创主题:MidWare , 中间物
 https://www.evernote.com/shard/s21/nl/2425275/2626ae56-a0eb-4c2a-97ae-8c331e8f581e , 自创主题:Naming , 起名难题
 https://www.evernote.com/shard/s21/nl/2425275/f31e3197-ba9c-4df6-81bf-03fb83c73a4d , 自创主题:SoftTaste , 第一次尝试某款软件

@@ -93,6 +93,8 @@ global g_tmpMonitorsLayout := {}
 global g_AmHotkeyFilepath := A_LineFile ; Record my real filepath at runtime.
 global g_AmHotkeyDirpath  := dev_SplitPath(g_AmHotkeyFilepath)
 
+global g_isdbg_DefineHotkeyFlex := false
+
 ;==========;==========;==========;==========;==========;==========;==========;==========;
 ; All global vars should be defined ABOVE this line, otherwise, they will be null.
 ;==========;==========;==========;==========;==========;==========;==========;==========;
@@ -936,6 +938,184 @@ GetActiveClassnnFromXY(x, y)
 
 
 ; ===============================================================================================
+
+; [2023-01-05] Brandnew dynnamic hotkey definition.
+; User can attach multiple actions to the same [hotkey-and-condition pair].
+
+_in_dev_DefineHotkeyFlex(_keyname, purpose_name, comment, fn_cond, fn_act, act_args*)
+{
+	; _keyname is the "KeyName" param that can be passed to `Hotkey` internal command.
+	; e.g., "F1"
+	
+	is_add := comment!="_off_" ? true : false
+	
+	dev_assert(_keyname!="")
+	if(is_add)
+		dev_assert(fn_act!="")
+	
+	if(_keyname=="" || (is_add && fn_act==""))
+		return ""
+
+	static s_dp := {} ; the dispatcher
+	
+	; Data structure example:
+	;
+	; s_dp["F1"]["purpose_auto1"].comment
+	; s_dp["F1"]["purpose_auto1"].fn_cond
+	; s_dp["F1"]["purpose_auto1"].fn_act
+	; s_dp["F1"]["purpose_auto1"].act_args
+	;
+	; s_dp["F1"]["purpose_auto2"].comment
+	; s_dp["F1"]["purpose_auto2"].fn_cond
+	; s_dp["F1"]["purpose_auto2"].fn_act
+	; s_dp["F1"]["purpose_auto2"].act_args
+	
+	
+	; If purpose_name is null, a new purpose_name will be auto-generated.
+	; If purpose_name is not null, old purpose_name will be replaced.
+	;
+	; If `comment` is "_off_", the hotkey by [keyname-purpose_name] is to be removed.
+	
+	keyname := _tweak_ThisHotkeyStripPrefix(_keyname) ; keyname as dict-key
+	
+	if(is_add)
+	{
+		; create first-level object for keynamedk
+		if(not s_dp[keyname])
+		{
+			dbgHotkeyFlex(Format("Create empty object s_dp[""{}""]", keyname))
+			s_dp[keyname] := {}
+		}
+		
+		if(purpose_name=="")
+			purpose_name := _create_auto_purposename(s_dp[keyname])
+		
+		is_new_purpose := s_dp[KeyName].HasKey(purpose_name)
+		
+		dbgHotkeyFlex( Format("{} hotkey ""{}"" of purpose-name: ""{}""`r`n"
+			. "    .comment = {}`r`n"
+			. "    .fn_cond = {}`r`n"
+			. "    .fn_act  = {}`r`n"
+			. "    .act_args (count) = {}"
+			, (is_new_purpose?"Create":"Update"), _keyname, purpose_name
+			, comment
+			, _tryget_funcobj_name(fn_cond)
+			, _tryget_funcobj_name(fn_act)
+			, act_args.Length() ))
+		
+		if(not s_dp[keyname][purpose_name])
+			s_dp[keyname][purpose_name] := {}
+		
+		s_dp[keyname][purpose_name].comment  := comment
+		s_dp[keyname][purpose_name].fn_cond  := fn_cond
+		s_dp[keyname][purpose_name].fn_act   := fn_act
+		s_dp[keyname][purpose_name].act_args := act_args
+		
+		Hotkey, If ; we always use global space
+		Hotkey, % _keyname, _dev_HotkeyFlex_global, On
+
+		return purpose_name
+	}
+	else ; remove this hotkey
+	{
+		dev_assert(purpose_name) ; To remove a hotkey, you must pass in an explicity purpose_name.
+		
+		if(not s_dp.HasKey(keyname)) {
+			dbgHotkeyFlex(Format("On delete, the passed in KeyName does not exist yet: ""{}""", keyname))
+			return false
+		}
+		
+		if(not s_dp[keyname].HasKey(purpose_name)) {
+			dbgHotkeyFlex(Format("On delete, the passed in purpose_name does not exist yet: ""{}""", purpose_name))
+			return false
+		}
+		
+		dbgHotkeyFlex(Format("Delete hotkey ""{}"" of purpose-name: ""{}"""
+			, _keyname, purpose_name))
+		
+		s_dp[keyname].Delete(purpose_name)
+		
+		if(dev_IsDictEmpty(s_dp[keyname]))
+		{
+			dbgHotkeyFlex(Format("Remove empty object s_dp[""{}""]", keyname))
+			
+			s_dp.Delete(keyname)
+		
+			Hotkey, If ; ; we always use global space
+			Hotkey, % _keyname, Off
+		}
+		
+		return true
+	}
+	
+	dev_assert(0) ; BUG! Should not get here.
+	
+_dev_HotkeyFlex_global:
+	
+	; I use AHK label so that we can directly access static s_dp{} here.
+
+	keyname := _tweak_ThisHotkeyStripPrefix(A_ThisHotkey)
+	
+	if(not s_dp.HasKey(keyname))
+	{
+		errmsg := Format("[Unexpect!] In _dev_HotkeyFlex_global:, A_ThisHotkey={} , stripped-keyname={} , not found in s_dp{}.", A_ThisHotkey, keyname)
+		dbgHotkeyFlex(errmsg)
+		dev_TooltipAutoClear(errmsg)
+		return
+	}
+
+	for purpose_name, actinfo in s_dp[keyname]
+	{
+		cond_ok := actinfo.fn_cond ? actinfo.fn_cond.() : true
+		
+		if(cond_ok)
+		{
+			dbgHotkeyFlex(Format("Flex-hotkey firing: [{}] {}", purpose_name, actinfo.comment))
+			
+			actinfo.fn_act.(actinfo.act_args*)
+		}
+		else
+		{
+			dbgHotkeyFlex(Format("Flex-hotkey NOT-fired: [{}] {}", purpose_name, actinfo.comment))
+		}
+	}
+	
+	return
+}
+
+dbgHotkeyFlex(s)
+{
+	if(g_isdbg_DefineHotkeyFlex)
+		Dbgwin_Output("HotkeyFlex: " s)
+}
+
+_create_auto_purposename(dict_of_purposename)
+{
+	Loop
+	{
+		newpurpose := "purpose_auto" A_Index
+	} Until (not dict_of_purposename.HasKey(newpurpose))
+	
+	return newpurpose
+}
+
+_tryget_funcobj_name(func)
+{
+	if(IsObject(func)) {
+		; a function object, cannot show it name, just show hint.
+		return "(not funcname, maybe a funcobj)"
+	}
+	else if(StrLen(func)>0) {
+		return func
+	}
+	else {
+		return "(weird, neither string nor funcobj)"
+	}
+}
+
+
+
+
 
 ; [2015-02-07] The great dynamically hotkey defining function. (tested on AHK 1.1.13.01)
 ; BIG Thanks to: http://stackoverflow.com/a/17932358
@@ -2531,17 +2711,9 @@ dev_Hex2Num(HX)
 	return Dec
 }
 
-dev_GuiLabelSetText(GuiName, LabelName, text)
+dev_GuiLabelSetText(GuiName, LabelName, text) ; todo: Use GuiControl_SetText instead
 {
 	GuiControl, %GuiName%:, %LabelName%, % text
-}
-
-dev_IsDictEmpty(dict)
-{
-	for key, value in dict {
-		return false
-	}
-	return true
 }
 
 

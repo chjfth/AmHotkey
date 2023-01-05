@@ -39,6 +39,7 @@ return ; End of auto-execute section.
 ; memo: [*] no need to post-type a space to trigger, 
 ;       [?] no need to prefix a wordchar to trigger
 :*:``1::192.168.
+:*:``2::172.24.0.
 :*:``q::Q:{space}
 :?*:;;::`:{space}
 

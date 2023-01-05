@@ -752,6 +752,15 @@ IsDictEmpty(dict)
 	return empty
 }
 
+dev_IsDictEmpty(dict)
+{
+	for key, value in dict {
+		return false
+	}
+	return true
+}
+
+
 dev_GetCurrentDatetime(format)
 {
 	FormatTime, outvar, , %format%
