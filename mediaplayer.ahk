@@ -530,6 +530,7 @@ MPC_DefineHotkeysSeekPercents()
 	dev_DefineHotkeyWithCondition("^``", "MPC_IsActive", "MPC_ClickToSeek", "2.5") ; ` is escaped, double typing it
 	dev_DefineHotkeyWithCondition("^0", "MPC_IsActive", "MPC_ClickToSeek", "97.5")
 
+/*
 	; For English keyboard, quick seek to 5pct, 15pct, 25pct, 95pct etc.
 	dev_DefineHotkeyWithCondition("^Tab", "MPC_IsActive", "MPC_ClickToSeek", "5")
 	dev_DefineHotkeyWithCondition("^q", "MPC_IsActive", "MPC_ClickToSeek", "15")
@@ -541,6 +542,7 @@ MPC_DefineHotkeysSeekPercents()
 	dev_DefineHotkeyWithCondition("^u", "MPC_IsActive", "MPC_ClickToSeek", "75")
 	dev_DefineHotkeyWithCondition("^i", "MPC_IsActive", "MPC_ClickToSeek", "85")
 	dev_DefineHotkeyWithCondition("^o", "MPC_IsActive", "MPC_ClickToSeek", "95")
+*/
 }
 
 

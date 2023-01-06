@@ -93,14 +93,16 @@ global g_tmpMonitorsLayout := {}
 global g_AmHotkeyFilepath := A_LineFile ; Record my real filepath at runtime.
 global g_AmHotkeyDirpath  := dev_SplitPath(g_AmHotkeyFilepath)
 
-global g_isdbg_DefineHotkeyFlex := false
+global g_isdbg_DefineHotkeyLegacy := false
+global g_isdbg_DefineHotkeyFlex   := false
+
+
 
 ;==========;==========;==========;==========;==========;==========;==========;==========;
 ; All global vars should be defined ABOVE this line, otherwise, they will be null.
 ;==========;==========;==========;==========;==========;==========;==========;==========;
 
 AmDoInit()
-dev_DefineHotkeyLogClear()
 
 Amhotkey_ScanAndLoadAutoexecLabels()
 
@@ -939,10 +941,41 @@ GetActiveClassnnFromXY(x, y)
 
 ; ===============================================================================================
 
-; [2023-01-05] Brandnew dynnamic hotkey definition.
-; User can attach multiple actions to the same [hotkey-and-condition pair].
+dbgHotkeyFlex(s)
+{
+	if(g_isdbg_DefineHotkeyFlex)
+		Dbgwin_Output("HotkeyFlex: " s)
+}
 
-_in_dev_DefineHotkeyFlex(_keyname, purpose_name, comment, fn_cond, fn_act, act_args*)
+dbgHotkeyLegacy(s)
+{
+	if(g_isdbg_DefineHotkeyLegacy)
+		Dbgwin_Output("HotkeyLegacy: " s)
+}
+
+_tweak_ThisHotkeyStripPrefix(ahkname)
+{
+	; Purpose: On Autohotkey 1.1.36 and many prior versions, I see that, when a Hotkey callback 
+	; is called, the A_ThisHotkey is not exactly the same as when we formerly told `Hotkey` command.
+	; For example "$NumpadDiv" becomes "NumpadDiv", but "$NumpadLeft" remains "$NumpadLeft".
+	; So, we need to strip off "~" and "$", and use the stripped-off form as dict-key to 
+	; Amhk.HotkeyFlexDispatcher .
+
+	ahkname := dev_StripPrefixChars(ahkname, "~$")
+	return ahkname
+}
+
+
+; [2023-01-06] Brandnew dynamic hotkey definition.
+; User can attach multiple actions to the same [hotkey-and-condition pair].
+; User parameter fn_cond and fn_act, can be any "callable" variable, which include:
+; * a string representing a function name, or
+; * a function object name, or 
+; * a Bind("funcname")-returned object.
+;
+; fn_cond: The condition to run fn_act. If fn_cond=="", then fn_act is always run.
+
+_in_dev_DefineHotkeyFlex(_keyname, purpose_name, comment, is_passthru, fn_cond, fn_act, act_args*)
 {
 	; _keyname is the "KeyName" param that can be passed to `Hotkey` internal command.
 	; e.g., "F1"
@@ -956,7 +989,7 @@ _in_dev_DefineHotkeyFlex(_keyname, purpose_name, comment, fn_cond, fn_act, act_a
 	if(_keyname=="" || (is_add && fn_act==""))
 		return ""
 
-	static s_dp := {} ; the dispatcher
+	s_dp := Amhk.HotkeyFlexDispatcher
 	
 	; Data structure example:
 	;
@@ -976,7 +1009,17 @@ _in_dev_DefineHotkeyFlex(_keyname, purpose_name, comment, fn_cond, fn_act, act_a
 	;
 	; If `comment` is "_off_", the hotkey by [keyname-purpose_name] is to be removed.
 	
+	; Note: $ and ~ keyname prefixes are ignored by _in_dev_DefineHotkeyFlex(),
+	; bcz $ and ~ 's semantic is told in is_passthru param.
+	;
 	keyname := _tweak_ThisHotkeyStripPrefix(_keyname) ; keyname as dict-key
+	hp_keyname := "$" keyname ; hp: hook($) prefix
+	
+	if(InStr(keyname, "&")) ;XXXX
+	{
+		Dbgwin_Output("TODO: Wrong flex hotkey: " keyname)
+		return ""
+	}
 	
 	if(is_add)
 	{
@@ -993,11 +1036,13 @@ _in_dev_DefineHotkeyFlex(_keyname, purpose_name, comment, fn_cond, fn_act, act_a
 		is_new_purpose := s_dp[KeyName].HasKey(purpose_name)
 		
 		dbgHotkeyFlex( Format("{} hotkey ""{}"" of purpose-name: ""{}""`r`n"
+			. "    .is_passthru = {}`r`n"
 			. "    .comment = {}`r`n"
 			. "    .fn_cond = {}`r`n"
 			. "    .fn_act  = {}`r`n"
 			. "    .act_args (count) = {}"
-			, (is_new_purpose?"Create":"Update"), _keyname, purpose_name
+			, (is_new_purpose?"Create":"Update"), keyname, purpose_name
+			, is_passthru ? "true" : "false"
 			, comment
 			, _tryget_funcobj_name(fn_cond)
 			, _tryget_funcobj_name(fn_act)
@@ -1006,15 +1051,22 @@ _in_dev_DefineHotkeyFlex(_keyname, purpose_name, comment, fn_cond, fn_act, act_a
 		if(not s_dp[keyname][purpose_name])
 			s_dp[keyname][purpose_name] := {}
 		
+		s_dp[keyname][purpose_name].is_passthru  := is_passthru
 		s_dp[keyname][purpose_name].comment  := comment
 		s_dp[keyname][purpose_name].fn_cond  := fn_cond
 		s_dp[keyname][purpose_name].fn_act   := fn_act
 		s_dp[keyname][purpose_name].act_args := act_args
 		
 		Hotkey, If ; we always use global space
-		Hotkey, % _keyname, _dev_HotkeyFlex_global, On
+		Hotkey, % hp_keyname, _dev_HotkeyFlex_callback, On UseErrorLevel
+		if(ErrorLevel) {
+			Dbgwin_Output(Format("""Hotkey, {}"" execution fail.", hp_keyname))
+			dev_assert(0) ; 
+		}
 
 		return purpose_name
+		; -- Call should keep this purpose_name so that current registered-hotkey 
+		;    can be removed later by calling with comment="_off_".
 	}
 	else ; remove this hotkey
 	{
@@ -1031,7 +1083,7 @@ _in_dev_DefineHotkeyFlex(_keyname, purpose_name, comment, fn_cond, fn_act, act_a
 		}
 		
 		dbgHotkeyFlex(Format("Delete hotkey ""{}"" of purpose-name: ""{}"""
-			, _keyname, purpose_name))
+			, keyname, purpose_name))
 		
 		s_dp[keyname].Delete(purpose_name)
 		
@@ -1041,53 +1093,66 @@ _in_dev_DefineHotkeyFlex(_keyname, purpose_name, comment, fn_cond, fn_act, act_a
 			
 			s_dp.Delete(keyname)
 		
-			Hotkey, If ; ; we always use global space
-			Hotkey, % _keyname, Off
+			Hotkey, If ; we always use global space
+			Hotkey, % hp_keyname, Off
 		}
 		
 		return true
 	}
 	
 	dev_assert(0) ; BUG! Should not get here.
-	
-_dev_HotkeyFlex_global:
-	
-	; I use AHK label so that we can directly access static s_dp{} here.
+}
+
+_dev_HotkeyFlex_callback()
+{
+	s_dp := Amhk.HotkeyFlexDispatcher
 
 	keyname := _tweak_ThisHotkeyStripPrefix(A_ThisHotkey)
 	
 	if(not s_dp.HasKey(keyname))
 	{
-		errmsg := Format("[Unexpect!] In _dev_HotkeyFlex_global:, A_ThisHotkey={} , stripped-keyname={} , not found in s_dp{}.", A_ThisHotkey, keyname)
+		errmsg := Format("[Unexpect!] In _dev_HotkeyFlex_callback(), A_ThisHotkey={} , stripped-keyname={} , not found in s_dp{}.", A_ThisHotkey, keyname)
 		dbgHotkeyFlex(errmsg)
 		dev_TooltipAutoClear(errmsg)
 		return
 	}
 
+	has_cond_match := false
+	meet_passthru := false
+	
 	for purpose_name, actinfo in s_dp[keyname]
 	{
-		cond_ok := actinfo.fn_cond ? actinfo.fn_cond.() : true
+		is_global := actinfo.fn_cond ? false : true
+		cond_ok := is_global ? true : actinfo.fn_cond.()
 		
 		if(cond_ok)
 		{
-			dbgHotkeyFlex(Format("Flex-hotkey firing: [{}] {}", purpose_name, actinfo.comment))
+			dbgHotkeyFlex(Format("Hotkey {} firing: [{}] {}", keyname, purpose_name, actinfo.comment))
 			
 			actinfo.fn_act.(actinfo.act_args*)
+			
+			has_cond_match := true
+			
+			if(actinfo.is_passthru)
+				meet_passthru := true
 		}
 		else
 		{
-			dbgHotkeyFlex(Format("Flex-hotkey NOT-fired: [{}] {}", purpose_name, actinfo.comment))
+			dbgHotkeyFlex(Format("Hotkey {} NOT-fired: [{}] {}", keyname, purpose_name, actinfo.comment))
+		}
+		
+		if(meet_passthru || !has_cond_match)
+		{
+			dbgHotkeyFlex(Format("Passthrough {} keyname: {}", meet_passthru?"(explicit)":"(implicit)", keyname))
+			
+			Send {%keyname%}
 		}
 	}
 	
 	return
 }
 
-dbgHotkeyFlex(s)
-{
-	if(g_isdbg_DefineHotkeyFlex)
-		Dbgwin_Output("HotkeyFlex: " s)
-}
+
 
 _create_auto_purposename(dict_of_purposename)
 {
@@ -1113,46 +1178,115 @@ _tryget_funcobj_name(func)
 	}
 }
 
-
-
-
-
-; [2015-02-07] The great dynamically hotkey defining function. (tested on AHK 1.1.13.01)
-; BIG Thanks to: http://stackoverflow.com/a/17932358
-; ... above is historical comment.
-; ... [2020-03-15] Now we have more advanced dev_DefineHotkey, dev_UnDefineHotkey, 
-;                  dev_DefineHotkeyWithCondition, dev_UnDefineHotkeyWithCondition .
-
-dev_DefineHotkeyLogClear() 
+fxhk_DefineHotkey(_keyname, is_passthru, fn_act, act_args*)
 {
-	; [2020-03-15] Autohotkey 1.1.32.00 
-	; If you need this log, please define `global g_isDefineHotkeyLog:=true` in custom_env.ahk .
-	; Default is no log, bcz dev_WriteLogFile seems quit time consuming.
-	if(g_isDefineHotkeyLog) {
-		dev_WriteLogFile(g_DefineHotkeyLogfile, "AmHotkey reload at: " . dev_GetDateTimeStrNow() . "`n", false)
-	} else {
-		FileDelete, % g_DefineHotkeyLogfile
-	}
+	dev_assert(StrLen(_keyname)>0) ; _keyname must be a valid Autohotkey keyname
+
+	purpose_name := _in_dev_DefineHotkeyFlex(_keyname
+		, ""       ; purpose_name null, would auto-generate
+		, ""       ; empty comment
+		, is_passthru
+		, ""       ; empty condition  
+		, fn_act, args*)
+	
+	return purpose_name
 }
 
-dev_DefineHotkeyLogAppend(prefix, hk, fn_name)
+fxhk_DefineHotkeyCond(_keyname, fn_cond, is_passthru, fn_act, act_args*)
 {
-	if(g_isDefineHotkeyLog) {
-		str := Format("[{1}] {2}： '{3}' => '{4}'`n",dev_GetDateTimeStrNow(), prefix, hk, fn_name)
-		dev_WriteLogFile(g_DefineHotkeyLogfile, str)
-	}
+	dev_assert(StrLen(_keyname)>0) ; _keyname must be a valid Autohotkey keyname
+
+	purpose_name := _in_dev_DefineHotkeyFlex(_keyname
+		, ""       ; purpose_name null, would auto-generate
+		, ""       ; empty comment
+		, is_passthru
+		, fn_cond  ; condition
+		, fn_act, act_args*)
+	
+	return purpose_name
+}
+
+fxhk_DefineHotkeyN(_keyname, purpose_name, comment, is_passthru, fn_act, act_args*)
+{
+	; N implies explicit Naming
+
+	dev_assert(StrLen(_keyname)>0)     ; _keyname must be a valid Autohotkey keyname
+	dev_assert(StrLen(purpose_name)>0) ; Input purpose_name must be a non-empty string
+
+	_in_dev_DefineHotkeyFlex(_keyname
+		, purpose_name
+		, comment
+		, is_passthru
+		, ""       ; empty condition  
+		, fn_act, act_args*)
+	
+	return purpose_name
+}
+
+fxhk_DefineHotkeyCondN(_keyname, purpose_name, comment, is_passthru, fn_cond, fn_act, act_args*)
+{
+	; N implies explicit Naming
+
+	dev_assert(StrLen(_keyname)>0)     ; _keyname must be a valid Autohotkey keyname
+	dev_assert(StrLen(purpose_name)>0) ; Input purpose_name must be a non-empty string
+
+	_in_dev_DefineHotkeyFlex(_keyname
+		, purpose_name
+		, comment
+		, is_passthru
+		, fn_cond
+		, fn_act, act_args*)
+	
+	return purpose_name
+}
+
+fxhk_UnDefineHotkey(_keyname, purpose_name)
+{
+	dev_assert(StrLen(_keyname)>0) ; _keyname must be a valid Autohotkey keyname
+	dev_assert(StrLen(purpose_name)>0) ; purpose_name must be a string
+	
+	ret := _in_dev_DefineHotkeyFlex(_keyname, purpose_name, "_off_"
+		, "", "", "")
+	return ret
+}
+
+fxhk_IsHotkeyExist(_keyname, purpose_name)
+{
+	keyname := _tweak_ThisHotkeyStripPrefix(_keyname) ; keyname as dict-key
+
+	s_dp := Amhk.HotkeyFlexDispatcher
+
+	if(IsObject(s_dp[keyname][purpose_name]))
+		return true
+	else
+		return false
+}
+
+;
+; [2015-02-07] The great dynamically hotkey defining function. (tested on AHK 1.1.13.01)
+; BIG Thanks to: http://stackoverflow.com/a/17932358
+;
+; [2022-01-06] Updated and tested with AHK 1.1.36.2 .
+; This function family includes:
+; * dev_DefineHotkey
+; * dev_UnDefineHotkey
+; * dev_DefineHotkeyWithCondition
+; * dev_UnDefineHotkeyWithCondition
+; This is considered my legacy enhancements to internal `Hotkey` command. 
+; They are not so flexible as those new fxhk_xxx alternatives.
+; But, the legacy ones have the ability to cope with keyname like "Esc & 1",
+; So, I just can not replace them totally with fxhk_xxx encapsulation.
+
+dev_DefineHotkey(hk, fn_name, args*) 
+{
+	dbgHotkeyLegacy(Format("dev_DefineHotkey(), hk={}, fn_name={}", hk, fn_name))
+	in_dev_DefineHotkey(true, hk, fn_name, args)
 }
 
 dev_UnDefineHotkey(hk, fn_name)
 {
-	dev_DefineHotkeyLogAppend("dev_UnDefineHotkey", hk, fn_name)
+	dbgHotkeyLegacy(Format("dev_UnDefineHotkey(), hk={}, fn_name={}", hk, fn_name))
 	in_dev_DefineHotkey(false, hk, fn_name, 0)
-}
-
-dev_DefineHotkey(hk, fn_name, args*) 
-{
-	dev_DefineHotkeyLogAppend("dev_DefineHotkey", hk, fn_name)
-	in_dev_DefineHotkey(true, hk, fn_name, args)
 }
 
 in_dev_DefineHotkey(is_on, hk_userform, fn_name, args) ; will define global hotkey
@@ -1177,9 +1311,7 @@ in_dev_DefineHotkey(is_on, hk_userform, fn_name, args) ; will define global hotk
 		return
 	}
 	
-	hk := hk_userform
-	; 
-	hk := _tweak_ThisHotkeyStripPrefix(hk)
+	hk := _tweak_ThisHotkeyStripPrefix(hk_userform)
 	
 	if(is_on)
 	{
@@ -1207,7 +1339,7 @@ in_dev_DefineHotkey(is_on, hk_userform, fn_name, args) ; will define global hotk
 	
 		funs[hk].Delete(fn_name)
 		
-		if( IsDictEmpty(funs[hk]) )
+		if( dev_IsDictEmpty(funs[hk]) )
 		{
 			Hotkey, If ; -- use the global context
 			Hotkey, %hk%, Off
@@ -1218,17 +1350,11 @@ in_dev_DefineHotkey(is_on, hk_userform, fn_name, args) ; will define global hotk
 
 Hotkey_Handler_global:
 
-	ThisHotkey_fix := A_ThisHotkey
-	
-	; We need to strip off "~" and "$", because later A_ThisHotkey *sometimes* does not contain that "~" and "$".
-	; For example "$NumpadDiv" becomes "NumpadDiv", but "$NumpadLeft" remains "$NumpadLeft".
-	; (maybe an AHK engine bug)
-	;
-	ThisHotkey_fix := _tweak_ThisHotkeyStripPrefix(ThisHotkey_fix)
+	hk_stripped := _tweak_ThisHotkeyStripPrefix(A_ThisHotkey)
 
-;	Dbgwin_Output(Format("Hotkey_Handler_global: A_ThisHotkey={} , fixed={}", A_ThisHotkey, ThisHotkey_fix)) ; debug
+;	Dbgwin_Output(Format("Hotkey_Handler_global: A_ThisHotkey={} , fixed={}", A_ThisHotkey, hk_stripped)) ; debug
 	
-	dict_fnpr := funs[ThisHotkey_fix]
+	dict_fnpr := funs[hk_stripped]
 	if(dict_fnpr)
 	{
 		; Call each callbacks registered in dict_fnpr{}.
@@ -1239,28 +1365,22 @@ Hotkey_Handler_global:
 	}
 	else
 	{
-		tooltip, % Format("Bad! funs[{}] is null !!!!!", ThisHotkey_fix)
+		tooltip, % Format("Bad! funs[{}] is null !!!!!", hk_stripped)
 	}
 
 	return
 }
 
-_tweak_ThisHotkeyStripPrefix(ahkname)
-{
-	ahkname := dev_StripPrefix(ahkname, "~")
-	ahkname := dev_StripPrefix(ahkname, "$")
-	return ahkname
-}
 
 dev_UnDefineHotkeyWithCondition(hk, cond)
 {
-	dev_DefineHotkeyLogAppend(Format("dev_UnDefineHotkeyWithCondition({})",cond), hk, fn_name)
+	dbgHotkeyLegacy(Format("dev_UnDefineHotkeyWithCondition(), hk={}, cond={}", hk, cond))
 	dev_DefineHotkeyWithCondition(hk, cond, "")
 }
 
-dev_DefineHotkeyWithCondition(hk, cond, fn_name, args*)
+dev_DefineHotkeyWithCondition(hk_userform, cond, fn_name, args*)
 {
-	dev_DefineHotkeyLogAppend(Format("dev_DefineHotkeyWithCondition({})",cond), hk, fn_name)
+	dbgHotkeyLegacy(Format("dev_DefineHotkeyWithCondition(), hk={}, cond={}, fn_name={}", hk_userform, cond, fn_name))
 
 	; fn_name  is a function name string, like "DoMyWork", DoMyWork() is defined somewhere else.
 	; If fn_name=="", the previously registered hotkey *for the cond* is removed.
@@ -1301,8 +1421,6 @@ dev_DefineHotkeyWithCondition(hk, cond, fn_name, args*)
 	; condfuns["F1"]["Spc_IsActive"].fn      => Function object for Spc_IsActive() true condition
 	; condfuns["F1"]["Spc_IsActive"].pr      => function parameters for the .fn function
 	
-	; [2022-12-19] TODO: Apply _tweak_ThisHotkeyStripPrefix() and dev_getCallStack() report, as in in_dev_DefineHotkey().
-	
 	if(cond=="")
 	{
 		dev_MsgBoxError("BUG! Call with null cond: `n`ndev_DefineHotkeyWithCondition(" . hk . "`, (null)`, " . fn_name . ")")
@@ -1310,6 +1428,8 @@ dev_DefineHotkeyWithCondition(hk, cond, fn_name, args*)
 	}
 	
 	static condfuns := {}
+	
+	hk := _tweak_ThisHotkeyStripPrefix(hk_userform) ; hk as dict-key
 	
 	if(not condfuns[hk])
 	{
@@ -1331,14 +1451,14 @@ dev_DefineHotkeyWithCondition(hk, cond, fn_name, args*)
 		condfuns[hk][cond].cnt := 0
 		
 		Hotkey, If, %cond%()
-		Hotkey, %hk%, Hotkey_Handler_conditional, On
+		Hotkey, %hk_userform%, Hotkey_Handler_conditional, On
 	}
 	else 
 	{
-		condfuns[hk].remove(cond)
+		condfuns[hk].Delete(cond)
 		
 		Hotkey, If, %cond%()
-		Hotkey, %hk%, Off
+		Hotkey, %hk_userform%, Off
 	}
 	
 	Hotkey, If ; to be third-party code friendly, revert to global Hotkey context
@@ -1346,15 +1466,18 @@ dev_DefineHotkeyWithCondition(hk, cond, fn_name, args*)
 	return
 
 Hotkey_Handler_conditional:
-	hk_dict := condfuns[A_ThisHotkey]
+
+	hk_stripped := _tweak_ThisHotkeyStripPrefix(A_ThisHotkey)
+
+	hk_dict := condfuns[hk_stripped]
 	hk_dict.count += 1
-;tooltip, % "Hotkey_Handler_conditional() [" . A_ThisHotkey . "] ........(" . hk_dict.count . ")"
+;tooltip, % "Hotkey_Handler_conditional() [" . hk_stripped . "] ........(" . hk_dict.count . ")"
 	
 	for cond, fnpr in hk_dict
 	{
 		if(%cond%()) ; if the condition is true
 		{
-;			tooltip, % "Hotkey_Handler_conditional() [" . A_ThisHotkey . "@" . cond . "] => " . fnpr.fn_name . "()" ; debug ok
+;			tooltip, % "Hotkey_Handler_conditional() [" . hk_stripped . "@" . cond . "] => " . fnpr.fn_name . "()" ; debug ok
 ;			sleep, 500 ; debug
 
 			fnpr.cnt += 1
@@ -1364,6 +1487,10 @@ Hotkey_Handler_conditional:
 
 	return
 }
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
 
 Get_ClientAreaPos(htopwin, byref x, byref y, byref w, byref h)
 {

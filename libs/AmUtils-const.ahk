@@ -17,4 +17,5 @@ class Amhk
 	static mbopt_TaskModal := 0x2000
 	static mbopt_Topmost := 0x40000
 
+	static HotkeyFlexDispatcher  := {}
 }

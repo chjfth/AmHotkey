@@ -433,7 +433,6 @@ dev_StripPrefix(str, prefix, is_case_sensitive:=false)
 		return SubStr(str, StrLen(prefix)+1)
 	else
 		return str
-	
 }
 
 dev_StripSuffix(str, suffix, is_case_sensitive:=false)
@@ -442,7 +441,32 @@ dev_StripSuffix(str, suffix, is_case_sensitive:=false)
 		return SubStr(str, 1, StrLen(str)-StrLen(suffix))
 	else
 		return str
-	
+}
+
+dev_StripPrefixChars(str, pfxchars, is_case_sensitive:=false)
+{
+	Loop, % StrLen(str)
+	{
+		c := SubStr(str, 1, 1)
+		if(InStr(pfxchars, c, is_case_sensitive))
+			str := SubStr(str, 2)
+		else
+			break
+	}
+	return str
+}
+
+dev_StripSuffixChars(str, sfxchars, is_case_sensitive:=false)
+{
+	Loop, % StrLen(str)
+	{
+		c := SubStr(str, 0)
+		if(InStr(sfxchars, c, is_case_sensitive))
+			str := SubStr(str, 1, -1)
+		else
+			break
+	}
+	return str
 }
 
 Gui_IsValidVar(varname)
@@ -739,17 +763,6 @@ dev_OnMessageRegister(wm_xxx, user_callback)
 dev_OnMessageUnRegister(wm_xxx, user_callback)
 {
 	return indev_OnMessage(wm_xxx, user_callback, 0)
-}
-
-IsDictEmpty(dict)
-{	
-	; A dict(dictionary) is an associative array.
-	empty := true
-	for k, v in dict {
-		empty := false
-		break
-	}
-	return empty
 }
 
 dev_IsDictEmpty(dict)
