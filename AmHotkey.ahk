@@ -1059,8 +1059,12 @@ _in_dev_DefineHotkeyFlex(_keyname, purpose_name, comment, is_passthru, fn_cond, 
 		
 		Hotkey, If ; we always use global space
 		Hotkey, % hp_keyname, _dev_HotkeyFlex_callback, On UseErrorLevel
-		if(ErrorLevel) {
-			Dbgwin_Output(Format("""Hotkey, {}"" execution fail.", hp_keyname))
+		if(ErrorLevel) 
+		{
+			; Improper hp_keyname that would cause `Hotkey` command to err:
+			; 	F44
+			; 	$CapsLock
+			Dbgwin_Output(Format("""Hotkey, {}"" execution fail. You probably passed in a improper keyname.", hp_keyname))
 			dev_assert(0) ; 
 		}
 
