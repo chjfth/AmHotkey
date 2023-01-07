@@ -230,7 +230,7 @@ Spc_FolderGoto_InitHotkeys()
 	Loop, parse, letters
 	{
 ;		Hotkey, If, IsSpeedCommanderActive()
-		dev_DefineHotkeyWithCondition("~$" . A_LoopField, "IsSpeedCommanderActive", "Spc_FolderGoto_AppendBSlash", A_LoopField)
+		old_dev_DefineHotkeyWithCondition("~$" . A_LoopField, "IsSpeedCommanderActive", "Spc_FolderGoto_AppendBSlash", A_LoopField)
 	}
 	
 }

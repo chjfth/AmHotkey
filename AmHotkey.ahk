@@ -94,7 +94,7 @@ global g_AmHotkeyFilepath := A_LineFile ; Record my real filepath at runtime.
 global g_AmHotkeyDirpath  := dev_SplitPath(g_AmHotkeyFilepath)
 
 global g_isdbg_DefineHotkeyLegacy := false
-global g_isdbg_DefineHotkeyFlex   := true ; false
+global g_isdbg_DefineHotkeyFlex   := false
 
 
 
@@ -1165,15 +1165,31 @@ _dev_HotkeyFlex_callback()
 	{
 		if(meet_passthru || !has_cond_match)
 		{
-			dbgHotkeyFlex(Format("Passthrough {} keynamed: {}", meet_passthru?"(explicit)":"(implicit)", keynamed))
+			sendcompat := _HotkeynameToSendCompat(keynamed)
+		
+			dbgHotkeyFlex(Format("Passthrough {} keynamed: {} → Send: {}"
+				, meet_passthru?"(explicit)":"(implicit)"
+				, keynamed
+				, sendcompat))
 			
-			Send {%keynamed%}
+			Send % sendcompat
 		}
 	}
 	
 	return
 }
 
+_HotkeynameToSendCompat(a__thishotkey)
+{
+	; My problem description:
+	; https://www.autohotkey.com/boards/viewtopic.php?f=76&t=112401
+	; according to mikeyww's suggestion, suitable for most cases.
+	;
+	; One failing case: >^a should translate to {RCtrl down}a{RCtrl up}
+	
+	sendcompat := RegExReplace(a__thishotkey, "\$?([#^!+]*)(.+)", "$1{$2}")
+	return sendcompat
+}
 
 _create_auto_purposename(dict_of_purposename)
 {
@@ -1347,21 +1363,27 @@ dev_UnDefineHotkeyWithCondition(hk, fn_cond, fn_name) ; old 2015
 ; BIG Thanks to: http://stackoverflow.com/a/17932358
 ;
 ; [2022-01-06] Updated and tested with AHK 1.1.36.2 .
-; This function family includes (now with _old_ prefix):
+; This function family includes (now with old_ prefix):
 ; * dev_DefineHotkey
 ; * dev_UnDefineHotkey
 ; * dev_DefineHotkeyWithCondition
 ; * dev_UnDefineHotkeyWithCondition
 ; This is considered my legacy enhancements to internal `Hotkey` command. 
 ; They are not so flexible as those new fxhk_xxx alternatives.
+;
+; BUT we should know, fxhk_xxx has its own limitation, due to not reliable 
+; implementation of _HotkeynameToSendCompat().
+; If such limitation is encountered, we have to use the old_ functions.
+; And BE AWARE: For a specific hotkey, that hotkey can NOT be registered 
+; with both fxhk_xxx and old_xxx; if you do that, only one will be effective.
 
-_old_dev_DefineHotkey(hk, fn_name, args*) 
+old_dev_DefineHotkey(hk, fn_name, args*) 
 {
 	dbgHotkeyLegacy(Format("dev_DefineHotkey(), hk={}, fn_name={}", hk, fn_name))
 	in_dev_DefineHotkey(true, hk, fn_name, args)
 }
 
-_old_dev_UnDefineHotkey(hk, fn_name)
+old_dev_UnDefineHotkey(hk, fn_name)
 {
 	dbgHotkeyLegacy(Format("dev_UnDefineHotkey(), hk={}, fn_name={}", hk, fn_name))
 	in_dev_DefineHotkey(false, hk, fn_name, 0)
@@ -1450,13 +1472,13 @@ Hotkey_Handler_global:
 }
 
 
-_old_dev_UnDefineHotkeyWithCondition(hk, cond)
+old_dev_UnDefineHotkeyWithCondition(hk, cond)
 {
 	dbgHotkeyLegacy(Format("dev_UnDefineHotkeyWithCondition(), hk={}, cond={}", hk, cond))
 	dev_DefineHotkeyWithCondition(hk, cond, "")
 }
 
-_old_dev_DefineHotkeyWithCondition(hk_userform, cond, fn_name, args*)
+old_dev_DefineHotkeyWithCondition(hk_userform, cond, fn_name, args*)
 {
 	dbgHotkeyLegacy(Format("dev_DefineHotkeyWithCondition(), hk={}, cond={}, fn_name={}", hk_userform, cond, fn_name))
 
