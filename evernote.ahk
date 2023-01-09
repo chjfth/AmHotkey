@@ -846,7 +846,7 @@ Evp_GenerateBaseImage(fpFromImage, scale_pct, imgsig, is_keeppngtrans
 		if(fpFromImage)
 		{
 			if(!FileExist(fpFromImage))	{
-				dev_MsgBoxError("Image file does not exist:`n`n" . fpFromImage)
+				dev_MsgBoxError("Image file does not exist:`n`n" fpFromImage)
 				goto EVP_CLEANUP_20221204
 			}
 			
@@ -1215,7 +1215,7 @@ Evp_HasTransparentPixel(fpimg)
 ;			dev_assert(scan_result.y<imgh)
 ;		}
 		
-;		dev_TooltipAutoClear("Phase-two scan from image-y (0-based): " . scan_result.y, 5000) ; debug
+;		dev_TooltipAutoClear("Phase-two scan from image-y (0-based): " scan_result.y, 5000) ; debug
 		
 		; Now we search "image left-side"(100-pixel column)
 		scan_width := 100
@@ -1248,11 +1248,11 @@ Evp_TimerProcCheckPngfileTranspixel(pngfilepath, from_startcount)
 
 	Gui_ChangeOpt(  "EVP", "+OwnDialogs")
 
-;	Dbgwin_Output("Evp_TimerProcCheckPngfileTranspixel(), " . pngfilepath) ; debug
+;	Dbgwin_Output("Evp_TimerProcCheckPngfileTranspixel(), " pngfilepath) ; debug
 	
 	hastranspx := Evp_HasTransparentPixel(pngfilepath)
 
-;	Dbgwin_Output("Evp_TimerProcCheckPngfileTranspixel() = " . (hastranspx?"Yes":"No")) ; debug
+;	Dbgwin_Output("Evp_TimerProcCheckPngfileTranspixel() = " (hastranspx?"Yes":"No")) ; debug
 	
 	; show warning icon if not hastranspx.
 	GuiControl_Show("EVP", "gu_evpIcnWarnNoTranspixel", !hastranspx?true:false)
@@ -1638,12 +1638,12 @@ Evp_BtnOK()
 
 	; Save the used picture to a permanent directory, so that we can get it back 
 	; in case Evernote fail to actually store my picture in the note.
-	dir_everpic_save := A_AppData . "\Everpic-save"
+	dir_everpic_save := A_AppData "\Everpic-save"
 	FileCreateDir, %dir_everpic_save%
 	FileCopy, %imgfilepath%, %dir_everpic_save%, 1 ; 1=overwrite
 	if(ErrorLevel) {
 		; Note: We did a non-overwrite copy, if destination file exist, we get ErrorLevel.
-		dev_MsgBoxInfo("Unexpect: Fail to copy your image file to " . dir_everpic_save)
+		dev_MsgBoxInfo("Unexpect: Fail to copy your image file to " dir_everpic_save)
 		return
 	}
 	
@@ -1691,7 +1691,7 @@ Evp_CleanupTempDir()
 {
 	; Cleanup stale everpic-... files in C:\Users\win7evn\AppData\Local\Temp\Everpic
 
-	Loop, Files, % g_evpTempDir . "\*"
+	Loop, Files, % g_evpTempDir "\*"
 	{
 		filename := A_LoopFileName ; example: "everpic-20221204_220000.q40.jpg"
 		
@@ -1992,7 +1992,7 @@ Evtbl_ParseTableColumnWidth(ColumnSpec)
 	{
 		; A_LoopField will be "24" or "360:Brief" etc
 		
-		tkn := [ "" , "#" . A_Index ]
+		tkn := [ "" , "#" A_Index ]
 		; -- tkn[2] : set default column header text #1, #2, #3 ...
 		
 		tkn := StrSplit(A_LoopField, ":")
@@ -2115,7 +2115,7 @@ Evtbl_GenHtml_Table(hexcolor1, hexcolor2)
 	html := Format(html_ptn
 		, htmline_colgroup, thead_tds, tbody_tds
 		, tableborder, bordercolor
-		, "evertbl_" . dev_GetDateTimeStrCompact())
+		, "evertbl_" dev_GetDateTimeStrCompact())
 
 	; [2022-10-30] Embed `chjid` timestamp into <table>, so that Evernote 6.5.4 preserves it.
 	; Note: I have to use chjid inside style="...", instead of regular id attribute of <table>,
@@ -2517,7 +2517,7 @@ Evtbl_ComboboxFillColorPresets(varname_combobox, default_idx)
 		d := ar_colordict[A_Index]
 		itemstr := Format("{1}, {2} {3}", d.hexcode, d.rgbcode, d.desc)
 		
-		combostr .= "|" . itemstr
+		combostr .= "|" itemstr
 	}
 
 	; Add color strings to combo dropdown list:
@@ -2561,7 +2561,7 @@ Evtbl_SyncUserInputOneColor(varname_combobox, varname_bgbox, varname_text, is_bl
 
 	; Grab the color assignment in Combobox, and update the Preview-box accordingly.
 	GuiControlGet, colortext, EVTBL:, %varname_combobox%
-	;	dev_TooltipAutoClear("$==" . colortext)
+	;	dev_TooltipAutoClear("$==" colortext)
 	
 	; colortext is sth like: "#f0f0f0, rgb(240,240,240) 灰", and we only 
 	; care the "#f0f0f0" part which is enough to represent a color value.
@@ -2573,7 +2573,7 @@ Evtbl_SyncUserInputOneColor(varname_combobox, varname_bgbox, varname_text, is_bl
 		Evtbl_RedrawPreviewBox(varname_bgbox, varname_text, "#000000", false, "Invalid color code")
 		return ""
 	}
-;	dev_TooltipAutoClear(">>>" . hexcolor, 1000) ;// debug, enable this to verify whether the sync-timer has stopped.
+;	dev_TooltipAutoClear(">>>" hexcolor, 1000) ;// debug, enable this to verify whether the sync-timer has stopped.
 	
 	Evtbl_RedrawPreviewBox(varname_bgbox, varname_text, hexcolor, is_black_text, text)
 	
@@ -2622,9 +2622,9 @@ Evtbl_HtmlShowMixColor(hexcolor1, hexcolor2, is_black_text)
 {
 	; hexcolor can be "#f0f0ff" or "f0f0ff"
 	if( SubStr(hexcolor1, 1, 1) != "#" )
-		hexcolor1 := "#" . hexcolor1 ; add leading "#"
+		hexcolor1 := "#" hexcolor1 ; add leading "#"
 	if( SubStr(hexcolor2, 1, 1) != "#" ) 
-		hexcolor2 := "#" . hexcolor2 ; add leading "#"
+		hexcolor2 := "#" hexcolor2 ; add leading "#"
 
 	WB := g_evtblPreviewMix
 	div := WB.document.body.firstChild
@@ -2683,7 +2683,7 @@ Evtbl_CalBorderColorFromBgColor(hexcolor)
 	if( SubStr(hexcolor, 1, 1) == "#" )
 		hexcolor := SubStr(hexcolor, 2) ; strip leading "#"
 
-	ctriple := util_GetRgbTripleFromStr("#" . hexcolor)
+	ctriple := util_GetRgbTripleFromStr("#" hexcolor)
 
 	factor := 0.75
 	newr := Round(ctriple.red * factor)
@@ -2953,9 +2953,6 @@ cmutil_xy_index1b(linear_index) ; 1-based input & output
 
 ColorMatrix_CreateGui()
 {
-;	GuiControlGet, g_evtblIsWhiteText, EVTBL:
-;	MsgBox, % "g_evtblIsWhiteText=" . g_evtblIsWhiteText
-	
 	gar_colordict := Evtbl_GetColorDicts() ; return a dict array
 	
 	Gui, ColorMatrix:New ; Destroy old if existed
@@ -2975,7 +2972,6 @@ ColorMatrix_CreateGui()
 	{
 		dcolor := gar_colordict[A_Index]
 		xy0 := cmutil_xy_index0b(A_Index)
-;		MsgBox, % xy0.x . " | " . xy0.y
 	
 		ctrlpos := Format("x{} y{} w{} h{}"
 			, COLORCELL_xmargin    + xy0.x*COLORCELL_xspan + xgap_half
@@ -3057,7 +3053,7 @@ ColorMatrix_RepaintLabels()
 	colors := gar_colordict.Length()
 	Loop, %colors%
 	{
-		bgcolor0x := "0x" . SubStr(gar_colordict[A_Index].hexcode,2,6) ; bgcolor0x="0xF0F0FF" etc
+		bgcolor0x := "0x" SubStr(gar_colordict[A_Index].hexcode,2,6) ; bgcolor0x="0xF0F0FF" etc
 		
 		foregroundcolor := g_colormatrixIsWhiteText ? 0xFFffFF : 0
 		
@@ -3103,7 +3099,7 @@ ColorMatrixGuiSize() ; Window resizing hook: ColorMatrix++GuiSize
 			x1pct := Round(pixelx1 / (A_GuiWidth-xmg*2) * 100)
 			y1pct := Round(pixely1 / (A_GuiHeight-ymg1-ymg2) * 100)
 
-			rsdict["g_matrixColor" . A_Index] := Format("{},{},{},{}", x0pct, y0pct, x1pct, y1pct)
+			rsdict["g_matrixColor" A_Index] := Format("{},{},{},{}", x0pct, y0pct, x1pct, y1pct)
 		}
 		
 		rsdict.g_colormatrixIsWhiteText := "0,100,0,100" ; stick to left bottom
@@ -3129,7 +3125,7 @@ ColorMatrix_HideGui(idx_select:=0)
 	if(idx_select>0)
 	{
 		varname := g_varnameComboColorOut ; maybe "g_evtblComboColor" or "g_evtblComboColor2"
-;		dev_TooltipAutoClear("varname=" . varname)
+;		dev_TooltipAutoClear("varname=" varname)
 		GuiControl, EVTBL:Choose,  %varname% , % idx_select
 		
 		iswhite := g_colormatrixIsWhiteText ? 1 : 0
@@ -3305,7 +3301,7 @@ ESC:: ; Do not allow ESC to close snippet window
 	}
 	; [2019-03-30] If ESC is pressed twice within a short time(e.g. 500ms), one ESC is always sent.
 	
-;	dev_TooltipAutoClear("PRior hotkey: " . A_PriorHotkey)
+;	dev_TooltipAutoClear("PRior hotkey: " A_PriorHotkey)
 	
 	if (A_PriorHotkey == "Esc" and A_TimeSincePriorHotkey <= 500) {
 	    ; This is a double-press.
@@ -3528,7 +3524,6 @@ Evernote_TSVtoHtml(input_string, sepchar:="", hexcolor1="", hexcolor2="")
 
 	Loop, PARSE, % input_string , `n, `r
 	{
-;		MsgBox, % ">>" . A_LoopField
 		fields := StrSplit(A_LoopField, sepchar, omitchars)
 		break
 	}
@@ -3620,9 +3615,9 @@ Evernote_PopLinkShowMenu()
 	    menutext := fields[2] ; e.g: MSBuild, WinGUI, Books:PRWIN5
 	    desctext := fields[3] 
 	    if(fields[4]) 
-	    	desctext .= ", " . fields[4]
+	    	desctext .= ", " fields[4]
 	    if(fields[5]) 
-	    	desctext .= ", " . fields[5] 
+	    	desctext .= ", " fields[5] 
 	    
 	    if (!url)
 	    	continue

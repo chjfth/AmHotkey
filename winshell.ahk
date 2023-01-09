@@ -230,7 +230,7 @@ Spc_FolderGoto_InitHotkeys()
 	Loop, parse, letters
 	{
 ;		Hotkey, If, IsSpeedCommanderActive()
-		old_dev_DefineHotkeyWithCondition("~$" . A_LoopField, "IsSpeedCommanderActive", "Spc_FolderGoto_AppendBSlash", A_LoopField)
+		old_dev_DefineHotkeyWithCondition("~$" A_LoopField, "IsSpeedCommanderActive", "Spc_FolderGoto_AppendBSlash", A_LoopField)
 	}
 	
 }
@@ -289,10 +289,10 @@ mo_CreateMonitorOffDlg()
 	
 	Gui, MonitorOff:Font, s9 cBlack, Tahoma
 	optchecked := g_isMoffPeriodic ? "Checked" : ""
-	Gui, MonitorOff:Add, CheckBox, % "vg_isMoffPeriodic " . optchecked, % "Periodically turn &off screen?"
+	Gui, MonitorOff:Add, CheckBox, % "vg_isMoffPeriodic " optchecked, % "Periodically turn &off screen?"
 
 ;	optchecked := g_isMoffPeriodicOnLockScreen ? "Checked" : ""
-;	Gui, MonitorOff:Add, CheckBox, % "vg_isMoffPeriodicOnLockScreen " . optchecked
+;	Gui, MonitorOff:Add, CheckBox, % "vg_isMoffPeriodicOnLockScreen " optchecked
 ;		, % "P&eriodically turn off only when screen is locked(by [Lock Now] button)?"
 	; [2016-02-19] This has very vague semantic and I actually never use it in the past year, so comment it out.
 	
@@ -491,9 +491,9 @@ CalPPI_CreateGui()
 	Gui, CalPPI:Font, s9 cBlack, Tahoma
 
 	Gui, CalPPI:Add, Text, Section, % "&Choose a predefined model:"
-	default_sel := g_CalppiDropboxSel>0 ? ("Choose" . g_CalppiDropboxSel) : ""
+	default_sel := g_CalppiDropboxSel>0 ? ("Choose" g_CalppiDropboxSel) : ""
 	Gui, CalPPI:Add, DropDownList
-		, % "ys-2 w200 vg_idxMonitorChoice glb_CalPPI_OnChangeDropdownSelection AltSubmit " . default_sel
+		, % "ys-2 w200 vg_idxMonitorChoice glb_CalPPI_OnChangeDropdownSelection AltSubmit " default_sel
 		, % g_CalppiListlist
 	;
 	Gui, CalPPI:Add, Text, xm, % "My monitor has phys&ical parameters:"
@@ -571,14 +571,14 @@ CalPPI_RefreshMonitorParams(model)
 	ppi_logix := 25.4/(physical.cm_w*10/g_CalppiLogicalResX)
 	ppi_logiy := 25.4/(physical.cm_h*10/g_CalppiLogicalResY)
 
-	GuiControl, CalPPI:, g_cm_Diagonal, % cm_d . "cm"
-	GuiControl, CalPPI:, g_cm_Width, % cm_w . "cm"
-	GuiControl, CalPPI:, g_cm_Height, % cm_h . "cm"
-	GuiControl, CalPPI:, g_mm_dotsize, % mm_dot . "mm"
+	GuiControl, CalPPI:, g_cm_Diagonal, % cm_d "cm"
+	GuiControl, CalPPI:, g_cm_Width, % cm_w "cm"
+	GuiControl, CalPPI:, g_cm_Height, % cm_h "cm"
+	GuiControl, CalPPI:, g_mm_dotsize, % mm_dot "mm"
 	GuiControl, CalPPI:, g_monitor_ppi, % ppi
 	;
-	GuiControl, CalPPI:, g_mm_dotsize_LogiX, % mm_dotsize_logix . "mm"
-	GuiControl, CalPPI:, g_mm_dotsize_LogiY, % mm_dotsize_logiy . "mm"
+	GuiControl, CalPPI:, g_mm_dotsize_LogiX, % mm_dotsize_logix "mm"
+	GuiControl, CalPPI:, g_mm_dotsize_LogiY, % mm_dotsize_logiy "mm"
 	GuiControl, CalPPI:, g_ppi_LogiX, % ppi_logix
 	GuiControl, CalPPI:, g_ppi_LogiY, % ppi_logiy
 }
@@ -652,7 +652,7 @@ winshell_GrabControlTextUnderMouse()
 	ControlGet, otext, List, , %classnn%, ahk_id %tophwnd%
 	ControlGetPos, x, y, w, h, %classnn%, ahk_id %tophwnd%
 
-;	tooltip, % "ctrlhwnd=" . %ctrlhwnd% . " / len=" . strlen(otext)
+;	tooltip, % "ctrlhwnd=" %ctrlhwnd% " / len=" strlen(otext)
 	
 	if(not classnn) {
 		MsgBox, % "Cannot get child window classnn under mouse."
@@ -673,20 +673,20 @@ winshell_GrabControlTextUnderMouse()
 		lines := StrCountLines(otext)
 		if(lines>1) {
 			color := "88eeff" ; cyan
-			prompt_lines := " (" . lines . " lines)"
+			prompt_lines := " (" lines " lines)"
 		}
 		else
 			color := "ffe088" ; yellow
 		
-		DoHilightRectInTopwin("ahk_id " . tophwnd, x,y,w,h, 500, color)
+		DoHilightRectInTopwin("ahk_id " tophwnd, x,y,w,h, 500, color)
 		
-		MsgBox, % textlen " chars grabbed" . prompt_lines . ", in clipboard.`n`nClassnn=" . classnn
+		MsgBox, % textlen " chars grabbed" prompt_lines ", in clipboard.`n`nClassnn=" classnn
 	}
 	else
 	{
-		DoHilightRectInTopwin("ahk_id " . tophwnd, x,y,w,h, 500, "ff8888") ; red 
+		DoHilightRectInTopwin("ahk_id " tophwnd, x,y,w,h, 500, "ff8888") ; red 
 		
-		MsgBox, % "No text under mouse grabbed.`n`nClassnn=" . classnn
+		MsgBox, % "No text under mouse grabbed.`n`nClassnn=" classnn
 	}
 	; ControlGet, OutputVar, List, Options, SysListView321, WinTitle, WinText
 	
@@ -749,12 +749,12 @@ return
 ctlmove_AimControlUnderMouse()
 {
 	WinGet, Awinid, ID, A ; cache active window unique id
-	wintitle := "ahk_id " . Awinid
+	wintitle := "ahk_id " Awinid
 
 	CoordMode, Mouse, Window
 	MouseGetPos, mxWindow, myWindow, mouse_at_htopwin, classnn
 	
-;	dev_TooltipAutoClear("classNN=" . classnn . " mouse_at_htopwin=" . mouse_at_htopwin, 15000)
+;	dev_TooltipAutoClear("classNN=" classnn " mouse_at_htopwin=" mouse_at_htopwin, 15000)
 	
 	if(mouse_at_htopwin!=Awinid) 
 	{

@@ -67,7 +67,7 @@ MPC_IsActiveWebcam()
 	Loop, % mpc_hwndcount
 	{
 		hwnd := mpc_hwnds%A_Index%
-		WinGetTitle, title, % "ahk_id " . hwnd
+		WinGetTitle, title, % "ahk_id " hwnd
 		if(StrIsStartsWith(title, "Live"))
 		{
 			g_mpc_hwndWebcam := hwnd
@@ -206,7 +206,7 @@ MPC_txc_GetPlaytime(wintitle="")
 		{
 			WinGet, winid, ID, ahk_class MediaPlayerClassicW
 		}
-		wintitle := "ahk_id " . winid
+		wintitle := "ahk_id " winid
 	}
 
 	ControlGetText, mpc_timetext, Static2, %wintitle%
@@ -244,7 +244,7 @@ MPC_txc_GetPlaytime(wintitle="")
 		}
 		else 
 		{
-			MsgBox, % msgboxoption_IconExclamation , , % "Unexpected MPC timetext: " . mpc_timetext
+			MsgBox, % msgboxoption_IconExclamation , , % "Unexpected MPC timetext: " mpc_timetext
 			return ""
 		}
 		
@@ -280,7 +280,7 @@ MPC_txc_GetPlaytime(wintitle="")
 		}
 		else 
 		{
-			MsgBox, % msgboxoption_IconExclamation , , % "Unexpected MPC timetext: " . mpc_timetext
+			MsgBox, % msgboxoption_IconExclamation , , % "Unexpected MPC timetext: " mpc_timetext
 			return ""
 		}
 		TotSeconds := MPC_CalAllSeconds(totHour, totMinute, totSecond)
@@ -333,7 +333,7 @@ MPC_txc_append_left()
 	
 	; now append the new left-part
 	txc_playtime := MPC_txc_GetCurrentPlaytimeTxc()
-	g_mpc_txc_string .= "[" . txc_playtime . "-]"
+	g_mpc_txc_string .= "[" txc_playtime "-]"
 	MPC_txc_tooltip_display(g_mpc_txc_string)
 }
 
@@ -351,7 +351,7 @@ MPC_txc_append_right()
 	{
 		; Make it something like:
 		;	P:\rec\20150313xxx.mpg[-0011]
-		g_mpc_txc_string := g_mpc_txc_string . "[-]" ; 
+		g_mpc_txc_string := g_mpc_txc_string "[-]" ; 
 	}
 	else if(g_mpc_txc_string ~= "[0-9]]$") ; (already has a right part)
 	{
@@ -365,7 +365,7 @@ MPC_txc_append_right()
 	
 	; now append the new right-part
 	txc_playtime := MPC_txc_GetCurrentPlaytimeTxc()
-	g_mpc_txc_string := RegExReplace(g_mpc_txc_string, "]$", txc_playtime . "]")
+	g_mpc_txc_string := RegExReplace(g_mpc_txc_string, "]$", txc_playtime "]")
 	MPC_txc_tooltip_display(g_mpc_txc_string)
 }
 
@@ -393,7 +393,7 @@ MPC_GetSeekbarY()
 MPC_GetSeekbarPos(xhint:=0)
 {
 	WinGet, mpc_winid, ID, A ; cache active window unique id
-	mpc_title := "ahk_id " . mpc_winid
+	mpc_title := "ahk_id " mpc_winid
 
 	WinGetPos, winx,winy,winw,winh, % mpc_title
 	if(xhint==0) 
@@ -465,7 +465,7 @@ MPC_ClickToSeek_condition(xpct, uy, proc_condition)
 
 	if(xpct<0 or xpct>100)
 	{
-;		MsgBox, % "MPC_ClickToSeek(): Wrong xpct=" . xpct . " (should be 0 ~ 100)."
+;		MsgBox, % "MPC_ClickToSeek(): Wrong xpct=" xpct " (should be 0 ~ 100)."
 		return
 	}
 	xpct := xpct/100 ; convert 1~100 to 0.01~0.99 // As of 1.1.19.02, I cannot write ``xpct /= 100``, which is floor division
@@ -522,10 +522,10 @@ MPC_DefineHotkeysSeekPercents()
 	hotchars := "123456789"
 	Loop, parse, hotchars
 	{
-		dev_DefineHotkeyWithCondition("^" . A_LoopField, "MPC_IsActive", "MPC_ClickToSeek", A_LoopField*10)
+		dev_DefineHotkeyWithCondition("^" A_LoopField, "MPC_IsActive", "MPC_ClickToSeek", A_LoopField*10)
 		
 		; And F1~F9 to be 10% ~ 90%
-		dev_DefineHotkeyWithCondition("F" . A_LoopField, "MPC_IsActive", "MPC_ClickToSeek_condition", A_LoopField*10, 0, "MPC_cond_F1toF9Seek")
+		dev_DefineHotkeyWithCondition("F" A_LoopField, "MPC_IsActive", "MPC_ClickToSeek_condition", A_LoopField*10, 0, "MPC_cond_F1toF9Seek")
 	}
 	dev_DefineHotkeyWithCondition("^``", "MPC_IsActive", "MPC_ClickToSeek", "2.5") ; ` is escaped, double typing it
 	dev_DefineHotkeyWithCondition("^0", "MPC_IsActive", "MPC_ClickToSeek", "97.5")
@@ -581,7 +581,7 @@ MPC_MoveWebcamWindow(idmonitor, xhint:=0, yhint:=0, width:=0, height:=0, isAlway
 		wa := GetMonitorWorkArea(idmonitor)
 		if(not wa)
 		{
-			MsgBox, % msgboxoption_IconExclamation, , % "MPC_MoveWebcamWindow(): invalid idmonitor=" . idmonitor
+			MsgBox, % msgboxoption_IconExclamation, , % "MPC_MoveWebcamWindow(): invalid idmonitor=" idmonitor
 			return None
 		}
 		
@@ -700,7 +700,7 @@ MPC_CopyToClipboardFriendlyCurrentPlayTime()
 {
 	timestr := MPC_GetFriendlyCurrentPlayTime()
 	if(timestr)
-		prompt := timestr . " - current playtime copied to clipboard."
+		prompt := timestr " - current playtime copied to clipboard."
 	else
 	{
 		prompt := "Error fetching current playtime. You may try again."
@@ -752,14 +752,14 @@ MPC_Bg_Back5sec(showtip=false)
 	WinGet, winid, ID, ahk_class MediaPlayerClassicW ; cache MPC window unique id
 	ControlSend , ahk_parent, {Left}, ahk_id %winid%
 	if(showtip)
-		dev_TooltipAutoClear("MPC back 5 sec [" . MPC_GetCurrentPlaytimeStr("ahk_id " . winid) . "]")
+		dev_TooltipAutoClear("MPC back 5 sec [" MPC_GetCurrentPlaytimeStr("ahk_id " winid) "]")
 }
 MPC_Bg_Forward5sec(showtip=false)
 {
 	WinGet, winid, ID, ahk_class MediaPlayerClassicW ; cache MPC window unique id
 	ControlSend , ahk_parent, {Right}, ahk_id %winid%
 	if(showtip)
-		dev_TooltipAutoClear("MPC forward 5 sec [" . MPC_GetCurrentPlaytimeStr("ahk_id " . winid) . "]")
+		dev_TooltipAutoClear("MPC forward 5 sec [" MPC_GetCurrentPlaytimeStr("ahk_id " winid) "]")
 }
 MPC_Bg_PausePlay(showtip=false, bringfront=false)
 {
@@ -871,7 +871,7 @@ MpcAot_LaunchExe()
 {
 	hwnd_mpc := MpcAot_GetHwnd(true)
 
-	WinActivate, % "ahk_id " . hwnd_mpc
+	WinActivate, % "ahk_id " hwnd_mpc
 	
 	MpcAot_SetAlwaysOnTop(true)
 }
@@ -883,7 +883,7 @@ MpcAot_SetAlwaysOnTop(isset)
 	if(isset)
 	{
 ;		g_mpcaot_isNowAlwaysOnTop := true
-		WinSet, AlwaysOnTop, On, % "ahk_id " . hwnd
+		WinSet, AlwaysOnTop, On, % "ahk_id " hwnd
 		
 		Menu, TRAY, Check, %g_mpcaot_text_AlwaysOnTop%
 		SetTimer, _MPC_timer_EnableAOT, 500
@@ -891,7 +891,7 @@ MpcAot_SetAlwaysOnTop(isset)
 	else
 	{
 ;		g_mpcaot_isNowAlwaysOnTop := false
-		WinSet, AlwaysOnTop, Off, % "ahk_id " . hwnd
+		WinSet, AlwaysOnTop, Off, % "ahk_id " hwnd
 		
 		Menu, TRAY, UnCheck, %g_mpcaot_text_AlwaysOnTop%
 		SetTimer, _MPC_timer_EnableAOT, Off
@@ -921,7 +921,7 @@ _MPC_timer_EnableAOT()
 	hwnd_mpc := dev_GetHwndByExepath(g_mpcaot_exepath)
 	if(hwnd_mpc)
 	{
-		WinSet, AlwaysOnTop, On, % "ahk_id " . hwnd_mpc
+		WinSet, AlwaysOnTop, On, % "ahk_id " hwnd_mpc
 	}
 }
 
@@ -1018,7 +1018,7 @@ MpcAot_SetCustomWindowSize()
 	
 	Menu, mpcpop_SetWindowSize, Rename, % cs_oldmenutext, % cs_newtext
 	
-;	WinGet, winid, ID, % "ahk_id " . hwnd_mpc
+;	WinGet, winid, ID, % "ahk_id " hwnd_mpc
 ;	dev_WinMove_with_backup("", "", cs.w, cs.h, winid)
 	MpcAot_SetWindowSize(cs.w, cs.h)
 }
