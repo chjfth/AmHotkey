@@ -1005,7 +1005,7 @@ _in_dev_DefineHotkeyFlex(user_keyname, purpose_name, comment, is_passthru, fn_co
 	if(user_keyname=="" || (is_add && fn_act==""))
 		return ""
 
-	s_dp := Amhk.HotkeyFlexDispatcher
+	s_dp := Amhk.HotkeyFlexDispatcher ; the static global
 	
 	; Data structure example:
 	;
@@ -1210,6 +1210,9 @@ _tryget_funcobj_name(func)
 	else if(StrLen(func)>0) {
 		return func
 	}
+	else if(func=="") {
+		return "(empty string)"
+	}
 	else {
 		return "(weird, neither string nor funcobj)"
 	}
@@ -1224,7 +1227,7 @@ fxhk_DefineHotkey(_keyname, is_passthru, fn_act, act_args*)
 		, ""       ; empty comment
 		, is_passthru
 		, ""       ; empty condition  
-		, fn_act, args*)
+		, fn_act, act_args*)
 	
 	return purpose_name
 }
