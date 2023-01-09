@@ -969,7 +969,8 @@ _fxhk_KeynameAddHppPrefix(keyname)
 {
 	if(InStr(keyname, " & "))
 	{
-		; User assigns a keyname like "Esc & 1", and we need to add ~ prefix,
+		; User assigns a "Custom combination" keyname (CcHotkey) like "Esc & 1", 
+		; then we need to add ~ prefix,
 		; so that Esc key's native action is not blocked (=keepnative).
 		return "~" keyname
 	}

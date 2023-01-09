@@ -849,4 +849,8 @@ dev_MenuTickItem(menuname, whichitem, is_tick)
 	Menu, % menuname, % is_tick ? "Check" : "Uncheck", % whichitem
 }
 
+dev_nop()
+{
+	; No operation
+}
 
