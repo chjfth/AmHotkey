@@ -66,6 +66,7 @@ Gui_Switch_Font(GuiName, sizept=0, rgbhex="", fontface:="", weight:=400)
 
 GuiControl_ChangeOpt(GuiName, CtrlVarname, opt)
 {
+	; Change a GUI-control's option dynamically.
 	; Example:
 	;	GuiControl_ChangeOpt("EVP", gu_xxx, "+AltSubmit")
 	
@@ -370,3 +371,44 @@ dev_GuiAutoResizeRemove(GuiName)
 	g_devGuiAutoResizeDict.Delete(GuiName)
 }
 
+
+GuiButton_SetIconFromDll(GuiName, CtrlVarName, dllname, icon_idx, icon_width, is_icon_only:=false)
+{
+	hctl := GuiControl_GetHwnd(GuiName, CtrlVarName)
+	
+;	Dbgwin_Output("hctl = " hctl)
+	if(not hctl)
+		return false
+
+	null := ""
+	IMAGE_ICON := 1
+	LR_SHARED := 0x8000
+	
+	hDll := DllCall("GetModuleHandle", "Str", dllname)
+;	Dbgwin_Output("hDll = " hDll)
+	if(hDll==0)
+		return false
+	
+	hIcon := DllCall("LoadImage"
+		, "Ptr", hDll ; HMODULE 
+		, "Ptr", icon_idx ; LPCTSTR lpszName or Resource-ID
+		, "Int", IMAGE_ICON ; UINT uType
+		, "Int", icon_width ; int cxDesired
+		, "Int", icon_width ; int cyDesired
+		, "Int", LR_SHARED) ; UINT fuLoad
+;	Dbgwin_Output("hIcon = " hIcon)
+	if(hIcon==0)
+		return false
+
+	BM_SETIMAGE := 247
+	DllCall("SendMessage"
+		, "Ptr", hctl
+		, "Int", BM_SETIMAGE
+		, "Ptr", IMAGE_ICON
+		, "Ptr", hIcon)
+	
+	opt_BS_ICON := is_icon_only ? "+0x40" : "-0x40"
+	GuiControl_ChangeOpt(GuiName, CtrlVarname, opt_BS_ICON)
+	
+	return true
+}

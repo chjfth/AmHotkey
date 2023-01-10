@@ -128,6 +128,9 @@ global gu_evpCkbAutoPaste  := ""
 global gu_evpCkbKeepWindow := ""
 
 global gu_evpEdrFootline   := "" ; current select image filepath
+global gu_evpBtnCopyFile   := "" ; the button at right edge of gu_evpEdrFootline
+
+global gc_evpIconBtnWidth := 25
 
 global g_evpIsGuiVisible := false
 global g_evpConvertStartCount := 0 ; increase one each time Launch convert.
@@ -163,7 +166,8 @@ global g_evp_ClipmonSeqNow := 0 ; Clipboard change sequence-number
 global g_evp_ClipmonSeqAct := 0 ; The sequence-number on which we have done image-conversion.
 
 global g_evpDbgCfg := {"showdbginfo":false, "showdbgcleanup":false, "showbgcmd":false, "slowbgcmd":0}
-;
+
+
 ; =======
 
 global g_HwndEvtbl
@@ -435,7 +439,9 @@ Evp_CreateGui()
 	Gui_Add_Picture( "EVP", "gu_evpPicPreview",     col2w, "h" g_evpImgpaneHeight) 
 	
 	; FootLine
-	Gui_Add_Editbox( "EVP", "gu_evpEdrFootline", fullwidth, "xm Readonly", "Footline")
+	Gui_Add_Editbox( "EVP", "gu_evpEdrFootline", fullwidth-gc_evpIconBtnWidth, "xm Readonly", "Footline")
+	Gui_Add_Button(  "EVP", "gu_evpBtnCopyFile", gc_evpIconBtnWidth, "x+2 g" . "Evp_CopyConvertedImageFileToClipboard", "")
+	GuiButton_SetIconFromDll("EVP", "gu_evpBtnCopyFile", "shell32.dll", 243, 16, true) ; #243 is the [Copy] icon, 16 is icon size
 	
 	; The above GUI control layout will later be updated by Evp_SyncGuiByBaseImage()
 	
@@ -476,7 +482,7 @@ Evp_ShowAllControls(is_show:=true)
 		, "gu_evpBtnOK", "gu_evpCkbAutoPaste", "gu_evpCkbKeepWindow"
 		, "gu_evpEdrBaseImgFilepath"
 ;		, "gu_evpCkbKeepPngTrans"
-		, "gu_evpPicPreview", "gu_evpEdrFootline" ] 
+		, "gu_evpPicPreview", "gu_evpEdrFootline", "gu_evpBtnCopyFile" ] 
 	
 	for index,value in ctls
 	{
@@ -975,6 +981,10 @@ Evp_WM_MOUSEMOVE(wParam, lParam, msg, hwnd)
 	{
 		dev_TooltipAutoClear("This input png file does NOT seem to have transparent pixels.")
 	}
+	else if(A_GuiControl=="gu_evpBtnCopyFile")
+	{
+		dev_TooltipAutoClear("Copy this file to Clipboard, so that you can paste the file to another folder.")
+	}
 	else
 		is_from_tooltiping_uic := false
 	
@@ -1018,6 +1028,22 @@ Evp_WM_RBUTTONUP(wParam, lParam, msg, hwnd)
 	
 	Evp_CreateContextMenu(menuname)
 	dev_MenuShow(menuname)
+}
+
+Evp_CopyConvertedImageFileToClipboard()
+{
+	select_filepath := GuiControl_GetText("EVP", "gu_evpEdrFootline")
+	
+	Clipboard := ""
+	WinClip.SetFiles(select_filepath)
+	if(Clipboard==select_filepath)
+	{
+		dev_TooltipAutoClear("File copied to Clipboard.")
+	}
+	else
+	{
+		dev_MsgBoxWarning("Unexpect! Copy file to Clipboard failed.")
+	}
 }
 
 Evp_CreateContextMenu(menuname)
@@ -1526,11 +1552,17 @@ Evp_SyncGuiByBaseImage(imgfilepath, imgw_scaled, imgh_scaled)
 	
 	GuiControl_SetText("EVP", "gu_evpPicPreview", imgfilepath) ; this actually changes Pic control's picture appearance
 
+	footy := yRef + dev_max(gc_evpImgpaneDefHeight, himgpane) + gc_evpGapY
 	GuiControl_SetPos("EVP", "gu_evpEdrFootline"
-		, -1, yRef + dev_max(gc_evpImgpaneDefHeight, himgpane) + gc_evpGapY
-		, gui_fullwidth, -1)
-
+		, -1, footy
+		, gui_fullwidth-gc_evpIconBtnWidth-9, -1)
+	;
 	rFootline := GuiControl_GetPos("EVP", "gu_evpEdrFootline")
+	;
+	GuiControl_SetPos("EVP", "gu_evpBtnCopyFile"
+		, rFootline.x + rFootline.w + 2, footy - 1
+		, -1, -1)
+
 	yBtnOK := rFootline.y + rFootline.h + gc_evpGapY
 	GuiControl_SetPos("EVP", "gu_evpBtnOK"
 		, -1, yBtnOK

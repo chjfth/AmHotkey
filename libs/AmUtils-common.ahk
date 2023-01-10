@@ -854,3 +854,8 @@ dev_nop()
 	; No operation
 }
 
+dev_Send(send_keys)
+{
+	Send % send_keys
+}
+
