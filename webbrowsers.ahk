@@ -9,11 +9,15 @@ global Chrome_kbd_MRUTab := ;"^Q"
 global Chrome_kbd_MRUTab_r := ;"+^Q"
 	; [2015-02-09] Currently, no Extension seems to be able to provide the MRU switching reliably
 
+webbrowsers_ahk_init()
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 return ; End of auto-execute section.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-
+webbrowsers_ahk_init()
+{
+}
 
 ;==============================================================
 ; Chrome Main Window
@@ -80,12 +84,21 @@ $+^Tab:: Send, % Chrome_kbd_MRUTab_r ? Chrome_kbd_MRUTab_r : "+^{Tab}"
 
 !End:: ClickInActiveWindow(0.5, -60, false) ; try to click into DevTool console so to input new command
 
+; [2023-01-10] Need this Workaround since I use fxhk mini-framework.
+; Human user note: Please to carry out "AppsKey & q", please hold Appskey for longer time,
+; until copy-success dialogbox is shown. In other word, if you release AppsKey too quickly,
+; Chrome contex-menu willl pop-out and ruin your Ctrl+A and Ctrl+C purpose.
+AppsKey:: dev_nop()
+AppsKey up:: Send {AppsKey}
 
+;
 ; Define a hotkey to "fix" prettify.js generated CF_HTML clipboard content,
 ; so that colored-code pasting into Evernote 5.x have correct line breaks.
 ; The pasting line-break problem is described at
 ; http://www.evernote.com/l/ABXoualVqgJIOZhQNzyy5VB6sWrGpUXMSBw/
+
 AppsKey & q:: CopyAndFix_Evernote_CF_HTML()
+
 CopyAndFix_Evernote_CF_HTML()
 {
 	title := "CopyAndFix_Evernote_CF_HTML"
