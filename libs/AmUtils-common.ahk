@@ -859,3 +859,12 @@ dev_Send(send_keys)
 	Send % send_keys
 }
 
+dev_YMDHMS_AddSeconds(ymdhms, seconds)
+{
+	outvar := ymdhms
+	EnvAdd, outvar, seconds, Seconds
+	return outvar
+}
+
+
+

@@ -167,6 +167,7 @@ global g_evp_ClipmonSeqAct := 0 ; The sequence-number on which we have done imag
 
 global g_evpDbgCfg := {"showdbginfo":false, "showdbgcleanup":false, "showbgcmd":false, "slowbgcmd":0}
 
+global g_evpSuppressUicTooltipBfrThis := A_Now ; will store A_Now format string
 
 ; =======
 
@@ -950,6 +951,14 @@ Evp_GenerateBaseImage(fpFromImage, scale_pct, imgsig, is_keeppngtrans
 
 Evp_WM_MOUSEMOVE(wParam, lParam, msg, hwnd)
 {
+	if(A_Now >= g_evpSuppressUicTooltipBfrThis)
+	{
+		evp_ShowUicTooltips(wParam, lParam, msg, hwnd)
+	}
+}
+
+evp_ShowUicTooltips(wParam, lParam, msg, hwnd)
+{
 	static s_prev_tooltiping_uic := 0
 
 	is_from_tooltiping_uic := true ; assume message is from a GuiControl
@@ -991,7 +1000,8 @@ Evp_WM_MOUSEMOVE(wParam, lParam, msg, hwnd)
 	if(A_Gui=="EVP")
 	{
 		; If mouse has *just* moved off a tooltiping UIC, we turn off the tooltip.
-		; We cannot blindly turn off tooltip here, bcz we would get constant WM_MOUSEMOVE 
+		; But,
+		; we cannot blindly turn off tooltip here, bcz we would get constant WM_MOUSEMOVE 
 		; even if we do not move the mouse; turning off tooltip blindly would cause 
 		; other function's dev_TooltipAutoClear() to vanish immediately.
 		;
@@ -1038,6 +1048,11 @@ Evp_CopyConvertedImageFileToClipboard()
 	WinClip.SetFiles(select_filepath)
 	if(Clipboard==select_filepath)
 	{
+		g_evpSuppressUicTooltipBfrThis := dev_YMDHMS_AddSeconds(A_Now, 2)
+		; -- increase g_evpSuppressUicTooltipBfrThis so that the button's stock(static) 
+		; tooltip is temporarily turned off, otherwise, we would not be able to see the 
+		; following new tooltip
+		
 		dev_TooltipAutoClear("File copied to Clipboard.")
 	}
 	else
@@ -1123,6 +1138,7 @@ Evp_TimerProc()
 	}
 	
 	Evp_CleanupTempDir_withInterval()
+	
 }
 
 Evp_ClipmonCallback()
