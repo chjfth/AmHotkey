@@ -412,3 +412,11 @@ GuiButton_SetIconFromDll(GuiName, CtrlVarName, dllname, icon_idx, icon_width, is
 	
 	return true
 }
+
+dev_Listbox_Clear(hwndListbox)
+{
+	LB_RESETCONTENT := 0x0184 
+	dev_SendMessage(hwndListbox, LB_RESETCONTENT, 0, 0)
+}
+
+

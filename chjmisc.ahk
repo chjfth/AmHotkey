@@ -97,6 +97,9 @@ type_python_shebang()
 ; Ctrl+Win+0 toggle last two window positions
 ^#0:: dev_UndoChangeWindowSize()
 
+
+
+
 ; Ctrl+Alt+[Numpad /], click in left-hand portion of a window.
 ; Ctrl+Alt+[Numpad *], click in right-hand portion of a window.
 ; [2021-12-02] Avoid Alt+*, bcz Visual Studio IDE use Alt+* as "Show Next Statement".
@@ -125,6 +128,38 @@ dev_WinMove_with_backup_with_prompt(_newx, _newy, _new_width, _new_height, Awini
 	s_hint_timeout := 1000
 }
 
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; 2023.01: Static hotkey definitions moved from AmHotkey.ahk .
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+$AppsKey:: Send {AppsKey} 
+	; Need this because I somewhere else use AppsKey as a prefix key (in many modules).
+
+CapsLock & Up:: Click WheelUp
+CapsLock & Down:: Click WheelDown
+;
+AppsKey & UP:: Click WheelUp
+AppsKey & DOWN:: Click WheelDown
+
+; Win+N to minimize a window, replacing Alt+Space,n
+#n:: WinMinimize, A
++#n:: WinRestore, A
+
+!#Del:: dev_WinHideWithPrompt()
+
+; Double-press Left Ctrl to move mouse cursor to the center of current active window. (memo: Press Ctrl twice)
+; I need "up"; otherwise, holding down LCtrl will trigger the double press condition.
+~LCtrl up::
+;	tooltip, % "Left-Ctrl-up: A_ThisHotkey=" . A_ThisHotkey . " "
+	if (A_PriorHotkey == "~LCtrl up" and A_TimeSincePriorHotkey < 300) {
+	    ; This is a double-press.
+		MouseMoveInActiveWindow(1/2, 1/2, 7)
+	}
+return
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 chj_DefineQuickSwitchApps() ; as template for actual users
 {
@@ -189,6 +224,46 @@ chj_DefineQuickSwitchApps() ; as template for actual users
 	
 	;QSA_DefineActivateGroupFlex_Caps("-", QSA_NO_WNDCLASS, "^HwndWrapper", "Microsoft Help Viewer", "MS Help Viewer 1.x/2.x") //VS2010 hlpviewer 1.x
 }
+
+;############### Zhongwen IME related ################
+IsTypingZhongwen_PinyinJiaJia() 
+{
+	; 获知当前是否处于 拼音加加 中文输入状态。
+	; 若是，意思是敲入的一个英文字母将被输入法浮动窗口吸收。
+	; 若否，敲入的一个英文字母将直接被应用程序获得。
+	
+	; 本函数适用于 拼音加加 5.2 。
+	
+	if WinExist("ahk_class PYJJ_STATUS_WND")
+	{
+		; PYJJ_STATUS_WND 是拼音加加附着在应用程序标题上的状态条。
+		; 接下来检查拼音加加状态条最右侧的那个小格是否是“全”字（全拼状态），
+		; 检查“全”字尖顶的那个粉红像素(x78, y3)，有的话则表示中文输入状态。
+		; 暂不处理双拼。
+		
+		WinGetPos, jjx, jjy, jjw, jjh, ahk_class PYJJ_STATUS_WND
+		CoordMode, Pixel, Screen
+		PixelGetColor, color, jjx+78, jjy+3, RGB
+		CoordMode, Pixel, Window
+		if(color==0xFF0099)
+			return true
+		else
+			return false
+	}
+	else
+	{
+		return false
+	}
+}
+
+ToggleZhongwenStatus_PinyinJiaJia(is_zhongwen_on)
+{
+	zs := IsTypingZhongwen_PinyinJiaJia()
+	if( (zs && !is_zhongwen_on) || (is_zhongwen_on && !zs))
+		SendInput {Shift down}{Shift up}{Ctrl down}{Ctrl up}
+	return zs ; return original status
+}
+
 
 
 get_dirfilecount(file_pattern)

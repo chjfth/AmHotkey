@@ -867,4 +867,317 @@ dev_YMDHMS_AddSeconds(ymdhms, seconds)
 }
 
 
+dev_Hex2Num(HX)
+{
+	; https://autohotkey.com/boards/viewtopic.php?t=6434
+    ; Assuming "0x" is always omitted (since in your script the "0x" will never occur anyway)
+    
+    ; Usage Example:
+    ; integer_result := dev_Hex2Num("FF")+100 ;// integer_result will be 355
+    
+	SetFormat, integer, D
+	Dec += "0x" HX
+	return Dec
+}
+
+dev_IsExeRunning(exename)
+{
+	Process, Exist, % exename
+	if ErrorLevel
+	{
+		; ErrorLevel is the pid.
+		return true
+	}
+	else
+	{
+	    return false
+	}
+}
+
+dev_IsExeActive(exefile)
+{
+	; exefilename sample :
+	; 	"notepad.exe"
+	; or 
+	;   "D:\portableapps\MPC-HC-Portable\App\MPC-HC\mpc-hc.exe"
+	
+	Awinid := dev_GetActiveHwnd() ; cache active window unique id
+	WinGet, exepath, ProcessPath, ahk_id %Awinid%
+
+	if(InStr(exefile, "\"))
+	{
+		; consider exefile as fullpath, need exact match
+		if(exepath==exefile)
+			return true
+		else
+			return false
+	}
+	else
+	{
+		; consider exefile as filenam only, match only final component.
+		if( StrIsEndsWith(exepath, "\" . exefile) )
+			return true
+		else
+			return false
+	}
+}
+
+dev_GetHwndByExepath(exepath)
+{
+	WinGet topwnd, List
+	Loop %topwnd%
+	{
+		hwnd := topwnd%A_Index%
+		WinGet, tmppath, ProcessPath, ahk_id %hwnd%
+		if(exepath==tmppath) 
+		{
+			return hwnd
+		}
+	}
+	return None
+}
+
+dev_GetActiveEXE_PathName()
+{
+	WinGet, exepath, ProcessPath, A
+	SplitPath, exepath, filename, dirpath
+	return [dirpath, filename]
+	; retarray[1] is dirpath, retarray[2] is filename .
+}
+
+dev_mapping_count(map)
+{
+	; Count how many keys are in a map(dict)
+	count := 0
+	for key, val in map
+		count++
+	return count
+}
+
+
+
+
+dev_IsShiftKeyDown()
+{
+	if(GetKeyState("Shift", "P"))
+	    return true
+	else
+	    return false
+
+}
+
+
+IsWinidActive(winid) ; Check against active window
+{
+	IfWinActive, ahk_id %winid%
+	{
+	    return true
+	}
+	return false
+}
+
+IsWinClassActive(winclass, wintext="") ; Check against active window
+{
+	IfWinActive, ahk_class %winclass%, %wintext%
+	{
+	    return true
+	}
+	return false
+}
+
+IsWinClassExist(winclass, wintext="") ; Check existing window
+{
+	IfWinExist, ahk_class %winclass%, %wintext%
+	{
+	    return true
+	}
+	return false
+}
+
+dev_IsWinclassExist(classname)
+{
+	if WinExist("ahk_class " classname) {
+		return true
+	} 
+	else {
+		return false
+	}
+}
+
+dev_WinActivateHwnd(hwnd)
+{
+	WinActivate, ahk_id %hwnd%
+}
+
+
+
+
+IsWinClassMatchRegex(regex) ; Check against active window class
+{
+	WinGetClass, class, A
+	foundpos := RegExMatch(class, regex)
+	if (foundpos>0)
+		return true
+	else 
+		return false
+}
+
+IsWinTitleMatchRegex(regex) ; Check against active window
+{
+	WinGetTitle, title, A
+	foundpos := RegExMatch(title, regex)
+	if (foundpos>0)
+		return true
+	else 
+		return false
+}
+
+dev_IsWin7SaveAsDialog()
+{
+	if(not IsWinClassActive("#32770"))
+		return false
+	
+	if(IsWinTitleMatchRegex("Áí´æÎª")
+		or IsWinTitleMatchRegex("Save As") )
+	{
+		return true
+	}
+	else
+		return false
+}
+
+Is_XY_in_Rect(x,y, xrect, yrect, wrect, hrect)
+{
+	if(x>=xrect and x<=xrect+wrect and y>yrect and y<yrect+hrect)
+		return true
+	else
+		return false
+}
+
+dev_XYinRect(x, y, rect_)
+{
+	if(x>=rect_.left && x<rect_.right && y>=rect_.top && y<rect_.bottom)
+		return true
+	else
+		return false
+}
+
+
+Is_RectA_in_RectB(Ax, Ay, Aw, Ah, Bx, By, Bw, Bh, tolerance:=0)
+{
+	t := tolerance
+	if(Ax>=(Bx-t) and Ay>=(By-t) and (Ax+Aw)<=(Bx+Bw+t) and (Ay+Ah)<=(By+Bh+t))
+		return true
+	else
+		return false
+}
+
+GetActiveClassnnFromXY(x, y)
+{
+	; Providing X,Y inside the active window, return control classnn from that position
+	
+	if(x==None)
+	{
+		MsgBox, % "Error: GetActiveClassnnFromXY() null x"
+		return 
+	}
+	if(y==None)
+	{
+		MsgBox, % "Error: GetActiveClassnnFromXY() null y"
+		return 
+	}
+	
+	MouseMove, %x%, %y%
+	MouseGetPos,,,, classnn
+	return classnn
+}
+
+
+dev_FileRead(filepath)
+{
+	FileRead, outvar, % filepath
+	return outvar
+}
+
+dev_FileReadLine(filepath, idxline)
+{
+	FileReadLine, linetext, % filepath, % idxline
+	return linetext
+}
+
+dev_hasValue(haystack, needle) 
+{
+	; Check if needle is in the haystack array.
+	; https://stackoverflow.com/a/33593563/151453
+    
+    if(!IsObject(haystack))
+        return false
+    if(haystack.Length()==0)
+        return false
+    for k,v in haystack
+        if(v==needle)
+            return true
+    return false
+}
+
+dev_Menu_CreateEmpty(menuname)
+{
+	dev_Menu_DeleteAll(menuname)
+	
+	Menu, % menuname, Add, "===empty===", dev_nop
+	Menu, % menuname, DeleteAll
+}
+
+dev_Menu_DeleteAll(menuname)
+{
+	try {
+		Menu, % menuname, DeleteAll
+	} catch {
+	}
+}
+
+dev_FindVacantFilename(path_ptn, start_seq:=1, max_seq:=10000)
+{
+	; If path_ptn=="d:\test\foo{}.txt", we'll search for 
+	;	d:\test\foo1.txt
+	;	d:\test\foo2.txt
+	;	d:\test\foo3.txt
+	; until the first non-existing filename/dirname is found.
+
+	if(!InStr(path_ptn, "{}"))
+		return ""
+	
+	now_seq := start_seq
+	Loop
+	{
+		if(now_seq>max_seq)
+			return ""
+	
+		nowpath := Format(path_ptn, now_seq)
+		if(!FileExist(nowpath))
+			return nowpath
+
+		now_seq += 1
+	}
+}
+
+
+dev_IsExePathMatchRegex(regex)
+{
+	Awinid := dev_GetActiveHwnd() ; cache active window unique id
+	WinGet, exepath, ProcessPath, ahk_id %Awinid%
+
+	foundpos := RegExMatch(exepath, regex)
+	if (foundpos>0)
+		return true
+	else 
+		return false
+}
+
+dev_StrRepeat(string, times)
+{
+    loop % times
+        output .= string
+    return output
+}
 

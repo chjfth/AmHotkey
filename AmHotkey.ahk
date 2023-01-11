@@ -18,9 +18,6 @@ global g_winmove_scale := 5 ; window move 5x larger step if you tap LCtrl just b
 global g_saved_xMouseScreen := 0
 global g_saved_yMouseScreen := 0
 
-;g_NumpadKeyMouse = 1
-	; Use Numpad keys as mouse navigator.
-	; Win+NumLock will toggle this behavior.
 
 global g_MouseNudgeUnit = 10
 global g_MouseNudgeUnitAM = 10 ; AM: Application Match
@@ -634,22 +631,6 @@ DoHilightRectInTopwin(wintitle, x, y, w, h, duration_msec:=1000, rgb:="FFE0BE")
 	DoHilightBlocksInTopwin(wintitle, arRects, duration_msec)
 }
 
-not_used___DoHilightBlocksInTopwin_rs(wintitle, arRectStrs, msec_step:=1000)
-{
-	; arRects sample:
-	;
-	; arRects := [ "100,100,100,100", "200,200,200,100" ]
-	
-	arRects := array()
-	for index, rectstr in arRectStrs
-	{
-		inputvar := arRectStrs[index]
-		num := StrSplit(inputvar, ",")
-		arRects.Insert( { "x":num[1] , "y":num[2] , "w":num[3] , "h":num[4] } )
-	}
-	DoHilightBlocksInTopwin(wintitle, arRects, msec_step)
-
-}
 
 DoHilightBlocksInTopwin(wintitle, arRects, msec_step:=1000)
 {
@@ -838,106 +819,6 @@ GetMonitorWorkArea(monidx)
 	else
 		return None
 }
-
-IsWinidActive(winid) ; Check against active window
-{
-	IfWinActive, ahk_id %winid%
-	{
-	    return true
-	}
-	return false
-}
-
-IsWinClassActive(winclass, wintext="") ; Check against active window
-{
-	IfWinActive, ahk_class %winclass%, %wintext%
-	{
-	    return true
-	}
-	return false
-}
-
-IsWinClassExist(winclass, wintext="") ; Check existing window
-{
-	IfWinExist, ahk_class %winclass%, %wintext%
-	{
-	    return true
-	}
-	return false
-}
-
-
-IsWinClassMatchRegex(regex) ; Check against active window class
-{
-	WinGetClass, class, A
-	foundpos := RegExMatch(class, regex)
-	if (foundpos>0)
-		return true
-	else 
-		return false
-}
-
-IsWinTitleMatchRegex(regex) ; Check against active window
-{
-	WinGetTitle, title, A
-	foundpos := RegExMatch(title, regex)
-	if (foundpos>0)
-		return true
-	else 
-		return false
-}
-
-dev_IsWin7SaveAsDialog()
-{
-	if(not IsWinClassActive("#32770"))
-		return false
-	
-	if(IsWinTitleMatchRegex("另存为")
-		or IsWinTitleMatchRegex("Save As") )
-	{
-		return true
-	}
-	else
-		return false
-}
-
-Is_XY_in_Rect(x,y, xrect, yrect, wrect, hrect)
-{
-	if(x>=xrect and x<=xrect+wrect and y>yrect and y<yrect+hrect)
-		return true
-	else
-		return false
-}
-
-Is_RectA_in_RectB(Ax, Ay, Aw, Ah, Bx, By, Bw, Bh, tolerance:=0)
-{
-	t := tolerance
-	if(Ax>=(Bx-t) and Ay>=(By-t) and (Ax+Aw)<=(Bx+Bw+t) and (Ay+Ah)<=(By+Bh+t))
-		return true
-	else
-		return false
-}
-
-GetActiveClassnnFromXY(x, y)
-{
-	; Providing X,Y inside the active window, return control classnn from that position
-	
-	if(x==None)
-	{
-		MsgBox, % "Error: GetActiveClassnnFromXY() null x"
-		return 
-	}
-	if(y==None)
-	{
-		MsgBox, % "Error: GetActiveClassnnFromXY() null y"
-		return 
-	}
-	
-	MouseMove, %x%, %y%
-	MouseGetPos,,,, classnn
-	return classnn
-}
-
 
 ; ===============================================================================================
 
@@ -1927,12 +1808,6 @@ RightClickAndPlaySound(sound:=true)
 }
 
 
-; Win+N to minimize a window, replacing Alt+Space,n
-#n:: WinMinimize, A
-+#n:: WinRestore, A
-
-!#Del:: dev_WinHideWithPrompt()
-
 dev_WinHideWithPrompt(Awinid:=0)
 {
 	if(Awinid==0)
@@ -1945,24 +1820,6 @@ dev_WinHideWithPrompt(Awinid:=0)
 		WinHide, ahk_id %Awinid%
 	}
 }
-
-
-AppsKey:: Send {AppsKey} 
-	; Need this because I use AppsKey as a prefix key (in many modules).
-	; Q: Why isn't a $ prefix required?
-
-
-CapsLock & Up:: Click WheelUp
-CapsLock & Down:: Click WheelDown
-/*
-; Define some AppsKey-combo hotkeys
-
-CapsLock & LEFT:: Click WheelLeft
-CapsLock & RIGHT:: Click WheelRight
-*/
-;
-AppsKey & UP:: Click WheelUp
-AppsKey & DOWN:: Click WheelDown
 
 
 MouseNudge(dx, dy, pixels, speed=1)
@@ -2014,7 +1871,7 @@ movewinGetScale()
 	
 	static scale = 1
 	matchpos := RegExMatch(A_PriorHotKey, "RCtrl")
-;tooltip, A_PriorHotKeY=%A_PriorHotKey% . A_PriorKeY=%A_PriorKey%  . matchpos=%matchpos%
+
 	if (matchpos>0 && A_TickCount-gtc_last_RCtrl<g_RCtrl_WinMoveScale_graceticks)
 	{	; A pre RCtrl tap will scale the move step
 		scale := g_winmove_scale
@@ -2404,20 +2261,6 @@ Current window(%winclass%) at <%x%,%y%> , size [%width%,%height%]
 
 !#/:: ; Interactively change g_winmove_unit
 	InputBox g_winmove_unit, Autohotkey move step, Input new window move unit in pixels, , , , , , , , %g_winmove_unit%
-return
-
-
-
-;
-
-; Double-press Left Ctrl to move mouse cursor to the center of current active window. (memo: Press Ctrl twice)
-; I need "up"; otherwise, holding down LCtrl will trigger the double press condition.
-~LCtrl up::
-;	tooltip, % "LLLLLLLLLLLLLLLLctrl-up: A_ThisHotkey=" . A_ThisHotkey . " "
-	if (A_PriorHotkey == "~LCtrl up" and A_TimeSincePriorHotkey < 300) {
-	    ; This is a double-press.
-		MouseMoveInActiveWindow(1/2, 1/2, 7)
-	}
 return
 
 
@@ -2929,64 +2772,6 @@ RegexBlindScrollAControl(sdir, wintitle, regexClassnn, regexControlText)
 	return true
 }
 
-dev_Hex2Num(HX)
-{
-	; https://autohotkey.com/boards/viewtopic.php?t=6434
-    ; Assuming "0x" is always omitted (since in your script the "0x" will never occur anyway)
-    
-    ; Usage Example:
-    ; integer_result := dev_Hex2Num("FF")+100 ;// integer_result will be 355
-    
-	SetFormat, integer, D
-	Dec += "0x" HX
-	return Dec
-}
-
-dev_GuiLabelSetText(GuiName, LabelName, text) ; todo: Use GuiControl_SetText instead
-{
-	GuiControl, %GuiName%:, %LabelName%, % text
-}
-
-
-
-;############### Zhongwen IME related ################
-IsTypingZhongwen_PinyinJiaJia() 
-{
-	; 获知当前是否处于 拼音加加 中文输入状态。
-	; 若是，意思是敲入的一个英文字母将被输入法浮动窗口吸收。
-	; 若否，敲入的一个英文字母将直接被应用程序获得。
-	
-	; 本函数适用于 拼音加加 5.2 。
-	
-	if WinExist("ahk_class PYJJ_STATUS_WND")
-	{
-		; PYJJ_STATUS_WND 是拼音加加附着在应用程序标题上的状态条。
-		; 接下来检查拼音加加状态条最右侧的那个小格是否是“全”字（全拼状态），
-		; 检查“全”字尖顶的那个粉红像素(x78, y3)，有的话则表示中文输入状态。
-		; 暂不处理双拼。
-		
-		WinGetPos, jjx, jjy, jjw, jjh, ahk_class PYJJ_STATUS_WND
-		CoordMode, Pixel, Screen
-		PixelGetColor, color, jjx+78, jjy+3, RGB
-		CoordMode, Pixel, Window
-		if(color==0xFF0099)
-			return true
-		else
-			return false
-	}
-	else
-	{
-		return false
-	}
-}
-
-ToggleZhongwenStatus_PinyinJiaJia(is_zhongwen_on)
-{
-	zs := IsTypingZhongwen_PinyinJiaJia()
-	if( (zs && !is_zhongwen_on) || (is_zhongwen_on && !zs))
-		SendInput {Shift down}{Shift up}{Ctrl down}{Ctrl up}
-	return zs ; return original status
-}
 
 
 ClipboardGet_HTML( byref Data ) ; [2022-12-17] No one use it yet, just keep for reference.
@@ -3044,105 +2829,12 @@ dev_ClipboardSetHTML(html, is_paste_now:=false, wait_hwnd:=0)
 	}
 }
 
-dev_WinActivateHwnd(hwnd)
-{
-	WinActivate, ahk_id %hwnd%
-}
 
-dev_IsWinclassExist(classname)
-{
-	if WinExist("ahk_class " . classname) {
-		return true
-	} 
-	else {
-		return false
-	}
-}
-
-dev_GetActiveEXE_PathName()
-{
-	WinGet, exepath, ProcessPath, A
-	SplitPath, exepath, filename, dirpath
-	return [dirpath, filename]
-	; retarray[1] is dirpath, retarray[2] is filename .
-}
-
-dev_mapping_count(map)
-{
-	; Count how many keys are in a map(dict)
-	count := 0
-	for key, val in map
-		count++
-	return count
-}
-
-dev_GetHwndByExepath(exepath)
-{
-	WinGet topwnd, List
-	Loop %topwnd%
-	{
-		hwnd := topwnd%A_Index%
-		WinGet, tmppath, ProcessPath, ahk_id %hwnd%
-		if(exepath==tmppath) 
-		{
-			return hwnd
-		}
-	}
-	return None
-}
-
-dev_IsExeActive(exefile)
-{
-	; exefilename sample :
-	; 	"notepad.exe"
-	; or 
-	;   "D:\portableapps\MPC-HC-Portable\App\MPC-HC\mpc-hc.exe"
-	
-	Awinid := dev_GetActiveHwnd() ; cache active window unique id
-	WinGet, exepath, ProcessPath, ahk_id %Awinid%
-
-	if(InStr(exefile, "\"))
-	{
-		; consider exefile as fullpath, need exact match
-		if(exepath==exefile)
-			return true
-		else
-			return false
-	}
-	else
-	{
-		; consider exefile as filenam only, match only final component.
-		if( StrIsEndsWith(exepath, "\" . exefile) )
-			return true
-		else
-			return false
-	}
-}
-
-dev_IsExePathMatchRegex(regex)
-{
-	Awinid := dev_GetActiveHwnd() ; cache active window unique id
-	WinGet, exepath, ProcessPath, ahk_id %Awinid%
-
-	foundpos := RegExMatch(exepath, regex)
-	if (foundpos>0)
-		return true
-	else 
-		return false
-}
-
-dev_StrRepeat(string, times)
-{
-    loop % times
-        output .= string
-    return output
-}
-
-test_EnumDisplayMonitors()
-{
-	mlo := dev_EnumDisplayMonitors()
-	MsgBox, % mlo.desctext
-}
+;test_EnumDisplayMonitors()
+;{
+;	mlo := dev_EnumDisplayMonitors()
+;	MsgBox, % mlo.desctext
+;}
 
 dev_EnumDisplayMonitors()
 {
@@ -3216,14 +2908,6 @@ devcb_EnumDisplayMonitors(hMonitor, hDC, pRect, arg)
 	return true
 }
 
-dev_XYinRect(x, y, rect_)
-{
-	if(x>=rect_.left && x<rect_.right && y>=rect_.top && y<rect_.bottom)
-		return true
-	else
-		return false
-}
-
 
 dev_TooltipDisableCloseWindow(msg_prefix)
 {
@@ -3232,111 +2916,6 @@ dev_TooltipDisableCloseWindow(msg_prefix)
 	; msg_prefix is some hotkey names like "Ctrl+W" or "Ctrl+Shift+W".
 	dev_TooltipAutoClear(msg_prefix . " closing window/tab is disabled by AmHotkey.")
 }
-
-
-dev_FileRead(filepath)
-{
-	FileRead, outvar, % filepath
-	return outvar
-}
-
-dev_FileReadLine(filepath, idxline)
-{
-	FileReadLine, linetext, % filepath, % idxline
-	return linetext
-}
-
-dev_hasValue(haystack, needle) 
-{
-	; Check if needle is in the haystack array.
-	; https://stackoverflow.com/a/33593563/151453
-    
-    if(!IsObject(haystack))
-        return false
-    if(haystack.Length()==0)
-        return false
-    for k,v in haystack
-        if(v==needle)
-            return true
-    return false
-}
-
-dev_Menu_CreateEmpty(menuname)
-{
-	dev_Menu_DeleteAll(menuname)
-	
-	Menu, % menuname, Add, "===empty===", dev_Menu_DoNone
-	Menu, % menuname, DeleteAll
-}
-
-dev_Menu_DeleteAll(menuname)
-{
-	try {
-		Menu, % menuname, DeleteAll
-	} catch {
-	}
-}
-
-dev_Menu_DoNone()
-{
-}
-
-dev_FindVacantFilename(path_ptn, start_seq:=1, max_seq:=10000)
-{
-	; If path_ptn=="d:\test\foo{}.txt", we'll search for 
-	;	d:\test\foo1.txt
-	;	d:\test\foo2.txt
-	;	d:\test\foo3.txt
-	; until the first non-existing filename/dirname is found.
-
-	if(!InStr(path_ptn, "{}"))
-		return ""
-	
-	now_seq := start_seq
-	Loop
-	{
-		if(now_seq>max_seq)
-			return ""
-	
-		nowpath := Format(path_ptn, now_seq)
-		if(!FileExist(nowpath))
-			return nowpath
-
-		now_seq += 1
-	}
-}
-
-
-dev_IsExeRunning(exename)
-{
-	Process, Exist, % exename
-	if ErrorLevel
-	{
-		; ErrorLevel is the pid.
-		return true
-	}
-	else
-	{
-	    return false
-	}
-}
-
-dev_IsShiftKeyDown()
-{
-	if(GetKeyState("Shift", "P"))
-	    return true
-	else
-	    return false
-
-}
-
-
-dev_Listbox_Clear(hwndListbox)
-{
-	LB_RESETCONTENT := 0x0184 
-	dev_SendMessage(hwndListbox, LB_RESETCONTENT, 0, 0)
-}
-
 
 
 

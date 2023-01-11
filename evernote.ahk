@@ -2906,9 +2906,9 @@ Pvhtml_SendtoClipboard()
 	dev_ClipboardSetHTML(g_PvhtmlEdit, false)
 
 	; Set prompt message and clear it after 1000ms
-	dev_GuiLabelSetText("PvHtml", "g_PvhtmlMsg", "Sent to clipboard done.")
+	GuiControl_SetText("PvHtml", "g_PvhtmlMsg", "Sent to clipboard done.")
 
-	fn_clearmsg := Func("dev_GuiLabelSetText").Bind("PvHtml", "g_PvhtmlMsg", "")
+	fn_clearmsg := Func("GuiControl_SetText").Bind("PvHtml", "g_PvhtmlMsg", "")
 	SetTimer, %fn_clearmsg%, -1000
 }
 
