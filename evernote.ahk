@@ -59,7 +59,7 @@ global g_evtblColorPresets := [ "#f0f0f0,清淡灰"
 
 ;;;;;;;; Everpic global vars ;;;;;;;;;;
 
-global g_evpTempDir := A_Temp "\Everpic" ; 2022.12
+global g_evpTempDir := A_Temp "\Everpic"
 global gc_evpBatchConvertExecpath := A_ScriptDir "\exe\everpic-batch-prepare.bat"
 
 
@@ -288,7 +288,7 @@ AppsKey & c:: Evp_LaunchUI()
 
 Evp_WinTitle()
 {
-	return "Everpic v2022.12"
+	return "Everpic v2023.01"
 }
 
 evpdbg(msg)
