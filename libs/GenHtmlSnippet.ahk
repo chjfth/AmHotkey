@@ -1,4 +1,4 @@
-#Include %A_LineFile%\..\AmUtils-common.ahk
+#Include %A_LineFile%\..\Amhk-common.ahk
 
 /* API:
 

@@ -1,10 +1,9 @@
-; AmUtils-common.ahk, part of AmHotkey suite.
+; Amhk-common.ahk, part of AmHotkey suite.
 ;
 ; This ahk is not to be run standalone, it is to be #include-d as AHK function library.
 ;
 
-
-#Include %A_LineFile%\..\AmUtils-const.ahk
+#Include %A_LineFile%\..\Amhk-globals.ahk
 
 
 dev_assert(torf, exitcode_now:=false)
