@@ -499,8 +499,7 @@ MPC_InitHotkeys()
 {
 	MPC_DefineHotkeysSeekPercents()
 	
-	dev_DefineHotkey("~^LButton", "MpcAot_ShowSizingMenu_LButton")
-
+	dev_DefineHotkeyWithCondition("~^LButton", "MpcAot_IsActive", "MpcAot_ShowSizingMenu_LButton")
 }
 
 MPC_cond_F1toF9Seek()

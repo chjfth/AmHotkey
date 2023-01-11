@@ -32,9 +32,6 @@
 ; #Include hotstrings.ahk
 ; #Include webbrowsers.ahk
 
-; #Include zjb-helper.ahk
-; #include <Vis2> ; Equivalent to #include .\lib\Vis2.ahk
-
 ; #Include chjmisc.ahk
 
 ; #Include AmTemplates.ahk
@@ -43,6 +40,10 @@
 ; #Include mstsc.ahk ; Microsoft terminal service client
 ; #Include Teclast_X98.ahk
 ; #Include numpad_tweak_as_R7.ahk
+
+; #Include zjb-helper.ahk
+; #include <Vis2> ; Equivalent to #include .\lib\Vis2.ahk
+
 
 ; This customize.ahk is optional.
 ; *i means "ignore if that .ahk does not exist"
