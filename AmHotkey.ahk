@@ -848,7 +848,7 @@ _fxhk_KeynameStripPrefix(keyname)
 
 _fxhk_KeynameAddHppPrefix(keyname)
 {
-	if(InStr(keyname, " & "))
+	if(_fxhk_IsComboKeyname(keyname))
 	{
 		; User assigns a "Custom combination" keyname (CcHotkey) like "Esc & 1", 
 		; then we need to add ~ prefix,
@@ -861,6 +861,14 @@ _fxhk_KeynameAddHppPrefix(keyname)
 		; so that we can delay-determine whether to passthru this hotkey.
 		return "$" keyname
 	}
+}
+
+_fxhk_IsComboKeyname(keyname)
+{
+	if(InStr(keyname, " & "))
+		return true
+	else
+		return false
 }
 
 
@@ -1056,13 +1064,16 @@ _dev_HotkeyFlex_callback()
 		if(meet_passthru || !has_cond_match)
 		{
 			sendcompat := _HotkeynameToSendCompat(keynamed)
-		
-			dbgHotkeyFlex(Format("Passthrough {} keynamed: 〖{}〗 → Send: {}"
-				, meet_passthru?"(explicit)":"(implicit)"
-				, keynamed
-				, sendcompat))
 			
-			Send % sendcompat
+			if(sendcompat)
+			{
+				dbgHotkeyFlex(Format("Passthrough {} keynamed: 〖{}〗 → Send: {}"
+					, meet_passthru?"(explicit)":"(implicit)"
+					, keynamed
+					, sendcompat))
+				
+				Send % sendcompat
+			}
 		}
 	}
 	
@@ -1124,6 +1135,9 @@ fxhk_get_hpcontext(user_keyname, purposename)
 
 _HotkeynameToSendCompat(a__thishotkey)
 {
+	if(_fxhk_IsComboKeyname(a__thishotkey))
+		return ""
+
 	; My problem description:
 	; https://www.autohotkey.com/boards/viewtopic.php?f=76&t=112401
 	; according to mikeyww's suggestion, suitable for most cases.
