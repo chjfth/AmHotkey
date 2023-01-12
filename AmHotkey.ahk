@@ -968,7 +968,7 @@ _in_dev_DefineHotkeyFlex(user_keyname, purpose_name, comment, is_passthru, fn_co
 			; Improper hpp_keyname that would cause `Hotkey` command to err:
 			; 	F44
 			; 	$CapsLock
-			Dbgwin_Output(Format("【Hotkey, {}】 execution fail. You probably passed in a improper keyname.", hpp_keyname))
+			Dbgwin_Output(Format("【Hotkey, {}】 execution fail. You probably passed in an improper keyname.", hpp_keyname))
 			dev_assert(0) ; 
 		}
 
@@ -1177,6 +1177,9 @@ _tryget_funcobj_name(func)
 
 fxhk_DefineHotkey(_keyname, is_passthru, fn_act, act_args*)
 {
+	; Memo: In order to define hotkey like "AppsKey & c", 
+	;       User should better use fxhk_DefineComboHotkey().
+
 	dev_assert(StrLen(_keyname)>0) ; _keyname must be a valid Autohotkey keyname
 
 	purpose_name := _in_dev_DefineHotkeyFlex(_keyname
@@ -1191,6 +1194,9 @@ fxhk_DefineHotkey(_keyname, is_passthru, fn_act, act_args*)
 
 fxhk_DefineHotkeyCond(_keyname, fn_cond, is_passthru, fn_act, act_args*)
 {
+	; Memo: In order to define hotkey like "AppsKey & c", 
+	;       User should better use fxhk_DefineComboHotkeyCond().
+
 	dev_assert(StrLen(_keyname)>0) ; _keyname must be a valid Autohotkey keyname
 
 	purpose_name := _in_dev_DefineHotkeyFlex(_keyname
@@ -1278,7 +1284,7 @@ fxhk_DefineComboHotkeyCondComment(prefix_keyname, suffix_keyname, user_purpose, 
 	;
 	
 	purpose_keydown := _fxhk_getComboKeyDownPurposeName(prefix_keyname)
-	fxhk_DefineHotkeyCondComment(prefix_keyname
+	fxhk_DefineHotkeyCondComment(prefix_keyname ; note: Don't add " DOWN" suffix, which results in invalid `Hotkey` keyname.
 		, purpose_keydown
 		, Format("This holds back prefix-key-down action of {}", prefix_keyname) ; comment
 		, false  ; is_passthru
@@ -1334,12 +1340,12 @@ _fxhk_callback_ComboPrefixResend(prefix_keyname)
 		; This means no other is pressed between a prefix-key(e.g. AppsKey)'s down and up,
 		; so we should re-send this prefix-key to user-environment.
 		
-		dbgHotkeyFlex(Format("Prefix-key {} released cleanly, re-send it.", prefix_keyname))
+		dbgHotkeyFlex(Format("Prefix-key 〖{}〗 released cleanly, re-send it.", prefix_keyname))
 		Send % "{" prefix_keyname "}"
 	}
 	else
 	{
-		dbgHotkeyFlex(Format("Prefix-key {} released with {} intervening fxhk hotkeys, so no re-send.", prefix_keyname, seq_diff-1))
+		dbgHotkeyFlex(Format("Prefix-key 〖{}〗 released with {} intervening fxhk hotkeys, so NO re-send.", prefix_keyname, seq_diff-1))
 	}
 }
 
