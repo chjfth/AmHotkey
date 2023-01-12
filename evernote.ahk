@@ -57,11 +57,12 @@ global g_evtblColorPresets := [ "#f0f0f0,清淡灰"
 	, "#FFFFFF,Pure White" ]
 
 
+global g_evpAppsKeyPressdownTick := 0
+
 ;;;;;;;; Everpic global vars ;;;;;;;;;;
 
 global g_evpTempDir := A_Temp "\Everpic"
 global gc_evpBatchConvertExecpath := A_ScriptDir "\exe\everpic-batch-prepare.bat"
-
 
 global g_evpBaseImageFilepath_100pct
 	; If user choose a new scale, we use g_evpBaseImageFilepath_100pct to re-generate
@@ -272,19 +273,31 @@ QSA_DefineActivateSingle_Caps("m", "ENMainFrame", "Evernote")
 QSA_DefineActivateGroupFlex_Caps("n", "ENSingleNoteView", QSA_NO_WNDCLS_REGEX, "^(?!#ENS).+", "Evernote Single-note")
 	; Match any single note whose title does NOT starts with #ENS
 
+
 evernote_SpecialPaste_InitMenu()
 
+evernote_InitHotkeys()
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 return ; End of auto-execute section.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+
 #Include %A_LineFile%\..\libs\GenHtmlSnippet.ahk
 #Include %A_LineFile%\..\libs\ClipboardMonitor.ahk
 
-; App+C to convert in-clipboard image to your preferred format(png/jpg) and put CF_HTML content into clipboard,
-; so Ctrl+V pasting it into Evernote saves quite much space (Evernote defaultly gives you very big PNG-32).
-AppsKey & c:: Evp_LaunchUI()
+
+evernote_InitHotkeys()
+{
+	; App+t to callup EverTable UI
+	fxhk_DefineComboHotkeyCond("AppsKey", "t", "Evernote_IsMainFrameOrSingleActive", "EverTable_LaunchUI")
+	
+	; App+c to callup Everpic UI, 
+	; This converts in-clipboard image to your preferred format(png/jpg) and put CF_HTML content into clipboard,
+	; so Ctrl+v pasting it into Evernote saves quite much space (Evernote defaultly gives you very big PNG-32).
+	fxhk_DefineComboHotkeyCond("AppsKey", "c", "Evernote_IsMainFrameOrSingleActive", "Evp_LaunchUI")
+
+}
 
 Evp_WinTitle()
 {
@@ -3422,12 +3435,16 @@ MoveToNotebook()
 	
 }
 
-
 ^!c:: Send ^+l ; Evernote 6: Apply code block to selected text.
 
 ; ^!p:: dev_ClipboardSetHTML("__<sup>^^</sup> =", true)
 ; ^!b:: dev_ClipboardSetHTML("^^<sub>__</sub> =", true)
 ^!':: Evernote_InsertSupSub()
+
+
+#If ; Evernote_IsMainFrameOrSingleActive()
+
+
 Evernote_InsertSupSub()
 {
 	; Create a "Supsub" GUI if not exist
@@ -3623,11 +3640,6 @@ Evernote_TSVtoHtml(input_string, sepchar:="", hexcolor1="", hexcolor2="")
 	return html
 }
 
-
-; App+T to bring up DIV/TABLE html generating dialog.
-AppsKey & t:: EverTable_LaunchUI()
-
-#If ; Evernote_IsMainFrameOrSingleActive()
 
 
 

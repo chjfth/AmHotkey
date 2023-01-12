@@ -17,5 +17,17 @@ class Amhk
 	static mbopt_TaskModal := 0x2000
 	static mbopt_Topmost := 0x40000
 
+
+	; fxhk... related:
+	;
 	static HotkeyFlexDispatcher  := {}
+	static fxhk_seq := 0 ; current processing fx-hotkey sequence
+	;
+	; Rcb : recent callback . Tick value is 64-bit.
+	static fxhkRcbStartTick := 0
+	static fxhkRcbEndTick   := 0
+	;
+;	static fxhkCtx_keynamed    := ""
+;	static fxhkCtx_purposename := ""
+	static fxhk_context := {} ; hotkey-purpose context
 }

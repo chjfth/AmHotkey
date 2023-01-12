@@ -1006,7 +1006,7 @@ _in_dev_DefineHotkeyFlex(user_keyname, purpose_name, comment, is_passthru, fn_co
 _dev_HotkeyFlex_callback()
 {
 	s_dp := Amhk.HotkeyFlexDispatcher
-
+	
 	keynamed := _fxhk_KeynameStripPrefix(A_ThisHotkey)
 	
 	if(not s_dp.HasKey(keynamed))
@@ -1017,6 +1017,10 @@ _dev_HotkeyFlex_callback()
 		dev_TooltipAutoClear(errmsg)
 		return
 	}
+
+	Amhk.fxhk_seq++
+	Amhk.fxhkRcbStartTick := dev_GetTickCount64()
+	dbgHotkeyFlex(Format("[seq:{}] Amhk.fxhkRcbStartTick = {}", Amhk.fxhk_seq, Amhk.fxhkRcbStartTick))
 
 	has_cond_match := false
 	meet_passthru := false
@@ -1029,6 +1033,10 @@ _dev_HotkeyFlex_callback()
 		if(cond_ok)
 		{
 			dbgHotkeyFlex(Format("Keynamed {} firing: [{}] {}", keynamed, purpose_name, actinfo.comment))
+			
+			Amhk.fxhk_context := actinfo
+			; -- In user's hotkey callback, he can use fxhk_get_callback_context() to get this global,
+			;    querying existing info or attaching new info to this context object.
 			
 			actinfo.fn_act.(actinfo.act_args*)
 			
@@ -1058,8 +1066,61 @@ _dev_HotkeyFlex_callback()
 		}
 	}
 	
+	Amhk.fxhkRcbEndTick := dev_GetTickCount64()
+	dbgHotkeyFlex(Format("[seq:{}] Amhk.fxhkRcbEndTick = {} (+{})"
+		, Amhk.fxhk_seq, Amhk.fxhkRcbEndTick, Amhk.fxhkRcbEndTick-Amhk.fxhkRcbStartTick))
+	
+	Amhk.fxhk_context := ""
+	
 	return
 }
+
+fxhk_RcbStartTick()
+{
+	return Amhk.fxhkRcbStartTick
+}
+
+fxhk_RcbEndTick()
+{
+	return Amhk.fxhkRcbEndTick
+}
+
+fxhk_get_seq()
+{
+	return Amhk.fxhk_seq
+}
+
+fxhk_get_callback_context()
+{
+	; This function is only meaningful from a fxhk hotkey callback funcion.
+	return Amhk.fxhk_context
+}
+
+fxhk_get_hpcontext(user_keyname, purposename)
+{
+	; Use this function to get other-person's context, as long as the requesting user 
+	; knows other-person's user_keyname and purposename.
+	;
+	; hp: Implies this context is indexed by a "Hotkey-name" and a "Purpose".
+	
+	s_dp := Amhk.HotkeyFlexDispatcher
+	
+	keynamed := _fxhk_KeynameStripPrefix(user_keyname)
+	
+	
+;	Dbgwin_Output(Format("IsObject(s_dp[{}]) = {}", keynamed, IsObject(s_dp[keynamed])))
+;	Dbgwin_Output(Format("IsObject(s_dp[{}][{}]) = {}", keynamed, purposename, IsObject(s_dp[keynamed][purposename])))
+	
+	context := s_dp[keynamed][purposename]
+	if(not IsObject(context))
+		return ""
+	
+	if(not context.fn_act)
+		return ""
+	
+	return context
+}
+
 
 _HotkeynameToSendCompat(a__thishotkey)
 {
@@ -1128,14 +1189,14 @@ fxhk_DefineHotkeyCond(_keyname, fn_cond, is_passthru, fn_act, act_args*)
 	return purpose_name
 }
 
-fxhk_DefineHotkeyN(_keyname, purpose_name, comment, is_passthru, fn_act, act_args*)
+fxhk_DefineHotkeyComment(_keyname, purpose_name, comment, is_passthru, fn_act, act_args*)
 {
-	; N implies explicit Naming
+	; explicit `comment` parameter
 
 	dev_assert(StrLen(_keyname)>0)     ; _keyname must be a valid Autohotkey keyname
-	dev_assert(StrLen(purpose_name)>0) ; Input purpose_name must be a non-empty string
+;	dev_assert(StrLen(purpose_name)>0) ; Input purpose_name must be a non-empty string
 
-	_in_dev_DefineHotkeyFlex(_keyname
+	purpose_name := _in_dev_DefineHotkeyFlex(_keyname
 		, purpose_name
 		, comment
 		, is_passthru
@@ -1145,14 +1206,14 @@ fxhk_DefineHotkeyN(_keyname, purpose_name, comment, is_passthru, fn_act, act_arg
 	return purpose_name
 }
 
-fxhk_DefineHotkeyCondN(_keyname, purpose_name, comment, is_passthru, fn_cond, fn_act, act_args*)
+fxhk_DefineHotkeyCondComment(_keyname, purpose_name, comment, is_passthru, fn_cond, fn_act, act_args*)
 {
-	; N implies explicit Naming
+	; explicit `comment` parameter
 
 	dev_assert(StrLen(_keyname)>0)     ; _keyname must be a valid Autohotkey keyname
-	dev_assert(StrLen(purpose_name)>0) ; Input purpose_name must be a non-empty string
+;	dev_assert(StrLen(purpose_name)>0) ; Input purpose_name must be a non-empty string
 
-	_in_dev_DefineHotkeyFlex(_keyname
+	purpose_name := _in_dev_DefineHotkeyFlex(_keyname
 		, purpose_name
 		, comment
 		, is_passthru
@@ -1184,7 +1245,113 @@ fxhk_IsHotkeyExist(_keyname, purpose_name)
 		return false
 }
 
+fxhk_DefineComboHotkeyCondComment(prefix_keyname, suffix_keyname, user_purpose, user_comment
+	, fn_cond, fn_act, act_args*)
+{
+	; Combo hotkey: the chm-doc so-called "custom Combination hotkey", CcHotkey for short.
+
+	dev_assert(StrLen(prefix_keyname)>0)
+	dev_assert(StrLen(suffix_keyname)>0)
+
+	ahk_keyname := prefix_keyname " & " suffix_keyname
+	
+	user_purpose := fxhk_DefineHotkeyCondComment(ahk_keyname, user_purpose, user_comment
+		, false     ; is_passthru
+		, fn_cond, fn_act, act_args*)
+	
+	;
+	; Define implicity hotkeys for prefix_keyname's DOWN and UP action.
+	;
+	
+	purpose_keydown := _fxhk_getComboKeyDownPurposeName(prefix_keyname)
+	fxhk_DefineHotkeyCondComment(prefix_keyname
+		, purpose_keydown
+		, Format("This holds back prefix-key-down action of {}", prefix_keyname) ; comment
+		, false  ; is_passthru
+		, ""     ; fn_cond
+		, "_fxhk_callback_ComboPrefixHoldback" ; fn_act
+		, prefix_keyname) ; parameters to fn_act
+	
+	purpose_keyup := _fxhk_getComboKeyUpPurposeName(prefix_keyname)
+	fxhk_DefineHotkeyCondComment(prefix_keyname " UP"
+		, purpose_keyup
+		, Format("This will re-send prefix-key-up action of {} (only if clean-press)", prefix_keyname) ; comment
+		, false  ; is_passthru
+		, ""     ; fn_cond
+		, "_fxhk_callback_ComboPrefixResend" ; fn_act
+		, prefix_keyname) ; parameters to fn_act
+	
+	return user_purpose
+}
+
+_fxhk_getComboKeyDownPurposeName(prefix_keyname)
+{
+	return  "CcPrefixKeyDown-" prefix_keyname
+}
+
+_fxhk_getComboKeyUpPurposeName(prefix_keyname)
+{
+	return  "CcPrefixKeyUp-" prefix_keyname
+}
+
+_fxhk_callback_ComboPrefixHoldback(prefix_keyname)
+{
+	ctx := fxhk_get_callback_context()
+	dev_assert(ctx)
+	
+	; attach a property(.cchk_keydown_seq) to the context
+	nowseq := fxhk_get_seq()
+	ctx.cchk_keydown_seq := nowseq
+	
+	dbgHotkeyFlex(Format("Holdback of combo-prefix {} at seq:{}", prefix_keyname, nowseq))
+}
+
+_fxhk_callback_ComboPrefixResend(prefix_keyname)
+{
+	purpose_keydown := _fxhk_getComboKeyDownPurposeName(prefix_keyname)
+	ctx_keydown := fxhk_get_hpcontext(prefix_keyname, purpose_keydown)
+	
+	seq_keydown := ctx_keydown.cchk_keydown_seq
+	seq_keyup := fxhk_get_seq()
+	seq_diff := seq_keyup - seq_keydown
+	
+	if(seq_diff == 1)
+	{
+		; This means no other is pressed between a prefix-key(e.g. AppsKey)'s down and up,
+		; so we should re-send this prefix-key to user-environment.
+		
+		dbgHotkeyFlex(Format("Prefix-key {} released cleanly, re-send it.", prefix_keyname))
+		Send % "{" prefix_keyname "}"
+	}
+	else
+	{
+		dbgHotkeyFlex(Format("Prefix-key {} released with {} intervening fxhk hotkeys, so no re-send.", prefix_keyname, seq_diff-1))
+	}
+}
+
+fxhk_DefineComboHotkey(prefix_keyname, suffix_keyname, fn_act, act_args*)
+{
+	purpose := fxhk_DefineComboHotkeyCondComment(prefix_keyname, suffix_keyname
+		, "" ; user_purpose
+		, "" ; user_comment
+		, "" ; fn_cond
+		, fn_act, act_args*)
+	return purpose
+}
+
+fxhk_DefineComboHotkeyCond(prefix_keyname, suffix_keyname, fn_cond, fn_act, act_args*)
+{
+	purpose := fxhk_DefineComboHotkeyCondComment(prefix_keyname, suffix_keyname
+		, "" ; user_purpose
+		, "" ; user_comment
+		, fn_cond, fn_act, act_args*)
+	return purpose
+}
+
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Encapsulation for 2015 old "Define hotkey functions".
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 dev_DefineHotkey(hk, fn_name, args*) ; old 2015
 {

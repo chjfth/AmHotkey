@@ -1180,3 +1180,25 @@ dev_StrRepeat(string, times)
     return output
 }
 
+
+dev_GetTickCount64()
+{
+	; As of Autohotkey 1.1.36.2, A_TickCount only returns a 32bit DWORD.
+	; Here I provide an encapsulation to make it 64-bit.
+
+	static s_prev_dword := 0
+	static s_highquad := 0 ; the 32-bit ~ 64-bit part
+	
+	now_dword := A_TickCount
+	
+	if(now_dword < s_prev_dword)
+	{
+		; DWORD wrap around happened
+		s_highquad += 1
+	}
+	
+	s_prev_dword := now_dword
+
+	return s_highquad * 0x100000000 + now_dword
+}
+
