@@ -20,8 +20,11 @@ class Amhk
 
 	; fxhk... related:
 	;
-	static HotkeyFlexDispatcher  := {}
-	static fxhk_seq := 0 ; current processing fx-hotkey sequence
+	static HotkeyFlexDispatcher := {}
+	;
+	static fxhk_seq     := 0 ; current processing fx-hotkey sequence
+	static fxhk_seq_end := 0 ; to detect recursive calling into _dev_HotkeyFlex_callback()
+	static fxhk_callback_reentrance_count := 0
 	;
 	; Rcb : recent callback . Tick value is 64-bit.
 	static fxhkRcbStartTick := 0

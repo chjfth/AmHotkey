@@ -1026,9 +1026,25 @@ _dev_HotkeyFlex_callback()
 		return
 	}
 
+	dev_assert(Amhk.fxhk_seq >= Amhk.fxhk_seq_end)
+	is_reentrance := false
+	if(Amhk.fxhk_seq > Amhk.fxhk_seq_end) {
+		is_reentrance := true
+		; Yes, we delay the re-entrance dbginfo output after "[seq:{}] >>>" .
+	}
+
 	Amhk.fxhk_seq++
 	Amhk.fxhkRcbStartTick := dev_GetTickCount64()
-	dbgHotkeyFlex(Format("[seq:{}] Amhk.fxhkRcbStartTick = {}", Amhk.fxhk_seq, Amhk.fxhkRcbStartTick))
+	dbgHotkeyFlex(Format("[seq:{}] >>> fxhkRcbStartTick = {}", Amhk.fxhk_seq, Amhk.fxhkRcbStartTick))
+
+	if(is_reentrance)
+	{
+		; This can really happen, randomly, bcz more than one AHK-thread could 
+		; possibly execute _dev_HotkeyFlex_callback() parallelly. 
+		Amhk.fxhk_callback_reentrance_count++
+		dbgHotkeyFlex(Format("[INFO] ### seq:{} _dev_HotkeyFlex_callback() re-entrance detected (count={})"
+			, Amhk.fxhk_seq, Amhk.fxhk_callback_reentrance_count))
+	}
 
 	has_cond_match := false
 	meet_passthru := false
@@ -1078,10 +1094,11 @@ _dev_HotkeyFlex_callback()
 	}
 	
 	Amhk.fxhkRcbEndTick := dev_GetTickCount64()
-	dbgHotkeyFlex(Format("[seq:{}] Amhk.fxhkRcbEndTick = {} (+{})"
+	dbgHotkeyFlex(Format("[seq:{}] <<< fxhkRcbEndTick = {} (+{})"
 		, Amhk.fxhk_seq, Amhk.fxhkRcbEndTick, Amhk.fxhkRcbEndTick-Amhk.fxhkRcbStartTick))
 	
 	Amhk.fxhk_context := ""
+	Amhk.fxhk_seq_end++
 	
 	return
 }
@@ -1179,7 +1196,6 @@ fxhk_DefineHotkey(_keyname, is_passthru, fn_act, act_args*)
 {
 	; Memo: In order to define hotkey like "AppsKey & c", 
 	;       User should better use fxhk_DefineComboHotkey().
-
 	dev_assert(StrLen(_keyname)>0) ; _keyname must be a valid Autohotkey keyname
 
 	purpose_name := _in_dev_DefineHotkeyFlex(_keyname
@@ -1196,7 +1212,6 @@ fxhk_DefineHotkeyCond(_keyname, fn_cond, is_passthru, fn_act, act_args*)
 {
 	; Memo: In order to define hotkey like "AppsKey & c", 
 	;       User should better use fxhk_DefineComboHotkeyCond().
-
 	dev_assert(StrLen(_keyname)>0) ; _keyname must be a valid Autohotkey keyname
 
 	purpose_name := _in_dev_DefineHotkeyFlex(_keyname
@@ -1323,7 +1338,7 @@ _fxhk_callback_ComboPrefixHoldback(prefix_keyname)
 	nowseq := fxhk_get_seq()
 	ctx.cchk_keydown_seq := nowseq
 	
-	dbgHotkeyFlex(Format("Holdback of combo-prefix {} at seq:{}", prefix_keyname, nowseq))
+	dbgHotkeyFlex(Format("Holdback of combo-prefix 〖{}〗 at seq:{}", prefix_keyname, nowseq))
 }
 
 _fxhk_callback_ComboPrefixResend(prefix_keyname)
@@ -1343,9 +1358,14 @@ _fxhk_callback_ComboPrefixResend(prefix_keyname)
 		dbgHotkeyFlex(Format("Prefix-key 〖{}〗 released cleanly, re-send it.", prefix_keyname))
 		Send % "{" prefix_keyname "}"
 	}
-	else
+	else if(seq_diff>1)
 	{
 		dbgHotkeyFlex(Format("Prefix-key 〖{}〗 released with {} intervening fxhk hotkeys, so NO re-send.", prefix_keyname, seq_diff-1))
+	}
+	else
+	{
+		Dbgwin_Output("Unexpect: In _fxhk_callback_ComboPrefixResend(), seq_diff=" seq_diff)
+		dev_assert(0) ; seq_diff should > 1
 	}
 }
 
