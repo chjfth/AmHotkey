@@ -1013,6 +1013,14 @@ _in_dev_DefineHotkeyFlex(user_keyname, purpose_name, comment, is_passthru, fn_co
 
 _dev_HotkeyFlex_callback()
 {
+	; Critical On
+	; -- Using "Critical On" makes this BIG global callback NOT re-entrant,
+	;    which defeats AHK's great design of AHK-threads.
+	;
+	;    BUT, Autohotkey 1.1.39.2 lacks built-in var A_ThreadID; this 
+	;    makes user unable to store thread-specific data, which greatly
+	;    compromise AHK-thread's usability here.
+
 	s_dp := Amhk.HotkeyFlexDispatcher
 	
 	keynamed := _fxhk_KeynameStripPrefix(A_ThisHotkey)
@@ -1034,16 +1042,22 @@ _dev_HotkeyFlex_callback()
 	}
 
 	Amhk.fxhk_seq++
+
+	nowseq := Amhk.fxhk_seq
+	; -- to get rid of influence of callback re-entrance, save it as a local var.
+
 	Amhk.fxhkRcbStartTick := dev_GetTickCount64()
-	dbgHotkeyFlex(Format("[seq:{}] >>> fxhkRcbStartTick = {}", Amhk.fxhk_seq, Amhk.fxhkRcbStartTick))
+	dbgHotkeyFlex(Format("[seq:{}] >>> fxhkRcbStartTick = {}", nowseq, Amhk.fxhkRcbStartTick))
 
 	if(is_reentrance)
 	{
-		; This can really happen, randomly, bcz more than one AHK-thread could 
+		; Re-entrance can really happen, randomly, bcz more than one AHK-thread could 
 		; possibly execute _dev_HotkeyFlex_callback() parallelly. 
+		; Re-entrance is more likely to happen if the callback code calls Sleep, 
+		; or GUI-related code, e.g, calling Dbgwin_Output().
 		Amhk.fxhk_callback_reentrance_count++
 		dbgHotkeyFlex(Format("[INFO] ### seq:{} _dev_HotkeyFlex_callback() re-entrance detected (count={})"
-			, Amhk.fxhk_seq, Amhk.fxhk_callback_reentrance_count))
+			, nowseq, Amhk.fxhk_callback_reentrance_count))
 	}
 
 	has_cond_match := false
@@ -1093,10 +1107,13 @@ _dev_HotkeyFlex_callback()
 		}
 	}
 	
+	; Sleep, 3000
+	; -- If you Sleep here, you can very easily see re-entrance problem by pressing hotkeys quickly.
+	
 	Amhk.fxhkRcbEndTick := dev_GetTickCount64()
 	dbgHotkeyFlex(Format("[seq:{}] <<< fxhkRcbEndTick = {} (+{})"
-		, Amhk.fxhk_seq, Amhk.fxhkRcbEndTick, Amhk.fxhkRcbEndTick-Amhk.fxhkRcbStartTick))
-	
+		, nowseq, Amhk.fxhkRcbEndTick, Amhk.fxhkRcbEndTick-Amhk.fxhkRcbStartTick))
+
 	Amhk.fxhk_context := ""
 	Amhk.fxhk_seq_end++
 	
@@ -1115,12 +1132,21 @@ fxhk_RcbEndTick()
 
 fxhk_get_seq()
 {
+	; [2023-01-13] Autohotkey 1.1.39.2: Due to lack of AHK-thread-specific storage,
+	; this function is NOT reliable, bcz the global var can possibly be change 
+	; by other interrupting AHK-thread.
+
 	return Amhk.fxhk_seq
 }
 
 fxhk_get_callback_context()
 {
 	; This function is only meaningful from a fxhk hotkey callback funcion.
+
+	; [2023-01-13] Autohotkey 1.1.39.2: Due to lack of AHK-thread-specific storage,
+	; this function is NOT reliable, bcz the global var can possibly be change 
+	; by other interrupting AHK-thread.
+
 	return Amhk.fxhk_context
 }
 
