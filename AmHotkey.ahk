@@ -915,7 +915,7 @@ _in_dev_DefineHotkeyFlex(user_keyname, purpose_name, comment, is_passthru, fn_co
 	
 	never_passthru := StrIsStartsWith(hpp_keyname, "~") ? true : false
 	
-	dbgHotkeyFlex(Format("user_keyname={}, keynamed={}, hpp_keyname={}", user_keyname, keynamed, hpp_keyname))
+	dbgHotkeyFlex(Format("user_keyname=〖{}〗, keynamed=〖{}〗, hpp_keyname=〖{}〗", user_keyname, keynamed, hpp_keyname))
 	
 	if(is_add)
 	{
@@ -931,7 +931,7 @@ _in_dev_DefineHotkeyFlex(user_keyname, purpose_name, comment, is_passthru, fn_co
 		
 		is_new_purpose := not s_dp[KeyNamed].HasKey(purpose_name)
 		
-		dbgHotkeyFlex( Format("{} hotkey ""{}"" of purpose-name: ""{}""`r`n"
+		dbgHotkeyFlex( Format("{} hotkey 〖{}〗 of purpose-name: ""{}""`r`n"
 			. "    .is_passthru = {}`r`n"
 			. "    .comment = {}`r`n"
 			. "    .fn_cond = {}`r`n"
@@ -960,7 +960,7 @@ _in_dev_DefineHotkeyFlex(user_keyname, purpose_name, comment, is_passthru, fn_co
 			; Improper hpp_keyname that would cause `Hotkey` command to err:
 			; 	F44
 			; 	$CapsLock
-			Dbgwin_Output(Format("""Hotkey, {}"" execution fail. You probably passed in a improper keyname.", hpp_keyname))
+			Dbgwin_Output(Format("【Hotkey, {}】 execution fail. You probably passed in a improper keyname.", hpp_keyname))
 			dev_assert(0) ; 
 		}
 
@@ -973,16 +973,16 @@ _in_dev_DefineHotkeyFlex(user_keyname, purpose_name, comment, is_passthru, fn_co
 		dev_assert(purpose_name) ; To remove a hotkey, you must pass in an explicity purpose_name.
 		
 		if(not s_dp.HasKey(keynamed)) {
-			dbgHotkeyFlex(Format("On delete, the keynamed does not exist yet: ""{}""", keyname))
+			dbgHotkeyFlex(Format("On delete, the keynamed does not exist yet: 〖{}〗", keyname))
 			return false
 		}
 		
 		if(not s_dp[keynamed].HasKey(purpose_name)) {
-			dbgHotkeyFlex(Format("On delete, the passed in purpose_name does not exist yet: ""{}""", purpose_name))
+			dbgHotkeyFlex(Format("On delete, the passed in purpose_name does not exist yet: 〖{}〗", purpose_name))
 			return false
 		}
 		
-		dbgHotkeyFlex(Format("Keynamed ""{}"" deletes purpose-name: ""{}"""
+		dbgHotkeyFlex(Format("Keynamed 〖{}〗 deletes purpose-name: ""{}"""
 			, keynamed, purpose_name))
 		
 		s_dp[keynamed].Delete(purpose_name)
@@ -1011,7 +1011,7 @@ _dev_HotkeyFlex_callback()
 	
 	if(not s_dp.HasKey(keynamed))
 	{
-		errmsg := Format("[Unexpect!] In _dev_HotkeyFlex_callback(), A_ThisHotkey={} , keynamed={} , not found in s_dp{}."
+		errmsg := Format("[Unexpect!] In _dev_HotkeyFlex_callback(), A_ThisHotkey=〖{}〗 , keynamed=〖{}〗 , not found in s_dp{}."
 			, A_ThisHotkey, keynamed)
 		dbgHotkeyFlex(errmsg)
 		dev_TooltipAutoClear(errmsg)
@@ -1032,7 +1032,7 @@ _dev_HotkeyFlex_callback()
 		
 		if(cond_ok)
 		{
-			dbgHotkeyFlex(Format("Keynamed {} firing: [{}] {}", keynamed, purpose_name, actinfo.comment))
+			dbgHotkeyFlex(Format("Keynamed 〖{}〗 firing: [{}] {}", keynamed, purpose_name, actinfo.comment))
 			
 			Amhk.fxhk_context := actinfo
 			; -- In user's hotkey callback, he can use fxhk_get_callback_context() to get this global,
@@ -1047,7 +1047,7 @@ _dev_HotkeyFlex_callback()
 		}
 		else
 		{
-			dbgHotkeyFlex(Format("Keynamed {} NOT-fired: [{}] {}", keynamed, purpose_name, actinfo.comment))
+			dbgHotkeyFlex(Format("Keynamed 〖{}〗 NOT-fired: [{}] {}", keynamed, purpose_name, actinfo.comment))
 		}
 	}
 	;
@@ -1057,7 +1057,7 @@ _dev_HotkeyFlex_callback()
 		{
 			sendcompat := _HotkeynameToSendCompat(keynamed)
 		
-			dbgHotkeyFlex(Format("Passthrough {} keynamed: {} → Send: {}"
+			dbgHotkeyFlex(Format("Passthrough {} keynamed: 〖{}〗 → Send: {}"
 				, meet_passthru?"(explicit)":"(implicit)"
 				, keynamed
 				, sendcompat))
