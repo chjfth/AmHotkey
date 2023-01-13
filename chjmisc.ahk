@@ -100,64 +100,6 @@ type_python_shebang()
 
 
 
-; Ctrl+Alt+[Numpad /], click in left-hand portion of a window.
-; Ctrl+Alt+[Numpad *], click in right-hand portion of a window.
-; [2021-12-02] Avoid Alt+*, bcz Visual Studio IDE use Alt+* as "Show Next Statement".
-; [2021-12-03] Avoid Ctrl or Shift, bcz Ctrl+click or Shift+click can cause "multi/range selection" hehavior.
-#NumpadDiv::  chj_ClickLeftSide()
-chj_ClickLeftSide()
-{
-	ClickInActiveWindow(g_LeftsideClickPct, g_MiddleFloorClickPct)
-	dev_TooltipAutoClear(Format("ClickInActiveWindow({1}, {2})", g_LeftsideClickPct, g_MiddleFloorClickPct))
-}
-;
-#NumpadMult:: chj_ClickRightSide()
-chj_ClickRightSide()
-{
-	ClickInActiveWindow(g_RightsideClickPct, g_MiddleFloorClickPct)
-	dev_TooltipAutoClear(Format("ClickInActiveWindow({1}, {2})", g_RightsideClickPct, g_MiddleFloorClickPct))
-}
-
-dev_WinMove_with_backup_with_prompt(_newx, _newy, _new_width, _new_height, Awinid:=0, is_force:=false)
-{
-	static s_hint_timeout := 8000
-
-	dev_WinMove_with_backup(_newx, _newy, _new_width, _new_height, Awinid, is_force)
-
-	dev_TooltipAutoClear("Press Ctrl+Win+0 to undo window location/size change.", s_hint_timeout)
-	s_hint_timeout := 1000
-}
-
-
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; 2023.01: Static hotkey definitions moved from AmHotkey.ahk .
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-
-$AppsKey:: Send {AppsKey} 
-	; Need this because I somewhere else use AppsKey as a prefix key (in many modules).
-
-CapsLock & Up:: Click WheelUp
-CapsLock & Down:: Click WheelDown
-;
-AppsKey & UP:: Click WheelUp
-AppsKey & DOWN:: Click WheelDown
-
-; Win+N to minimize a window, replacing Alt+Space,n
-#n:: WinMinimize, A
-+#n:: WinRestore, A
-
-!#Del:: dev_WinHideWithPrompt()
-
-; Double-press Left Ctrl to move mouse cursor to the center of current active window. (memo: Press Ctrl twice)
-; I need "up"; otherwise, holding down LCtrl will trigger the double press condition.
-~LCtrl up::
-;	tooltip, % "Left-Ctrl-up: A_ThisHotkey=" . A_ThisHotkey . " "
-	if (A_PriorHotkey == "~LCtrl up" and A_TimeSincePriorHotkey < 300) {
-	    ; This is a double-press.
-		MouseMoveInActiveWindow(1/2, 1/2, 7)
-	}
-return
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 

@@ -5,6 +5,10 @@
 
 #Include %A_LineFile%\..\Amhk-globals.ahk
 
+dev_nop()
+{
+	; No operation
+}
 
 dev_assert(torf, exitcode_now:=false)
 {
@@ -822,6 +826,11 @@ dev_GetWin32ThreadId()
 	return threadid
 }
 
+dev_RunCmd(cmd_and_params)
+{
+	Run % cmd_and_params
+}
+
 dev_MenuAddItem(menuname, itemtext, target)
 {
 	dev_assert(target)
@@ -848,10 +857,22 @@ dev_MenuTickItem(menuname, whichitem, is_tick)
 	Menu, % menuname, % is_tick ? "Check" : "Uncheck", % whichitem
 }
 
-dev_nop()
+dev_Menu_CreateEmpty(menuname)
 {
-	; No operation
+	dev_Menu_DeleteAll(menuname)
+	
+	Menu, % menuname, Add, "===empty===", dev_nop
+	Menu, % menuname, DeleteAll
 }
+
+dev_Menu_DeleteAll(menuname)
+{
+	try {
+		Menu, % menuname, DeleteAll
+	} catch {
+	}
+}
+
 
 dev_Send(send_keys)
 {
@@ -1117,22 +1138,6 @@ dev_hasValue(haystack, needle)
         if(v==needle)
             return true
     return false
-}
-
-dev_Menu_CreateEmpty(menuname)
-{
-	dev_Menu_DeleteAll(menuname)
-	
-	Menu, % menuname, Add, "===empty===", dev_nop
-	Menu, % menuname, DeleteAll
-}
-
-dev_Menu_DeleteAll(menuname)
-{
-	try {
-		Menu, % menuname, DeleteAll
-	} catch {
-	}
 }
 
 dev_FindVacantFilename(path_ptn, start_seq:=1, max_seq:=10000)
