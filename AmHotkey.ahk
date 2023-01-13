@@ -109,6 +109,10 @@ return
 ;################################### Global-exec section ENDS ################################### 
 ;################################################################################################ 
 
+
+#Include %A_LineFile%\..\libs\debugwin.ahk
+#Include %A_LineFile%\..\libs\WinClipAPI.ahk
+#Include %A_LineFile%\..\libs\WinClip.ahk
 #include %A_LineFile%\..\libs\Amhk-common.ahk
 #include %A_LineFile%\..\libs\Amhk-gui.ahk
 

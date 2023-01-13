@@ -2,11 +2,8 @@
 ; Note: 
 ;  A Line starting with semicolon is a comment line.
 
-#Include libs\debugwin.ahk
-#Include libs\WinClipAPI.ahk
-#Include libs\WinClip.ahk
-; #Include libs\CtlColorStatic.ahk ; need by evernote.ahk
-; #Include libs\Gdip_All.ahk       ; need by evernote.ahk
+; #Include libs\CtlColorStatic.ahk 
+; #Include libs\Gdip_All.ahk       ; GDI+ functions
 
 #Include quick-switch-app.ahk
 
