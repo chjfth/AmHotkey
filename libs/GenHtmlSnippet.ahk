@@ -59,6 +59,9 @@ in_genhtml_code2pre_2022(codetext, is_color:=false, line_comment:="//", block_co
 	; Wrap whole content in <pre> tag
 	;
 	prestyle := "white-space:pre-wrap; border:1px solid #ddd; background-color:#f6f6f6; font-family:consolas,monospace; padding:0.3em; margin:0.3em 0; border-radius:3px"
+	; -- It's a big pitty that we cannot use CSS `line-height:1.0` here, Evernote 6.5.4 seems to 
+	;    force strip off the `line-height` property.
+	
 	html := Format("-<pre style='{}'>{}</pre>-"
 		, prestyle, html)
 
