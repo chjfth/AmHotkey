@@ -30,6 +30,7 @@
 ; #Include webbrowsers.ahk
 
 ; #Include chjmisc.ahk
+; #Include chjmisc2.ahk
 
 ; #Include AmTemplates.ahk
 ; #Include menus.ahk
