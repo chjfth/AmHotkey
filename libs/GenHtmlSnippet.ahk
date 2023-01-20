@@ -36,17 +36,22 @@ in_genhtml_code2pre_2022(codetext, is_color:=false, line_comment:="//", block_co
 		return ""
 	}
 
+	; Want pure \n as separator, for easier later processing
+	html := StrReplace(html, "`r`n", "`n")
+
 	html := dev_EscapeHtmlChars(codetext)
 
 	; Tab -> spaces
 	spaces := "        "
 	html := StrReplace(html, "`t", SubStr(spaces, 1, tab_spaces))
-
+	
+	if(workaround_evernote_bug)
+	{
+		html := StrReplace(html, " ", "&nbsp;")
+	}
+	
 	if(is_color)
 	{
-		; Want pure \n as separator
-		html := StrReplace(html, "`r`n", "`n")
-
 		if(block_comment)
 		{
 			html := genhtml_pre_colorize_block(html, block_comment)
@@ -58,33 +63,40 @@ in_genhtml_code2pre_2022(codetext, is_color:=false, line_comment:="//", block_co
 	;
 	; Wrap whole content in <pre> tag
 	;
-	prestyle := "white-space:pre-wrap; border:1px solid #ddd; background-color:#f6f6f6; font-family:consolas,monospace; padding:0.3em; margin:0.3em 0; border-radius:3px"
+	prestyle := workaround_evernote_bug ? "" : "white-space:pre-wrap; "
+	prestyle .= "border:1px solid #ddd; background-color:#f6f6f6; font-family:consolas,monospace; padding:0.3em; margin:0.3em 0; border-radius:3px"
 	; -- It's a big pitty that we cannot use CSS `line-height:1.0` here, Evernote 6.5.4 seems to 
 	;    force strip off the `line-height` property.
 	
-	html := Format("-<pre style='{}'>{}</pre>-"
-		, prestyle, html)
-
-	; Fix for Evernote 6.5.4 bug:
-	; If line N ends with </span> and line N+1 starts with <span ...>, the line-break between 
-	; is LOST on rendering. Workaround: add extra <br/> at end of line N.
-	;
-	if(workaround_evernote_bug)
+	if(!workaround_evernote_bug)
 	{
-		lines := StrSplit(html, "`n")
-		Loop, % lines.Length()-1
-		{
-			if(StrIsEndsWith(lines[A_Index], "</span>") 
-				&& StrIsStartsWith(lines[A_Index+1], "<span"))
-			{
-				lines[A_Index] .= "<br/>"
-			}
-		}
+		; The normal <pre> code-blocking process, plain and simple.
 		
-		html := dev_JoinStrings(lines, "`n")
+		html := Format("-<pre style='{}'>{}</pre>-"
+			, prestyle, html)
+	}
+	else
+	{
+		; Fix for Evernote 6.5.4 html-editing buggy behavior.
+		;
+		; (1) If line N ends with </span> and line N+1 starts with <span ...>, the line-break between 
+		; is LOST on rendering. Workaround: add extra <br/> at end of line N.
+		; (2) Even if fix(1) makes the pasted text look correct, user copies several lines from the 
+		; <pre> block from Evernote will see that line-breaking is still lost. User self-assisted 
+		; workaround is: type an Enter inside the <pre> block, and try to copy again.
+		;
+		; So, we need to fix it automatically for user. The only reliable way found up-until-today,
+		; is to use <div> + <br/> instead of <pre> ; this simulates the <pre> behavior.
+		;
+		; To see the un-fixed behavior, just call genhtml_code2pre_pure() or genhtml_code2pre_2022() with workaround_evernote_bug=false.
+	
+		html := StrReplace(html, "`n", "<br/>")
+		
+		html := Format("-<div style='{}'>{}</div>-"
+			, prestyle, html)
 	}
 
-;	dev_WriteWholeFile("stage3.html", html) ; debug
+	dev_WriteWholeFile("stage3.html", html) ; debug
 
 	return html
 }
