@@ -1376,8 +1376,24 @@ _fxhk_callback_ComboPrefixResend(prefix_keyname)
 	purpose_keydown := _fxhk_getComboKeyDownPurposeName(prefix_keyname)
 	ctx_keydown := fxhk_get_hpcontext(prefix_keyname, purpose_keydown)
 	
+;	Dbgwin_Output(Format("prefix_keyname={} , purpose_keydown={}", prefix_keyname, purpose_keydown))
+	
 	seq_keydown := ctx_keydown.cchk_keydown_seq
 	seq_keyup := fxhk_get_seq()
+	
+	if(seq_keydown=="")
+	{
+		; [2023-01-20] This may happen on a Win10 Host machine, when:
+		; * The Host machine has a VirtualBox 6.1.26 Win7 VM running,
+		; * User in VM presses AppsKey and release.
+		; In this case, the Host machine sees only {AppsKey UP} without {AppsKey} DOWN.
+		; We just ignore such case.
+		dbgHotkeyFlex(Format("[INFO] In _fxhk_callback_ComboPrefixResend(), seeing 〖{} UP〗 first without key DOWN."))
+		return
+	}
+	
+;	Dbgwin_Output(Format("seq_keydown={} , seq_keyup={}", seq_keydown, seq_keyup))
+	
 	seq_diff := seq_keyup - seq_keydown
 	
 	if(seq_diff == 1)
