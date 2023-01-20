@@ -8,9 +8,9 @@ genhtml_code2pre_2022() ; wrap in <pre> and colorize.
 
 */
 
-genhtml_code2pre_pure(codetext, tab_spaces:=4)
+genhtml_code2pre_pure(codetext, tab_spaces:=4, workaround_evernote_bug:=false)
 {
-	return in_genhtml_code2pre_2022(codetext, false, "", "", tab_spaces, false)
+	return in_genhtml_code2pre_2022(codetext, false, "", "", tab_spaces, workaround_evernote_bug)
 }
 
 genhtml_code2pre_2022(codetext, line_comment:="//", block_comment:=""

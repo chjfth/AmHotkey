@@ -3885,14 +3885,14 @@ Ins & 3:: CF_HTML_PasteCodeBlock("#" , ["""""""",""""""""])
 CF_HTML_PasteCodeBlockPure()
 {
 	codetext := Clipboard
-	html := genhtml_code2pre_pure(codetext)
+	html := genhtml_code2pre_pure(codetext, 4, true)
 	dev_ClipboardSetHTML(html, true)
 }
 
 CF_HTML_PasteCodeBlock(line_comment, block_comment:="")
 {
 	codetext := Clipboard
-	html := genhtml_code2pre_2022(codetext, line_comment, block_comment)
+	html := genhtml_code2pre_2022(codetext, line_comment, block_comment, 4, true)
 	dev_ClipboardSetHTML(html, true)
 }
 
