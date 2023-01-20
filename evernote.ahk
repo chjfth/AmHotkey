@@ -294,10 +294,10 @@ evernote_InitHotkeys()
 	; App+t to callup EverTable UI
 	fxhk_DefineComboHotkeyCond("AppsKey", "t", "Evernote_IsMainFrameOrSingleActive", "EverTable_LaunchUI")
 	
-	; App+c to callup Everpic UI, 
+	; App+c to callup Everpic UI, we make it global hotkey.
 	; This converts in-clipboard image to your preferred format(png/jpg) and put CF_HTML content into clipboard,
 	; so Ctrl+v pasting it into Evernote saves quite much space (Evernote defaultly gives you very big PNG-32).
-	fxhk_DefineComboHotkeyCond("AppsKey", "c", "Evernote_IsMainFrameOrSingleActive", "Evp_LaunchUI")
+	fxhk_DefineComboHotkey("AppsKey", "c", "Evp_LaunchUI")
 
 }
 
