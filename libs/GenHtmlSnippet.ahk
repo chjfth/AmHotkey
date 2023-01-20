@@ -47,6 +47,8 @@ in_genhtml_code2pre_2022(codetext, is_color:=false, line_comment:="//", block_co
 	
 	if(workaround_evernote_bug)
 	{
+		; To workaround for Evernote, we need to use &nbsp; here, 
+		; bcz we'll use <div> instead of <pre> to represent a code block.
 		html := StrReplace(html, " ", "&nbsp;")
 	}
 	
@@ -79,9 +81,9 @@ in_genhtml_code2pre_2022(codetext, is_color:=false, line_comment:="//", block_co
 	{
 		; Fix for Evernote 6.5.4 html-editing buggy behavior.
 		;
-		; (1) If line N ends with </span> and line N+1 starts with <span ...>, the line-break between 
+		; (#1) If line N ends with </span> and line N+1 starts with <span ...>, the line-break between 
 		; is LOST on rendering. Workaround: add extra <br/> at end of line N.
-		; (2) Even if fix(1) makes the pasted text look correct, user copies several lines from the 
+		; (#2) Even if fix(1) makes the pasted text look correct, user copies several lines from the 
 		; <pre> block from Evernote will see that line-breaking is still lost. User self-assisted 
 		; workaround is: type an Enter inside the <pre> block, and try to copy again.
 		;
@@ -90,13 +92,26 @@ in_genhtml_code2pre_2022(codetext, is_color:=false, line_comment:="//", block_co
 		;
 		; To see the un-fixed behavior, just call genhtml_code2pre_pure() or genhtml_code2pre_2022() with workaround_evernote_bug=false.
 	
-		html := StrReplace(html, "`n", "<br/>")
+		lines := StrSplit(html, "`n")
+		Loop, % lines.Length()-1
+		{
+			if(StrIsEndsWith(lines[A_Index], "</span>") 
+				&& StrIsStartsWith(lines[A_Index+1], "<span"))
+			{
+				; This fixes bug (#1), i.e. force an extra <br/>,
+				; Yes, it's bad for others, but good for Evernote 6.5.4 .
+				lines[A_Index] .= "<br/>"
+			}
+		}
+		
+		; Now fix bug (#2), by joining the lines with <br/>, NOT by \n :
+		html := dev_JoinStrings(lines, "<br/>") 
 		
 		html := Format("-<div style='{}'>{}</div>-"
 			, prestyle, html)
 	}
 
-	dev_WriteWholeFile("stage3.html", html) ; debug
+;	dev_WriteWholeFile("stage3.html", html) ; debug
 
 	return html
 }
