@@ -448,6 +448,8 @@ dev_StripSuffix(str, suffix, is_case_sensitive:=false)
 
 dev_StripPrefixChars(str, pfxchars, is_case_sensitive:=false)
 {
+	; Alternative: stock function LTrim()
+
 	Loop, % StrLen(str)
 	{
 		c := SubStr(str, 1, 1)
@@ -461,6 +463,8 @@ dev_StripPrefixChars(str, pfxchars, is_case_sensitive:=false)
 
 dev_StripSuffixChars(str, sfxchars, is_case_sensitive:=false)
 {
+	; Alternative: stock function RTrim()
+
 	Loop, % StrLen(str)
 	{
 		c := SubStr(str, 0)
@@ -835,7 +839,8 @@ dev_MenuAddItem(menuname, itemtext, target)
 {
 	dev_assert(target)
 
-	if(dev_IsString(target)) {
+	if(dev_IsString(target) && !StrIsStartsWith(target, ":")) ; ":" means a submenu name
+	{
 		dev_assert(IsObject(Func(target))) ; target, if a string, must be an existing function name
 	}
 

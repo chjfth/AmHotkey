@@ -138,7 +138,6 @@ class CClipboardMonitor
 		{
 			clientid := this.GenRandom()
 		} Until not this._clients.haskey(clientid)
-
 		
 		this._clients[clientid] := { "fnobj":fnobj, "datetime":dev_GetDateTimeStrNow() }
 
@@ -231,9 +230,23 @@ Clipmon_WM_DRAWCLIPBOARD(wParam, lParam, msg, hwnd)
 
 Clipmon_CreateMonitor(fnobj)
 {
+	; fnobj can be either a function-object or just a function-name string.
+
+	dev_assert(fnobj) ; fnobj must not be null
+	if(!fnobj)
+		return 0
+
+	if(dev_IsString(fnobj))
+	{
+		; Convert fnobj into a function-object if it is only a function-name.
+		fnobj := Func(fnobj)
+	}
+
 	; Check for bad parameter format:
 	if(!IsObject(fnobj)) 
 	{
+		; If fnobj is string of not-existing function, it gets here.
+	
 		fnname := fnobj . ""
 		
 		fnname := strlen(fnname)>0 ? fnname : "MyCallbackFunction"

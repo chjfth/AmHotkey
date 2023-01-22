@@ -268,15 +268,24 @@ global g_SupsubSubText
 global g_evernotePopLinksFile := "EvernotePopupLinks.csv.txt"
 ; -- In customize.ahk, you can override this global var to point to your own file.
 
+class Evnt
+{
+	static MAX_AutoEvxlinks := 30
+	static arAutoEvxlinks := []
+	; -- each element is a dict, d.word="AmHotkey" d.link="https://www.evernote.com/shard/s21/nl/2425275/..."
+	
+	static hcmEvxlink := 0 ; HANDLE from Clipmon_CreateMonitor()
+	
+	static filenamEvxlinks := "EvernoteAutoEvxLinks.txt"
+}
+
 
 QSA_DefineActivateSingle_Caps("m", "ENMainFrame", "Evernote")
 QSA_DefineActivateGroupFlex_Caps("n", "ENSingleNoteView", QSA_NO_WNDCLS_REGEX, "^(?!#ENS).+", "Evernote Single-note")
 	; Match any single note whose title does NOT starts with #ENS
 
+Evernote_InitThisModule()
 
-evernote_SpecialPaste_InitMenu()
-
-evernote_InitHotkeys()
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 return ; End of auto-execute section.
@@ -288,6 +297,14 @@ return ; End of auto-execute section.
 #Include %A_LineFile%\..\libs\GenHtmlSnippet.ahk
 #Include %A_LineFile%\..\libs\ClipboardMonitor.ahk
 
+Evernote_InitThisModule()
+{
+	evernote_SpecialPaste_InitMenu()
+
+	evernote_InitHotkeys()
+	
+	evernote_InitEvxLinks()
+}
 
 evernote_InitHotkeys()
 {
@@ -3666,6 +3683,26 @@ Evernote_PopLinkShowMenu()
 	menuhead := Format("== {} ==",  g_evernotePopLinksFile)
 	Menu, EvernotePoplinksMenu, Add, %menuhead%, Evernote_OpenPopLinkFile
 	
+	;
+	; Load Auto-pickup evxlink files
+	;
+	
+	dev_Menu_DeleteAll("EvernoteAutopickupEvx")
+	if(Evnt.arAutoEvxlinks.Length()>0)
+	{
+	  	for index,evx in Evnt.arAutoEvxlinks
+		{
+			fn := Func("Evernote_EvxLinkPaste").Bind(index, evx.word, evx.link)
+			dev_MenuAddItem("EvernoteAutopickupEvx", "&" evx.word, fn)
+		}
+
+		dev_MenuAddItem("EvernotePoplinksMenu", "Auto pickup", ":EvernoteAutopickupEvx")
+	}
+	
+	;
+	; Load static poplink files
+	;
+	
 	Loop, read, % g_evernotePopLinksFile
 	{
 		if(SubStr(A_LoopReadLine, 1, 1)==";")
@@ -3749,11 +3786,11 @@ Evernote_OpenPopLinkFile()
 	{
 		; Msgbox, % "outfound1=" outfound1 ; debug
 		url := outfound1
-		linktext := outfound2
+		evxlink := outfound2
 		
 		Clipboard := url
 		
-		MsgBox, % "Found Evernote in-clip url, and copied to clipboard:`n`n" url "`n`n" linktext
+		MsgBox, % "Found Evernote in-clip url, and copied to clipboard:`n`n" url "`n`n" evxlink
 	}
 }
 
@@ -3896,6 +3933,101 @@ CF_HTML_PasteCodeBlock(line_comment, block_comment:="")
 	dev_ClipboardSetHTML(html, true)
 }
 
-
 #If
+
+
+evernote_InitEvxLinks()
+{
+	Evnt.hcmEvxlink := Clipmon_CreateMonitor("evernote_PickupEvxlink")
+	dev_assert(Evnt.hcmEvxlink)
+	
+	Loop, Read, % Evnt.filenamEvxlinks
+	{
+		ss := StrSplit(A_LoopReadLine, "`t")
+		Evnt.arAutoEvxlinks.Push({"word":ss[1], "link":ss[2]})
+	}
+}
+
+evernote_PickupEvxlink()
+{
+	; This acts as a Clipmon callback.
+	; It checks if [Clipboard has CF_HTML content and has a piece of short text with 
+	; Evernote internal-cross-link(call it evxlink) in it. If it has, then pick up
+	; the evxlink and add it to Evnt.arAutoEvxlinks{} .
+
+	; [2023-01-22] If no Sleep, following WinClip.GetHtml() may probably returns empty.
+	; Just don't know why.
+	Sleep, 100
+	
+	cfhtml := WinClip.GetHtml("UTF-8")
+;	Dbgwin_Output("cfhtml=" cfhtml)
+	if(not cfhtml)
+		return
+
+;	dev_WriteLogFile("evxlink.txt", cfhtml, false)
+
+	ptn := "<!--StartFragment-->`r`n<span><span>.{0,5}<a href=""(https://www.evernote.com/shard/s21/nl/[0-9a-z-/]+)""[^>]*>([^<]+?)</a>"
+	; -- allow only 5 (as in .{0,5}) chars before the link-text.
+	foundpos := RegExMatch(cfhtml, ptn, outfound)
+	if( foundpos==0 )
+		return
+	
+	newlink := outfound1 ; https://www.evernote.com/shard/s21/nl/2425275/...
+	newword := outfound2 ; AmHotkey 
+	
+	newword := Trim(newword, "[()]")
+	
+	if(strlen(newword)>20)
+		return ; ignore it
+
+	evernote_InsertEvxAtHead(newword, newlink)
+
+	dev_TooltipAutoClear(Format("Auto pickup evxlink: [{}]", newword))
+}
+
+evernote_InsertEvxAtHead(newword, newlink, delete_index:=-1)
+{
+	newevx := {"word":newword , "link":newlink }
+
+	if(delete_index==-1)
+	{
+		; Remove old dup entry.
+	  	for index,evx in Evnt.arAutoEvxlinks
+	    {
+	        if(newword==evx.word)
+	        {
+	        	Evnt.arAutoEvxlinks.RemoveAt(index)
+	        	break
+	        }
+	    }
+    }
+    else if(delete_index>0)
+    {
+       	Evnt.arAutoEvxlinks.RemoveAt(delete_index)
+    }
+    
+    ; Insert newlink at HEAD
+    Evnt.arAutoEvxlinks.InsertAt(1, newevx)
+    
+    ; Always delete the MAX FINAL
+    Evnt.arAutoEvxlinks.RemoveAt(Evnt.MAX_AutoEvxlinks+1)
+
+    ; Save the list to file.
+    filecontent := ""
+  	for index,evx in Evnt.arAutoEvxlinks
+    {
+;    	Dbgwin_Output(evx.word) ; debug
+		filecontent .= Format("{}`t{}`r`n", evx.word, evx.link)
+    }
+    dev_WriteWholeFile(Evnt.filenamEvxlinks, filecontent)
+}
+
+Evernote_EvxLinkPaste(index, word, link)
+{
+	Evernote_PopLinkPaste(word, link)
+	
+	if(index>1)
+		evernote_InsertEvxAtHead(word, link, index)
+}
+
 
