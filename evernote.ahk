@@ -270,7 +270,7 @@ global g_evernotePopLinksFile := "EvernotePopupLinks.csv.txt"
 
 class Evnt
 {
-	static MAX_AutoEvxlinks := 30
+	static MAX_AutoEvxlinks := 6
 	static arAutoEvxlinks := []
 	; -- each element is a dict, d.word="AmHotkey" d.link="https://www.evernote.com/shard/s21/nl/2425275/..."
 	
@@ -3946,6 +3946,8 @@ evernote_InitEvxLinks()
 		ss := StrSplit(A_LoopReadLine, "`t")
 		Evnt.arAutoEvxlinks.Push({"word":ss[1], "link":ss[2]})
 	}
+	
+	evernote_EvxArrayDeleteBeyondMax()
 }
 
 evernote_PickupEvxlink()
@@ -4009,8 +4011,8 @@ evernote_InsertEvxAtHead(newword, newlink, delete_index:=-1)
     ; Insert newlink at HEAD
     Evnt.arAutoEvxlinks.InsertAt(1, newevx)
     
-    ; Always delete the MAX FINAL
-    Evnt.arAutoEvxlinks.RemoveAt(Evnt.MAX_AutoEvxlinks+1)
+    ; Delete beyond MAX 
+    evernote_EvxArrayDeleteBeyondMax()
 
     ; Save the list to file.
     filecontent := ""
@@ -4030,4 +4032,8 @@ Evernote_EvxLinkPaste(index, word, link)
 		evernote_InsertEvxAtHead(word, link, index)
 }
 
+evernote_EvxArrayDeleteBeyondMax()
+{
+	dev_ArrayTruncateAt_(Evnt.arAutoEvxlinks, Evnt.MAX_AutoEvxlinks)
+}
 

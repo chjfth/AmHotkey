@@ -1212,3 +1212,16 @@ dev_GetTickCount64()
 	return s_highquad * 0x100000000 + now_dword
 }
 
+dev_ArrayTruncateAt_(ar, nkeeps)
+{
+	nDel := ar.Length() - nkeeps
+	if(nDel>0)
+	{
+	    Loop, % nDel
+	    {
+	    	ar.Pop()
+		}
+	}
+}
+
+
