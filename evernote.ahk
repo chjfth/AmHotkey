@@ -270,7 +270,7 @@ global g_evernotePopLinksFile := "EvernotePopupLinks.csv.txt"
 
 class Evnt
 {
-	static MAX_AutoEvxlinks := 6
+	static MAX_AutoEvxlinks := 20
 	static arAutoEvxlinks := []
 	; -- each element is a dict, d.word="AmHotkey" d.link="https://www.evernote.com/shard/s21/nl/2425275/..."
 	
@@ -3692,7 +3692,7 @@ Evernote_PopLinkShowMenu()
 	{
 	  	for index,evx in Evnt.arAutoEvxlinks
 		{
-			fn := Func("Evernote_EvxLinkPaste").Bind(index, evx.word, evx.link)
+			fn := Func("Evernote_EvxLinkPaste").Bind(evx.word, evx.link, index)
 			dev_MenuAddItem("EvernoteAutopickupEvx", "&" evx.word, fn)
 		}
 
@@ -3730,7 +3730,7 @@ Evernote_PopLinkShowMenu()
 	    {
 			menutextfull := Format("&{1}`t{2}", menutext, desctext)
 
-			fn := Func("Evernote_PopLinkPaste").Bind(menutext, url)
+			fn := Func("Evernote_EvxLinkPaste").Bind(menutext, url)
 			Menu, EvernotePoplinksMenu, Add, %menutextfull%, %fn%
 	    
 	    }
@@ -3751,7 +3751,7 @@ Evernote_PopLinkShowMenu()
 			menutextfull := Format("&{1}`t{2}", menutext, desctext)
 	    	
 	    	; Create submenu
-	    	fn := Func("Evernote_PopLinkPaste").Bind(menutext, url)
+	    	fn := Func("Evernote_EvxLinkPaste").Bind(menutext, url)
 	    	Menu, %submenuname%, Add, %menutextfull%, %fn%
 	    	
 	    	; Create and add to parent menu
@@ -3762,10 +3762,12 @@ Evernote_PopLinkShowMenu()
 	Menu, EvernotePoplinksMenu, Show
 }
 
-Evernote_PopLinkPaste(text, url)
+Evernote_EvxLinkPaste(text, url, delete_index:=-1)
 {
 	html := Format("<span>[<a href='{1}'>{2}</a>]&nbsp;</span>", url, text)
 	dev_ClipboardSetHTML(html, true)
+
+	evernote_InsertEvxAtHead(text, url, delete_index)
 }
 
 Evernote_OpenPopLinkFile()
@@ -4022,14 +4024,6 @@ evernote_InsertEvxAtHead(newword, newlink, delete_index:=-1)
 		filecontent .= Format("{}`t{}`r`n", evx.word, evx.link)
     }
     dev_WriteWholeFile(Evnt.filenamEvxlinks, filecontent)
-}
-
-Evernote_EvxLinkPaste(index, word, link)
-{
-	Evernote_PopLinkPaste(word, link)
-	
-	if(index>1)
-		evernote_InsertEvxAtHead(word, link, index)
 }
 
 evernote_EvxArrayDeleteBeyondMax()
