@@ -9,6 +9,7 @@ PreviewHtml_ShowGui(html)
 ColorMatrix_ShowGui()
 ;
 Evernote_PopLinkShowMenu()
+Evernote_PopLinkShowAutoPickupMenu()
 ;
 Evernote_PopupPasteMenu()
 Evernote_PasteSingleLineCode()
@@ -306,6 +307,7 @@ Evernote_InitThisModule()
 	evernote_InitEvxLinks()
 }
 
+
 evernote_InitHotkeys()
 {
 	; App+t to callup EverTable UI
@@ -317,6 +319,17 @@ evernote_InitHotkeys()
 	fxhk_DefineComboHotkey("AppsKey", "c", "Evp_LaunchUI")
 
 }
+
+;
+; [2021-12-24] Load EvernotePopupLinks.csv.txt and popup a live menu for user to select a shortcut link,
+; then send the corresponding html snippet to clipboard so to paste into Evernote, the final result is: 
+; we get a real Evernote link in our Evernote clip(n.). I find myself need to frequently insert topic-link 
+; like [WinGUI] [AutoHotkey] [MSBuild] etc in my clip, and this becomes a great time saver.
+;
+#If Evernote_IsMainFrameOrSingleActive()
+AppsKey & k:: Evernote_PopLinkShowMenu()
+#If
+
 
 Evp_WinTitle()
 {
@@ -3660,18 +3673,39 @@ Evernote_TSVtoHtml(input_string, sepchar:="", hexcolor1="", hexcolor2="")
 }
 
 
+Evernote_PopLinkShowMenu_2x()
+{
+	; [2023-01-25] This function does not work as expected yet.
+	; Reason: When a tracking popup-menu is shown, the Autohotkey's thread is blocked
+	; inside WinAPI TrackPopupMenu(), so it cannot respond to any other keypress, 
+	; until the popup-menu is dismissed.
+	
+	; [PURPOSE] On called first-time, full menu is shown.
+	; If called a second-time in one second, Auto-pickup menu is displaye instead.
 
+	static s_prevmsec := 0
+	
+	nowmsec := dev_GetTickCount64()
 
-;
-; [2021-12-24] Load EvernotePopupLinks.csv.txt and popup a live menu for user to select a shortcut link,
-; then send the corresponding html snippet to clipboard so to paste into Evernote, the final result is: 
-; we get a real Evernote link in our Evernote clip(n.). I find myself need to frequently insert topic-link 
-; like [WinGUI] [AutoHotkey] [MSBuild] etc in my clip, and this becomes a great time saver.
-;
-#If Evernote_IsMainFrameOrSingleActive()
-AppsKey & k:: Evernote_PopLinkShowMenu()
-#If
-;
+;	Dbgwin_Output(Format("Pop2x: now={} , diff={}", nowmsec, nowmsec-s_prevmsec))
+
+	if(nowmsec - s_prevmsec > 1000)
+	{
+		if(Evernote_IsMainFrameOrSingleActive())
+		{
+			Evernote_PopLinkShowMenu()
+; Dbgwin_Output(Format("Pop2x: Done"))
+			
+			s_prevmsec := nowmsec
+		}
+	}
+	else 
+	{
+		Evernote_PopLinkShowAutoPickupMenu()
+	}
+	
+}
+
 Evernote_PopLinkShowMenu()
 {
 	submenus_seen := []
@@ -3686,16 +3720,9 @@ Evernote_PopLinkShowMenu()
 	;
 	; Load Auto-pickup evxlink files
 	;
-	
-	dev_Menu_DeleteAll("EvernoteAutopickupEvx")
-	if(Evnt.arAutoEvxlinks.Length()>0)
+		
+	if(evernote_ConstructAutoPickupMenu())
 	{
-	  	for index,evx in Evnt.arAutoEvxlinks
-		{
-			fn := Func("Evernote_EvxLinkPaste").Bind(evx.word, evx.link, index)
-			dev_MenuAddItem("EvernoteAutopickupEvx", "&" evx.word, fn)
-		}
-
 		dev_MenuAddItem("EvernotePoplinksMenu", "Auto pickup", ":EvernoteAutopickupEvx")
 	}
 	
@@ -3760,6 +3787,31 @@ Evernote_PopLinkShowMenu()
 	}
 	
 	Menu, EvernotePoplinksMenu, Show
+}
+
+Evernote_PopLinkShowAutoPickupMenu()
+{
+	if(evernote_ConstructAutoPickupMenu())
+	{
+		dev_MenuShow("EvernoteAutopickupEvx")
+	}
+}
+
+evernote_ConstructAutoPickupMenu()
+{
+	dev_Menu_DeleteAll("EvernoteAutopickupEvx")
+	if(Evnt.arAutoEvxlinks.Length()>0)
+	{
+	  	for index,evx in Evnt.arAutoEvxlinks
+		{
+			fn := Func("Evernote_EvxLinkPaste").Bind(evx.word, evx.link, index)
+			dev_MenuAddItem("EvernoteAutopickupEvx", "&" evx.word, fn)
+		}
+
+		return true 
+	}
+	else
+		return false
 }
 
 Evernote_EvxLinkPaste(text, url, delete_index:=-1)

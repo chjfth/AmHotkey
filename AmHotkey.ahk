@@ -1417,6 +1417,8 @@ _fxhk_callback_ComboPrefixResend(prefix_keyname)
 
 fxhk_DefineComboHotkey(prefix_keyname, suffix_keyname, fn_act, act_args*)
 {
+	; Command prefix_keyname: "AppsKey", "Esc"
+
 	purpose := fxhk_DefineComboHotkeyCondComment(prefix_keyname, suffix_keyname
 		, "" ; user_purpose
 		, "" ; user_comment
