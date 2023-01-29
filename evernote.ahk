@@ -3715,7 +3715,12 @@ Evernote_PopLinkShowMenu()
 	} catch {
 	}
 	menuhead := Format("== {} ==",  g_evernotePopLinksFile)
-	Menu, EvernotePoplinksMenu, Add, %menuhead%, Evernote_OpenPopLinkFile
+	Menu, EvernotePoplinksMenu, Add, %menuhead%, Evernote_PopLinkFile_OpenEditor
+	
+	if(not FileExist(g_evernotePopLinksFile))
+	{
+		dev_MsgBoxWarning(Format("This file assigned in g_evernotePopLinksFile does NOT exit: {}", g_evernotePopLinksFile))
+	}
 	
 	;
 	; Load Auto-pickup evxlink files
@@ -3824,8 +3829,13 @@ Evernote_EvxLinkPaste(text, url, delete_index:=-1)
 	evernote_InsertEvxAtHead(text, url, delete_index)
 }
 
-Evernote_OpenPopLinkFile()
+Evernote_PopLinkFile_OpenEditor()
 {
+	if(not FileExist(g_evernotePopLinksFile))
+	{
+		dev_WriteWholeFile(g_evernotePopLinksFile, "")
+	}
+
 	Run, open "%g_evernotePopLinksFile%"
 	
 	Sleep, 500
