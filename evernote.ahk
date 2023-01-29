@@ -3805,7 +3805,9 @@ evernote_ConstructAutoPickupMenu()
 	  	for index,evx in Evnt.arAutoEvxlinks
 		{
 			fn := Func("Evernote_EvxLinkPaste").Bind(evx.word, evx.link, index)
-			dev_MenuAddItem("EvernoteAutopickupEvx", "&" evx.word, fn)
+			dev_MenuAddItem("EvernoteAutopickupEvx"
+				, Format("&{}`t({})", evx.word, index)
+				, fn)
 		}
 
 		return true 
