@@ -14,7 +14,8 @@ global g_clipmonHwndTmp
 global g_clipmon ; the only clipmon instance, dynamically created/destroyed
 
 global g_clipmonSeeDebugMsg
-; -- If override to true(e.g. in customize.ahk), it will show debug-messsage and small debug window.
+; -- If override to true(e.g. in custom_env.ahk), it will show debug-messsage and small debug window.
+; -- Note: Setting g_clipmonSeeDebugMsg:=true here is useless, bcz this file is not a Amhotkey module.
 
 
 class CClipboardMonitor
@@ -175,7 +176,7 @@ class CClipboardMonitor
 	
 	Do_WM_CHANGECBCHAIN(wParam, lParam, msg, hwnd)
 	{
-		this.dbg(Format("In WM_CHANGECBCHAIN(): wParam=0x{:08X} lParam=0x{:08X} hwnd=0x{:08X}."
+		this.dbg(Format("Do_WM_CHANGECBCHAIN(): wParam=0x{:08X} lParam=0x{:08X} hwnd=0x{:08X}."
 			,wParam, lParam, hwnd))
 
 		if(wParam == this._hwndNextClipViewer)
@@ -187,7 +188,7 @@ class CClipboardMonitor
 	
 	Do_WM_DRAWCLIPBOARD(wParam, lParam, msg, hwnd)
 	{
-		this.dbg(Format("In WM_DRAWCLIPBOARD(), hwnd=0x{:08X}", this._GuiHwnd))
+		this.dbg(Format("Do_WM_DRAWCLIPBOARD(), hwnd=0x{:08X}", this._GuiHwnd))
 
 		this._nChanges++
 		
@@ -196,7 +197,7 @@ class CClipboardMonitor
 
 		for key,client in this._clients
 		{
-			this.dbg(Format("Do_WM_DRAWCLIPBOARD clientid={} , since={}", key, client.datetime))
+			this.dbg(Format("Do_WM_DRAWCLIPBOARD() clientid={} , since={}", key, client.datetime))
 			client.fnobj()
 		}
 

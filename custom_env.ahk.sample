@@ -1,2 +1,2 @@
 
-global g_isDefineHotkeyLog := true
+; global g_clipmonSeeDebugMsg := true
