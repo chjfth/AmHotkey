@@ -78,24 +78,31 @@
       }
     }
     structSize := formatsNum*( 4 + 4 ) + clipSize  ;allocating 4 bytes for format ID and 4 for data size
-    if !structSize
-      return 0
-    VarSetCapacity( clipData, structSize, 0 )
-    ; array in form of:
-    ; format   UInt
-    ; dataSize UInt
-    ; data     Byte[]
-    offset := 0
-    for fmt, params in objFormats
+    if structSize>0
     {
-      NumPut( fmt, &clipData, offset, "UInt" )
-      offset += 4
-      NumPut( params.size, &clipData, offset, "UInt" )
-      offset += 4
-      WinClipAPI.memcopy( &clipData + offset, params.handle, params.size )
-      offset += params.size
-      WinClipAPI.GlobalUnlock( params.handle )
-    }
+	    VarSetCapacity( clipData, structSize, 0 )
+	    ; array in form of:
+	    ; format   UInt
+	    ; dataSize UInt
+	    ; data     Byte[]
+	    offset := 0
+	    for fmt, params in objFormats
+	    {
+	      NumPut( fmt, &clipData, offset, "UInt" )
+	      offset += 4
+	      NumPut( params.size, &clipData, offset, "UInt" )
+	      offset += 4
+	      WinClipAPI.memcopy( &clipData + offset, params.handle, params.size )
+	      offset += params.size
+	      WinClipAPI.GlobalUnlock( params.handle )
+	    }
+	}
+	else
+	{
+		; [2023-02-03] Chj Fixed: 
+		; Even if structsize==0, we need to CloseClipboard().
+		; This happenes if ahk statement `Clipboard := ""` is executed.
+	}
     WinClipAPI.CloseClipboard()
     return structSize
   }
