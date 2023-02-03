@@ -3805,6 +3805,7 @@ Evernote_PopLinkShowAutoPickupMenu()
 evernote_ConstructAutoPickupMenu()
 {
 	dev_Menu_DeleteAll("EvernoteAutopickupEvx")
+	
 	if(Evnt.arAutoEvxlinks.Length()>0)
 	{
 	  	for index,evx in Evnt.arAutoEvxlinks
@@ -3814,6 +3815,8 @@ evernote_ConstructAutoPickupMenu()
 				, Format("&{}`t({})", evx.word, index)
 				, fn)
 		}
+
+	    evernote_EvxArrayTruncateBeyondMax()
 
 		return true 
 	}
@@ -4013,7 +4016,9 @@ evernote_InitEvxLinks()
 		Evnt.arAutoEvxlinks.Push({"word":ss[1], "link":ss[2]})
 	}
 	
-	evernote_EvxArrayDeleteBeyondMax()
+	; evernote_EvxArrayTruncateBeyondMax()
+	; -- Don't truncate the list here, bcz customize.ahk may set(override) a larger value of MAX_AutoEvxlinks.
+	; The truncation has been moved to evernote_ConstructAutoPickupMenu().
 }
 
 evernote_PickupEvxlink()
@@ -4078,7 +4083,7 @@ evernote_InsertEvxAtHead(newword, newlink, delete_index:=-1)
     Evnt.arAutoEvxlinks.InsertAt(1, newevx)
     
     ; Delete beyond MAX 
-    evernote_EvxArrayDeleteBeyondMax()
+    evernote_EvxArrayTruncateBeyondMax()
 
     ; Save the list to file.
     filecontent := ""
@@ -4090,7 +4095,7 @@ evernote_InsertEvxAtHead(newword, newlink, delete_index:=-1)
     dev_WriteWholeFile(Evnt.filenamEvxlinks, filecontent)
 }
 
-evernote_EvxArrayDeleteBeyondMax()
+evernote_EvxArrayTruncateBeyondMax()
 {
 	dev_ArrayTruncateAt_(Evnt.arAutoEvxlinks, Evnt.MAX_AutoEvxlinks)
 }

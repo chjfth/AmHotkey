@@ -1865,29 +1865,6 @@ dev_IsClassnnFocused_regex(regex)
 		return false
 }
 
-dev_SetClipboardWithTimeout(text, timeout_milisec:=1000)
-{
-	is_ok := false
-	msec_start := A_TickCount
-	Loop
-	{
-		try {
-			Clipboard := text
-		} catch e {
-			; e seems to be null
-			Sleep, 10
-			continue
-		}
-		
-		is_ok := true
-		break
-		
-	} until (A_TickCount-msec_start>timeout_milisec)
-	
-	return is_ok
-}
-
-
 ;################### Windows GUI tweaking functions ###########################
 
 dev_ReadRemoteBuffer(hpRemote, RemoteBuffer, ByRef LocalVar, bytes)

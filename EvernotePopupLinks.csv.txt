@@ -108,6 +108,7 @@ https://www.evernote.com/shard/s21/nl/2425275/61d348e1-8ab7-4bec-93f4-48e248d89a
 https://www.evernote.com/shard/s21/nl/2425275/e84984e1-0f3a-4030-aaac-3243ba61ee73 , 机器实例:A320BK , 群升公寓的备份机
 https://www.evernote.com/shard/s21/nl/2425275/7e850d61-28f6-4427-940c-93a284e44c82 , 机器实例:Win10vwork
 https://www.evernote.com/shard/s21/nl/2425275/a7f5797b-f464-41e7-9098-93f6d3286dd3 , 机器实例:MyNUCs , Intel NUC
+https://www.evernote.com/shard/s21/nl/2425275/e6f8bb67-de35-4bf8-829e-945c41415c45 , 机器实例:chji , 用了十年的 i7-4770K
 https://www.evernote.com/shard/s21/nl/2425275/2c903369-2c41-4d7c-b2d6-6ebbb10aaec3 , 机器实例:AcerR7
 https://www.evernote.com/shard/s21/nl/2425275/c4f3cb6f-f9ff-4a29-969e-931cb9679dfb , 机器实例:GBChj-P35W
 

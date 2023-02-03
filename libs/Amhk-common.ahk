@@ -1225,3 +1225,28 @@ dev_ArrayTruncateAt_(ar, nkeeps)
 }
 
 
+dev_SetClipboardWithTimeout(text, timeout_milisec:=1000)
+{
+	is_ok := false
+	msec_start := A_TickCount
+	Loop
+	{
+		try {
+			Clipboard := text
+		} catch e {
+			; e seems to be null
+
+;			Dbgwin_Output("dev_SetClipboardWithTimeout() needs wait...")
+			Sleep, 10
+			continue
+		}
+		
+		is_ok := true
+		break
+		
+	} until (A_TickCount-msec_start>timeout_milisec)
+	
+	return is_ok
+}
+
+
