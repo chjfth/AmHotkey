@@ -205,6 +205,9 @@ dev_CheckWindowInfo(hwnd)
 	else
 		classnn := ""
 	
+	isHCtrlUnicode := DllCall("IsWindowUnicode", "Ptr", hctrl_undermouse)
+	ynHCtrlUnicode := isHCtrlUnicode ? "yes" : "no"
+
 	info =
 	(
 The Active window class is "%class%" (Hwnd=%hwnd%)
@@ -223,6 +226,7 @@ Mouse position: In-window: (%mxWindow%,%myWindow%)  `; In-screen: (%mxScreen%,%m
 
 ClassNN under mouse is "%classnn%"
 hwndCtrl under mouse is "%hctrl_undermouse%"
+IsWindowUnicode? [%ynHCtrlUnicode%]
 	)
 	MsgBox, % msgboxoption_IconInfo, , %info%
 }
