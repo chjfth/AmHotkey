@@ -1250,3 +1250,16 @@ dev_SetClipboardWithTimeout(text, timeout_milisec:=1000)
 }
 
 
+dev_IsWin10()
+{
+	verstr := A_OSVersion ; may be "10.0.19044"
+	
+	if(StrIsStartsWith(verstr, "10.0."))
+	{
+		return true
+	}
+	else
+	{
+		return false
+	}
+}

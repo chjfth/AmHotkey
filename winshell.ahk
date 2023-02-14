@@ -963,7 +963,8 @@ winshell_DefineUtilitiesMenu()
 {
 	umenu := "WinshellUtilityMenu"
 
-	winshell_AddOneUtilitiesMenu("Network/WiFi Systray Panel", "rundll32.exe van.dll`,RunVAN")
+	winshell_AddOneUtilitiesMenu("Network/WiFi Systray Panel"
+		, dev_IsWin10() ? "explorer.exe ms-availablenetworks:" : "rundll32.exe van.dll`,RunVAN")
 
 	winshell_AddOneUtilitiesMenu("Network interface list (ncpa.cpl)", "ncpa.cpl")
 	

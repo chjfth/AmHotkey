@@ -51,6 +51,10 @@ Dbgwin_Output(msg)
 	; This function will append msg to end of curent multiline-editbox,
 	; adding time-stamp prefix and \r\n suffix .
 	
+	; Makes single \n become \r\n, bcz Win32 editbox recognized only \r\n as newline.
+	msg := StrReplace(msg, "`r`n", "`n")
+	msg := StrReplace(msg, "`n", "`r`n")
+	
 	; I will report millisecond fraction, so need some extra work.
 	;
 	static s_start_msec   := A_TickCount

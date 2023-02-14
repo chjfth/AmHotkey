@@ -227,10 +227,51 @@ Mouse position: In-window: (%mxWindow%,%myWindow%)  `; In-screen: (%mxScreen%,%m
 ClassNN under mouse is "%classnn%"
 hwndCtrl under mouse is "%hctrl_undermouse%"
 IsWindowUnicode? [%ynHCtrlUnicode%]
+
+Answer [Yes] to see more system info.
 	)
-	MsgBox, % msgboxoption_IconInfo, , %info%
+	
+	more := dev_MsgBoxYesNo(info, false)
+	if(more)
+	{
+		Dbg_DumpSysInfo()
+	}
 }
 
+dbgline_onevar(varname, showfmt:="")
+{
+	if(not showfmt)
+		str := Format("{} = {}`n", varname, %varname%)
+	else if(showfmt=="t/f")
+		str := Format("{} = {}`n", varname, %varname% ? "true" : "false")
+	else if(showfmt=="hex")
+		str := Format("{} = 0x{:08X}`n", varname, %varname%)
+	
+	return str
+}
+
+Dbg_DumpSysInfo()
+{
+	info := "System info:`n"
+	info .= dbgline_onevar("A_OSVersion")
+	info .= dbgline_onevar("A_Is64bitOS", "t/f")
+	info .= dbgline_onevar("A_PtrSize")
+	info .= dbgline_onevar("A_IsAdmin", "t/f")
+	info .= dbgline_onevar("A_AppData")
+	info .= dbgline_onevar("A_ScreenDPI")
+	info .= dbgline_onevar("A_AhkVersion")
+	info .= dbgline_onevar("A_AhkPath")
+	info .= dbgline_onevar("A_WorkingDir")
+	info .= dbgline_onevar("A_ScriptDir")
+	info .= dbgline_onevar("A_ScriptName")
+	info .= dbgline_onevar("A_ScriptFullPath")
+	info .= dbgline_onevar("A_FileEncoding")
+	info .= dbgline_onevar("A_ScriptHwnd", "hex")
+	info .= dbgline_onevar("A_IsUnicode", "t/f")
+	info .= dbgline_onevar("A_IsCompiled", "t/f")
+	
+	Dbgwin_Output(info)
+}
 
 
 SystrayMenu_Add_MuteClicking()
