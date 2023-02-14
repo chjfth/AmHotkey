@@ -1444,7 +1444,7 @@ _fxhk_callback_ComboPrefixResend(prefix_keyname)
 		; * User in VM presses AppsKey and release.
 		; In this case, the Host machine sees only {AppsKey UP} without {AppsKey} DOWN.
 		; We just ignore such case.
-		dbgHotkeyFlex(Format("[INFO] In _fxhk_callback_ComboPrefixResend(), seeing 〖{} UP〗 first without key DOWN."))
+		dbgHotkeyFlex(Format("[INFO] In _fxhk_callback_ComboPrefixResend(), seeing 〖{} UP〗 first without key DOWN.", prefix_keyname))
 		return
 	}
 	
