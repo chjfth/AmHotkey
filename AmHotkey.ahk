@@ -1084,10 +1084,17 @@ _dev_HotkeyFlex_callback()
 	}
 
 	dev_assert(Amhk.fxhk_seq >= Amhk.fxhk_seq_end)
-	is_reentrance := false
+	
+	
 	if(Amhk.fxhk_seq > Amhk.fxhk_seq_end) {
+		
+		; Set a flag to indicate that current AHK-thread is intruding(interrupting) another AHK-thread.
+		
 		is_reentrance := true
-		; Yes, we delay the re-entrance dbginfo output after "[seq:{}] >>>" .
+		; -- Yes, we delay the re-entrance dbginfo output after "[seq:{}] >>>" .
+	}
+	else {
+		is_reentrance := false
 	}
 
 	Amhk.fxhk_seq++
@@ -1096,12 +1103,12 @@ _dev_HotkeyFlex_callback()
 	; -- to get rid of influence of callback re-entrance, save it as a local var.
 
 	Amhk.fxhkRcbStartTick := dev_GetTickCount64()
-	dbgHotkeyFlex(Format("[seq:{}] >>> fxhkRcbStartTick = {}", nowseq, Amhk.fxhkRcbStartTick))
+	dbgHotkeyFlex(Format("[seq:{}]〖{}〗>>> fxhkRcbStartTick = {}", nowseq, keynamed, Amhk.fxhkRcbStartTick))
 
 	if(is_reentrance)
 	{
 		; Re-entrance can really happen, randomly, bcz more than one AHK-thread could 
-		; possibly execute _dev_HotkeyFlex_callback() parallelly. 
+		; possibly execute _dev_HotkeyFlex_callback() in parallel. 
 		; Re-entrance is more likely to happen if the callback code calls Sleep, 
 		; or GUI-related code, e.g, calling Dbgwin_Output().
 		Amhk.fxhk_callback_reentrance_count++
@@ -1119,7 +1126,7 @@ _dev_HotkeyFlex_callback()
 		
 		if(cond_ok)
 		{
-			dbgHotkeyFlex(Format("Keynamed 〖{}〗 firing: [{}] {}", keynamed, purpose_name, actinfo.comment))
+			dbgHotkeyFlex(Format("[seq:{}]〖{}〗 firing: [{}] {}", nowseq, keynamed, purpose_name, actinfo.comment))
 			
 			Amhk.fxhk_context := actinfo
 			; -- In user's hotkey callback, he can use fxhk_get_callback_context() to get this global,
@@ -1134,7 +1141,7 @@ _dev_HotkeyFlex_callback()
 		}
 		else
 		{
-			dbgHotkeyFlex(Format("Keynamed 〖{}〗 NOT-fired: [{}] {}", keynamed, purpose_name, actinfo.comment))
+			dbgHotkeyFlex(Format("[seq:{}]〖{}〗 NOT-fired: [{}] {}", nowseq, keynamed, purpose_name, actinfo.comment))
 		}
 	}
 	;
@@ -1146,9 +1153,10 @@ _dev_HotkeyFlex_callback()
 			
 			if(sendcompat)
 			{
-				dbgHotkeyFlex(Format("Passthrough {} keynamed: 〖{}〗 → Send: {}"
-					, meet_passthru?"(explicit)":"(implicit)"
+				dbgHotkeyFlex(Format("[seq:{}]〖{}〗Passthrough {} → Send: {}"
+					, nowseq
 					, keynamed
+					, meet_passthru?"(explicit)":"(implicit)"
 					, sendcompat))
 				
 				Send % sendcompat
@@ -1160,8 +1168,11 @@ _dev_HotkeyFlex_callback()
 	; -- If you Sleep here, you can very easily see re-entrance problem by pressing hotkeys quickly.
 	
 	Amhk.fxhkRcbEndTick := dev_GetTickCount64()
-	dbgHotkeyFlex(Format("[seq:{}] <<< fxhkRcbEndTick = {} (+{})"
-		, nowseq, Amhk.fxhkRcbEndTick, Amhk.fxhkRcbEndTick-Amhk.fxhkRcbStartTick))
+	dbgHotkeyFlex(Format("[seq:{}]〖{}〗<<< fxhkRcbEndTick = {} (+{})"
+		, nowseq
+		, keynamed
+		, Amhk.fxhkRcbEndTick
+		, Amhk.fxhkRcbEndTick-Amhk.fxhkRcbStartTick))
 
 	Amhk.fxhk_context := ""
 	Amhk.fxhk_seq_end++
@@ -3194,6 +3205,30 @@ dev_TooltipDisableCloseWindow(msg_prefix)
 	dev_TooltipAutoClear(msg_prefix . " closing window/tab is disabled by AmHotkey.")
 }
 
+
+dev_DbgAskAHKVar_OnOff()
+{
+	static s_varname := ""
+	
+	prompt := "Input a AHK varname so to make it true or false.`r`n"
+		. "OK to set true; Cancel to set false.`r`n`r`n"
+		. "g_isdbg_DefineHotkeyFlex `r`n"
+		. "g_clipmonSeeDebugMsg `r`n"
+
+	isok := dev_InputBox_DefaultText("", prompt, s_varname) ; s_varname will change on output
+	
+	s_varname := Trim(s_varname)
+	
+	if(s_varname)
+	{
+		if(isok)
+			%s_varname% := 1
+		else
+			%s_varname% := 0
+	}
+
+	Dbgwin_Output(Format("{} = {}", s_varname, %s_varname%))
+}
 
 
 ;==============================================================================

@@ -1263,3 +1263,24 @@ dev_IsWin10()
 		return false
 	}
 }
+
+dev_InputBox_DefaultText(title, prompt, byref usertext:="")
+{
+	if(title=="")
+		title := "AHK InputBox"
+	
+	InputBox, answer, % title, % prompt, , , , , , , 0, % usertext
+	
+	usertext := answer
+
+	if(ErrorLevel) 
+	{
+		; User pressed Cancel. 
+    	return false
+    }
+	else
+	{
+    	return true
+    }
+}
+
