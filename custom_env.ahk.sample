@@ -1,2 +1,4 @@
 
 ; global g_clipmonSeeDebugMsg := true
+
+; g_isdbg_DefineHotkeyFlex_default := true

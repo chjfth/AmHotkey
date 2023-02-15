@@ -90,8 +90,9 @@ global g_tmpMonitorsLayout := {}
 global g_AmHotkeyFilepath := A_LineFile ; Record my real filepath at runtime.
 global g_AmHotkeyDirpath  := dev_SplitPath(g_AmHotkeyFilepath)
 
-global g_isdbg_DefineHotkeyLegacy := false
-global g_isdbg_DefineHotkeyFlex   := false
+global g_isdbg_DefineHotkeyLegacy := g_isdbg_DefineHotkeyLegacy_default
+global g_isdbg_DefineHotkeyFlex   := g_isdbg_DefineHotkeyFlex_default
+; -- User can override g_isdbg_DefineHotkeyFlex_default in custom_env.ahk .
 
 
 
@@ -912,12 +913,19 @@ _fxhk_KeynameAddHppPrefix(keyname)
 	}
 }
 
-_fxhk_IsComboKeyname(keyname)
+_fxhk_IsComboKeyname(keyname, byref prefix_keyname="", byref suffix_keyname:="")
 {
 	if(InStr(keyname, " & "))
+	{
+		dual := StrSplit(keyname, " & ")
+		prefix_keyname := dual[1]
+		suffix_keyname := dual[2]
 		return true
+	}
 	else
+	{
 		return false
+	}
 }
 
 
@@ -970,7 +978,7 @@ _in_dev_DefineHotkeyFlex(user_keyname, purpose_name, comment, is_passthru, fn_co
 	keynamed := _fxhk_KeynameStripPrefix(user_keyname) ; keyname as dict-key
 	hpp_keyname := _fxhk_KeynameAddHppPrefix(keynamed) ; hpp: hook($) or passthru(~) prefix
 	
-	never_passthru := StrIsStartsWith(hpp_keyname, "~") ? true : false
+;	isComboHotkey := StrIsStartsWith(hpp_keyname, "~") ? true : false
 	
 	dbgHotkeyFlex(Format("user_keyname=〖{}〗, keynamed=〖{}〗, hpp_keyname=〖{}〗", user_keyname, keynamed, hpp_keyname))
 	
@@ -1030,7 +1038,7 @@ _in_dev_DefineHotkeyFlex(user_keyname, purpose_name, comment, is_passthru, fn_co
 		dev_assert(purpose_name) ; To remove a hotkey, you must pass in an explicity purpose_name.
 		
 		if(not s_dp.HasKey(keynamed)) {
-			dbgHotkeyFlex(Format("On delete, the keynamed does not exist yet: 〖{}〗", keyname))
+			dbgHotkeyFlex(Format("On delete, the keynamed does not exist yet: 〖{}〗", keynamed))
 			return false
 		}
 		
@@ -1145,22 +1153,50 @@ _dev_HotkeyFlex_callback()
 		}
 	}
 	;
-	if(!never_passthru)
+;	Dbgwin_Output(Format("###########meet_passthru={} , has_cond_match={} , isComboHotkey={}", meet_passthru, has_cond_match, isComboHotkey))
+	if(meet_passthru || !has_cond_match)
 	{
-		if(meet_passthru || !has_cond_match)
+		; EXPLAIN: 
+		; If user explicitly wants current hotkey to passthrough(meet_passthru==true), we need to re-send the key.
+		;   OR
+		; If current hotkey does not match any triggering-condition(no matter user wants it passthru or not),
+		; we need to re-send the key as well -- so that current suffix-key can retain its original behavior.
+		;
+		; But be aware, for combo-hotkey and non-combo-hotkey, the "re-send" method is different.
+	
+		if(not _fxhk_IsComboKeyname(keynamed, out_prefix_keyname, out_suffix_keyname))
 		{
-			sendcompat := _HotkeynameToSendCompat(keynamed)
+			; keynamed is like: F2 , ^1 , #!u , ...
+			;                   __   __   ___
 			
-			if(sendcompat)
-			{
-				dbgHotkeyFlex(Format("[seq:{}]〖{}〗Passthrough {} → Send: {}"
-					, nowseq
-					, keynamed
-					, meet_passthru?"(explicit)":"(implicit)"
-					, sendcompat))
+			sendcompat := _HotkeynameToSendCompat(keynamed) ; get a compatible string representing the key for `Send`
+			
+			dev_assert(sendcompat!="")
+			
+			dbgHotkeyFlex(Format("[seq:{}]〖{}〗 NCC-passthrough {} → Send {}"
+				, nowseq
+				, keynamed
+				, meet_passthru?"(explicit)":"(implicit)"
+				, sendcompat))
 				
-				Send % sendcompat
-			}
+			Send % sendcompat
+		}
+		else
+		{
+			; keynamed is like: AppsKey & 1 , ESC & n , ...
+			;                   ___________   _______
+			;
+			; Then we'll send {1} , {n} etc.
+			
+			send_suffix := "{" out_suffix_keyname "}"
+			
+			dbgHotkeyFlex(Format("[seq:{}]〖{}〗 CC-passthrough {} → Send {}"
+				, nowseq
+				, keynamed
+				, meet_passthru?"(explicit)":"(implicit)"
+				, send_suffix))
+			
+			Send % send_suffix
 		}
 	}
 	
@@ -1454,7 +1490,7 @@ _fxhk_callback_ComboPrefixResend(prefix_keyname)
 	
 	if(seq_diff == 1)
 	{
-		; This means no other is pressed between a prefix-key(e.g. AppsKey)'s down and up,
+		; This means no other key is pressed between a prefix-key(e.g. AppsKey)'s down and up,
 		; so we should re-send this prefix-key to user-environment.
 		
 		dbgHotkeyFlex(Format("Prefix-key 〖{}〗 released cleanly, re-send it.", prefix_keyname))
