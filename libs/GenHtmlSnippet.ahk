@@ -6,6 +6,20 @@ genhtml_code2pre_pure() ; no color highlight, just wrap in <pre>
 
 genhtml_code2pre_2022() ; wrap in <pre> and colorize.
 
+
+Use the following text-block to verify whether continuous spaces are rendered correctly.
+
+1234567890 "string"1234567890
+ 234567890 "string" 234567890
+  34567890 "string"  34567890
+   4567890 "string"   4567890
+    567890 "string"    567890
+     67890 "string"     67890
+      7890 "string"      7890
+       890 "string"       890
+        90 "string"        90
+         0 "string"         0
+
 */
 
 genhtml_code2pre_pure(codetext, tab_spaces:=4, workaround_evernote_bug:=false)
@@ -110,6 +124,9 @@ in_genhtml_code2pre_2022(codetext, is_color:=false, line_comment:="//", block_co
 		
 		html := Format("-<div style='{}'>{}</div>-"
 			, prestyle, html)
+
+		; Evernote problem: "<br/> " at start of the line would swallow the space-char inside.
+		html := StrReplace(html, "<br/> ", "<br/>&nbsp;")
 	}
 
 ;	dev_WriteWholeFile("stage3.html", html) ; debug
