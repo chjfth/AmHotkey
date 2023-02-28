@@ -1,4 +1,4 @@
-#Include %A_LineFile%\..\Amhk-common.ahk
+﻿#Include %A_LineFile%\..\Amhk-common.ahk
 
 /* API:
 
@@ -108,6 +108,12 @@ in_genhtml_code2pre_2022(codetext, is_color:=false, line_comment:="//", block_co
 		; To see the un-fixed behavior, just call genhtml_code2pre_pure() or genhtml_code2pre_2022() with workaround_evernote_bug=false.
 	
 		lines := StrSplit(html, "`n")
+
+/* [2023-02-28] 
+   妈的! 今发觉, 对于用 genhtml_pre_colorize_block() 和 genhtml_pre_colorize_eachline() 
+   生成的 html 源码, 如果用 <div>+<br/> 来代替 <pre> 的话, (#2) 说的问题并不存在!
+   因此注释掉这块代码, 继续观察. 换言之, (#2)的问题只在真正的 <pre> block 中才存在.
+		
 		Loop, % lines.Length()-1
 		{
 			if(StrIsEndsWith(lines[A_Index], "</span>") 
@@ -118,7 +124,7 @@ in_genhtml_code2pre_2022(codetext, is_color:=false, line_comment:="//", block_co
 				lines[A_Index] .= "<br/>"
 			}
 		}
-		
+*/		
 		; Now fix bug (#2), by joining the lines with <br/>, NOT by \n :
 		html := dev_JoinStrings(lines, "<br/>") 
 		
