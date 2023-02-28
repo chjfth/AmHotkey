@@ -111,8 +111,11 @@ in_genhtml_code2pre_2022(codetext, is_color:=false, line_comment:="//", block_co
 
 /* [2023-02-28] 
    妈的! 今发觉, 对于用 genhtml_pre_colorize_block() 和 genhtml_pre_colorize_eachline() 
-   生成的 html 源码, 如果用 <div>+<br/> 来代替 <pre> 的话, (#2) 说的问题并不存在!
-   因此注释掉这块代码, 继续观察. 换言之, (#2)的问题只在真正的 <pre> block 中才存在.
+   生成的 html 源码, 如果用 <div>+<br/> 来代替 <pre> 的话, (#1) 说的问题并不存在!
+   因此注释掉这块代码, 继续观察. 实施 <div> 的情况下, 又加了下面这块代码, 反而会多出空行.
+   
+   总言之, 今认为 #1,#2 的问题只在真正的 <pre> block 中才存在.
+   验证一段时间没问题后, 就动手去掉此处大量无用的注释.
 		
 		Loop, % lines.Length()-1
 		{
