@@ -192,6 +192,12 @@ SourceURL:file:///C:/Users/win7evn/AppData/Local/Temp/prettify_output.html
 ;		Dbgwin_Output("nReplaced = " nReplaced) ; debug
 	
 	} Until (nReplaced==0)
+
+	; Add CSS "white-space:pre-wrap" to <pre>, so that the pre-text wraps at view-port right edge.
+	htmlraw := StrReplace(htmlraw
+		, "<pre class=""prettyprint prettyprinted"" style="""
+		, "<pre class=""prettyprint prettyprinted"" style=""white-space:pre-wrap; ", nReplaced )
+;	Dbgwin_Output("nReplaced = ......... " nReplaced) ; debug , should be 1
 	
 	; Surround whole <pre> with a pair of '-' to make further editing room in Evernote clip.
 	
