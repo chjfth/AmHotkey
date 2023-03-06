@@ -118,10 +118,26 @@ foxit_IsVersion7(wintitle="A")
 }
 
 
+
 #If foxit_IsWinActive()
 
 F8:: Send +^{Tab}
 F9:: Send ^{Tab}
+
+$F5:: Foxit_HkToggleBookmarkSidebar()
+Foxit_HkToggleBookmarkSidebar()
+{
+	if(foxit_IsVersion7())
+	{
+		SendInput {F5} ; Relay F5, which is [Navigation Panels -> Bookmarks]
+	}
+	else
+	{
+		; On Foxit 9+, (buggy) Configuring F5 to [Navigation Panels -> Bookmarks]
+		; takes no effect, so I have to choose Ctrl+F5 as its shortcut.
+		SendInput ^{F5} 
+	}
+}
 
 foxitHotkey_SelectTextMode(){
 	g_foxit_last_tool := FOXIT_TOOL_SelectText
