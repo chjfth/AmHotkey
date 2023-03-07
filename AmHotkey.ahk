@@ -235,7 +235,7 @@ Answer [Yes] to see more system info.
 	more := dev_MsgBoxYesNo(info, false)
 	if(more)
 	{
-		Dbg_DumpSysInfo()
+		Dbg_DumpSysInfo(true)
 	}
 }
 
@@ -251,7 +251,7 @@ dbgline_onevar(varname, showfmt:="")
 	return str
 }
 
-Dbg_DumpSysInfo()
+Dbg_DumpSysInfo(force_fgwin:=false)
 {
 	info := "System info:`n"
 	info .= dbgline_onevar("A_OSVersion")
@@ -271,7 +271,7 @@ Dbg_DumpSysInfo()
 	info .= dbgline_onevar("A_IsUnicode", "t/f")
 	info .= dbgline_onevar("A_IsCompiled", "t/f")
 	
-	Dbgwin_Output(info)
+	Dbgwin_Output(info, force_fgwin)
 }
 
 

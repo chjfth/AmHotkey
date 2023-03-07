@@ -5,6 +5,11 @@
 
 Dbgwin_Output("Your debug message.")
 	; This debug-message window will be created automatically.
+	; On first call, the dbg-window is popped to front;
+	; on second call, the dbg-window remains in background so it does not disturb your active window.
+	; To force second call window foreground, call Dbgwin_Output_fg() or Dbgwin_Output(msg, true) .
+
+Dbgwin_Output_fg("Your msg") ; Force debug-window bring to front.
 	
 Dbgwin_ShowGui(true)
 	; Show the Gui, in case it was hidden(closed by user).
@@ -46,7 +51,12 @@ Init_DebugwinEnv()
 	; Write your initialization statements here.
 }
 
-Dbgwin_Output(msg)
+Dbgwin_Output_fg(msg)
+{
+	Dbgwin_Output(msg, true)
+}
+
+Dbgwin_Output(msg, force_fgwin:=false)
 {
 	; This function will append msg to end of curent multiline-editbox,
 	; adding time-stamp prefix and \r\n suffix .
@@ -88,7 +98,7 @@ Dbgwin_Output(msg)
 		, msec_from_prev>=1000 ? ".`r`n" : ""
 		, stimestamp, stimeplus, msg)
 
-	Dbgwin_ShowGui()
+	Dbgwin_ShowGui(force_fgwin)
 	
 	; We we append msg to end of curent multiline-editbox. (AppendText)
 	; Using WinAPI like this:
