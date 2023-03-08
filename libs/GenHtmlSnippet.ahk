@@ -49,7 +49,7 @@ in_genhtml_code2pre_2022(codetext, lnprefix_start:=0
 		workaround_evernote_bug := true
 
 	if(codetext==""){
-		dev_MsgBoxWarning("No text in Clipboard.", A_LineFile)
+		dev_MsgBoxWarning("No text in Clipboard yet.", A_LineFile)
 		return ""
 	}
 
@@ -146,7 +146,8 @@ in_genhtml_code2pre_2022(codetext, lnprefix_start:=0
 			{
 				if(lines[A_Index]=="")
 				{
-					; For empty line, we need to... pendingg
+					; For empty line, we need to add an extra nbsp, otherwise, Evernote
+					; swallows this empty line. i.e. user will see this line missing.
 					lines[A_Index] := "&nbsp;"
 				}
 			

@@ -3955,15 +3955,17 @@ Evernote_PopupBlockPasteMenu()
 	
 	dev_Menu_DeleteAll(mn)
 	
-	dev_MenuAddItem(mn, "Paste code block // ...",  Func(fn).Bind("//", ["/*","*/"], 0))
-	dev_MenuAddItem(mn, "Paste code block `; ..." ,  Func(fn).Bind(";",  ["/*","*/"], 0))
-	dev_MenuAddItem(mn, "Paste code block # ..." ,  Func(fn).Bind("#",  ["""""""",""""""""], 0))
+	dev_MenuAddItem(mn, "==== Paste code block ====", "dev_nop")
+	
+	dev_MenuAddItem(mn, "&1. Paste code block // ...",  Func(fn).Bind("//", ["/*","*/"], 0))
+	dev_MenuAddItem(mn, "&2. Paste code block `; ..." ,  Func(fn).Bind(";",  ["/*","*/"], 0))
+	dev_MenuAddItem(mn, "&3. Paste code block # ..." ,  Func(fn).Bind("#",  ["""""""",""""""""], 0))
 
-	dev_MenuAddItem(mn, "Paste code block //... (line number)",  Func(fn).Bind("//", ["/*","*/"], lnstart))
-	dev_MenuAddItem(mn, "Paste code block `; ... (line number)" ,  Func(fn).Bind(";",  ["/*","*/"], lnstart))
-	dev_MenuAddItem(mn, "Paste code block # ... (line number)" ,  Func(fn).Bind("#",  ["""""""",""""""""], lnstart))
+	dev_MenuAddItem(mn, "&4. Paste code block //... (line number)",  Func(fn).Bind("//", ["/*","*/"], lnstart))
+	dev_MenuAddItem(mn, "&5. Paste code block `; ... (line number)" ,  Func(fn).Bind(";",  ["/*","*/"], lnstart))
+	dev_MenuAddItem(mn, "&6. Paste code block # ... (line number)" ,  Func(fn).Bind("#",  ["""""""",""""""""], lnstart))
 
-	dev_MenuAddItem(mn, Format("Change start line-number (current: {})", lnstart), "Evernote_ChangeStartLinenum")
+	dev_MenuAddItem(mn, Format("&0. Change start line-number (current: {})", lnstart), "Evernote_ChangeStartLinenum")
 
 	dev_MenuShow(mn)
 }
