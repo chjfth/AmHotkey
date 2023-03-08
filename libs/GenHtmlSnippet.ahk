@@ -22,25 +22,34 @@ Use the following text-block to verify whether continuous spaces are rendered co
 
 */
 
-genhtml_code2pre_pure(codetext, tab_spaces:=4, workaround_evernote_bug:=false)
+genhtml_code2pre_pure(codetext, lnprefix_from:=0, tab_spaces:=4, workaround_evernote_bug:=false)
 {
-	return in_genhtml_code2pre_2022(codetext, false, "", "", tab_spaces, workaround_evernote_bug)
+	return in_genhtml_code2pre_2022(codetext, lnprefix_from, false, "", "", tab_spaces, workaround_evernote_bug)
 }
 
-genhtml_code2pre_2022(codetext, line_comment:="//", block_comment:=""
+genhtml_code2pre_2022(codetext, lnprefix_from:=0, line_comment:="//", block_comment:=""
 	, tab_spaces:=4, workaround_evernote_bug:=true)
 {
-	return in_genhtml_code2pre_2022(codetext, true, line_comment, block_comment
+;	Dbgwin_Output("lnprefix_from=" lnprefix_from)
+	
+	lnprefix_from := dev_str2num(lnprefix_from) ; dev_assert(!dev_IsString(lnprefix_from))
+
+	return in_genhtml_code2pre_2022(codetext, lnprefix_from, true, line_comment, block_comment
 		, tab_spaces, workaround_evernote_bug)
 }
 
-in_genhtml_code2pre_2022(codetext, is_color:=false, line_comment:="//", block_comment:=""
+in_genhtml_code2pre_2022(codetext, lnprefix_from:=0
+	, is_color:=false, line_comment:="//", block_comment:=""
 	, tab_spaces:=4, workaround_evernote_bug:=true)
 {
+	; lnprefix_from: If >0, each code line has a line-number prefix from this value.
 	; block_comment sample: ["/*", "*/"]
 
+	if(lnprefix_from>0)
+		workaround_evernote_bug := true
+
 	if(codetext==""){
-		dev_MsgBoxWarning("No text in Clipboard.")
+		dev_MsgBoxWarning("No text in Clipboard.", A_LineFile)
 		return ""
 	}
 
@@ -94,48 +103,48 @@ in_genhtml_code2pre_2022(codetext, is_color:=false, line_comment:="//", block_co
 	}
 	else
 	{
-		; Fix for Evernote 6.5.4 html-editing buggy behavior.
-		;
-		; (#1) If line N ends with </span> and line N+1 starts with <span ...>, the line-break between 
-		; is LOST on rendering. Workaround: add extra <br/> at end of line N.
-		; (#2) Even if fix(1) makes the pasted text look correct, user copies several lines from the 
-		; <pre> block from Evernote will see that line-breaking is still lost. User self-assisted 
-		; workaround is: type an Enter inside the <pre> block, and try to copy again.
-		;
-		; So, we need to fix it automatically for user. The only reliable way found up-until-today,
-		; is to use <div> + <br/> instead of <pre> ; this simulates the <pre> behavior.
-		;
+		; Now fix for Evernote 6.5.4 html-editing buggy behavior.
 		; To see the un-fixed behavior, just call genhtml_code2pre_pure() or genhtml_code2pre_2022() with workaround_evernote_bug=false.
+		;
+		; [CASE 1] prefix line number not needed.
+		; We WILL to use <div> block instead of <pre> block, bcz Evernote exhibits quite a few 
+		; weird behavior inside <pre> block. Historical observiation reveals:
+		;   (#1) If line N ends with </span> and line N+1 starts with <span ...>, the line-break between 
+		;        is LOST on rendering. Workaround: add extra <br/> at end of line N.
+		;   (#2) Even if fix(1) makes the pasted text look correct, user copies several lines from the 
+		;        <pre> block from Evernote will see that line-breaking is still lost. 
+		;        User self-assisted workaround: type an Enter inside the <pre> block, and try to copy again.
+		; With <div> block, line-break should be represented as <br/>, instead of normal \n .
+		;
+		; [CASE 2] prefix line numbers needed.
+		; We WILL use <ol><li>...<li></ol> to represent the lines.
+		; In this case, a pair of <li>...</li> produces the line-break, so <br/> is not used.
 	
 		lines := StrSplit(html, "`n")
 
-/* [2023-02-28] 
-   妈的! 今发觉, 对于用 genhtml_pre_colorize_block() 和 genhtml_pre_colorize_eachline() 
-   生成的 html 源码, 如果用 <div>+<br/> 来代替 <pre> 的话, (#1) 说的问题并不存在!
-   因此注释掉这块代码, 继续观察. 实施 <div> 的情况下, 又加了下面这块代码, 反而会多出空行.
-   
-   总言之, 今认为 #1,#2 的问题只在真正的 <pre> block 中才存在.
-   验证一段时间没问题后, 就动手去掉此处大量无用的注释.
-		
-		Loop, % lines.Length()-1
+		if(lnprefix_from<=0 or lnprefix_from=="")
 		{
-			if(StrIsEndsWith(lines[A_Index], "</span>") 
-				&& StrIsStartsWith(lines[A_Index+1], "<span"))
-			{
-				; This fixes bug (#1), i.e. force an extra <br/>,
-				; Yes, it's bad for others, but good for Evernote 6.5.4 .
-				lines[A_Index] .= "<br/>"
-			}
-		}
-*/		
-		; Now fix bug (#2), by joining the lines with <br/>, NOT by \n :
-		html := dev_JoinStrings(lines, "<br/>") 
-		
-		html := Format("-<div style='{}'>{}</div>-"
-			, prestyle, html)
+			; separate each line with <br/>
+			html := dev_JoinStrings(lines, "<br/>") 
+			
+			html := Format("-<div style='{}'>{}</div>-", prestyle, html)
 
-		; Evernote problem: "<br/> " at start of the line would swallow the space-char inside.
-		html := StrReplace(html, "<br/> ", "<br/>&nbsp;")
+			; Fix Evernote problem: "<br/> " at start of the line would swallow the space-char inside.
+			html := StrReplace(html, "<br/> ", "<br/>&nbsp;")
+		}
+		else
+		{
+			; wrap each line in <li> tag
+			Loop, % lines.Length()
+			{
+				lines[A_Index] := "<li>" lines[A_Index] "</li>"
+			}
+
+			html := dev_JoinStrings(lines, "`n") 
+			
+			html := Format("-<div style='{}'><ol start=""{}"">{}</ol></div>-"
+				, prestyle, lnprefix_from, html)
+		}
 	}
 
 ;	dev_WriteWholeFile("stage3.html", html) ; debug

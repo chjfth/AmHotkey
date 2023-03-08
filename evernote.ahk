@@ -11,7 +11,9 @@ ColorMatrix_ShowGui()
 Evernote_PopLinkShowMenu()
 Evernote_PopLinkShowAutoPickupMenu()
 ;
-Evernote_PopupPasteMenu()
+Evernote_PopupInlinePasteMenu()
+Evernote_PopupBlockPasteMenu()
+
 Evernote_PasteSingleLineCode()
 Evernote_PasteSingleLineCode_SelectBg() ; redundant
 */
@@ -278,6 +280,8 @@ class Evnt
 	static hcmEvxlink := 0 ; HANDLE from Clipmon_CreateMonitor()
 	
 	static filenamEvxlinks := "EvernoteAutoEvxLinks.txt"
+	
+	static pastecode_start_numline := 1
 }
 
 
@@ -300,7 +304,7 @@ return ; End of auto-execute section.
 
 Evernote_InitThisModule()
 {
-	evernote_SpecialPaste_InitMenu()
+	evernote_InlinePaste_InitMenu()
 
 	evernote_InitHotkeys()
 	
@@ -3899,16 +3903,16 @@ Evernote_PasteSingleLineCode(bgcolor:="#e0e0e0", keep_orig_clipboard:=true)
 	} 
 }
 
-evernote_PasteSingleLineCode_AddMenuItem(bgcolor, desctext, idx)
+evernote_PasteInlineCode_AddMenuItem(bgcolor, desctext, idx)
 {
 	menutext := Format("&{1}. Bgcolor: {2} {3}", idx, bgcolor, desctext)
 	
 	fn := Func("Evernote_PasteSingleLineCode").Bind(bgcolor)
 	
-	Menu, evernote_menuSpecialPaste, add, %menutext%, %fn%
+	Menu, evernote_menuInlinePaste, add, %menutext%, %fn%
 }
 
-evernote_SpecialPaste_InitMenu()
+evernote_InlinePaste_InitMenu()
 {
 	color_presets := [ "#e0e0e0,代码灰"
 	, "#C6E2FF,多云蓝"
@@ -3917,14 +3921,14 @@ evernote_SpecialPaste_InitMenu()
 	, "#FFE0B0,霞光橙"
 	, "#F49292,故障红" ]
 	
-	Menu, evernote_menuSpecialPaste, add, % "&0. Paste as plain text (or F1)", Evernote_PastePlainText
+	Menu, evernote_menuInlinePaste, add, % "&0. Paste as plain text (or F1)", Evernote_PastePlainText
 	
 	for idx, colorspec in color_presets
 	{
 		token := StrSplit(colorspec, ",")
 		; -- token[1]="#e0e0e0" , token[2]="代码灰"
 		
-		evernote_PasteSingleLineCode_AddMenuItem(token[1], token[2], idx)
+		evernote_PasteInlineCode_AddMenuItem(token[1], token[2], idx)
 	}
 }
 
@@ -3934,19 +3938,51 @@ Evernote_PasteSingleLineCode_SelectBg()
 	if(!codetext)
 		return
 
-	Menu, evernote_menuSpecialPaste, Show
+	Menu, evernote_menuInlinePaste, Show
 }
 
-Evernote_PopupPasteMenu()
+Evernote_PopupInlinePasteMenu()
 {
-	Menu, evernote_menuSpecialPaste, Show
+	Menu, evernote_menuInlinePaste, Show
 }
+
+
+Evernote_PopupBlockPasteMenu()
+{
+	mn := "evernote_menuBlockPaste"
+	fn := "CF_HTML_PasteCodeBlock"
+	lnstart := Evnt.pastecode_start_numline
+	
+	dev_Menu_DeleteAll(mn)
+	
+	dev_MenuAddItem(mn, "Paste code block // ...",  Func(fn).Bind("//", ["/*","*/"], 0))
+	dev_MenuAddItem(mn, "Paste code block `; ..." ,  Func(fn).Bind(";",  ["/*","*/"], 0))
+	dev_MenuAddItem(mn, "Paste code block # ..." ,  Func(fn).Bind("#",  ["""""""",""""""""], 0))
+
+	dev_MenuAddItem(mn, "Paste code block //... (line number)",  Func(fn).Bind("//", ["/*","*/"], lnstart))
+	dev_MenuAddItem(mn, "Paste code block `; ... (line number)" ,  Func(fn).Bind(";",  ["/*","*/"], lnstart))
+	dev_MenuAddItem(mn, "Paste code block # ... (line number)" ,  Func(fn).Bind("#",  ["""""""",""""""""], lnstart))
+
+	dev_MenuAddItem(mn, Format("Change start line-number (current: {})", lnstart), "Evernote_ChangeStartLinenum")
+
+	dev_MenuShow(mn)
+}
+
+Evernote_ChangeStartLinenum()
+{
+	ln := evnt.pastecode_start_numline
+
+	isok := dev_InputBox_DefaultText("", "New past-code starting line-number:", ln)
+	if(isok)
+		Evnt.pastecode_start_numline := ln
+}
+
 
 #If Evernote_IsMainFrameOrSingleActive()
 
 F1:: Evernote_PastePlainText()
 
-+Ins up:: Evernote_PastePlainText_exwait()
+; +Ins up:: Evernote_PastePlainText_exwait()
 Evernote_PastePlainText_exwait()
 {
 	KeyWait, Shift, T1
@@ -3960,9 +3996,9 @@ Evernote_PastePlainText_exwait()
 	}
 }
 
-^Ins up:: Evernote_PasteSingleLineCode_DynBg()
+Ins up:: Evernote_PasteInlineCode_DynBg()
 
-Evernote_PasteSingleLineCode_DynBg()
+Evernote_PasteInlineCode_DynBg()
 {
 	codetext := Clipboard
 	ilen := strlen(codetext)
@@ -3978,9 +4014,9 @@ Evernote_PasteSingleLineCode_DynBg()
 
 
 
-; ^!b:: Evernote_PasteSingleLineCode_SelectBg()
+^Ins up:: Evernote_PopupInlinePasteMenu()
 
-Ins up:: Evernote_PopupPasteMenu()
++Ins up:: Evernote_PopupBlockPasteMenu()
 
 #Ins up:: CF_HTML_PasteCodeBlockPure()
 
@@ -3988,18 +4024,27 @@ Ins & 1:: CF_HTML_PasteCodeBlock("//", ["/*","*/"])
 Ins & 2:: CF_HTML_PasteCodeBlock(";", ["/*","*/"])
 Ins & 3:: CF_HTML_PasteCodeBlock("#" , ["""""""",""""""""])
 
-CF_HTML_PasteCodeBlockPure()
+CF_HTML_PasteCodeBlockPure(lnprefix_from:=0)
 {
 	codetext := Clipboard
-	html := genhtml_code2pre_pure(codetext, 4, true)
-	dev_ClipboardSetHTML(html, true)
+	html := genhtml_code2pre_pure(codetext, lnprefix_from, 4, true)
+	if(html)
+	{
+		dev_ClipboardSetHTML(html, true)
+	}
 }
 
-CF_HTML_PasteCodeBlock(line_comment, block_comment:="")
+CF_HTML_PasteCodeBlock(line_comment, block_comment:="", lnprefix_from:=0)
 {
 	codetext := Clipboard
-	html := genhtml_code2pre_2022(codetext, line_comment, block_comment, 4, true)
-	dev_ClipboardSetHTML(html, true)
+	html := genhtml_code2pre_2022(codetext, lnprefix_from, line_comment, block_comment, 4, true)
+	
+	if(html)
+	{
+		dev_ClipboardSetHTML(html, true)
+	
+		Evnt.pastecode_start_numline := 1 ; reset it
+	}
 }
 
 #If

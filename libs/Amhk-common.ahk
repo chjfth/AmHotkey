@@ -736,6 +736,9 @@ dev_KillProcessByPid(pid, byref winerr:=0)
 
 dev_IsString(s)
 {
+	; Limitation:
+	; `strlen(456)` will report 3, which is wrong result.
+
 	if(strlen(s)>0)
 		return true
 	else
