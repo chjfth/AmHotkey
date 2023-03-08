@@ -22,30 +22,30 @@ Use the following text-block to verify whether continuous spaces are rendered co
 
 */
 
-genhtml_code2pre_pure(codetext, lnprefix_from:=0, tab_spaces:=4, workaround_evernote_bug:=false)
+genhtml_code2pre_pure(codetext, lnprefix_start:=0, tab_spaces:=4, workaround_evernote_bug:=false)
 {
-	return in_genhtml_code2pre_2022(codetext, lnprefix_from, false, "", "", tab_spaces, workaround_evernote_bug)
+	return in_genhtml_code2pre_2022(codetext, lnprefix_start, false, "", "", tab_spaces, workaround_evernote_bug)
 }
 
-genhtml_code2pre_2022(codetext, lnprefix_from:=0, line_comment:="//", block_comment:=""
+genhtml_code2pre_2022(codetext, lnprefix_start:=0, line_comment:="//", block_comment:=""
 	, tab_spaces:=4, workaround_evernote_bug:=true)
 {
-;	Dbgwin_Output("lnprefix_from=" lnprefix_from)
+;	Dbgwin_Output("lnprefix_start=" lnprefix_start)
 	
-	lnprefix_from := dev_str2num(lnprefix_from) ; dev_assert(!dev_IsString(lnprefix_from))
+	lnprefix_start := dev_str2num(lnprefix_start) ; dev_assert(!dev_IsString(lnprefix_start))
 
-	return in_genhtml_code2pre_2022(codetext, lnprefix_from, true, line_comment, block_comment
+	return in_genhtml_code2pre_2022(codetext, lnprefix_start, true, line_comment, block_comment
 		, tab_spaces, workaround_evernote_bug)
 }
 
-in_genhtml_code2pre_2022(codetext, lnprefix_from:=0
+in_genhtml_code2pre_2022(codetext, lnprefix_start:=0
 	, is_color:=false, line_comment:="//", block_comment:=""
 	, tab_spaces:=4, workaround_evernote_bug:=true)
 {
-	; lnprefix_from: If >0, each code line has a line-number prefix from this value.
+	; lnprefix_start: If >0, each code line has a line-number prefix from this value.
 	; block_comment sample: ["/*", "*/"]
 
-	if(lnprefix_from>0)
+	if(lnprefix_start>0)
 		workaround_evernote_bug := true
 
 	if(codetext==""){
@@ -60,7 +60,7 @@ in_genhtml_code2pre_2022(codetext, lnprefix_from:=0
 	}
 
 	; Want pure \n as separator, for easier later processing
-	html := StrReplace(html, "`r`n", "`n")
+	codetext := StrReplace(codetext, "`r`n", "`n")
 
 	html := dev_EscapeHtmlChars(codetext)
 
@@ -122,10 +122,10 @@ in_genhtml_code2pre_2022(codetext, lnprefix_from:=0
 	
 		lines := StrSplit(html, "`n")
 
-		if(lnprefix_from<=0 or lnprefix_from=="")
+		if(lnprefix_start<=0 or lnprefix_start=="")
 		{
 			; separate each line with <br/>
-			html := dev_JoinStrings(lines, "<br/>") 
+			html := dev_JoinStrings(lines, "<br/>`n") ; '\n" is for easier observiation in Free Clipboard Viewer
 			
 			html := Format("-<div style='{}'>{}</div>-", prestyle, html)
 
@@ -134,16 +134,35 @@ in_genhtml_code2pre_2022(codetext, lnprefix_from:=0
 		}
 		else
 		{
-			; wrap each line in <li> tag
-			Loop, % lines.Length()
+			nlines := lines.Length()
+			
+			if(lines[nlines]=="")
+				nlines--
+		
+			; wrap each line in <li> tag 
+			; the numbering prefix in grey(#b6b6b6)
+			
+			Loop, % nlines
 			{
-				lines[A_Index] := "<li>" lines[A_Index] "</li>"
+				if(lines[A_Index]=="")
+				{
+					; For empty line, we need to... pendingg
+					lines[A_Index] := "&nbsp;"
+				}
+			
+				lines[A_Index] := "<li style=""color:#b6b6b6;""><span style=""color:#333;"">" lines[A_Index] "</span></li>"
 			}
 
+			; We add an almost-invisible end-line mark(e.g. "//END@12" or "#END@12") to the final line,
+			; so that the user can easily check whether he has once manually added/deleted some lines.
+			;
+			markstr := Format("<span style=""color:#ededed""> {}END@{}</span>", line_comment, lnprefix_start+nlines-1)
+			lines[nlines] := StrReplace(lines[nlines], "</span></li>", markstr "</span></li>")
+			
 			html := dev_JoinStrings(lines, "`n") 
 			
 			html := Format("-<div style='{}'><ol start=""{}"">{}</ol></div>-"
-				, prestyle, lnprefix_from, html)
+				, prestyle, lnprefix_start, html)
 		}
 	}
 
@@ -343,3 +362,4 @@ genhtml_GetML1Piece(istr, block_comment, byref piecelen)
 		return "NORM"
 	}
 }
+

@@ -4024,20 +4024,20 @@ Ins & 1:: CF_HTML_PasteCodeBlock("//", ["/*","*/"])
 Ins & 2:: CF_HTML_PasteCodeBlock(";", ["/*","*/"])
 Ins & 3:: CF_HTML_PasteCodeBlock("#" , ["""""""",""""""""])
 
-CF_HTML_PasteCodeBlockPure(lnprefix_from:=0)
+CF_HTML_PasteCodeBlockPure(lnprefix_start:=0)
 {
 	codetext := Clipboard
-	html := genhtml_code2pre_pure(codetext, lnprefix_from, 4, true)
+	html := genhtml_code2pre_pure(codetext, lnprefix_start, 4, true)
 	if(html)
 	{
 		dev_ClipboardSetHTML(html, true)
 	}
 }
 
-CF_HTML_PasteCodeBlock(line_comment, block_comment:="", lnprefix_from:=0)
+CF_HTML_PasteCodeBlock(line_comment, block_comment:="", lnprefix_start:=0)
 {
 	codetext := Clipboard
-	html := genhtml_code2pre_2022(codetext, lnprefix_from, line_comment, block_comment, 4, true)
+	html := genhtml_code2pre_2022(codetext, lnprefix_start, line_comment, block_comment, 4, true)
 	
 	if(html)
 	{
