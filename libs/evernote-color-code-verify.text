@@ -1,12 +1,20 @@
+const char *intdiv = "aa // bb" ; // nice day
+const char *s2 /*.".*/ = "cc // dd" ;
+Win_Client_X := NumGet(&RECT, 0, "Int") ; comment with semicolon
+// a comment with "double-quoted" string
+// a comment with 'single-quoted' string
+//
+
 int a = 1;
 const char *s = // trailing comment
 "String content";
-void func(){ }
+void func() { }
 
-// This sample shows how to write a simple unit test for a function,
-// using Google C++ testing framework.
-//
 int foo1()
 {
 	// need to have "4 spaces" ahead.
+	return 0;
+	/* Block comment "across"
+		multiple
+	lines. */
 }

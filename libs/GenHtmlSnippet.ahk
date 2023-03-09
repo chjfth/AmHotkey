@@ -140,7 +140,6 @@ in_genhtml_code2pre_2022(codetext, lnprefix_start:=0
 				nlines--
 		
 			; wrap each line in <li> tag 
-			; the numbering prefix in grey(#b6b6b6)
 			
 			Loop, % nlines
 			{
@@ -151,7 +150,7 @@ in_genhtml_code2pre_2022(codetext, lnprefix_start:=0
 					lines[A_Index] := "&nbsp;"
 				}
 			
-				lines[A_Index] := "<li style=""color:#b6b6b6;""><span style=""color:#333;"">" lines[A_Index] "</span></li>"
+				lines[A_Index] := "<li><span style=""color:#333;"">" lines[A_Index] "</span></li>"
 			}
 
 			; We add an almost-invisible end-line mark(e.g. "//END@12" or "#END@12") to the final line,
@@ -162,7 +161,8 @@ in_genhtml_code2pre_2022(codetext, lnprefix_start:=0
 			
 			html := dev_JoinStrings(lines, "`n") 
 			
-			html := Format("-<div style='{}'><ol start=""{}"">{}</ol></div>-"
+			; #b6b6b6: make the number-prefix in grey
+			html := Format("-<div style='{}'><ol start=""{}"" style=""color:#b6b6b6;"">{}</ol></div>-"
 				, prestyle, lnprefix_start, html)
 		}
 	}
