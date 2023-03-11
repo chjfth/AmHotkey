@@ -73,7 +73,7 @@ in_genhtml_code2pre_2022(codetext, lnprefix_start:=0
 		; To workaround for Evernote, we need to use &nbsp; here, to avoid 
 		; multiple white-spaces collapsing, 
 		; bcz we'll use <div> instead of <pre> to represent a code block.
-		html := StrReplace(html, "  ", " &nbsp;")
+		html := StrReplace(html, "  ", "&nbsp; ")
 	}
 	
 	if(is_color)
