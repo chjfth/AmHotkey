@@ -213,6 +213,20 @@ foxit_FocusReaderPane()
 }
 
 
+NumpadEnter:: foxit_ClickColorPropertyEx() ; for easier human right-hand hotkey activating
+foxit_ClickColorPropertyEx()
+{
+	Click 
+	; -- This "Click" makes the commented area "selected"(display in inverted color), 
+	; only then, can foxit_ClickColorProperty() be effective.
+	; Memo: Before calling foxit_ClickColorPropertyEx(), user should have placed
+	; mouse cursor onto the commented area and the comment(underline, squiggles etc)
+	; has benn applied, otherwise, in vain.
+	; Tested in Foxit Reader 7.1.5 on Win7.
+
+	foxit_ClickColorProperty() 
+}
+
 F12:: foxit_ClickColorProperty()
 foxit_ClickColorProperty()
 {
