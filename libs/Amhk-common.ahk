@@ -734,6 +734,19 @@ dev_KillProcessByPid(pid, byref winerr:=0)
 	return is_succ
 }
 
+dev_GetRootWindow(hwnd)
+{
+	GA_ROOT := 2
+	hwndRoot := DllCall("GetAncestor", "Ptr",hwnd, "int", GA_ROOT)
+	return hwndRoot
+}
+
+dev_IsToplevelWindow(hwnd)
+{
+	hwndRoot := dev_GetRootWindow(hwnd)
+	return hwndRoot==hwnd ? true : false
+}
+
 dev_IsString(s)
 {
 	; Limitation:
@@ -1037,6 +1050,82 @@ dev_WinActivateHwnd(hwnd)
 	WinActivate, ahk_id %hwnd%
 }
 
+dev_WinWaitActive(hwnd, timeout_millisec:=2000)
+{
+	WinWaitActive, ahk_id %hwnd%, , % timeout_millisec/1000
+	if not ErrorLevel
+	{
+		return true
+	}
+	else
+	{
+		return false
+	}
+}
+
+dev_WinWaitActive_with_timeout(wintitle, wintext:="", timeout_sec:=1)
+{
+	WinWaitActive, %wintitle%, %wintext%, %timeout_sec%
+	if not ErrorLevel
+	{
+		return true
+	}
+	else
+	{
+		return false
+	}
+}
+
+dev_WinGetClientAreaPos(WinId)
+{
+	; https://www.autohotkey.com/boards/viewtopic.php?p=257561&sid=d2327857875a0de35c9281ab43c6a868#p257561
+	
+	VarSetCapacity(RECT, 16, 0)
+	if !DllCall("user32\GetClientRect", Ptr,WinId, Ptr,&RECT)
+		return null
+	if !DllCall("user32\ClientToScreen", Ptr,WinId, Ptr,&RECT)
+		return null
+	
+	Win_Client_X := NumGet(&RECT, 0, "Int")
+	Win_Client_Y := NumGet(&RECT, 4, "Int")
+	Win_Client_W := NumGet(&RECT, 8, "Int")
+	Win_Client_H := NumGet(&RECT, 12, "Int")
+
+	r := {}
+	r.left := Win_Client_X
+	r.right := Win_Client_X + Win_Client_W
+	r.top := Win_Client_Y
+	r.bottom := Win_Client_Y + Win_Client_H
+	
+	return r
+}
+
+
+dev_GetHwndFromClassNN(classnn, wintitle)
+{
+	ControlGet, hctrl, HWND, , %classnn%, %wintitle%
+	return hctrl
+}
+
+GetActiveClassnnFromXY(x, y)
+{
+	; Providing X,Y inside the active window, return control classnn from that position
+	
+	if(x==None)
+	{
+		MsgBox, % "Error: GetActiveClassnnFromXY() null x"
+		return 
+	}
+	if(y==None)
+	{
+		MsgBox, % "Error: GetActiveClassnnFromXY() null y"
+		return 
+	}
+	
+	MouseMove, %x%, %y%
+	MouseGetPos,,,, classnn
+	return classnn
+}
 
 
 
@@ -1098,26 +1187,6 @@ Is_RectA_in_RectB(Ax, Ay, Aw, Ah, Bx, By, Bw, Bh, tolerance:=0)
 		return true
 	else
 		return false
-}
-
-GetActiveClassnnFromXY(x, y)
-{
-	; Providing X,Y inside the active window, return control classnn from that position
-	
-	if(x==None)
-	{
-		MsgBox, % "Error: GetActiveClassnnFromXY() null x"
-		return 
-	}
-	if(y==None)
-	{
-		MsgBox, % "Error: GetActiveClassnnFromXY() null y"
-		return 
-	}
-	
-	MouseMove, %x%, %y%
-	MouseGetPos,,,, classnn
-	return classnn
 }
 
 
@@ -1228,7 +1297,7 @@ dev_ArrayTruncateAt_(ar, nkeeps)
 }
 
 
-dev_SetClipboardWithTimeout(text, timeout_milisec:=1000)
+dev_SetClipboardWithTimeout(text, timeout_millisec:=1000)
 {
 	is_ok := false
 	msec_start := A_TickCount
@@ -1247,7 +1316,7 @@ dev_SetClipboardWithTimeout(text, timeout_milisec:=1000)
 		is_ok := true
 		break
 		
-	} until (A_TickCount-msec_start>timeout_milisec)
+	} until (A_TickCount-msec_start>timeout_millisec)
 	
 	return is_ok
 }
@@ -1286,4 +1355,5 @@ dev_InputBox_DefaultText(title, prompt, byref usertext:="")
     	return true
     }
 }
+
 

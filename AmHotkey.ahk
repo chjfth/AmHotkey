@@ -539,49 +539,6 @@ Launch_AU3Spy()
 	}
 }
 
-dev_WinWaitActive_with_timeout(wintitle, wintext:="", timeout_sec:=1)
-{
-	WinWaitActive, %wintitle%, %wintext%, %timeout_sec%
-	if not ErrorLevel
-	{
-		return true
-	}
-	else
-	{
-		return false
-	}
-}
-
-dev_WinGetClientAreaPos(WinId)
-{
-	; https://www.autohotkey.com/boards/viewtopic.php?p=257561&sid=d2327857875a0de35c9281ab43c6a868#p257561
-	
-	VarSetCapacity(RECT, 16, 0)
-	if !DllCall("user32\GetClientRect", Ptr,WinId, Ptr,&RECT)
-		return null
-	if !DllCall("user32\ClientToScreen", Ptr,WinId, Ptr,&RECT)
-		return null
-	
-	Win_Client_X := NumGet(&RECT, 0, "Int")
-	Win_Client_Y := NumGet(&RECT, 4, "Int")
-	Win_Client_W := NumGet(&RECT, 8, "Int")
-	Win_Client_H := NumGet(&RECT, 12, "Int")
-
-	r := {}
-	r.left := Win_Client_X
-	r.right := Win_Client_X + Win_Client_W
-	r.top := Win_Client_Y
-	r.bottom := Win_Client_Y + Win_Client_H
-	
-	return r
-}
-
-Get_HCtrlFromClassNN(classnn, wintitle)
-{
-	ControlGet, hctrl, HWND, , %classnn%, %wintitle%
-	return hctrl
-}
-
 
 ; !#f:: devtest_TryFocusUicBeneathMouse() 
 devtest_TryFocusUicBeneathMouse()
@@ -2728,6 +2685,14 @@ MouseActInActiveWindow(ux,xomode, uy,yomode, is_movemouse:=true, is_click:=false
 		PlaySoundLeftClick()
 }
 
+dev_ClickInChildClassnn(hwnd, classnn, ux, uy, is_movemouse:=false, is_warn:=true)
+{
+	; When calling, remember to pass quoted-string for classnn
+	ControlGet, output_hctrl, HWND, , %classnn%, ahk_id %hwnd%
+
+	dev_MouseActInChildwnd(output_hctrl, ux,false, uy,false, is_movemouse, true, is_movemouse?3:0, is_warn)
+}
+
 ClickInActiveControl(classnn, ux, uy, is_movemouse:=false, is_warn:=true)
 {
 	; Note: ClickInActiveControl(classnn, 0.5, 0.5) can be used as a workaround for 
@@ -2737,6 +2702,7 @@ ClickInActiveControl(classnn, ux, uy, is_movemouse:=false, is_warn:=true)
 
 	MouseActInActiveControl(classnn, ux,false, uy,false, is_movemouse, true, is_movemouse?3:0, is_warn)
 }
+
 ClickInActiveControlEx(classnn, ux,xomode, uy,yomode, is_movemouse:=false, is_warn:=true)
 {
 	MouseActInActiveControl(classnn, ux,xomode, uy,yomode, is_movemouse, true, is_movemouse?3:0, is_warn)
@@ -2744,14 +2710,24 @@ ClickInActiveControlEx(classnn, ux,xomode, uy,yomode, is_movemouse:=false, is_wa
 
 MouseActInActiveControl(classnn, ux,xomode, uy,yomode, is_movemouse:=true, is_click:=false, movespeed:=0, is_warn:=true)
 {
-	; This function does not really operate at the target control, but operate on 
-	; the screen position of that control.
-
 	; When calling, remember to pass quoted-string for classnn
-	ControlGetPos, winx, winy, width, height, %classnn%, A
+	ControlGet, output_hctrl, HWND, , %classnn%, A
+	
+	dev_MouseActInChildwnd(output_hctrl, ux,xomode, uy,yomode, is_movemouse, is_click, movespeed, is_warn)
+}
+
+dev_MouseActInChildwnd(hwnd, ux,xomode, uy,yomode, is_movemouse:=true, is_click:=false, movespeed:=0, is_warn:=true)
+{
+	; If is_click==true, this function does not really operate at the target control, 
+	; but operate on the screen position of that control.
+
+	; ControlGetPos, winx, winy, width, height, , ahk_id %hwnd%
+	WinGetPos, winx, winy, width, height, ahk_id %hwnd% ; we need absolute screen pos
+
+;	Dbgwin_Output(Format("chd_hwnd={:#x} winx={}, winy={}", hwnd, winx, winy)) ; debug
 	if(!winx and is_warn) {
 		
-		errmsg = [AmHotkey]Unexpected in MouseActInActiveControl(): ControlGetPos returns blank for classnn %classnn%
+		errmsg := Format("[AmHotkey]Unexpected in dev_MouseActInChildwnd(): WinGetPos returns blank for hwnd={}", hwnd)
 		
 		MsgBox, % errmsg . "`n`nCallstack below (most recent call last):`n`n" . dev_getCallStack()
 		
@@ -2765,10 +2741,14 @@ MouseActInActiveControl(classnn, ux,xomode, uy,yomode, is_movemouse:=true, is_cl
 	targetx := NewCoordFromHint(winx, width,  ux, xomode)
 	targety := NewCoordFromHint(winy, height, uy, yomode)
 
+	CoordMode, Mouse, Screen  ;sets screen-based coordinates
+
 	MouseMove, %targetx%, %targety%, %movespeed%
 	
 	if (is_click)
 		Click %targetx%, %targety%
+
+	CoordMode, Mouse, Window  ;restore to active-window-based coordinates
 
 	If (not is_movemouse)
 		dev_RestoreMouseScreenPos()
@@ -2799,6 +2779,47 @@ dev_ListActiveWindowChildren()
 	
 	Run, %filepath%
 
+}
+
+RegexFindToplevelWindowByTitle(tpw_regex, chd_regex:="")
+{
+	; tpw_regex : The top-level window's title should match this regex.
+	; chd_regex : If present, the top-level window should have a child-window matching this regex title.
+	
+	if(!tpw_regex)
+		return false
+	
+	WinGet, wnd, List ; wnd contains only top-level windows
+
+	Loop, %wnd%
+	{
+		winid := wnd%A_Index%
+		WinGetTitle, title, ahk_id %winid%
+		
+		if(chd_regex=="")
+		{
+			if(title ~= tpw_regex)
+				return winid
+			else
+				continue
+		}
+		
+		; Go on checking for child-windows
+		
+		WinGet, chdwinids, ControlListHwnd, ahk_id %winid%
+		
+		Loop, parse, chdwinids, `n
+		{
+			chd_winid := A_LoopField
+			WinGetTitle, title, ahk_id %chd_winid%
+;			Dbgwin_Output(Format("{:#x} ### {:#x}", winid, chd_winid)) ; debug
+
+			if(title ~= chd_regex)
+				return winid
+		}
+	}
+	return false
+	
 }
 
 RegexClassnnFindControl(Cregex, Tregex
@@ -2941,7 +2962,7 @@ ControlFocusViaRegexClassNNXY(Cregex, Tregex, xhint, yhint, is_click=true, is_mo
 		MouseMove, %targetx%, %targety%
 		MouseGetPos, _mx, _my, _winid, target_classnn
 		ControlFocus, %target_classnn%, ahk_id %Awinid%
-;		tooltip, % "ControlFocusViaRegexClassNNXY() target_classnn=" . target_classnn . " / hctrl=" . Get_HCtrlFromClassNN(target_classnn, "ahk_id " . Awinid)
+;		tooltip, % "ControlFocusViaRegexClassNNXY() target_classnn=" . target_classnn . " / hctrl=" . dev_GetHwndFromClassNN(target_classnn, "ahk_id " . Awinid)
 		if (not is_movemouse)
 			MouseMove, %xorig%, %yorig%
 	}

@@ -117,6 +117,14 @@ foxit_IsVersion7(wintitle="A")
 		return false
 }
 
+#If foxit_IsAnnoationPropertyWindowActive()
+ESC:: foxit_NoEscClosePropertiesDlgbox()
+foxit_NoEscClosePropertiesDlgbox()
+{
+	dev_TooltipAutoClear("ESC no closing Foxit comment Properties Dlgbox")
+}
+#If
+
 
 
 #If foxit_IsWinActive()
@@ -431,9 +439,49 @@ foxit_SwitchTo_SelectAnnotation_mode()
 ; or using Ctrl+← , Ctrl+→
 ^Left:: ClickInActiveControl("msctls_trackbar321", 0.1, 0.5)
 ^Right:: ClickInActiveControl("msctls_trackbar321", 0.9, 0.5)
-
+; or Numpad Home/PgUp
+NumpadHome:: ClickInActiveControl("msctls_trackbar321", 0.1, 0.5)
+NumpadPgUp:: ClickInActiveControl("msctls_trackbar321", 0.9, 0.5)
 
 #If ; foxit_IsAnnoationPropertyWindowActive()
+
+
+foxit_GetCommentPropertiesDlgBox()
+{
+	return RegexFindToplevelWindowByTitle(".+ Properties$", "Current Properties as Default")
+}
+
+#If foxit_IsWinActive()
+
+foxit_PropertiesClickSlidebar(left_or_right)
+{
+;	Dbgwin_Output(Format("foxit_PropertiesClickSlidebar({})", left_or_right)) ; debug
+
+	hwnd := foxit_GetCommentPropertiesDlgBox()
+	if(hwnd)
+	{
+		awinid := dev_GetActiveHwnd() ; this is Foxit main window
+		
+		dev_ClickInChildClassnn(hwnd, "msctls_trackbar321", left_or_right=="left"?0.1:0.9, 0.5)
+		
+/*
+		dev_WinActivateHwnd(hwnd) ; no use, bcz Comment Properties Dlgbox is *owned* by Foxit main-window.
+		waitok := dev_WinWaitActive(awinid, 500)
+		if(!waitok)
+		{
+			dev_TooltipAutoClear("[Unexpect]Foxit main window is not re-activated.")
+		}
+*/		
+		;Sleep, 1000
+		Click ; use Click instead
+	}
+}
+
+NumpadHome:: foxit_PropertiesClickSlidebar("left")
+NumpadPgUp:: foxit_PropertiesClickSlidebar("right")
+
+
+#If ; foxit_IsWinActive()
 
 
 
