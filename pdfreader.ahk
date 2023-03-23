@@ -220,6 +220,17 @@ foxit_FocusReaderPane()
 	}
 }
 
+^F12:: foxit_ClickTextColorSelection()
+foxit_ClickTextColorSelection()
+{
+	; This click the Text color selection "button" on the []Format toolbar.
+	; I have to put this toolbar on a pre-defined location.
+	;
+	; When I'm editing the text in a comment text-block, it changes the text color.
+	
+	ClickInActiveWindow(380, 105)
+}
+
 
 NumpadEnter:: foxit_ClickColorPropertyEx() ; for easier human right-hand hotkey activating
 foxit_ClickColorPropertyEx()
@@ -238,6 +249,9 @@ foxit_ClickColorPropertyEx()
 F12:: foxit_ClickColorProperty()
 foxit_ClickColorProperty()
 {
+	; This clicks the color-selection "button" inside the Comment-property floating-window.
+	; This floating window may have title like "Underline Properties", "Squiggly Properties" etc.
+
 	is_retried := false
 
 RETRY:
