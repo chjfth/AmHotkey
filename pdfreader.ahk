@@ -118,11 +118,20 @@ foxit_IsVersion7(wintitle="A")
 }
 
 #If foxit_IsAnnoationPropertyWindowActive()
+
 ESC:: foxit_NoEscClosePropertiesDlgbox()
 foxit_NoEscClosePropertiesDlgbox()
 {
-	dev_TooltipAutoClear("ESC no closing Foxit comment Properties Dlgbox")
+	dev_TooltipAutoClear("ESC key no closing Foxit comment Properties Dlgbox")
 }
+
+Enter::       foxit_EnterNoCloseCommentProperties()
+NumpadEnter:: foxit_EnterNoCloseCommentProperties()
+foxit_EnterNoCloseCommentProperties()
+{
+	dev_TooltipAutoClear("ENTER key no closing Foxit comment Properties Dlgbox")
+}
+
 #If
 
 
