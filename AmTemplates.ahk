@@ -339,6 +339,8 @@ Amt_ShowGui(inipath)
 	; -- to avoid using stale auto-GUIDs from maybe several hours/days agao.
 
 	Amt_ResyncUI()
+	
+	dev_StartTimerPeriodic("Amt_RegenGuidsByCheckbox", 1000)
 }
 
 Amt_HideGui()
@@ -347,6 +349,8 @@ Amt_HideGui()
 
 	OnMessage(0x200, Func("Amt_WM_MOUSEMOVE"), 0) ; remove message hook
 	tooltip
+	
+	dev_StopTimer("Amt_RegenGuidsByCheckbox")
 }
 
 AMTGuiSize()
@@ -402,7 +406,7 @@ AMT_BtnOK()
 	
 	if(FileExist(finalApplyDir))
 	{
-		dev_MsgBoxWarning("Apply folder already exists. Please choose a different one.")
+		dev_MsgBoxWarning("Applying target folder already exists. Please choose a different one.")
 		return
 	}
 
@@ -775,3 +779,6 @@ amt_IsWildcardsMatch(ptns, filename)
 Amt_none()
 {
 }
+
+
+; TODO: Check that the <ProjectGuid> in AmTemplate.cfg.ini really appear at least once in the folder.
