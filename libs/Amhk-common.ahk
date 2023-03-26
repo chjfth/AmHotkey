@@ -1356,4 +1356,23 @@ dev_InputBox_DefaultText(title, prompt, byref usertext:="")
     }
 }
 
+dev_StartTimerOnce(str_callable, millisec)
+{
+	if(millisec<=0)
+		dev_assert("dev_StartTimerPeriodic() `millisec` must be >0")
 
+	SetTimer, % str_callable, % 0-millisec
+}
+
+dev_StartTimerPeriodic(str_callable, millisec)
+{
+	if(millisec<=0)
+		dev_assert("dev_StartTimerPeriodic() `millisec` must be >0")
+
+	SetTimer, % str_callable, % millisec
+}
+
+dev_StopTimer(str_callable)
+{
+	SetTimer, % str_callable, Off
+}
