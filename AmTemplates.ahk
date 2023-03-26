@@ -402,7 +402,7 @@ AMT_BtnOK()
 	
 	if(FileExist(finalApplyDir))
 	{
-		dev_MsgBoxWarning("Apply folder already exists. Please choose a different one.")
+		dev_MsgBoxWarning("Applying target folder already exists. Please choose a different one.")
 		return
 	}
 
@@ -775,3 +775,6 @@ amt_IsWildcardsMatch(ptns, filename)
 Amt_none()
 {
 }
+
+
+; TODO: Check that the <ProjectGuid> in AmTemplate.cfg.ini really appear at least once in the folder.
