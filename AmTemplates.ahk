@@ -656,6 +656,13 @@ Amt_DoExpandTemplate(srcdir, dstdir)
 
 	Amt_WriteResultIni(cfgini, dstdir "\" g_amtIniResultFileName)
 	
+	dictGuidReplaceCount := {}
+	for index,obj in g_amt_arTemplateGuids
+	{
+		; This count is used to check GUID stray-away Template bug.
+		dictGuidReplaceCount[obj.oldword] := 0
+	}
+	
 	; Actually copy these files.
 	
 	for index,pair in arPairs
@@ -705,7 +712,8 @@ Amt_DoExpandTemplate(srcdir, dstdir)
 			
 			for index,obj in g_amt_arTemplateGuids
 			{
-				filetext := StrReplace(filetext, obj.oldword, obj.newword)
+				filetext := StrReplace(filetext, obj.oldword, obj.newword, outCount)
+				dictGuidReplaceCount[obj.oldword] += outCount
 			}
 			
 			FileAppend, %filetext%, %dstpath%
@@ -715,6 +723,20 @@ Amt_DoExpandTemplate(srcdir, dstdir)
 				return false
 			}
 		}
+	}
+	
+	arBadGuids := []
+	for index,obj in g_amt_arTemplateGuids
+	{
+		if(dictGuidReplaceCount[obj.oldword] == 0)
+			arBadGuids.Push(obj.oldword)
+	}
+	if(arBadGuids.Length() > 0)
+	{
+		bads := dev_JoinStrings(arBadGuids, "`n")
+		dev_MsgBoxError(Format("[ERROR] Some GUID(s) from {} does not appear even once in source files. Template BUG!`n`n{}"
+			,g_amtIniCfgFilename, bads))
+		return false
 	}
 	
 	return true
