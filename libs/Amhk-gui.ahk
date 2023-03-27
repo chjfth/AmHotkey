@@ -118,8 +118,6 @@ Gui_Add_Button(GuiName, CtrlVarname, width, format, btntext)
 	vCtrlVarname := StrLen(CtrlVarname)>0 ? "v" CtrlVarname : ""
 	wWidth := width>0 ? "w" width : "" ; so width==-1 will make it auto-width by text length
 
-
-	cmdadd := GuiName ? (GuiName ":Add") : "Add"
 	Gui, % cmdadd, Button, % Format("{} {} {}", vCtrlVarname, wWidth, format), % btntext
 }
 
@@ -127,7 +125,10 @@ Gui_Add_Picture(GuiName, CtrlVarname, width, format, imgfilepath:="")
 {
 	dev_assert(Gui_IsValidVar(CtrlVarname))
 	cmdadd := GuiName ? (GuiName ":Add") : "Add"
-	Gui, % cmdadd, Picture, % Format("v{} w{} {}", CtrlVarname, width, format), % imgfilepath
+	vCtrlVarname := StrLen(CtrlVarname)>0 ? "v" CtrlVarname : ""
+	wWidth := width>0 ? "w" width : "" ; so width==-1 will make it auto-width by text length
+
+	Gui, % cmdadd, Picture, % Format("{} {} {}", vCtrlVarname, wWidth, format), % imgfilepath
 }
 
 Gui_Picture_SetIconFromDll(GuiName, CtrlVarname, dllpath, icon_group_idx)
@@ -142,10 +143,10 @@ Gui_Add_Checkbox(GuiName, CtrlVarname, width, format, btntext)
 
 	dev_assert(Gui_IsValidVar(CtrlVarname))
 	cmdadd := GuiName ? (GuiName ":Add") : "Add"
-
-	w_width := width>=0 ? "w" width : ""
+	vCtrlVarname := StrLen(CtrlVarname)>0 ? "v" CtrlVarname : ""
+	wWidth := width>0 ? "w" width : "" ; so width==-1 will make it auto-width by text length
 	
-	Gui, % cmdadd, Checkbox, % Format("v{} {} {}", CtrlVarname, w_width, format), % btntext
+	Gui, % cmdadd, Checkbox, % Format("{} {} {}", vCtrlVarname, wWidth, format), % btntext
 }
 
 Gui_Add_Editbox(GuiName, CtrlVarname, width, format, init_text:="")
@@ -157,7 +158,10 @@ Gui_Add_Editbox(GuiName, CtrlVarname, width, format, init_text:="")
 
 	dev_assert(Gui_IsValidVar(CtrlVarname))
 	cmdadd := GuiName ? (GuiName ":Add") : "Add"
-	Gui, % cmdadd, Edit, % Format("v{} w{} {}", CtrlVarname, width, format), % init_text
+	vCtrlVarname := StrLen(CtrlVarname)>0 ? "v" CtrlVarname : ""
+	wWidth := width>0 ? "w" width : "" ; so width==-1 will make it auto-width by text length
+
+	Gui, % cmdadd, Edit, % Format("{} {} {}", vCtrlVarname, wWidth, format), % init_text
 }
 
 Gui_Add_Listbox(GuiName, CtrlVarname, width, format, itemlist_pipes:="")
@@ -166,7 +170,10 @@ Gui_Add_Listbox(GuiName, CtrlVarname, width, format, itemlist_pipes:="")
 
 	dev_assert(Gui_IsValidVar(CtrlVarname))
 	cmdadd := GuiName ? (GuiName ":Add") : "Add"
-	Gui, % cmdadd, ListBox, % Format("v{} w{} {}", CtrlVarname, width, format), % itemlist_pipes
+	vCtrlVarname := StrLen(CtrlVarname)>0 ? "v" CtrlVarname : ""
+	wWidth := width>0 ? "w" width : "" ; so width==-1 will make it auto-width by text length
+
+	Gui, % cmdadd, ListBox, % Format("{} {} {}", vCtrlVarname, wWidth, format), % itemlist_pipes
 }
 
 Gui_Add_Combobox(GuiName, CtrlVarname, width, format, itemlist_pipes:="")
@@ -175,7 +182,10 @@ Gui_Add_Combobox(GuiName, CtrlVarname, width, format, itemlist_pipes:="")
 
 	dev_assert(Gui_IsValidVar(CtrlVarname))
 	cmdadd := GuiName ? (GuiName ":Add") : "Add"
-	Gui, % cmdadd, ComboBox, % Format("v{} w{} {}", CtrlVarname, width, format), % itemlist_pipes
+	vCtrlVarname := StrLen(CtrlVarname)>0 ? "v" CtrlVarname : ""
+	wWidth := width>0 ? "w" width : "" ; so width==-1 will make it auto-width by text length
+
+	Gui, % cmdadd, ComboBox, % Format("{} {} {}", vCtrlVarname, wWidth, format), % itemlist_pipes
 }
 
 GuiControl_Enable(GuiName, CtrlVarname, is_enable)
