@@ -4,6 +4,9 @@
 ; * A file named "AmTemplate.cfg.ini" marks the existence of a template folder.
 ; * Once user selects a template folder, a dialogbox pops out asking for substitution parameters.
 
+; All GUIDs in AmTemplate.cfg.ini must conform to AmtGuidFormat, this requirement 
+; enables me to check for GUID-mismatch situation between AmTemplate.cfg.ini and Template file sources.
+
 AUTOEXEC_AmTemplates: ; Workaround for Autohotkey's ugly auto-exec feature. Don't delete.
 
 /* APIs:
@@ -18,6 +21,10 @@ global g_dirsAmTemplates := [ A_ScriptDir "\AmTemplates" ]
 global g_amtIniCfgFilename := "AmTemplate.cfg.ini"
 global g_amtIniResultFileName := "AmTemplate.result.ini"
 global g_amtRootMenu := "AmtMenu"
+
+global g_amtGuidFormatRegex := "\{CCCCCCCC-0000-0000-[0-9A-Za-z]{4}-[0-9A-Za-z]{12}\}"
+global g_amtGuidFormatFriendly := "{CCCCCCCC-0000-0000-....-............}"
+; -- that is, AmtGuidFormat {CCCCCC-0000-0000-...}
 
 global AMT_FOUND_IMMEDIATE_TEMPLATE := -1
 
@@ -89,6 +96,14 @@ return ; End of auto-execute section.
 Amt_GetIniFilepath(dirtmpl)
 {
 	return dirtmpl "\" g_amtIniCfgFilename
+}
+
+Amt_IsAmtGuidFormat(guid)
+{
+	if(guid ~= "i)" g_amtGuidFormatRegex) ; case-insensitive match
+		return true
+	else 
+		return false
 }
 
 Amt_PrepareDir(basemenu, basedirpath)
@@ -438,6 +453,14 @@ AMT_BtnOK()
 		
 		dev_MsgBoxInfo(msg)
 	}
+	else
+	{
+		is_yes := dev_MsgBoxYesNo_Warning(Format("Template expansion failed. Do you want to remove target folder?`n`n"
+			. "{}", finalApplyDir))
+		if(is_yes) {
+			dev_rmdir(finalApplyDir)
+		}
+	}
 	
 	Amt_RegenGuidsByCheckbox()
 	
@@ -643,8 +666,10 @@ Amt_DoExpandTemplate(srcdir, dstdir)
 	
 	; Walk source dir and find files matching IncludePatterns.
 
-	IniRead, IncludePatterns, % cfgini, % "global", % "IncludePatterns", % "*"
+	IncludePatterns := dev_IniRead(cfgini, "global", "IncludePatterns","*")
 	ptns := StrSplit(IncludePatterns, "|")
+	
+	isStrictGuid := dev_IniReadVal(cfgini, "global", "IsStrictGuid", 0)
 
 	Loop, Files, % srcdir "\*", FR
 	{
@@ -672,8 +697,27 @@ Amt_DoExpandTemplate(srcdir, dstdir)
 	dictGuidReplaceCount := {}
 	for index,obj in g_amt_arTemplateGuids
 	{
+		thisguid := obj.oldword
+	
+		; Check that GUIDs do not duplicate.
+		if(dictGuidReplaceCount.HasKey(thisguid)) {
+			dev_MsgBoxError(Format("[ERROR] {} has duplicate GUID in it: {}", g_amtIniCfgFilename, thisguid))
+			return false
+		}
+		
+		; Check that GUIDs conform to AmtGuidFormat.
+		if(isStrictGuid and not Amt_IsAmtGuidFormat(thisguid))
+		{
+			info := Format("[ERROR] The GUID ""{}"" does NOT meet AMT-GUID-format.`n`n"
+				. "With IsStrictGuid=1, the GUID should have this format:"
+				. "`n`n{}"
+				, thisguid, g_amtGuidFormatFriendly)
+			dev_MsgBoxError(info)
+			return false
+		}
+
 		; This count is used to check GUID stray-away Template bug.
-		dictGuidReplaceCount[obj.oldword] := 0
+		dictGuidReplaceCount[thisguid] := 0
 	}
 	
 	; Actually copy these files.
@@ -711,7 +755,7 @@ Amt_DoExpandTemplate(srcdir, dstdir)
 		{
 			; For text file, we need to replace text.
 			
-			FileRead, filetext, %srcpath%
+			filetext := dev_ReadFile(srcpath)
 			if(ErrorLevel)
 			{
 				dev_MsgBoxError(Format("ERROR: Fail to read source file: {}", srcpath))
@@ -729,7 +773,22 @@ Amt_DoExpandTemplate(srcdir, dstdir)
 				dictGuidReplaceCount[obj.oldword] += outCount
 			}
 			
-			FileAppend, %filetext%, %dstpath%
+			; Ensure that all AmtGuidFormat GUIDs are all gone, otherwise, assert error.
+			;
+			badpos := RegExMatch(filetext, "i)" g_amtGuidFormatRegex, matchedstr)
+			if(badpos>0)
+			{
+				badguid := matchedstr
+				dev_MsgBoxError(Format("[ERROR] Template source file`n`n"
+					. "{}`n`n"
+					. "has un-replaced AMT-GUID-format GUID: `n`n"
+					. "{}`n`n"
+					. "The author of {} probably forgot to refer to this GUID to have it replaced, which is an error."
+					, srcpath, badguid, g_amtIniCfgFilename))
+				return false
+			}
+			
+			dev_WriteWholeFile(dstpath,filetext)
 			if(ErrorLevel)
 			{
 				dev_MsgBoxError(Format("ERROR: Fail to create new text file: {}", dstpath))
@@ -737,6 +796,8 @@ Amt_DoExpandTemplate(srcdir, dstdir)
 			}
 		}
 	}
+	
+	; Check that all source GUIDs are "used" at least once.
 	
 	arBadGuids := []
 	for index,obj in g_amt_arTemplateGuids

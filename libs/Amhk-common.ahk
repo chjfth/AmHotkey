@@ -165,6 +165,12 @@ dev_IniRead(inifilepath, section, key:="", default_val:="")
 	
 }
 
+dev_IniReadVal(inifilepath, section, key:="", default_val:=0)
+{
+	str := dev_IniRead(inifilepath, section, key, default_val)
+	return dev_str2num(str)
+}
+
 dev_IniWrite(inifilepath, section, key, val)
 {
 	IniWrite, % val, % inifilepath, % section, % key
@@ -261,6 +267,24 @@ dev_FileRemoveDir(dirpath, is_recurse)
 		return true
 }
 
+dev_FileRead(filepath)
+{
+	FileRead, outvar, % filepath
+	return outvar
+}
+
+dev_ReadFile(filepath)
+{
+	return dev_FileRead(filepath)
+}
+
+dev_FileReadLine(filepath, idxline)
+{
+	FileReadLine, linetext, % filepath, % idxline
+	return linetext
+}
+
+
 dev_WriteFile(filepath, text, is_append)
 {
 	; memo: Use "`n" in text to represent a new line.
@@ -337,6 +361,15 @@ dev_IsDiskFolder(dirpath)
 		return false
 }
 
+dev_rmdir(dirpath)
+{
+	FileRemoveDir, % dirpath, 1
+	
+	if(FileExist(dirpath))
+		return false
+	else
+		return true
+}
 
 dev_InterpretHotkeySpec(spec)
 {
@@ -1195,18 +1228,6 @@ Is_RectA_in_RectB(Ax, Ay, Aw, Ah, Bx, By, Bw, Bh, tolerance:=0)
 		return false
 }
 
-
-dev_FileRead(filepath)
-{
-	FileRead, outvar, % filepath
-	return outvar
-}
-
-dev_FileReadLine(filepath, idxline)
-{
-	FileReadLine, linetext, % filepath, % idxline
-	return linetext
-}
 
 dev_hasValue(haystack, needle) 
 {
