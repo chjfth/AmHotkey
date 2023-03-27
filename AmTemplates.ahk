@@ -33,6 +33,8 @@ global AMT_FOUND_IMMEDIATE_TEMPLATE := -1
 global g_HwndAmt ; HWND for AMT dialog.
 global g_amtTemplateSrcDir ; the Dir with file AmTemplate.cfg.ini
 
+global g_amtWordEdtWidth := 220
+
 global g_OldwordHeader, g_NewwordHeader
 ;
 ; Max 9 words supported.
@@ -241,7 +243,7 @@ Amt_CreateGui(inipath)
 	Gui_Switch_Font( GuiName, 9, "", "Tahoma")
 	Gui_Add_TxtLabel(GuiName, "", 580, "xm", Format("Template folder found: (with {})", inifilename))
 	Gui_Add_Editbox( GuiName, "g_amtTemplateSrcDir", 580, "xm ReadOnly -E0x200", inidir)
-	Gui_Add_TxtLabel(GuiName, "g_OldwordHeader", 180, "xm y+16", "Old words from template:")
+	Gui_Add_TxtLabel(GuiName, "g_OldwordHeader", g_amtWordEdtWidth, "xm y+16", "Old words from template:")
 	Gui_Add_TxtLabel(GuiName, "g_NewwordHeader", -1, "x+10 yp", "New words to apply:")
 
 	;
@@ -265,8 +267,8 @@ Amt_CreateGui(inipath)
 		varname_oldword := "g_amteditOldword" index
 		varname_newword := "g_amteditNewword" index
 		
-		Gui_Add_Editbox(GuiName, varname_oldword, 180, "xm ReadOnly -Tabstop", key)
-		Gui_Add_Editbox(GuiName, varname_newword, 180, "yp x+10 g" . "Amt_OnNewWordChange", key)
+		Gui_Add_Editbox(GuiName, varname_oldword, g_amtWordEdtWidth, "xm ReadOnly -Tabstop", key)
+		Gui_Add_Editbox(GuiName, varname_newword, g_amtWordEdtWidth, "yp x+10 g" . "Amt_OnNewWordChange", key)
 		
 		g_amt_arTemplateWords[index] := {"oldword":key, "newword":key, "desc":value}
 	}
@@ -372,8 +374,8 @@ AMTGuiSize()
 	rsdict := {}
 	rsdict.g_amtTemplateSrcDir := "0,0,100,0"
 	
-	rsdict.g_OldwordHeader := "0,0,33,0"
-	rsdict.g_NewwordHeader := "33,0,66,0"
+	rsdict.g_OldwordHeader := "0,0,44,0"
+	rsdict.g_NewwordHeader := "44,0,88,0"
 	;
 	nwords := g_amt_arTemplateWords.Length()
 	Loop, %nwords%
