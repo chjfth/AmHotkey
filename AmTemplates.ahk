@@ -519,6 +519,9 @@ Amt_OnNewGuidChange()
 
 Amt_WM_MOUSEMOVE()
 {
+    static s_prev_tooltiping_uic := 0
+
+	is_from_tooltiping_uic := true ; assume message is from a GuiControl
 	idCtrl := A_GuiControl
 	
 	if(StrIsStartsWith(idCtrl, "g_amteditOldword"))
@@ -543,12 +546,24 @@ Amt_WM_MOUSEMOVE()
 	{
 		dev_TooltipAutoClear(g_amtApplyFolderHint)
 	}
-	else if(A_Gui=="AMT")
+	else
+		is_from_tooltiping_uic := false
+	
+	if(A_Gui=="AMT")
 	{
-		; Note: We use delay-hide here.
-		; If execute `tooltip` immediately, the dev_TooltipAutoClear() call from 
-		; Amt_OnNewWordChange() and Amt_OnNewGuidChange() will vanish immediately, with a mere flash.
-		dev_TooltipDelayHide()
+		; According to my [20221215.R1]
+        ; If mouse has *just* moved off a tooltiping UIC, we turn off the tooltip.
+        ; We cannot blindly turn off tooltip here, bcz we would get constant WM_MOUSEMOVE 
+        ; even if we do not move the mouse; turning off tooltip blindly would cause 
+        ; other function''s dev_TooltipAutoClear() to vanish immediately.
+        ;
+        if(is_from_tooltiping_uic) {
+            s_prev_tooltiping_uic := A_GuiControl
+        }
+        else if(s_prev_tooltiping_uic) {
+            tooltip ; turn off tooltip
+            s_prev_tooltiping_uic := 0
+        }
 	}
 }
 
@@ -801,4 +816,3 @@ Amt_none()
 }
 
 
-; TODO: Tooltip off and disappear
