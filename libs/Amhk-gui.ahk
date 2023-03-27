@@ -1,8 +1,11 @@
-
-
 ;===================================
 ;====== AHK Gui & GuiControl =======
 ;===================================
+
+class AmhkGui ; To store global vars
+{ 
+	static dictGuiAutoResize := {}
+}
 
 Gui_AssociateHwndVarname(GuiName, HwndVarname)
 {
@@ -288,8 +291,6 @@ GuiControl_ComboboxGetText(GuiName, CtrlVarname)
 
 dev_GuiAutoResize(GuiName, rsdict, gui_nowwidth, gui_nowheight, force_redraw:=false, qmargin:="")
 {
-	static g_devGuiAutoResizeDict := {}
-
 	; gui_nowwidth, gui_nowheight tells the GUI's client area size
 	
 	if(qmargin) ; q implies quad
@@ -317,8 +318,10 @@ dev_GuiAutoResize(GuiName, rsdict, gui_nowwidth, gui_nowheight, force_redraw:=fa
 	
 ;	MsgBox, % Format("nowwidth={} nowheight={} x0m={} y0m={}", nowwidth, nowheight, x0m, y0m)
 	
-	if( ! g_devGuiAutoResizeDict[GuiName] )
+	if( ! AmhkGui.dictGuiAutoResize[GuiName] )
 	{
+;		Dbgwin_Output("dev_GuiAutoResize() see newly created: " GuiName) ; debug
+		
 		; It is the first time this GuiName is seen, which means this GUI is just created, 
 		; so we initialize it. The ctrl's positions at this time are considered at their initial positions.
 		
@@ -349,14 +352,14 @@ dev_GuiAutoResize(GuiName, rsdict, gui_nowwidth, gui_nowheight, force_redraw:=fa
 		}
 
 		; Mark this GuiName "created".
-		g_devGuiAutoResizeDict[GuiName] := gui_rsinfo
+		AmhkGui.dictGuiAutoResize[GuiName] := gui_rsinfo
 
 	}
 	else
 	{
-;		MsgBox, SecondTimeARS
+;		Dbgwin_Output("dev_GuiAutoResize() see existing: " GuiName) ; debug
 		
-		gui_rsinfo := g_devGuiAutoResizeDict[GuiName] ; define a label for easier reference
+		gui_rsinfo := AmhkGui.dictGuiAutoResize[GuiName] ; define a label for easier reference
 		
 		for ctrlvar, ctrl_rsinfo in gui_rsinfo
 		{
@@ -380,7 +383,9 @@ dev_GuiAutoResize(GuiName, rsdict, gui_nowwidth, gui_nowheight, force_redraw:=fa
 
 dev_GuiAutoResizeRemove(GuiName)
 {
-	g_devGuiAutoResizeDict.Delete(GuiName)
+;	Dbgwin_Output("dev_GuiAutoResizeRemove(): " GuiName) ; debug
+
+	AmhkGui.dictGuiAutoResize.Delete(GuiName)
 }
 
 
