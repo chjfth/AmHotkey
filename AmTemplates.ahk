@@ -19,7 +19,7 @@ global g_dirsAmTemplates := [ A_ScriptDir "\AmTemplates" ]
 
 ; global constant use by this module
 global g_amtIniCfgFilename := "AmTemplate.cfg.ini"
-global g_amtIniResultFileName := "AmTemplate.result.ini"
+global g_amtIniResultFileName := "AmTemplate.result.ini" ; looks useless
 global g_amtRootMenu := "AmtMenu"
 
 global g_amtGuidFormatRegex := "\{CCCCCCCC-0000-0000-[0-9A-Za-z]{4}-[0-9A-Za-z]{12}\}"
@@ -744,10 +744,10 @@ Amt_DoExpandTemplate(srcdir, dstdir)
 			; Check that target(new) GUIDs is NOT in AMT-GUID-format.
 			if(Amt_IsAmtGuidFormat(newguid))
 			{
-				dev_MsgBoxError(Format("[ERROR] One of your input new GUIDs has AMT-GUID-format:`n`n"
+				dev_MsgBoxError(Format("[ERROR] One of your manually typed new GUIDs has AMT-GUID-format:`n`n"
 					. "{}`n`n"
-					. "This is not allowed."
-					, newguid))
+					. "This is not allowed when {} says IsStrictGuid=1 ."
+					, newguid, g_amtIniCfgFilename))
 				return false
 			}
 		}
@@ -851,7 +851,7 @@ Amt_DoExpandTemplate(srcdir, dstdir)
 
 	Amt_GenerateNextLevelCfgIni(srcdir, dstdir)
 
-	Amt_GenerateResultIni(cfgini, dstdir "\" g_amtIniResultFileName)
+;	Amt_GenerateResultIni(cfgini, dstdir "\" g_amtIniResultFileName)
 	
 	return true
 }
@@ -870,8 +870,7 @@ Amt_GenerateNextLevelCfgIni(srcdir, dstdir)
 	IncludePatterns := dev_IniRead(srcinipath, "global", "IncludePatterns","*")
 	dev_IniWrite(dstinipath, "global", "IncludePatterns", IncludePatterns)
 	
-	; This new cfg-ini surely does not conforms to AMT-GUID-format, so we need to mark it 0.
-	dev_IniWrite(dstinipath, "global", "IsStrictGuid", 0) 
+	isGuidAllAmt := true ; assume true
 	
 	for index,obj in g_amt_arTemplateWords
 	{
@@ -881,7 +880,12 @@ Amt_GenerateNextLevelCfgIni(srcdir, dstdir)
 	for index,obj in g_amt_arTemplateGuids
 	{
 		dev_IniWrite(dstinipath, "GUID", obj.newword, obj.desc)
+		
+		if(not Amt_IsAmtGuidFormat(obj.newword))
+			isGuidAllAmt := false
 	}
+	
+	dev_IniWrite(dstinipath, "global", "IsStrictGuid", isGuidAllAmt ? 1 : 0)
 }
 
 Amt_GenerateResultIni(srcini, dstini)
