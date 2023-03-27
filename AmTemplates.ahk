@@ -184,7 +184,7 @@ Amt_LaunchMenu()
 	dev_Menu_DeleteAll(g_amtRootMenu)
 	
 	menuheadtext := "==== AmTemplates ===="
-	Menu, % g_amtRootMenu, Add, % menuheadtext, Amt_none
+	Menu, % g_amtRootMenu, Add, % menuheadtext, dev_nop
 	
 	Loop, % g_dirsAmTemplates.Length()
 	{
@@ -206,7 +206,7 @@ Amt_LaunchMenu()
 			
 			if(amtfound==0)
 			{
-				Menu, % g_amtRootMenu, Add, % menutext, Amt_none
+				Menu, % g_amtRootMenu, Add, % menutext, dev_nop
 			}
 			else
 			{
@@ -671,6 +671,8 @@ Amt_DoExpandTemplate(srcdir, dstdir)
 	
 	isStrictGuid := dev_IniReadVal(cfgini, "global", "IsStrictGuid", 0)
 
+	; ========== Gather srd -> dst file pairs in a dict.
+
 	Loop, Files, % srcdir "\*", FR
 	{
 		srcRela := dev_StripPrefix(A_LoopFileFullPath, srcdir) ; srcRela will have \ prefix
@@ -692,10 +694,10 @@ Amt_DoExpandTemplate(srcdir, dstdir)
 		arPairs.Push({"srcrela":srcRela , "dstrela":dstRela}) 
 	}
 
-	Amt_WriteResultIni(cfgini, dstdir "\" g_amtIniResultFileName)
-	
 	dictGuidReplaceCount := {}
 	dictNewGuid := {} ; for dup-check
+	
+	; ========== For each GUID, check format correctness
 	
 	for index,obj in g_amt_arTemplateGuids
 	{
@@ -744,7 +746,7 @@ Amt_DoExpandTemplate(srcdir, dstdir)
 		}
 	}
 	
-	; Actually copy these files.
+	; ========== Actually copy/expand each file.
 	
 	for index,pair in arPairs
 	{
@@ -839,11 +841,43 @@ Amt_DoExpandTemplate(srcdir, dstdir)
 			,g_amtIniCfgFilename, bads))
 		return false
 	}
+
+	Amt_GenerateNextLevelCfgIni(srcdir, dstdir)
+
+	Amt_GenerateResultIni(cfgini, dstdir "\" g_amtIniResultFileName)
 	
 	return true
 }
 
-Amt_WriteResultIni(srcini, dstini)
+Amt_GenerateNextLevelCfgIni(srcdir, dstdir)
+{
+	; We generate in dstdir a new AmTemplate.cfg.ini, so that this new one
+	; can mark a valid AmTemplate folder to carry out further expansion(if user wishes).
+	;
+	; The facilitates the work flow of:
+	;   Apply Template -> Customize the new project -> Clone the customized-project with a new project-name.
+	
+	srcinipath := srcdir "\" g_amtIniCfgFilename
+	dstinipath := dstdir "\" g_amtIniCfgFilename
+	
+	IncludePatterns := dev_IniRead(srcinipath, "global", "IncludePatterns","*")
+	dev_IniWrite(dstinipath, "global", "IncludePatterns", IncludePatterns)
+	
+	; This new cfg-ini surely does not conforms to AMT-GUID-format, so we need to mark it 0.
+	dev_IniWrite(dstinipath, "global", "IsStrictGuid", 0) 
+	
+	for index,obj in g_amt_arTemplateWords
+	{
+		dev_IniWrite(dstinipath, "WordToReplace", obj.newword, obj.desc)
+	}
+	
+	for index,obj in g_amt_arTemplateGuids
+	{
+		dev_IniWrite(dstinipath, "GUID", obj.newword, obj.desc)
+	}
+}
+
+Amt_GenerateResultIni(srcini, dstini)
 {
 	; First make a verbatim copy to new filename
 
@@ -896,11 +930,6 @@ amt_IsWildcardsMatch(ptns, filename)
 	}
 	
 	return false
-}
-
-
-Amt_none()
-{
 }
 
 
