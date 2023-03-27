@@ -695,29 +695,53 @@ Amt_DoExpandTemplate(srcdir, dstdir)
 	Amt_WriteResultIni(cfgini, dstdir "\" g_amtIniResultFileName)
 	
 	dictGuidReplaceCount := {}
+	dictNewGuid := {} ; for dup-check
+	
 	for index,obj in g_amt_arTemplateGuids
 	{
-		thisguid := obj.oldword
+		oldguid := obj.oldword
+		newguid := obj.newword
 	
-		; Check that GUIDs do not duplicate.
-		if(dictGuidReplaceCount.HasKey(thisguid)) {
-			dev_MsgBoxError(Format("[ERROR] {} has duplicate GUID in it: {}", g_amtIniCfgFilename, thisguid))
+		; Check that template(old) GUIDs do not duplicate.
+		if(dictGuidReplaceCount.HasKey(oldguid)) {
+			dev_MsgBoxError(Format("[ERROR] {} has duplicate GUID in it: {}", g_amtIniCfgFilename, oldguid))
 			return false
 		}
 		
-		; Check that GUIDs conform to AmtGuidFormat.
-		if(isStrictGuid and not Amt_IsAmtGuidFormat(thisguid))
+		; This count is used to check GUID stray-away Template bug.
+		dictGuidReplaceCount[oldguid] := 0
+		
+		; Check that old GUIDs conform to AmtGuidFormat.
+		if(isStrictGuid and not Amt_IsAmtGuidFormat(oldguid))
 		{
 			info := Format("[ERROR] The GUID ""{}"" does NOT meet AMT-GUID-format.`n`n"
 				. "With IsStrictGuid=1, the GUID should have this format:"
 				. "`n`n{}"
-				, thisguid, g_amtGuidFormatFriendly)
+				, oldguid, g_amtGuidFormatFriendly)
 			dev_MsgBoxError(info)
 			return false
 		}
 
-		; This count is used to check GUID stray-away Template bug.
-		dictGuidReplaceCount[thisguid] := 0
+		; Check that target(new) GUIDs do not duplicate.
+		if(dictNewGuid.HasKey(newguid)) {
+			dev_MsgBoxError(Format("[ERROR] Your input new GUIDs has duplication: {}", newguid))
+			return false
+		}
+		
+		dictNewGuid[newguid] := 1
+
+		if(isStrictGuid)
+		{
+			; Check that target(new) GUIDs is NOT in AMT-GUID-format.
+			if(Amt_IsAmtGuidFormat(newguid))
+			{
+				dev_MsgBoxError(Format("[ERROR] One of your input new GUIDs has AMT-GUID-format:`n`n"
+					. "{}`n`n"
+					. "This is not allowed."
+					, newguid))
+				return false
+			}
+		}
 	}
 	
 	; Actually copy these files.
@@ -772,20 +796,23 @@ Amt_DoExpandTemplate(srcdir, dstdir)
 				filetext := StrReplace(filetext, obj.oldword, obj.newword, outCount)
 				dictGuidReplaceCount[obj.oldword] += outCount
 			}
-			
-			; Ensure that all AmtGuidFormat GUIDs are all gone, otherwise, assert error.
-			;
-			badpos := RegExMatch(filetext, "i)" g_amtGuidFormatRegex, matchedstr)
-			if(badpos>0)
+
+			if(IsStrictGuid)
 			{
-				badguid := matchedstr
-				dev_MsgBoxError(Format("[ERROR] Template source file`n`n"
-					. "{}`n`n"
-					. "has un-replaced AMT-GUID-format GUID: `n`n"
-					. "{}`n`n"
-					. "The author of {} probably forgot to refer to this GUID to have it replaced, which is an error."
-					, srcpath, badguid, g_amtIniCfgFilename))
-				return false
+				; Ensure that all AmtGuidFormat GUIDs are all gone, otherwise, assert error.
+				;
+				badpos := RegExMatch(filetext, "i)" g_amtGuidFormatRegex, matchedstr)
+				if(badpos>0)
+				{
+					badguid := matchedstr
+					dev_MsgBoxError(Format("[ERROR] Template source file`n`n"
+						. "{}`n`n"
+						. "has un-replaced AMT-GUID-format GUID: `n`n"
+						. "{}`n`n"
+						. "The author of {} probably forgot to refer to this GUID to have it replaced, which is an error."
+						, srcpath, badguid, g_amtIniCfgFilename))
+					return false
+				}
 			}
 			
 			dev_WriteWholeFile(dstpath,filetext)
