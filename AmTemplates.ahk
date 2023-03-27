@@ -73,6 +73,8 @@ global g_amtDefaultOutdirUser := A_AppData "\" "AmTemplatesApply"
 	; Example: C:\Users\win7evn\AppData\Roaming\AmTemplatesApply
 	; This can be overridden in customize.ahk
 
+global g_amtApplyBtn := ""
+
 global g_amtDefaultOutdirUser0 := g_amtDefaultOutdirUser
 
 ; AmTemplates_InitHotkeys()
@@ -245,8 +247,8 @@ Amt_CreateGui(inipath)
 		key := key_value[1]
 		value := key_value[2]
 		
-		varname_oldword := "g_amteditOldword" + index
-		varname_newword := "g_amteditNewword" + index
+		varname_oldword := "g_amteditOldword" index
+		varname_newword := "g_amteditNewword" index
 		
 		Gui_Add_Editbox(GuiName, varname_oldword, 180, "xm ReadOnly -Tabstop", key)
 		Gui_Add_Editbox(GuiName, varname_newword, 180, "yp x+10 g" . "Amt_OnNewWordChange", key)
@@ -300,10 +302,8 @@ Amt_CreateGui(inipath)
 	
 	; Now, a readonly text line that shows final apply folder, with a prefix icon showing final-folder state.
 	Gui_Add_Picture(GuiName, "g_amtIconWarnOverwrite", 16, "xm h16 +0x100") ; 0x100: SS_NOTIFY, for hovering tooltip
-				;Gui, AMT:Add, Picture, xm w16 h16 +0x100 vg_amtIconWarnOverwrite ; 0x100: SS_NOTIFY, for hovering tooltip
 	Gui_Add_Editbox(GuiName, "g_amtTxtApplyDirFinal", 562, "yp x+3 ReadOnly -E0x200") ; -E0x200: turn off WS_EX_CLIENTEDGE, no so editbox border
-				;Gui, AMT:Add, Edit, yp x+3  w562 ReadOnly -E0x200   vg_amtTxtApplyDirFinal, % "" ; -E0x200: turn off WS_EX_CLIENTEDGE, no so editbox border
-	Gui_Add_Button(GuiName, "", -1, "y+16 xm Default g" . "AMT_BtnOK", " &Apply ")
+	Gui_Add_Button( GuiName, "", -1, "y+10 xm Default g" . "AMT_BtnOK", " &Apply ")
 }
 
 
@@ -378,8 +378,9 @@ AMTGuiSize()
 ;		rsdict["g_amteditNewguid" A_Index] := rsdict.g_NewguidHeader
 ;	}
 	
-	rsdict.g_amtEdtOutdirUser := "0,0,100,0"
-	rsdict.g_amtTxtApplyDirFinal := "0,0,100,0"
+	rsdict.g_amtEdtOutdirUser := "0,100,100,100"
+	rsdict.g_amtTxtApplyDirFinal := "0,100,100,100"
+	rsdict.g_amtApplyBtn := "0,100,0,100"
 	
 	dev_GuiAutoResize("AMT", rsdict, A_GuiWidth, A_GuiHeight)
 }

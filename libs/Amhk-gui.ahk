@@ -82,17 +82,11 @@ Gui_Add_TxtLabel(GuiName, CtrlVarname:="", width:=-1, format:="", text:="")
 	; +0xC000 (SS_WORDELLIPSIS)
 
 	dev_assert(Gui_IsValidVar(CtrlVarname))
-
-	if(StrLen(CtrlVarname)>0)
-		vCtrlVarname := "v" CtrlVarname
-	else
-		vCtrlVarname := ""
-
 	cmdadd := GuiName ? (GuiName ":Add") : "Add"
+	vCtrlVarname := StrLen(CtrlVarname)>0 ? "v" CtrlVarname : ""
+	wWidth := width>0 ? "w" width : "" ; so width==-1 will make it auto-width by text length
 	
-	w_width := width>=0 ? "w" width : "" ; so width==-1 will make it auto-width by text length
-	
-	Gui, % cmdadd, Text, % Format("{} {} {}", vCtrlVarname, w_width, format), % text
+	Gui, % cmdadd, Text, % Format("{} {} {}", vCtrlVarname, wWidth, format), % text
 }
 
 Gui_Add_StaticLabel(GuiName, text)
@@ -121,7 +115,12 @@ Gui_Add_Button(GuiName, CtrlVarname, width, format, btntext)
 {
 	dev_assert(Gui_IsValidVar(CtrlVarname))
 	cmdadd := GuiName ? (GuiName ":Add") : "Add"
-	Gui, % cmdadd, Button, % Format("v{} w{} {}", CtrlVarname, width, format), % btntext
+	vCtrlVarname := StrLen(CtrlVarname)>0 ? "v" CtrlVarname : ""
+	wWidth := width>0 ? "w" width : "" ; so width==-1 will make it auto-width by text length
+
+
+	cmdadd := GuiName ? (GuiName ":Add") : "Add"
+	Gui, % cmdadd, Button, % Format("{} {} {}", vCtrlVarname, wWidth, format), % btntext
 }
 
 Gui_Add_Picture(GuiName, CtrlVarname, width, format, imgfilepath:="")
