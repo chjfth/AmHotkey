@@ -1403,3 +1403,13 @@ dev_StopTimer(str_callable)
 {
 	SetTimer, % str_callable, Off
 }
+
+dev_IsValidGuid(input)
+{
+	ptn := "^\{[0-9A-Za-z]{8}-[0-9A-Za-z]{4}-[0-9A-Za-z]{4}-[0-9A-Za-z]{4}-[0-9A-Za-z]{12}\}$"
+	if(input ~= ptn)
+		return true
+	else
+		return false
+}
+

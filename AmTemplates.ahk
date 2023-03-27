@@ -733,6 +733,11 @@ Amt_DoExpandTemplate(srcdir, dstdir)
 		}
 		
 		dictNewGuid[newguid] := 1
+		
+		if(not dev_IsValidGuid(newguid)) {
+			dev_MsgBoxError(Format("[ERROR] Your input GUID is in wrong format:`n`n{}", newguid))
+			return false
+		}
 
 		if(isStrictGuid)
 		{
