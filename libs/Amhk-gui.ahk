@@ -1,8 +1,11 @@
-
-
 ;===================================
 ;====== AHK Gui & GuiControl =======
 ;===================================
+
+class AmhkGui ; To store global vars
+{ 
+	static dictGuiAutoResize := {}
+}
 
 Gui_AssociateHwndVarname(GuiName, HwndVarname)
 {
@@ -44,7 +47,7 @@ Gui_SetXYMargin(GuiName, xmargin, ymargin)
 	Gui, % cmd , % xmargin, % ymargin
 }
 
-Gui_Switch_Font(GuiName, sizept=0, rgbhex="", fontface:="", weight:=400)
+Gui_Switch_Font(GuiName, sizept:=0, rgbhex:="", fontface:="", weight:=400)
 {
 	; Set new font for next control, influencing Button, TxtLabel, Editbox etc.
 	;	Gui, EVTBL:Font, s9 cBlack, Tahoma
@@ -75,21 +78,18 @@ GuiControl_ChangeOpt(GuiName, CtrlVarname, opt)
 	GuiControl, % cmd, % CtrlVarname, % opt
 }
 
-Gui_Add_TxtLabel(GuiName, CtrlVarname:="", width:=-1, format="", text:="")
+Gui_Add_TxtLabel(GuiName, CtrlVarname:="", width:=-1, format:="", text:="")
 {
 	; format: 
 	; +0x8000 (SS_PATHELLIPSIS)
 	; +0xC000 (SS_WORDELLIPSIS)
-	
-	if(!CtrlVarname)
-		CtrlVarname := "gu_TxtLabelDefault"
 
 	dev_assert(Gui_IsValidVar(CtrlVarname))
 	cmdadd := GuiName ? (GuiName ":Add") : "Add"
+	vCtrlVarname := StrLen(CtrlVarname)>0 ? "v" CtrlVarname : ""
+	wWidth := width>0 ? "w" width : "" ; so width==-1 will make it auto-width by text length
 	
-	w_width := width>=0 ? "w" width : "" ; so width==-1 will make it auto-width by text length
-	
-	Gui, % cmdadd, Text, % Format("v{} {} {}", CtrlVarname, w_width, format), % text
+	Gui, % cmdadd, Text, % Format("{} {} {}", vCtrlVarname, wWidth, format), % text
 }
 
 Gui_Add_StaticLabel(GuiName, text)
@@ -118,14 +118,20 @@ Gui_Add_Button(GuiName, CtrlVarname, width, format, btntext)
 {
 	dev_assert(Gui_IsValidVar(CtrlVarname))
 	cmdadd := GuiName ? (GuiName ":Add") : "Add"
-	Gui, % cmdadd, Button, % Format("v{} w{} {}", CtrlVarname, width, format), % btntext
+	vCtrlVarname := StrLen(CtrlVarname)>0 ? "v" CtrlVarname : ""
+	wWidth := width>0 ? "w" width : "" ; so width==-1 will make it auto-width by text length
+
+	Gui, % cmdadd, Button, % Format("{} {} {}", vCtrlVarname, wWidth, format), % btntext
 }
 
 Gui_Add_Picture(GuiName, CtrlVarname, width, format, imgfilepath:="")
 {
 	dev_assert(Gui_IsValidVar(CtrlVarname))
 	cmdadd := GuiName ? (GuiName ":Add") : "Add"
-	Gui, % cmdadd, Picture, % Format("v{} w{} {}", CtrlVarname, width, format), % imgfilepath
+	vCtrlVarname := StrLen(CtrlVarname)>0 ? "v" CtrlVarname : ""
+	wWidth := width>0 ? "w" width : "" ; so width==-1 will make it auto-width by text length
+
+	Gui, % cmdadd, Picture, % Format("{} {} {}", vCtrlVarname, wWidth, format), % imgfilepath
 }
 
 Gui_Picture_SetIconFromDll(GuiName, CtrlVarname, dllpath, icon_group_idx)
@@ -140,10 +146,10 @@ Gui_Add_Checkbox(GuiName, CtrlVarname, width, format, btntext)
 
 	dev_assert(Gui_IsValidVar(CtrlVarname))
 	cmdadd := GuiName ? (GuiName ":Add") : "Add"
-
-	w_width := width>=0 ? "w" width : ""
+	vCtrlVarname := StrLen(CtrlVarname)>0 ? "v" CtrlVarname : ""
+	wWidth := width>0 ? "w" width : "" ; so width==-1 will make it auto-width by text length
 	
-	Gui, % cmdadd, Checkbox, % Format("v{} {} {}", CtrlVarname, w_width, format), % btntext
+	Gui, % cmdadd, Checkbox, % Format("{} {} {}", vCtrlVarname, wWidth, format), % btntext
 }
 
 Gui_Add_Editbox(GuiName, CtrlVarname, width, format, init_text:="")
@@ -155,7 +161,10 @@ Gui_Add_Editbox(GuiName, CtrlVarname, width, format, init_text:="")
 
 	dev_assert(Gui_IsValidVar(CtrlVarname))
 	cmdadd := GuiName ? (GuiName ":Add") : "Add"
-	Gui, % cmdadd, Edit, % Format("v{} w{} {}", CtrlVarname, width, format), % init_text
+	vCtrlVarname := StrLen(CtrlVarname)>0 ? "v" CtrlVarname : ""
+	wWidth := width>0 ? "w" width : "" ; so width==-1 will make it auto-width by text length
+
+	Gui, % cmdadd, Edit, % Format("{} {} {}", vCtrlVarname, wWidth, format), % init_text
 }
 
 Gui_Add_Listbox(GuiName, CtrlVarname, width, format, itemlist_pipes:="")
@@ -164,7 +173,10 @@ Gui_Add_Listbox(GuiName, CtrlVarname, width, format, itemlist_pipes:="")
 
 	dev_assert(Gui_IsValidVar(CtrlVarname))
 	cmdadd := GuiName ? (GuiName ":Add") : "Add"
-	Gui, % cmdadd, ListBox, % Format("v{} w{} {}", CtrlVarname, width, format), % itemlist_pipes
+	vCtrlVarname := StrLen(CtrlVarname)>0 ? "v" CtrlVarname : ""
+	wWidth := width>0 ? "w" width : "" ; so width==-1 will make it auto-width by text length
+
+	Gui, % cmdadd, ListBox, % Format("{} {} {}", vCtrlVarname, wWidth, format), % itemlist_pipes
 }
 
 Gui_Add_Combobox(GuiName, CtrlVarname, width, format, itemlist_pipes:="")
@@ -173,7 +185,10 @@ Gui_Add_Combobox(GuiName, CtrlVarname, width, format, itemlist_pipes:="")
 
 	dev_assert(Gui_IsValidVar(CtrlVarname))
 	cmdadd := GuiName ? (GuiName ":Add") : "Add"
-	Gui, % cmdadd, ComboBox, % Format("v{} w{} {}", CtrlVarname, width, format), % itemlist_pipes
+	vCtrlVarname := StrLen(CtrlVarname)>0 ? "v" CtrlVarname : ""
+	wWidth := width>0 ? "w" width : "" ; so width==-1 will make it auto-width by text length
+
+	Gui, % cmdadd, ComboBox, % Format("{} {} {}", vCtrlVarname, wWidth, format), % itemlist_pipes
 }
 
 GuiControl_Enable(GuiName, CtrlVarname, is_enable)
@@ -276,8 +291,6 @@ GuiControl_ComboboxGetText(GuiName, CtrlVarname)
 
 dev_GuiAutoResize(GuiName, rsdict, gui_nowwidth, gui_nowheight, force_redraw:=false, qmargin:="")
 {
-	static g_devGuiAutoResizeDict := {}
-
 	; gui_nowwidth, gui_nowheight tells the GUI's client area size
 	
 	if(qmargin) ; q implies quad
@@ -305,8 +318,10 @@ dev_GuiAutoResize(GuiName, rsdict, gui_nowwidth, gui_nowheight, force_redraw:=fa
 	
 ;	MsgBox, % Format("nowwidth={} nowheight={} x0m={} y0m={}", nowwidth, nowheight, x0m, y0m)
 	
-	if( ! g_devGuiAutoResizeDict[GuiName] )
+	if( ! AmhkGui.dictGuiAutoResize[GuiName] )
 	{
+;		Dbgwin_Output("dev_GuiAutoResize() see newly created: " GuiName) ; debug
+		
 		; It is the first time this GuiName is seen, which means this GUI is just created, 
 		; so we initialize it. The ctrl's positions at this time are considered at their initial positions.
 		
@@ -337,14 +352,14 @@ dev_GuiAutoResize(GuiName, rsdict, gui_nowwidth, gui_nowheight, force_redraw:=fa
 		}
 
 		; Mark this GuiName "created".
-		g_devGuiAutoResizeDict[GuiName] := gui_rsinfo
+		AmhkGui.dictGuiAutoResize[GuiName] := gui_rsinfo
 
 	}
 	else
 	{
-;		MsgBox, SecondTimeARS
+;		Dbgwin_Output("dev_GuiAutoResize() see existing: " GuiName) ; debug
 		
-		gui_rsinfo := g_devGuiAutoResizeDict[GuiName] ; define a label for easier reference
+		gui_rsinfo := AmhkGui.dictGuiAutoResize[GuiName] ; define a label for easier reference
 		
 		for ctrlvar, ctrl_rsinfo in gui_rsinfo
 		{
@@ -368,7 +383,9 @@ dev_GuiAutoResize(GuiName, rsdict, gui_nowwidth, gui_nowheight, force_redraw:=fa
 
 dev_GuiAutoResizeRemove(GuiName)
 {
-	g_devGuiAutoResizeDict.Delete(GuiName)
+;	Dbgwin_Output("dev_GuiAutoResizeRemove(): " GuiName) ; debug
+
+	AmhkGui.dictGuiAutoResize.Delete(GuiName)
 }
 
 

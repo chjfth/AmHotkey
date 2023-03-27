@@ -141,10 +141,16 @@ dev_PostMessage(hwnd, wm_xxx, wparam, lparam)
     PostMessage, % wm_xxx, % wparam, % lparam, , ahk_id %hwnd%
 }
 
+dev_IniReadSection(inifilepath, section)
+{
+	IniRead, outvar, % inifilepath, % section
+	lines := StrSplit(outvar, "`n")
+	return lines ; an array of text, each element is one line 
+}
 
 dev_IniRead(inifilepath, section, key:="", default_val:="")
 {
-	; key=="" to return whole section content
+	; key=="" to return whole section content as a single string(separated by \n)
 
 	default_magic := "20221219.dev_IniRead.default"
 	if(default_val=="")
