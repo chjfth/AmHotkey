@@ -44,7 +44,7 @@ Gui_SetXYMargin(GuiName, xmargin, ymargin)
 	Gui, % cmd , % xmargin, % ymargin
 }
 
-Gui_Switch_Font(GuiName, sizept=0, rgbhex="", fontface:="", weight:=400)
+Gui_Switch_Font(GuiName, sizept:=0, rgbhex:="", fontface:="", weight:=400)
 {
 	; Set new font for next control, influencing Button, TxtLabel, Editbox etc.
 	;	Gui, EVTBL:Font, s9 cBlack, Tahoma
@@ -75,21 +75,24 @@ GuiControl_ChangeOpt(GuiName, CtrlVarname, opt)
 	GuiControl, % cmd, % CtrlVarname, % opt
 }
 
-Gui_Add_TxtLabel(GuiName, CtrlVarname:="", width:=-1, format="", text:="")
+Gui_Add_TxtLabel(GuiName, CtrlVarname:="", width:=-1, format:="", text:="")
 {
 	; format: 
 	; +0x8000 (SS_PATHELLIPSIS)
 	; +0xC000 (SS_WORDELLIPSIS)
-	
-	if(!CtrlVarname)
-		CtrlVarname := "gu_TxtLabelDefault"
 
 	dev_assert(Gui_IsValidVar(CtrlVarname))
+
+	if(StrLen(CtrlVarname)>0)
+		vCtrlVarname := "v" CtrlVarname
+	else
+		vCtrlVarname := ""
+
 	cmdadd := GuiName ? (GuiName ":Add") : "Add"
 	
 	w_width := width>=0 ? "w" width : "" ; so width==-1 will make it auto-width by text length
 	
-	Gui, % cmdadd, Text, % Format("v{} {} {}", CtrlVarname, w_width, format), % text
+	Gui, % cmdadd, Text, % Format("{} {} {}", vCtrlVarname, w_width, format), % text
 }
 
 Gui_Add_StaticLabel(GuiName, text)

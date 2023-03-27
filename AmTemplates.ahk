@@ -209,10 +209,11 @@ Amt_ExpandTemplateUI(dirtmpl)
 
 Amt_CreateGui(inipath)
 {
+	GuiName := "AMT"
 	g_amt_arTemplateWords := []
 	g_amt_arTemplateGuids := []
 	;
-	dev_GuiAutoResizeRemove("AMT")
+	dev_GuiAutoResizeRemove(GuiName)
 
 	inidir := dev_SplitPath(inipath, inifilename)
 
@@ -220,22 +221,17 @@ Amt_CreateGui(inipath)
 	Gui, AMT:+Hwndg_HwndAmt
 	Gui, AMT:+Resize +MinSize
 
-	Gui, AMT:Font, s9, Tahoma
-	Gui, AMT:Add, Text, xm w580, % Format("Template folder found: (with {})", inifilename)
-	Gui, AMT:Add, Edit, xm w580 ReadOnly -E0x200 vg_amtTemplateSrcDir, % inidir ; -E0x200: turn off WS_EX_CLIENTEDGE
-
-	Gui, AMT:Add, Text, xm y+16 w180  vg_OldwordHeader, % "Old words from template:"
-	Gui, AMT:Add, Text, x+10 yp       vg_NewwordHeader, % "New words to apply:"
+	Gui_Switch_Font( GuiName, 9, "", "Tahoma")
+	Gui_Add_TxtLabel(GuiName, "", 580, "xm", Format("Template folder found: (with {})", inifilename))
+	Gui_Add_Editbox( GuiName, "g_amtTemplateSrcDir", 580, "xm ReadOnly -E0x200", inidir)
+	Gui_Add_TxtLabel(GuiName, "g_OldwordHeader", 180, "xm y+16", "Old words from template:")
+	Gui_Add_TxtLabel(GuiName, "g_NewwordHeader", -1, "x+10 yp", "New words to apply:")
 
 	;
 	; Get all items from [WordToReplace]
 	;
 	
-	IniRead, sectlines, % inipath, % "WordToReplace"
-;	MsgBox, % ">>> " inipath " ### " sectlines
-	
-	arlinetext := StrSplit(sectlines, "`n")
-;	nlines := arlinetext.Length
+	arlinetext := dev_IniReadSection(inipath, "WordToReplace")
 	
 	for index,itemline in arlinetext
 	{
@@ -252,16 +248,15 @@ Amt_CreateGui(inipath)
 		varname_oldword := "g_amteditOldword" + index
 		varname_newword := "g_amteditNewword" + index
 		
-		Gui, AMT:Add, Edit,    xm   w180 ReadOnly -Tabstop           v%varname_oldword% , % key
-		Gui, AMT:Add, Edit, yp x+10 w180        gAmt_OnNewWordChange v%varname_newword% , % key
+		Gui_Add_Editbox(GuiName, varname_oldword, 180, "xm ReadOnly -Tabstop", key)
+		Gui_Add_Editbox(GuiName, varname_newword, 180, "yp x+10 g" . "Amt_OnNewWordChange", key)
 		
 		g_amt_arTemplateWords[index] := {"oldword":key, "newword":key, "desc":value}
 	}
 	
-	
-	Gui, AMT:Add, Text, xm y+16 w280 vg_OldguidHeader, % "Old GUIDs from template:"
-	Gui, AMT:Add, Text, x+10 yp      vg_NewguidHeader, % "New GUIDs to apply:"
-	Gui, AMT:Add, Checkbox, x+45 yp Checked vg_amtIsAutoGuid gAmt_ckbToggledAutoGenGuid, % "Auto &generate"
+	Gui_Add_TxtLabel(GuiName, "g_OldguidHeader", 280, "xm y+16", "Old GUIDs from template:")
+	Gui_Add_TxtLabel(GuiName, "g_NewguidHeader", -1, "x+10 yp", "New GUIDs to apply:")
+	Gui_Add_Checkbox(GuiName, "g_amtIsAutoGuid", -1, "x+45 yp Checked g" . "Amt_ckbToggledAutoGenGuid", "Auto &generate")
 	
 	;
 	; Get all items from [GUID]
@@ -288,25 +283,27 @@ Amt_CreateGui(inipath)
 		
 		guidnew := Amt_GenerateGuidByTime(index)
 		
-		Gui, AMT:Add, Edit,    xm   w280 ReadOnly -Tabstop         v%varname_oldword% , % key
-		Gui, AMT:Add, Edit, yp x+10 w280      gAmt_OnNewGuidChange v%varname_newword% , % guidnew
+		Gui_Add_Editbox(GuiName, varname_oldword, 280, "xm ReadOnly -Tabstop", key)
+		Gui_Add_Editbox(GuiName, varname_newword, 280, "yp x+10 g" . "Amt_OnNewGuidChange", guidnew) 
 		
 		g_amt_arTemplateGuids[index] := {"oldword":key, "newword":guidnew, "desc":value}
 	}
 	
-	Gui, AMT:Add, Text, y+16 xm, % "Apply &to:"
-	Gui, AMT:Add, Edit, xm+15 w565 vg_amtEdtOutdirUser gAmt_ResyncUI, % "" ; text fill later in Amt_ShowGui()
+	Gui_Add_TxtLabel(GuiName, "", -1, "y+16 xm", "Apply &to:")
+	Gui_Add_Editbox( GuiName, "g_amtEdtOutdirUser", 565, "xm+15 g" . "Amt_ResyncUI") ; text fill later in Amt_ShowGui()
 	
 	initcheck := g_amtIsCreateDirForFirstWord ? "Checked" : ""
-	Gui, AMT:Add, Checkbox, xm w500 %initcheck% vg_amtIsCreateDirForFirstWord gAmt_ResyncUI, % CREATE_SUBDIR_WITH_NEW_WORD
 	
-	Gui, AMT:Add, Text, xm, % "Final apply folder:"
+	Gui_Add_Checkbox(GuiName, "g_amtIsCreateDirForFirstWord", 500, initcheck " xm g" . "Amt_ResyncUI", CREATE_SUBDIR_WITH_NEW_WORD)
+
+	Gui_Add_TxtLabel(GuiName, "", -1, "xm", "Final apply folder:")
 	
 	; Now, a readonly text line that shows final apply folder, with a prefix icon showing final-folder state.
-	Gui, AMT:Add, Picture, xm w16 h16 +0x100 vg_amtIconWarnOverwrite ; 0x100: SS_NOTIFY, for hovering tooltip
-	Gui, AMT:Add, Edit, yp x+3  w562 ReadOnly -E0x200   vg_amtTxtApplyDirFinal, % "" ; -E0x200: turn off WS_EX_CLIENTEDGE, no so editbox border
-	
-	Gui, AMT:Add, Button, y+16 xm Default gAMT_BtnOK, % " &Apply "
+	Gui_Add_Picture(GuiName, "g_amtIconWarnOverwrite", 16, "xm h16 +0x100") ; 0x100: SS_NOTIFY, for hovering tooltip
+				;Gui, AMT:Add, Picture, xm w16 h16 +0x100 vg_amtIconWarnOverwrite ; 0x100: SS_NOTIFY, for hovering tooltip
+	Gui_Add_Editbox(GuiName, "g_amtTxtApplyDirFinal", 562, "yp x+3 ReadOnly -E0x200") ; -E0x200: turn off WS_EX_CLIENTEDGE, no so editbox border
+				;Gui, AMT:Add, Edit, yp x+3  w562 ReadOnly -E0x200   vg_amtTxtApplyDirFinal, % "" ; -E0x200: turn off WS_EX_CLIENTEDGE, no so editbox border
+	Gui_Add_Button(GuiName, "", -1, "y+16 xm Default g" . "AMT_BtnOK", " &Apply ")
 }
 
 
@@ -803,4 +800,4 @@ Amt_none()
 }
 
 
-; TODO: Check that the <ProjectGuid> in AmTemplate.cfg.ini really appear at least once in the folder.
+; TODO: Tooltip off and disappear
