@@ -25,19 +25,19 @@ km_init_arT3obj() ; define the function
 	o := km_dict_T3obj.PrnScrn ; o is just a reference to km_dict_T3obj.PrnScrn, not a copy
 	o.friendlyname := "PrintScreen" ; (const)
 	o.ahkname := "SC137" ; use "PrintScreen" sometimes cause weired problem, so SC-code (const)
-	o.action := "Left" ; default as left click (variable)
+	o.action := ""       ; default as original key action
 
 	km_dict_T3obj.ScroLock := {}
 	o := km_dict_T3obj.ScroLock
 	o.friendlyname := "ScrollLock"
 	o.ahkname := "SC046" ; use "ScrollLock" sometimes cause weired problem
-	o.action := "Right" ; default as right click
+	o.action := "Left" ; default as left click
 
 	km_dict_T3obj.Brk := {}
 	o := km_dict_T3obj.Brk
 	o.friendlyname := "Pause"
 	o.ahkname := "SC045" ;"Pause"
-	o.action := ""
+	o.action := "Right"  ; default as right click
 		; [2019-10-08] Memo: On Autohotkey 1.1.24.05, using "Pause" as o.ahkname will cause problem:
 		; Call dev_DefineHotkey with 1st param "$Pause", and Hotkey_Handler_global sees A_ThisHotkey as "Pause",
 		; -- the "$" prefix is lost. Using "SC045" fixes this problem(ahk bug?), and we'll se A_ThisHotkey as "$SC045".
