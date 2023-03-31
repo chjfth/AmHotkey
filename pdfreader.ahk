@@ -447,8 +447,8 @@ foxit_SwitchTo_SelectAnnotation_mode()
 	foxitHotkey_SelectTextMode()
 	Click  ; set caret position to where the mouse cursor is
 		; The above two clicks causes double-click(selecting a word under cursor) effect. .
-	Sleep, 100
-	Send {Left}{Right}
+;	Sleep, 100
+;	Send {Left}{Right}
 		; This clears the selection-highlight.
 }
 #If 
