@@ -185,6 +185,11 @@ foxitHotkey_HighlightText()
 	Send ^' 
 }
 
+foxitHotkey_TypeWriterReady()
+{
+	Send ^]
+}
+
 
 CapsLock & Left:: foxit_FocusBookmarkPane()
 foxit_FocusBookmarkPane()
@@ -423,6 +428,8 @@ NumLock:: foxitHotkey_SelectHandMode()
 
 ^w:: dev_TooltipDisableCloseWindow("Ctrl+W")
 ^q:: dev_TooltipDisableCloseWindow("Ctrl+Q")
+
+!w:: foxitHotkey_TypeWriterReady()
 
 #If ; #If foxit_IsWinActive()
 
