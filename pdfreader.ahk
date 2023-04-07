@@ -117,16 +117,40 @@ foxit_IsVersion7(wintitle="A")
 		return false
 }
 
+foxit_ActivateMainWindow()
+{
+	hwnd := dev_GetHwndByWintitle("ahk_class classFoxitReader")
+	if(!hwnd) {
+		dev_MsgBoxInfo("foxit_ActivateMainWindow() Not found: ""ahk_class classFoxitReader"".")
+		return false
+	}
+	
+	dev_WinActivateHwnd(hwnd)
+
+	return dev_WinWaitActive(hwnd, 500)
+}
+
 #If foxit_IsAnnoationPropertyWindowActive()
 
 ESC:: foxit_NoEscClosePropertiesDlgbox()
 foxit_NoEscClosePropertiesDlgbox()
 {
+	; [2023-04-07] Great job! From today on, I will NOT be afraid that
+	; striking ESC key(one or multi times) will close Foxit reader 7.1.5's 
+	; comment-Property dialog. Instead, ESC brings me back to Foxit main window.
+	
 	dev_TooltipAutoClear("ESC key no closing Foxit comment Properties Dlgbox")
+	
+	; But activate Foxit Reader main-window.
+	if(not foxit_ActivateMainWindow()) {
+		dev_TooltipAutoClear("foxit_ActivateMainWindow() failed.")
+		return
+	}
+	
+	foxit_MakeMainWindowFreeScrolling()
 }
 
-Enter::       foxit_EnterNoCloseCommentProperties()
-NumpadEnter:: foxit_EnterNoCloseCommentProperties()
+Enter:: foxit_EnterNoCloseCommentProperties()
 foxit_EnterNoCloseCommentProperties()
 {
 	dev_TooltipAutoClear("ENTER key no closing Foxit comment Properties Dlgbox")
@@ -137,6 +161,22 @@ foxit_EnterNoCloseCommentProperties()
 
 
 #If foxit_IsWinActive()
+
+ESC:: foxit_MakeMainWindowFreeScrolling()
+foxit_MakeMainWindowFreeScrolling()
+{
+	; [2023-04-07] Great job! After user press ESC key, user can then
+	; press UP/DOWN key to scroll the page. Tested on Foxit Reader 7.1.5 .
+	;
+	; I have to stimulate SelectTextMode then SelectHandMode, bcz:
+	; If currently I have a comment object(e.g. Squiggly line) selected(=highlight)
+	; UP/DOWN will not take effect. "SelectTextMode then SelectHandMode" unlocks it.
+
+	foxitHotkey_SelectTextMode()
+	Sleep, 50
+	foxitHotkey_SelectHandMode()
+}
+
 
 F8:: Send +^{Tab}
 F9:: Send ^{Tab}
@@ -246,19 +286,7 @@ foxit_ClickTextColorSelection()
 }
 
 
-NumpadEnter:: foxit_ClickColorPropertyEx() ; for easier human right-hand hotkey activating
-foxit_ClickColorPropertyEx()
-{
-	Click 
-	; -- This "Click" makes the commented area "selected"(display in inverted color), 
-	; only then, can foxit_ClickColorProperty() be effective.
-	; Memo: Before calling foxit_ClickColorPropertyEx(), user should have placed
-	; mouse cursor onto the commented area and the comment(underline, squiggles etc)
-	; has benn applied, otherwise, in vain.
-	; Tested in Foxit Reader 7.1.5 on Win7.
-
-	foxit_ClickColorProperty() 
-}
+!q:: foxit_ClickColorProperty() ; for left-hand ease
 
 F12:: foxit_ClickColorProperty()
 foxit_ClickColorProperty()
@@ -435,9 +463,11 @@ NumLock:: foxitHotkey_SelectHandMode()
 
 
 #If foxit_IsAnnoationPropertyWindowActive() or foxit_IsWinActive()
+
 NumpadDiv:: foxit_SwitchTo_SelectAnnotation_mode()
 foxit_SwitchTo_SelectAnnotation_mode()
 {
+/*
 	WinGet, Awinid, ID, ahk_class classFoxitReader
 	;WinGetClass, class, ahk_id %Awinid%
 	;WinGetTitle, title, ahk_id %Awinid%
@@ -453,11 +483,42 @@ foxit_SwitchTo_SelectAnnotation_mode()
 	Click  ; ensure Foxit main window(instead of the Property modeless dialog) become active window.
 	foxitHotkey_SelectTextMode()
 	Click  ; set caret position to where the mouse cursor is
-		; The above two clicks causes double-click(selecting a word under cursor) effect. .
+		; The above two clicks causes double-click(selecting a word under cursor) effect.
 ;	Sleep, 100
 ;	Send {Left}{Right}
 		; This clears the selection-highlight.
+*/
+
+	if(not foxit_ActivateMainWindow()) {
+		dev_TooltipAutoClear("foxit_ActivateMainWindow() failed.")
+		return
+	}
+
+	foxitHotkey_SelectTextMode()
 }
+
+NumpadEnter:: foxit_ClickColorPropertyEx() ; for easier human right-hand hotkey activating
+foxit_ClickColorPropertyEx()
+{
+	if(not foxit_ActivateMainWindow()) {
+		dev_TooltipAutoClear("foxit_ActivateMainWindow() failed.")
+		return
+	}
+	
+	foxitHotkey_SelectAnnotationMode()
+	
+	Click 
+	; -- This "Click" makes the commented area "selected"(display in inverted color), 
+	; only then, can foxit_ClickColorProperty() be effective.
+	; Memo: Before calling foxit_ClickColorPropertyEx(), user should have placed
+	; mouse cursor onto the commented area and the comment(underline, squiggles etc)
+	; has benn applied, otherwise, in vain.
+	; Tested in Foxit Reader 7.1.5 on Win7.
+	
+	foxit_ClickColorProperty() 
+}
+
+
 #If 
 
 

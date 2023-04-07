@@ -1025,15 +1025,17 @@ dev_GetActiveEXE_PathName()
 	; retarray[1] is dirpath, retarray[2] is filename .
 }
 
+
 dev_mapping_count(map)
 {
 	; Count how many keys are in a map(dict)
+	; Since AutoHotkey 1.1.29, equals map.Count() .
+	
 	count := 0
 	for key, val in map
 		count++
 	return count
 }
-
 
 
 
@@ -1084,6 +1086,12 @@ dev_IsWinclassExist(classname)
 	}
 }
 
+dev_GetHwndByWintitle(wintitle:="A")
+{
+	WinGet, Awinid, ID, % wintitle
+	return Awinid
+}
+
 dev_WinActivateHwnd(hwnd)
 {
 	WinActivate, ahk_id %hwnd%
@@ -1115,31 +1123,6 @@ dev_WinWaitActive_with_timeout(wintitle, wintext:="", timeout_sec:=1)
 	}
 }
 
-dev_WinGetClientAreaPos(WinId)
-{
-	; https://www.autohotkey.com/boards/viewtopic.php?p=257561&sid=d2327857875a0de35c9281ab43c6a868#p257561
-	
-	VarSetCapacity(RECT, 16, 0)
-	if !DllCall("user32\GetClientRect", Ptr,WinId, Ptr,&RECT)
-		return null
-	if !DllCall("user32\ClientToScreen", Ptr,WinId, Ptr,&RECT)
-		return null
-	
-	Win_Client_X := NumGet(&RECT, 0, "Int")
-	Win_Client_Y := NumGet(&RECT, 4, "Int")
-	Win_Client_W := NumGet(&RECT, 8, "Int")
-	Win_Client_H := NumGet(&RECT, 12, "Int")
-
-	r := {}
-	r.left := Win_Client_X
-	r.right := Win_Client_X + Win_Client_W
-	r.top := Win_Client_Y
-	r.bottom := Win_Client_Y + Win_Client_H
-	
-	return r
-}
-
-
 dev_GetHwndFromClassNN(classnn, wintitle)
 {
 	ControlGet, hctrl, HWND, , %classnn%, %wintitle%
@@ -1165,8 +1148,6 @@ GetActiveClassnnFromXY(x, y)
 	MouseGetPos,,,, classnn
 	return classnn
 }
-
-
 
 IsWinClassMatchRegex(regex) ; Check against active window class
 {
@@ -1201,6 +1182,31 @@ dev_IsWin7SaveAsDialog()
 	else
 		return false
 }
+
+dev_WinGetClientAreaPos(WinId)
+{
+	; https://www.autohotkey.com/boards/viewtopic.php?p=257561&sid=d2327857875a0de35c9281ab43c6a868#p257561
+	
+	VarSetCapacity(RECT, 16, 0)
+	if !DllCall("user32\GetClientRect", Ptr,WinId, Ptr,&RECT)
+		return null
+	if !DllCall("user32\ClientToScreen", Ptr,WinId, Ptr,&RECT)
+		return null
+	
+	Win_Client_X := NumGet(&RECT, 0, "Int")
+	Win_Client_Y := NumGet(&RECT, 4, "Int")
+	Win_Client_W := NumGet(&RECT, 8, "Int")
+	Win_Client_H := NumGet(&RECT, 12, "Int")
+
+	r := {}
+	r.left := Win_Client_X
+	r.right := Win_Client_X + Win_Client_W
+	r.top := Win_Client_Y
+	r.bottom := Win_Client_Y + Win_Client_H
+	
+	return r
+}
+
 
 Is_XY_in_Rect(x,y, xrect, yrect, wrect, hrect)
 {
