@@ -286,9 +286,6 @@ foxit_ClickTextColorSelection()
 }
 
 
-!q:: foxit_ClickColorProperty() ; for left-hand ease
-
-F12:: foxit_ClickColorProperty()
 foxit_ClickColorProperty()
 {
 	; This clicks the color-selection "button" inside the Comment-property floating-window.
@@ -357,94 +354,10 @@ foxit_PixelGetColor_greyscale(x, y)
 	b := "0x" . SubStr(rgb, 3, 2)
 	b += 0
 	
-	
 ;	MsgBox The color at %x% , %y% position is %rgb% , r=%r%, g=%g%, b=%b% ; debug
 	; some ref: http://www.joellipman.com/articles/automation/autohotkey/functions-to-convert-hex-2-rgb-and-vice-versa.html
 	
 	return (r+g+b)/3
-}
-
-Pause:: foxit_ClickColorProperty_in_SelectText_mode()
-foxit_ClickColorProperty_in_SelectText_mode()
-{
-	; Using shift+arrow to select some text first, then call this function to goto
-	; Highlight Property palette. (such a great trick)
-	;
-	oCaretX := A_CaretX
-	oCaretY := A_CaretY
-	movespeed := 0
-	xnudge := 5
-	ynudge := 2
-
-	;origLpixel := foxit_PixelGetColor_greyscale(oCaretX-xnudge, oCaretY+ynudge)
-	;origRpixel := foxit_PixelGetColor_greyscale(oCaretX+xnudge, oCaretY+ynudge)
-	; PixelGetColor, rgbL, % oCaretX-xnudge, % oCaretY+ynudge ; debug 
-	; PixelGetColor, rgbR, % oCaretX+xnudge, % oCaretY+ynudge ; debug
-	; tooltip, orig ( x= %oCaretX% / y= %oCaretY% ) %origLpixel% / %origRpixel% // %rgbL% / %rgbR%  ; debug
-	; MouseMove, %oCaretX%, %oCaretY% ; debug
-	; Sleep, 1000 ; debug
-	; xxx if( oCaretY<0 or (origLpixel==origRpixel and origLpixel>64) ) ; >64 implies white pixel, the bkgnd color
-	if(g_foxit_last_tool==FOXIT_TOOL_Hand or g_foxit_last_tool==FOXIT_TOOL_SelectAnnotation)
-	{
-		; If user happens to have selected the Annotation tool, we should call foxit_ClickColorProperty() directly.
-		; BUT, the check is not accurate, -- because user may select the "tools" from foxit toolbar directly.
-		; So, to make it work, use AHK hotkeys(NumpadDiv, NumLock today) to select the tools.
-		Click
-		foxit_ClickColorProperty()
-		dev_TooltipAutoClear("FOXIT_TOOL_Hand/SelectAnnotation return")
-		return
-	}
-	
-	foxitHotkey_SelectAnnotationMode()
-	
-	MouseMove, % oCaretX-xnudge, % oCaretY+ynudge, % movespeed
-	Click ; click at left side of current caret
-	LC_Lpixel := foxit_PixelGetColor_greyscale(oCaretX-xnudge, oCaretY+ynudge)
-	LC_Rpixel := foxit_PixelGetColor_greyscale(oCaretX+xnudge, oCaretY+ynudge)
-	; Sleep, 1000 ; debug
-	;
-	foxitHotkey_SelectTextMode() ; clear the invert bkgnd color caused by first click
-	MouseMove, % oCaretX+xnudge, % oCaretY+ynudge, % movespeed
-	foxitHotkey_SelectAnnotationMode()
-	Click	; click at right side of current caret
-	RC_Lpixel := foxit_PixelGetColor_greyscale(oCaretX-xnudge, oCaretY+ynudge)
-	RC_Rpixel := foxit_PixelGetColor_greyscale(oCaretX+xnudge, oCaretY+ynudge)
-	; Sleep, 1000 ; debug
-
-	; Purpose of the complexity of LC_Lpixel,LC_Rpixel,RC_Lpixel,RC_Rpixel:
-	; A smaller annotation may be nested inside a bigger annotation. So, when the caret is at
-	; the left/right edge of the inner annotation, we should strive to click operate on the 
-	; inner one. So, test-clicking left/right and check left/right pixel color will reveal 
-	; which click hits the inner annotation.
-	; * If click hits the outter annotation, xC_Lpixel and xC_Rpixel will be the same RGB.
-	; * If click hits the inner annotation, xC_Lpixel and xC_Rpixel will be different RGB, and the 
-	;   darker pixel(smaller grey-scale value) reveals inner annotation's position.
-	; -- at least this is true for Foxit Reader 7.1.5
-
-	if(LC_Lpixel==LC_Rpixel and RC_Lpixel==RC_Rpixel ) {
-		xoffset := 0
-		; dev_TooltipAutoClear("cond0", 3000)
-	}
-	else if(LC_Lpixel<LC_Rpixel or RC_Lpixel<RC_Rpixel) {
-		xoffset := -xnudge
-		; dev_TooltipAutoClear("cond1", 3000)
-	}
-	else {
-		xoffset := xnudge
-		; dev_TooltipAutoClear("cond2", 3000)
-	}
-
-	if(xoffset != xnudge)
-	{
-		foxitHotkey_SelectTextMode()
-		MouseMove, % oCaretX+xoffset , % oCaretY+ynudge , % movespeed
-		foxitHotkey_SelectAnnotationMode()
-		Click
-	}
-	foxit_ClickColorProperty()
-	
-	; When you have done color selection, it is suggested to go back to SelectText mode by calling 
-	; foxit_SwitchTo_SelectAnnotation_mode()
 }
 
 NumpadMult:: foxitHotkey_HighlightText()
@@ -467,28 +380,6 @@ NumLock:: foxitHotkey_SelectHandMode()
 NumpadDiv:: foxit_SwitchTo_SelectAnnotation_mode()
 foxit_SwitchTo_SelectAnnotation_mode()
 {
-/*
-	WinGet, Awinid, ID, ahk_class classFoxitReader
-	;WinGetClass, class, ahk_id %Awinid%
-	;WinGetTitle, title, ahk_id %Awinid%
-	WinActivate, ahk_id %Awinid%
-	WinGetPos, _x,_y,w,h, ahk_id %Awinid%
-	MouseGetPos, mousex, mousey
-	
-	; If mouse cursor is not inside foxit main window, we make it inside,
-	; and afterward we can do Click.
-	if( not (mousex>0 and mousex<w and mousey>0 and mousey<h) )
-		MouseMove, w/2, h/2
-
-	Click  ; ensure Foxit main window(instead of the Property modeless dialog) become active window.
-	foxitHotkey_SelectTextMode()
-	Click  ; set caret position to where the mouse cursor is
-		; The above two clicks causes double-click(selecting a word under cursor) effect.
-;	Sleep, 100
-;	Send {Left}{Right}
-		; This clears the selection-highlight.
-*/
-
 	if(not foxit_ActivateMainWindow()) {
 		dev_TooltipAutoClear("foxit_ActivateMainWindow() failed.")
 		return
@@ -497,9 +388,19 @@ foxit_SwitchTo_SelectAnnotation_mode()
 	foxitHotkey_SelectTextMode()
 }
 
-NumpadEnter:: foxit_ClickColorPropertyEx() ; for easier human right-hand hotkey activating
+F12:: foxit_ClickColorProperty() ; The hotkey I have used since 2015
+!q::  foxit_ClickColorProperty() ; for left-hand ease (2023.04)
+; -- Note: This foxit_ClickColorProperty(), not Ex, is used when:
+;    the comment object is selected, but the mouse is not hovering on it.
+
+NumpadEnter:: foxit_ClickColorPropertyEx() ; for easier human right-hand hotkey activating (2023.04)
+
 foxit_ClickColorPropertyEx()
 {
+	; [2023-04-07] New: User only has to hover mouse pointer on a comment object
+	; (Underline, Squiggly, Strikeout etc), then call this function to popup 
+	; color selection box. Yes, no longer need to manally click on the comment object.
+
 	if(not foxit_ActivateMainWindow()) {
 		dev_TooltipAutoClear("foxit_ActivateMainWindow() failed.")
 		return
