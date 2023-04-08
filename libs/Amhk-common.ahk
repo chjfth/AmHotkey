@@ -890,6 +890,25 @@ dev_RunCmd(cmd_and_params)
 	Run % cmd_and_params
 }
 
+dev_SendRaw(rawstr)
+{
+	; `n represent Line-feed
+	SendRaw, % rawstr
+}
+
+dev_SendTextLines(arlines)
+{
+	if(!arlines)
+		return
+
+    for index,oneline in arlines
+    {
+    	SendInput, % "{raw}" oneline
+        Send {Enter}
+    }
+}
+
+
 dev_MenuAddItem(menuname, itemtext, target)
 {
 	dev_assert(target)
@@ -900,6 +919,11 @@ dev_MenuAddItem(menuname, itemtext, target)
 	}
 
 	Menu, % menuname, add, % itemtext, % target
+}
+
+dev_MenuAddSubmenu(parent_menuname, parent_menutext, child_menuname)
+{
+	Menu, % parent_menuname, add, % parent_menutext, % ":" child_menuname
 }
 
 dev_MenuShow(menuname, x:="", y:="")

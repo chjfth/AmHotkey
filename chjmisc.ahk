@@ -22,7 +22,7 @@ global g_prettyprint_webbrowser := "" ; "D:\PortableApps\GoogleChrome-74\GoogleC
 ; -- Above two vars can be overridden by user.
 
 chj_DefineQuickSwitchApps()
-chjmisc_InitSystryMenus()
+chjmisc_InitMenus()
 Bcam4_Init()
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -219,10 +219,15 @@ get_dirfilecount(file_pattern)
 	return count
 }
 
-chjmisc_InitSystryMenus()
+chjmisc_InitMenus()
 {
 	Menu, tray, add  ; Creates a separator line.
 	SystrayMenu_Add_MuteClicking()
+	
+	winshell_AddOneSendTextMenu("venv39 - transcode"
+		, ["d:\venv\venv39a\Scripts\activate.bat"
+		, "d:\PFNoInst\chjtranscode\setenv.bat"
+		, "set PYTHONPATH=D:\github\youtube-dl"])
 }
 
 
