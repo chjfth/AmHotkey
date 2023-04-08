@@ -168,6 +168,13 @@ chj_DefineQuickSwitchApps() ; as template for actual users
 }
 
 ;############### Zhongwen IME related ################
+
+Is_PinyinJiaJia_Floatbar_Visible()
+{
+	; If PYJJ's floatbar is visible, user is typing Chinese chars, character picking pending.
+	return dev_IsWinclassExist("PYJJ_COMPUI_WND")
+}
+
 IsTypingZhongwen_PinyinJiaJia() 
 {
 	; 获知当前是否处于 拼音加加 中文输入状态。

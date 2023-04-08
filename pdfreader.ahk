@@ -172,6 +172,12 @@ foxit_MakeMainWindowFreeScrolling()
 	; If currently I have a comment object(e.g. Squiggly line) selected(=highlight)
 	; UP/DOWN will not take effect. "SelectTextMode then SelectHandMode" unlocks it.
 
+	if(Is_PinyinJiaJia_Floatbar_Visible())
+	{
+		Send, {Esc}
+		return
+	}
+
 	foxitHotkey_SelectTextMode()
 	Sleep, 50
 	foxitHotkey_SelectHandMode()
@@ -206,7 +212,7 @@ foxitHotkey_SelectAnnotationMode()
 	Send !2 ; Alt+2 
 }
 foxitHotkey_SelectHandMode()
-{ 
+{
 	g_foxit_last_tool := FOXIT_TOOL_Hand
 	Send !3 ; Alt+3
 }

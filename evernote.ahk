@@ -3388,7 +3388,7 @@ CapsLock & Right:: Evernote_ClickEditingArea()
 
 
 ESC:: ; Do not allow ESC to close snippet window
-	if(dev_IsWinclassExist("PYJJ_COMPUI_WND") || dev_IsWinclassExist("QQPinyinCompWndTSF"))
+	if(Is_PinyinJiaJia_Floatbar_Visible() || dev_IsWinclassExist("QQPinyinCompWndTSF"))
 	{
 		; If doing Pinyin JiaJia or QQ pinyin typing(a floating IME small window on screen), Esc is allowed.
 		; The window class name "PYJJ_COMPUI_WND" can be probed by checking the HWND value under mouse cursor.
