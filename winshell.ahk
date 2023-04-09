@@ -58,8 +58,13 @@ winshell_WindowOp_Init()
 return ; End of auto-execute section.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+class winshell
+{
+	static UtilityMenu := "WinshellUtilityMenu"
+}
 
-AppsKey & w:: dev_MenuShow("WinshellUtilityMenu")
+
+AppsKey & w:: dev_MenuShow(winshell.UtilityMenu)
 
 ; Ctrl+Alt+[Numpad /], click in left-hand portion of a window.
 ; Ctrl+Alt+[Numpad *], click in right-hand portion of a window.
@@ -953,16 +958,29 @@ winshell_popup_WindowOpMenu()
 
 winshell_AddOneUtilitiesMenu(menuitem_text, cmd_and_params)
 {
-	umenu := "WinshellUtilityMenu"
-	
 	fnobj := Func("dev_RunCmd").Bind(cmd_and_params)
-	dev_MenuAddItem(umenu, menuitem_text, fnobj)
+	dev_MenuAddItem(winshell.UtilityMenu, menuitem_text, fnobj)
+}
+
+winshell_AddOneSendTextMenu(menuitem_text, textlines)
+{
+	; textlines: 
+	; * may be a string, each line separated by `n 
+	; * or an array of strings, then after sending each line, a `n will be appended.
+	
+	if(dev_IsString(textlines))
+		fnobj := Func("dev_SendRaw").Bind(textlines)
+	else
+		fnobj := Func("dev_SendTextLines").Bind(textlines)
+
+	dev_MenuAddItem("menu_PasteText", menuitem_text, fnobj)
+	
+	dev_MenuAddSubmenu(winshell.UtilityMenu, "Paste text >>", "menu_PasteText")
+	
 }
 
 winshell_DefineUtilitiesMenu()
 {
-	umenu := "WinshellUtilityMenu"
-
 	winshell_AddOneUtilitiesMenu("Network/WiFi Systray Panel"
 		, dev_IsWin10() ? "explorer.exe ms-availablenetworks:" : "rundll32.exe van.dll`,RunVAN")
 
@@ -970,7 +988,7 @@ winshell_DefineUtilitiesMenu()
 	
 	winshell_AddOneUtilitiesMenu("Traditional System properties (sysdm.cpl)", "sysdm.cpl")
 	
-	dev_MenuAddItem(umenu, "Edit Env-vars dialogbox", "winshell_BringUpEnvvarEditor")
+	dev_MenuAddItem(winshell.UtilityMenu, "Edit Env-vars dialogbox", "winshell_BringUpEnvvarEditor")
 	
 	winshell_AddOneUtilitiesMenu("Sound property", "control mmsys.cpl sounds")
 	
