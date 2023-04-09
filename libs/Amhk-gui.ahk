@@ -7,13 +7,16 @@ class AmhkGui ; To store global vars
 	static dictGuiAutoResize := {}
 }
 
-Gui_AssociateHwndVarname(GuiName, HwndVarname)
-{
-	dev_assert(GuiName)
 
-	Gui, % Format("{}:+Hwnd{}", GuiName, HwndVarname)
+Gui_New(GuiName)
+{
+	Gui, % (GuiName ? GuiName ":" : "") . "New"
 }
 
+Gui_Hide(GuiName)
+{
+	Gui, % (GuiName ? GuiName ":" : "") . "Hide"
+}
 
 Gui_Show(GuiName, options="", title:="AHKGUI")
 {
@@ -24,13 +27,11 @@ Gui_Show(GuiName, options="", title:="AHKGUI")
 	Gui, % cmd, % options, % title
 }
 
-Gui_Hide(GuiName)
+Gui_AssociateHwndVarname(GuiName, HwndVarname)
 {
-	cmd := "Hide"
-	if(GuiName)
-		cmd := Format("{}:{}", GuiName, cmd)
+	dev_assert(GuiName)
 
-	Gui, % cmd
+	Gui, % Format("{}:+Hwnd{}", GuiName, HwndVarname)
 }
 
 Gui_ChangeOpt(GuiName, optstr)
@@ -288,6 +289,15 @@ GuiControl_ComboboxGetText(GuiName, CtrlVarname)
 	;pending, need to query whether it has 'AltSubmit' option .
 }
 
+GuiControl_SetFocus(GuiName, CtrlVarname)
+{
+	dev_assert(Gui_IsValidVar(CtrlVarname))
+	cmd := "Focus"
+	if(GuiName)
+		cmd := Format("{}:{}", GuiName, cmd)
+
+	GuiControl, % cmd, % CtrlVarname
+}
 
 dev_GuiAutoResize(GuiName, rsdict, gui_nowwidth, gui_nowheight, force_redraw:=false, qmargin:="")
 {

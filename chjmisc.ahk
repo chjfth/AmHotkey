@@ -29,6 +29,7 @@ Bcam4_Init()
 return ; End of auto-execute section.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+#Include %A_LineFile%\..\libs\AmTrimPath.ahk
 
 ;==============================================================================
 ; Some hotstring auto-replace
@@ -231,10 +232,13 @@ chjmisc_InitMenus()
 	Menu, tray, add  ; Creates a separator line.
 	SystrayMenu_Add_MuteClicking()
 	
+	winshell_AddOneAhkFunctionMenu("AHK Trim path utility", "AmTrimPath_ShowGui")
+	
 	winshell_AddOneSendTextMenu("venv39 - transcode"
 		, ["d:\venv\venv39a\Scripts\activate.bat"
 		, "d:\PFNoInst\chjtranscode\setenv.bat"
 		, "set PYTHONPATH=D:\github\youtube-dl"])
+	
 }
 
 
@@ -543,125 +547,6 @@ Everything_SmartUpDown(keyname)
 
 #IfWinActive ; ahk_class EVERYTHING
 
-
-
-
-;;;;;;;;; Some commonly used path string operation ;;;;;;;;;;
-+^':: DlgManipulatePathString() ; Ctrl+Shift+'
-DlgManipulatePathString()
-{
-	g_clipboard_cache := Clipboard
-	If not g_clipboard_cache {
-		MsgBox, No text in clipboard, nothing to do.
-		return
-	}
-	
-	; Trim the extra long(if so) clipboard content within around 1024 chars, and 10 lines.
-	; because I will prompt them on an input dialog, so avoiding a giant dialog.
-	max_preview_len = 1024
-	if StrLen(g_clipboard_cache)<=max_preview_len
-		clip_preview := g_clipboard_cache
-	else 
-	{
-		clip_preview := RegExReplace(g_clipboard_cache, "s)^(.{1," . max_preview_len . "})(.*)", "$1")
-			; ``s)`` options means DOTALL, dot matches \n
-		clip_preview := RegExReplace(clip_preview, "s)(([^\n]*\n){1,10})(.*)", "$1")
-		if (clip_preview!=g_clipboard_cache)
-			clip_preview .= "..."
-	}
-	
-	static OpNums
-	static ClipboardPreview
-	Gui, pathop:New ; This New is required, otherwise, a second call of this will assert error
-	Gui, pathop:Font, s9 cBlack, Tahoma
-	Gui, pathop:Add, Text, , % "剪贴板中的文字共 " . StrLen(g_clipboard_cache) . " 个字符 :"
-	Gui, pathop:Font, cBlue
-	Gui, pathop:Add, Text, , %clip_preview%
-	Gui, pathop:Font, s8 cBlack
-	Gui, pathop:Add, Text, ,
-(
-选择如何转换剪贴板中的文字:
-
-1. 两侧添加双引号 "..."
-2. 去除两侧双引号
-
-3. 使用正斜杠 / 作为路径分隔符
-4. 使用反斜杠 \ 作为路径分隔符
-5. 使用双反斜杠 \\ 作为路径分隔符
-
-n. 使用单个 \n 作为换行符
-
-输入范例 "1" "2" "3" "14" "15" "23n"
-)
-	Gui, pathop:Add, Edit, w50 vOpNums, %g_pathop_last_numop%
-	Gui, pathop:Add, Button, default, OK  ; The label ButtonOK (if it exists) will be run when the button is pressed.
-	Gui, pathop:Show, , Autohotkey prompt
-	return
-
-pathopButtonOK:
-	Gui, pathop:Submit ; OpNums updated
-	
-	LFonly := InStr(OpNums, "n") ? true : false
-	
-	rtest12 := RegExReplace(OpNums, "[^12]", "")
-	if StrLen(rtest12)>1 {
-		MsgBox, % "输入错误！只能指定 1 2 其中之一。"
-		return
-	}
-	rtest345 := RegExReplace(OpNums, "[^345]", "")
-	if StrLen(rtest345)>1 {
-		MsgBox, % "输入错误！只能指定 3 4 5 其中之一。"
-		return
-	}
-	
-	if (rtest12=="" && rtest345=="") { ; need brackets here
-		MsgBox, % "没有提供有效输入。"
-		return
-	}
-	
-	g_pathop_last_numop := OpNums
-	g_clipboard_cache := RTrim(g_clipboard_cache, "`n") 
-		; I need this trick here: trim trailing \n , so that a clipboard content like "abc\n" will loop only once.
-	new_clipboard := ""
-	Loop, parse, g_clipboard_cache, `n , `r
-	{
-		newline := A_LoopField
-		ahk_dbquote = "
-		ptn_quoted := "^" . ahk_dbquote . "(.*)" . ahk_dbquote . "$"
-		;MsgBox, ptn_quoted=%ptn_quoted%
-		if (rtest12=="1") {
-			if RegExMatch(newline, ptn_quoted)==0 ; if not already quoted
-				newline := ahk_dbquote . newline . ahk_dbquote
-		}
-		else if (rtest12=="2") {
-			newline := RegExReplace(newline, ptn_quoted, "$1")
-		}
-		
-		; Sample input:
-		; X:\a\\b/c//d\\\e///f.txt
-		if (rtest345=="3") { ; to /
-			StringReplace, newline, newline, \ , / , All
-			newline := RegExReplace(newline, "/+", "/") ; remove duplicate
-		}
-		else if (rtest345=="4"||rtest345=="5") { ; to \
-			StringReplace, newline, newline, / , \ , All
-			newline := RegExReplace(newline, "\\+", "\") ; remove duplicate
-			if (rtest345=="5") {
-				StringReplace, newline, newline, \ , \\ , All ; doubles \
-			}
-		}
-		
-		new_clipboard .= newline . (LFonly ? "`n" : "`r`n")
-	}
-	
-	Clipboard := new_clipboard
-	
-	; fall down to Gui,Destroy
-pathopGuiClose:
-pathopGuiEscape:
-	Gui, pathop:Destroy
-	return
-}
 
 
 ;==============================================================================

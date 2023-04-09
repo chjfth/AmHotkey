@@ -973,10 +973,20 @@ winshell_AddOneSendTextMenu(menuitem_text, textlines)
 	else
 		fnobj := Func("dev_SendTextLines").Bind(textlines)
 
-	dev_MenuAddItem("menu_PasteText", menuitem_text, fnobj)
+	dev_MenuAddItem("submenu_PasteText", menuitem_text, fnobj)
 	
-	dev_MenuAddSubmenu(winshell.UtilityMenu, "Paste text >>", "menu_PasteText")
+	dev_MenuAddSubmenu(winshell.UtilityMenu, "Paste text >>", "submenu_PasteText")
 	
+}
+
+winshell_AddOneAhkFunctionMenu(menuitem_text, funcname)
+{
+	dev_assert(StrLen(funcname)>0)
+
+	fnobj := Func(funcname)
+	dev_MenuAddItem("submenu_AhkFuncs", menuitem_text "`t" funcname, fnobj)
+	
+	dev_MenuAddSubmenu(winshell.UtilityMenu, "AHK Functions >>", "submenu_AhkFuncs")
 }
 
 winshell_DefineUtilitiesMenu()
