@@ -1,5 +1,6 @@
 #Include %A_LineFile%\..\Amhk-common.ahk
 #Include %A_LineFile%\..\Amhk-gui.ahk
+#Include %A_LineFile%\..\ClipboardMonitor.ahk
 
 ; API: AmTrimPath_ShowGui()
 
