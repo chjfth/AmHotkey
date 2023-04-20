@@ -346,7 +346,7 @@ dev_GetParentDir(path)
 dev_IsDiskFile(filepath)
 {
 	attr := FileExist(filepath)
-	if( InStr(attr, "A") || InStr(attr, "N") ) ; but never see "N"
+	if( InStr(attr, "A") || InStr(attr, "N") ) ; but never see "N" yet
 		return true
 	else
 		return false
@@ -560,6 +560,12 @@ dev_IsSameFiletime(file1, file2)
 		return true
 	else
 		return false
+}
+
+dev_FileGetTime(filepath, whichtime:="M")
+{
+	FileGetTime, outvar, % filepath, % whichtime
+	return outvar ; 
 }
 
 dev_FileGetSize(filepath)
@@ -889,6 +895,75 @@ dev_RunCmd(cmd_and_params)
 {
 	Run % cmd_and_params
 }
+
+dev_RunWaitOne(command, is_hidewindow:=false, working_dir:="") 
+{
+	dret := dev_RunWaitOneEx(command, is_hidewindow, working_dir)
+	if(dret.exitcode==0)
+		return dret.output
+	else {
+			return Format("In dev_RunWaitOne(), the following shell command failed:`n`n"
+			. "{}`n`n"
+			. "Console output is:`n`n"
+			. "{}"
+		 	, command, dret.output)
+	}
+}
+
+dev_RunWaitOneEx(command, is_hidewindow:=false, working_dir:="") 
+{
+	; Return a dict like: { "exitcode" : 0, "output" : "stdout+stderr" }
+
+	if(not is_hidewindow)
+	{
+		; // From Autohotkey chm doc
+		; // Problem: if StdOut contains Unicode, they may be swallowed.
+		;
+		; WshShell object: http://msdn.microsoft.com/en-us/library/aew9yb99
+		shell := ComObjCreate("WScript.Shell")
+		; Execute a single command via cmd.exe
+		exec := shell.Exec(ComSpec " /C " command)
+		
+		; Read and return the command's output
+		stdout := exec.StdOut.ReadAll()
+		stderr := exec.StdErr.ReadAll()
+
+		return { "exitcode" : exec.ExitCode , "output" : stdout . stderr }
+		
+		; [2023-04-20] Seems that we can never see stdout,stderr text on the popped out
+		; CMD console, even if we do not call exec.StdOut.ReadAll() and exec.StdErr.ReadAll().
+	}
+	else
+	{
+		; Redirect the new process's stdout to a file then retrieve it.
+		; I have to do this because WScript.Shell.Exec does not support "hide window" param,
+		; while Autohotkey's Run allows "hiding".
+		
+		threadid := dev_GetWin32ThreadId()
+		
+		dir_localapp := dev_EnvGet("LocalAppData")
+		tempfile := Format(dir_localapp . "\temp\AHK-dev_RunWaitOne-tid{}.txt", threadid)
+		run_string = %ComSpec% /c @%command% > %tempfile% 2>&1
+		; -- We need an @, to avoid 'CMD /C' stripping user command's starting-ending-double-quote-pair
+
+		try {
+			RunWait, %run_string%, %working_dir%, Hide UseErrorLevel
+			if(ErrorLevel=="ERROR")
+				exitcode := 1
+			else
+				exitcode := ErrorLevel
+		} catch e {
+			Dbgwin_Output("dev_RunWaitOneEx() catch RunWait error!") ; debug
+			exitcode := 1
+		}
+		
+		cmd_output := dev_FileRead(tempfile)
+		
+		return { "exitcode" : exitcode , "output" : cmd_output }
+	}
+}
+
+
 
 dev_SendRaw(rawstr)
 {

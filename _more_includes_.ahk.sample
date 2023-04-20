@@ -32,6 +32,8 @@
 ; #Include chjmisc.ahk
 ; #Include chjmisc2.ahk
 
+; #Include vmware-control.ahk
+
 ; #Include AmTemplates.ahk
 ; #Include menus.ahk
 

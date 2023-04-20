@@ -1889,38 +1889,6 @@ CharIsAlphaNum(c)
 }
 
 
-dev_RunWaitOne(command, is_hidewindow:=false, working_dir:="") 
-{
-	if(not is_hidewindow)
-	{
-		; // From Autohotkey chm doc
-		; // Problem: if StdOut contains Unicode, they may be swallowed.
-		;
-		; WshShell object: http://msdn.microsoft.com/en-us/library/aew9yb99
-		shell := ComObjCreate("WScript.Shell")
-		; Execute a single command via cmd.exe
-		exec := shell.Exec(ComSpec " /C " command)
-		; Read and return the command's output
-		return exec.StdOut.ReadAll()
-	}
-	else
-	{
-		; Redirect the new process's stdout to a file then retrieve it.
-		; I have to do this because WScript.Shell.Exec does not support "hide window" param,
-		; while Autohotkey's Run allows "hiding".
-		dir_localapp := dev_EnvGet("LocalAppData")
-		tempfile := dir_localapp . "\temp\dev_RunWaitOne.txt"
-		run_string = %ComSpec% /c %command% > %tempfile%
-		try {
-			RunWait, %run_string%, %working_dir%, Hide
-		} catch e {
-			return "In dev_RunWaitOne(), the following command failed:`n" . run_string
-		}
-		FileRead, cmd_output, %tempfile%
-		return cmd_output
-	}
-}
-
 dev_IsClassnnFocused_regex(regex)
 {
 	ControlGetFocus, focusNN, A
