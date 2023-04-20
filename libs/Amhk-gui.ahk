@@ -20,6 +20,9 @@ Gui_Hide(GuiName)
 
 Gui_Show(GuiName, options="", title:="AHKGUI")
 {
+	; options:
+	; W400 H300 Center
+
 	cmd := "Show"
 	if(GuiName)
 		cmd := Format("{}:{}", GuiName, cmd)
@@ -283,6 +286,22 @@ GuiControl_SetPos(GuiName, CtrlVarname, x:=-1, y:=-1, w:=-1, h:=-1, force_redraw
 		, h==-1 ? r.h : h)
 }
 
+
+GuiControl_ComboboxAddItems(GuiName, CtrlVarname, ar_strings)
+{
+	if(dev_IsString(ar_strings))
+	{
+		; ar_string should be | separated string
+		value := ar_strings 
+	}
+	else
+	{
+		; ar_string should be an array of strings
+		value := dev_JoinStrings(ar_strings, "|")
+	}
+	
+	GuiControl_SetText(GuiName, CtrlVarname, value)
+}
 
 GuiControl_ComboboxGetText(GuiName, CtrlVarname)
 {

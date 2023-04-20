@@ -998,6 +998,12 @@ dev_MenuAddItem(menuname, itemtext, target)
 
 dev_MenuAddSubmenu(parent_menuname, parent_menutext, child_menuname)
 {
+	; If child_menuname is "g_more_operations", the child menu should have been 
+	; created with:
+	; 	dev_MenuAddItem("g_more_operations", "more info one", "MoreTargetOne")
+	; 	dev_MenuAddItem("g_more_operations", "more info two", "MoreTargetTwo")
+	;	...
+	
 	Menu, % parent_menuname, add, % parent_menutext, % ":" child_menuname
 }
 

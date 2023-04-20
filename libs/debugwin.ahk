@@ -14,7 +14,16 @@ Dbgwin_Output_fg("Your msg") ; Force debug-window bring to front.
 Dbgwin_ShowGui(true)
 	; Show the Gui, in case it was hidden(closed by user).
 	; Parameter: `true` to bring it to front; `false` to keep it background(not have keyboard focus).
+
+Dbgvar_ShowGui()
+	; Pop up the dialog UI that allows user to change AHK global vars on the fly.
+
+Dbgvar_AddVarname(uservar, desc:="")
+	; Module author use this function to add varnames to Dbgvar's UI so that user knows they exist.
+
 */
+
+; [[ Dbgwin ]]
 
 global g_dbgwinHwnd
 
@@ -23,12 +32,18 @@ global gu_dbgwinHint
 global gu_dbgwinBtnClear
 global gu_dbgwinMLE
 
-
 global g_dbgwinMsgCount := 0
 
-;Init_DebugwinEnv()
-; -- This function's body is defined after the first "return",
-;    but we have to call it before the first "return".
+; [[ Dbgvar ]]
+
+global g_dbgvarHwnd
+
+global gu_dbgvarCbxVarSelect
+global gu_dbgvarMleDesc
+global gu_dbgvarEdtNewValue
+global gu_dbgvarTxtNewValue
+global gu_dbgvarSetBtn
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; If you define any global variables, you MUST define them ABOVE this line.
@@ -37,7 +52,7 @@ global g_dbgwinMsgCount := 0
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
-class Dbgwin 
+class Dbgwin ; as global var container
 {
 	; We define Dbgwin class, in order to define these "global constant"
 	; without the help of AUTOEXEC_debugwin label.
@@ -46,10 +61,6 @@ class Dbgwin
 	static IniSection  := "cfg"
 }
 
-Init_DebugwinEnv()
-{
-	; Write your initialization statements here.
-}
 
 Dbgwin_Output_fg(msg)
 {
@@ -232,3 +243,133 @@ Dbgwin_evtClear()
 
 	Dbgwin_SaveWindowPos()
 }
+
+
+; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; 
+; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; 
+; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; 
+
+; Dbgvar : a GUI that allow user to change global vars on the fly.
+
+class Dbgvar ; as global var container
+{
+	static GuiName := "Dbgvar"
+	static GuiWidth := 400 ; px
+	
+	static dictVars := {}
+}
+
+Dbgvar_CreateGui()
+{
+	GuiName := Dbgvar.GuiName
+	guiwidth := 400
+	
+	Gui_New(GuiName)
+	Gui_AssociateHwndVarname(GuiName, "g_dbgvarHwnd")
+	Gui_ChangeOpt(GuiName, "+Resize +MinSize")
+	
+	Gui_Switch_Font( GuiName, 9, "", "Tahoma")
+	
+	Gui_Add_TxtLabel(GuiName, "", -1, "xm", "Change global vars on the fly.")
+	Gui_Add_TxtLabel(GuiName, "", -1, "xm", "Var name:")
+	
+	Gui_Add_Combobox(GuiName, "gu_dbgvarCbxVarSelect", 300, "xm g" "Dbgvar_SyncUI")
+	Gui_Add_Editbox( GuiName, "gu_dbgvarMleDesc", Dbgvar.GuiWidth-20, "xm-2 readonly r3 -E0x200")
+	
+	Gui_Add_TxtLabel(GuiName, "gu_dbgvarTxtNewValue", -1, "xm", "New value:")
+	Gui_Add_Editbox( GuiName, "gu_dbgvarEdtNewValue", Dbgvar.GuiWidth-20, "")
+
+	Gui_Add_Button(  GuiName, "gu_dbgvarSetBtn", -1, "Default g" "Dbgvar_SetValueBtn", "&Set new value")
+	
+	varlist := []
+	for varname,desc in Dbgvar.dictVars
+	{
+		varlist.Push(varname)
+	}
+	GuiControl_ComboboxAddItems(GuiName, "gu_dbgvarCbxVarSelect", varlist) ; already sorted by AHKGUI
+}
+
+Dbgvar_ShowGui()
+{
+	GuiName := Dbgvar.GuiName
+
+	if(!g_dbgvarHwnd) {
+		Dbgvar_CreateGui() ; destroy old and create new
+	}
+	
+	Gui_Show(GuiName, Format("w{} center", Dbgvar.GuiWidth), "AHK change global var")
+	
+}
+
+Dbgvar_HideGui()
+{
+	GuiName := Dbgvar.GuiName
+
+	Gui_Hide(GuiName)
+}
+
+DbgvarGuiClose()
+{
+	Dbgvar_HideGui()
+}
+
+DbgvarGuiEscape()
+{
+	Dbgvar_HideGui()
+}
+
+Dbgvar_SetValue()
+{
+	GuiName := Dbgvar.GuiName
+
+	uservar := GuiControl_GetText(GuiName, "gu_dbgvarCbxVarSelect")
+	uservalue := GuiControl_GetText(GuiName, "gu_dbgvarEdtNewValue")
+	
+	GuiControl_SetText(GuiName, "gu_dbgvarMleDesc", Dbgvar.dictVars[uservar])
+	
+	%uservar% := uservalue
+}
+
+Dbgvar_SetValueBtn()
+{
+	Dbgvar_SetValue()
+	
+	Dbgvar_HideGui()
+}
+
+DbgvarGuiSize()
+{
+	rsdict := {}
+    rsdict.gu_dbgvarMleDesc := "0,0,100,100" ; Left/Top/Right/Bottom pct
+    rsdict.gu_dbgvarEdtNewValue := "0,100,100,100"
+    rsdict.gu_dbgvarTxtNewValue := "0,100,0,100"
+    rsdict.gu_dbgvarSetBtn := "0,100,0,100"
+    dev_GuiAutoResize(Dbgvar.GuiName, rsdict, A_GuiWidth, A_GuiHeight, true)
+}
+
+
+
+;Dbgvar_evtCbxVarSelect()
+;{
+;	Dbgvar_SyncUI()
+;}
+;
+
+Dbgvar_SyncUI()
+{
+	GuiName := Dbgvar.GuiName
+
+	uservar := GuiControl_GetText(GuiName, "gu_dbgvarCbxVarSelect")
+	
+	GuiControl_SetText(GuiName, "gu_dbgvarMleDesc", Dbgvar.dictVars[uservar])
+	
+	uservalue := %uservar%
+	GuiControl_SetText(GuiName, "gu_dbgvarEdtNewValue", uservalue)
+}
+
+
+Dbgvar_AddVarname(uservar, desc:="")
+{
+	Dbgvar.dictVars[uservar] := desc
+}
+

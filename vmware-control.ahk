@@ -108,7 +108,7 @@ vmctl_timer_MonitorPausedVMs(byref errmsg:="")
 				msg := "Start suspending VM: " vmxpath
 				dev_TooltipAutoClear(msg)
 				
-				Dbgwin_Output(msg) ; debug
+;				Dbgwin_Output(msg) ; debug
 				
 				vmctl_SuspendVmx(vmxpath)
 

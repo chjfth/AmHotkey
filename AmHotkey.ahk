@@ -122,6 +122,8 @@ AmDoInit()
 	; [2022-11-02] Move this to chjmisc.ahk, other people may not need it.
 ;	Menu, tray, add  ; Creates a separator line.
 ;	SystrayMenu_Add_MuteClicking()
+
+	Dbgvar_AddVarname("g_isdbg_DefineHotkeyFlex", "Debug fxhk_DefineHotkey...()")
 }
 
 ; ########## Some debugging hotkeys first ##########
@@ -3246,7 +3248,7 @@ dev_TooltipDisableCloseWindow(msg_prefix)
 	dev_TooltipAutoClear(msg_prefix . " closing window/tab is disabled by AmHotkey.")
 }
 
-
+/* 
 dev_DbgAskAHKVar_OnOff()
 {
 	static s_varname := ""
@@ -3270,7 +3272,7 @@ dev_DbgAskAHKVar_OnOff()
 
 	Dbgwin_Output(Format("{} = {}", s_varname, %s_varname%))
 }
-
+*/
 
 ;==============================================================================
 #Include *i _more_includes_.ahk ;This should be the final statement of this ahk

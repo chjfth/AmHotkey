@@ -267,6 +267,8 @@ Clipmon_CreateMonitor(fnobj)
 	dev_assert(g_clipmon) ; should have been assigned inside CClipboardMonitor's __New()
 	
 	clientid := g_clipmon.AddClient(fnobj)
+	
+	Dbgvar_AddVarname("g_clipmonSeeDebugMsg", "Debug Clipboard monitor: 0/1")
 
 	return clientid
 }
