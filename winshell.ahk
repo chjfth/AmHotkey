@@ -938,22 +938,22 @@ winshell_WindowOp_Init()
 	;
 
 	; Define submenu item list:
-	Menu, winshell_menuvar_WindowOp, add, %winshell_menutext_CheckActiveWindowInfo%, dev_CheckActiveWindowInfo
+	dev_MenuAddItem("winshell_menutext_WindowOp", "Check active window info", "dev_CheckActiveWindowInfo")
 	;
 	fn := Func("winshell_SetDwmNcRendering_ActiveWindow").Bind(false)
-	Menu, winshell_menuvar_WindowOp, add, %winshell_menutext_ActiveWindowDwmOff%, %fn%
+	dev_MenuAddItem("winshell_menutext_WindowOp", "Active-window DWM rendering off", fn)
 	;
 	fn := Func("winshell_SetDwmNcRendering_ActiveWindow").Bind(true)
-	Menu, winshell_menuvar_WindowOp, add, %winshell_menutext_ActiveWindowDwmOn%, %fn%
+	dev_MenuAddItem("winshell_menutext_WindowOp", "Active-window DWM rendering on", fn)
 
 	; Finally, Attach submenu to main menu
-	Menu, tray, add, %winshell_menutext_WindowOp%, :winshell_menuvar_WindowOp
+	dev_MenuAddSubmenu("TRAY", winshell_menutext_WindowOp, "winshell_menutext_WindowOp")
 	
 	winshell_DefineUtilitiesMenu()
 }
 winshell_popup_WindowOpMenu()
 {
-	Menu, winshell_menuvar_WindowOp, Show
+	Menu, winshell_menutext_WindowOp, Show
 }
 
 winshell_AddOneUtilitiesMenu(menuitem_text, cmd_and_params)

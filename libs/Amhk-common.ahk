@@ -986,6 +986,8 @@ dev_SendTextLines(arlines)
 
 dev_MenuAddItem(menuname, itemtext, target)
 {
+	; To add a menu-item to AHK's systry popup, use menuname="TRAY"
+
 	dev_assert(target)
 
 	if(dev_IsString(target) && !StrIsStartsWith(target, ":")) ; ":" means a submenu name
@@ -996,7 +998,7 @@ dev_MenuAddItem(menuname, itemtext, target)
 	Menu, % menuname, add, % itemtext, % target
 }
 
-dev_MenuAddSubmenu(parent_menuname, parent_menutext, child_menuname)
+dev_MenuAddSubmenu(parent_menuname, parent_itemtext, child_menuname)
 {
 	; If child_menuname is "g_more_operations", the child menu should have been 
 	; created with:
@@ -1004,7 +1006,7 @@ dev_MenuAddSubmenu(parent_menuname, parent_menutext, child_menuname)
 	; 	dev_MenuAddItem("g_more_operations", "more info two", "MoreTargetTwo")
 	;	...
 	
-	Menu, % parent_menuname, add, % parent_menutext, % ":" child_menuname
+	Menu, % parent_menuname, add, % parent_itemtext, % ":" child_menuname
 }
 
 dev_MenuShow(menuname, x:="", y:="")
