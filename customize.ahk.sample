@@ -1,21 +1,19 @@
 ﻿; Note: If this file contains non-ASCII characters, you must saved it in UTF8 with BOM,
 ; in order for the Unicode characters to be recognized by Autohotkey engine.
-
-AUTOEXEC_customize: ; Workaround for Autohotkey's ugly auto-exec feature. Don't delete.
-	; When duplicating this file, you MUST: Change the above ahk label to a unique one, 
-	; such as AUTOEXEC_foobar_ahk.
+;
+AUTOEXEC_customize: 
+	; Workaround for Autohotkey's ugly auto-exec feature. Don't delete above line.
+	; IMPORTANT: It must be the *first* non-comment line so that 
+	; Amhotkey_ScanAndLoadAutoexecLabels() can recognize this file to be a "module".
+	; Even /* ... */ comment block can not be used above.
+	;
+	; After duplicating this file, you MUST change the above AUTOEXEC_xxx label to 
+	; be a unique one, such as AUTOEXEC_foobar. Otherwise, AHK engine will assert 
+	; error on loading AHK source file.
 
 ; Something to place here:
 ; * Customize these global vars according to your running machine:
 ; * Call the run-once functions.
-
-; Something NOT to place here:
-; * Hotkey definition, like 
-;		#!t:: DoSomething()
-; * Function definition.
-;
-; If you violate this "NOT" rule, .e.g, you define foo(){...} , then all `global`s 
-; after this foo will be ignored.
 
 global g_myglobal1 := 123
 
@@ -23,8 +21,14 @@ Init_MyCustomizedEnv()
 ; -- This function's body is defined after the first "return",
 ;    but we have to call it *before* the first "return".
 
-;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
-; If you define any global variables, you MUST define them ABOVE this line.
+; Something NOT to place here:
+; * Hotkey definition, like 
+;		#!t:: DoSomething()
+; * Function definition.
+;
+; If you violate that "NOT" rule, .e.g, you define foo(){...} here, then all 
+; `global` vars above will receive *empty* initial value.
+
 ;
 return ; The first return in this ahk. It marks the End of auto-execute section.
 ;

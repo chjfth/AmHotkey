@@ -310,10 +310,11 @@ GetFirstNoncommentLine(ahkfilepath)
 amhk_AddAutoExecAhk(arAutoexecLabels, ahkdir, filename)
 {
 	static s_dictAutoexecExistingFname := {} ; for checking duplicate
+	static s_dictAutoexecExistingLabel := {} ; for checking duplicate
 
 	ahkfilepath := ahkdir . "\" . filename
 
-	; check duplicate
+	; check and skip duplicate
 	if(s_dictAutoexecExistingFname.HasKey(ahkfilepath)) {
 		return
 	}
@@ -324,9 +325,24 @@ amhk_AddAutoExecAhk(arAutoexecLabels, ahkdir, filename)
 	foundpos := RegExMatch(chkline, "^(AUTOEXEC_[a-zA-Z0-9_.]+)\:", subpat)
 	if( foundpos>0 )
 	{
-		filepath := dev_StripPrefix(ahkfilepath, A_ScriptDir "\")
-		arAutoexecLabels.Insert( {"filename":filepath , "label":subpat1} )
-		s_dictAutoexecExistingFname[ahkfilepath] := "yes"
+		autoexec_label := subpat1
+
+		if(s_dictAutoexecExistingLabel.HasKey(autoexec_label))
+		{
+			; [2023-04-20] As of Autohotkey 1.1.32, this code will not have a chance to execute,
+			; bcz AHK engine will detect "Duplicate label" error and refuse to load the whole AHK.
+			dev_MsgBoxError(Format("User AHK error detected! The same label '{}' is defined in two ahk files:`n`n"
+				. "{}`n"
+				. "{}`n"
+				, autoexec_label, s_dictAutoexecExistingLabel[autoexec_label], ahkfilepath))
+		}
+
+		filename := dev_StripPrefix(ahkfilepath, A_ScriptDir "\")
+		arAutoexecLabels.Insert( {"filename":filename , "label":autoexec_label} )
+		s_dictAutoexecExistingFname[ahkfilepath] := autoexec_label
+		
+		s_dictAutoexecExistingLabel[autoexec_label] := ahkfilepath
+;		Dbgwin_Output(autoexec_label " => " ahkfilepath)
 	}
 }
 
@@ -383,10 +399,10 @@ amhk_ScanAhkFilesForAutoexecLabels(arAutoexecLabels)
 		}
 	}
 	
-	; If user has his own startup Script(instead of AmHotkey.ahk), we scan and load
-	; ahk modules there.
+	; If user has his own startup Script(known via A_ScriptDir, instead of AmHotkey.ahk), 
+	; we scan and load ahk modules there.
 	;
-	if(dev_StringLower(A_ScriptDir) != dev_StringLower(g_AmHotkeyDirpath))
+	if(not dev_StrIsEqualI(A_ScriptDir, g_AmHotkeyDirpath))
 	{
 		Loop, Files, %A_ScriptDir%\*.ahk, R
 		{
@@ -398,7 +414,7 @@ amhk_ScanAhkFilesForAutoexecLabels(arAutoexecLabels)
 	}
 
 	amhk_AddAutoExecAhk(arAutoexecLabels, A_ScriptDir, gc_customize_ahk)
-	; -- Load this at the final stage, because it is intendeded to override some 
+	; -- Load this at the final stage, because it is intended to override some 
 	;    global vars defined by other modules.
 	
 	; [2022-12-28] Ahk2Exe support code:
