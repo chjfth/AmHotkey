@@ -290,7 +290,7 @@ Amdbg_CreateGui()
 	Gui_Switch_Font( GuiName, 9, "", "Tahoma")
 	
 	Gui_Add_TxtLabel(GuiName, "", -1, "xm", "Configure debug message UI output levels.")
-	Gui_Add_TxtLabel(GuiName, "", -1, "xm", "AmDbg client id:")
+	Gui_Add_TxtLabel(GuiName, "", -1, "xm", "Debug-client id:")
 	
 	Gui_Add_Combobox(GuiName, "gu_amdbgCbxClientId", 320, "xm g" "Amdbg_SyncUI_nocopy")
 	Gui_Add_Button(  GuiName, "gu_amdbgBtnRefresh", 60, "yp-1 x+5 g" "Amdbg_RefreshClients", "&Refresh")

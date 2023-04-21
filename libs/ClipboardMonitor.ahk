@@ -238,7 +238,7 @@ Clipmon_WM_DRAWCLIPBOARD(wParam, lParam, msg, hwnd)
 	g_clipmon.Do_WM_DRAWCLIPBOARD(wParam, lParam, msg, hwnd)
 }
 
-Clipmon_CreateMonitor(fnobj, client_name)
+Clipmon_CreateMonitor(fnobj, client_name:="default-client-name")
 {
 	; fnobj can be either a function-object or just a function-name string.
 

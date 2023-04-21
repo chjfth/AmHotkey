@@ -950,7 +950,7 @@ winshell_WindowOp_Init()
 	dev_MenuAddSubmenu("TRAY", winshell_menutext_WindowOp, "winshell_menutext_WindowOp")
 	
 	
-	dev_MenuAddItem("TRAY", "Change Debug vars UI", "Amdbg_ShowGui")
+	dev_MenuAddItem("TRAY", "Configure Debug-clients", "Amdbg_ShowGui")
 	
 	; ...
 	
