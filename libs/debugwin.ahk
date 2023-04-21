@@ -266,7 +266,7 @@ class Amdbg ; as global var container
 	static GuiName := "Amdbg"
 	static GuiWidth := 400 ; px
 	
-	static dictVars := {} ; TODO: rename to dictClient
+	static dictClients := {}
 	; -- each dict-key represent a "client", and each client is described in
 	; 	yet another dict which has the following keys:
 	;	.desc     : description text of  
@@ -317,7 +317,7 @@ Amdbg_RefreshClients()
 	dev_Combobox_Clear(hwndCombobox)
 
 	varlist := []
-	for clientId in Amdbg.dictVars
+	for clientId in Amdbg.dictClients
 	{
 		varlist.Push(clientId)
 	}
@@ -362,9 +362,9 @@ Amdbg_SetValue()
 	clientId := GuiControl_GetText(GuiName, "gu_amdbgCbxClientId")
 	outputlv := GuiControl_GetText(GuiName, "gu_amdbgEdtNewValue")
 	
-;	GuiControl_SetText(GuiName, "gu_amdbgMleDesc", Amdbg.dictVars[uservar]) ; to-delete
+;	GuiControl_SetText(GuiName, "gu_amdbgMleDesc", Amdbg.dictClients[uservar]) ; to-delete
 	
-	Amdbg.dictVars[clientId].outputlv := outputlv
+	Amdbg.dictClients[clientId].outputlv := outputlv
 }
 
 Amdbg_SetValueBtn()
@@ -379,7 +379,6 @@ AmdbgGuiSize()
 	rsdict := {}
     rsdict.gu_amdbgMleDesc := "0,0,100,100" ; Left/Top/Right/Bottom pct
     rsdict.gu_amdbgEdtNewValue := "0,100,100,100"
-    rsdict.gu_amdbgTxtNewValue := "0,100,0,100"
     rsdict.gu_amdbgSetBtn := "0,100,0,100"
     dev_GuiAutoResize(Amdbg.GuiName, rsdict, A_GuiWidth, A_GuiHeight, true)
 }
@@ -398,9 +397,9 @@ Amdbg_SyncUI()
 
 	clientId := GuiControl_GetText(GuiName, "gu_amdbgCbxClientId")
 	
-	GuiControl_SetText(GuiName, "gu_amdbgMleDesc", Amdbg.dictVars[clientId].desc)
+	GuiControl_SetText(GuiName, "gu_amdbgMleDesc", Amdbg.dictClients[clientId].desc)
 	
-	outputlv := Amdbg.dictVars[clientId].outputlv
+	outputlv := Amdbg.dictClients[clientId].outputlv
 	GuiControl_SetText(GuiName, "gu_amdbgEdtNewValue", outputlv)
 }
 
@@ -457,12 +456,12 @@ AmDbg_MakeLineMsg(msg, lv)
 
 _Amdbg_CreateClientId(clientId) ; Create client object is not-exist yet
 {
-	if(not Amdbg.dictVars.HasKey(clientId))
+	if(not Amdbg.dictClients.HasKey(clientId))
 	{
-		Amdbg.dictVars[clientId] := {}
-		Amdbg.dictVars[clientId].desc := "Unset yet"
-		Amdbg.dictVars[clientId].allmsg := ""
-		Amdbg.dictVars[clientId].timegapteller := new CTimeGapTeller(1000)
+		Amdbg.dictClients[clientId] := {}
+		Amdbg.dictClients[clientId].desc := "Unset yet"
+		Amdbg.dictClients[clientId].allmsg := ""
+		Amdbg.dictClients[clientId].timegapteller := new CTimeGapTeller(1000)
 		
 		; Check for g_DefaultDbgLv_xxx global var to determine initial dbgLv .
 		; User can set those vars in custom_env.ahk, for example, if 
@@ -474,12 +473,12 @@ _Amdbg_CreateClientId(clientId) ; Create client object is not-exist yet
 		defaultlv := %gvarname%
 		
 		if(defaultlv>0)
-			Amdbg.dictVars[clientId].outputlv := defaultlv
+			Amdbg.dictClients[clientId].outputlv := defaultlv
 		else
-			Amdbg.dictVars[clientId].outputlv := 0
+			Amdbg.dictClients[clientId].outputlv := 0
 	}
 
-	return Amdbg.dictVars[clientId]
+	return Amdbg.dictClients[clientId]
 }
 
 _Amdbg_AppendLineMsg(client, linemsg)
