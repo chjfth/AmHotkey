@@ -259,7 +259,10 @@ vmctl_GetVmLastModifyTime(vmx_filepath, ts14_old:="")
 	latest_file := ""
 	s_lv2_dbg_sent := false
 	
-	Loop, Files, % vmxdir "\*.*"
+	; Scan for all .vmdk files's modification time as clue for VM Activity.
+	; If a VM is paused, it vmdk files will cease being modified.
+	
+	Loop, Files, % vmxdir "\*.vmdk"
 	{
 ;		Dbgwin_Output(A_LoopFileTimeModified " : " A_LoopFileName)
 		
@@ -280,8 +283,6 @@ vmctl_GetVmLastModifyTime(vmx_filepath, ts14_old:="")
 			}
 		}
 
-		; We need to scan all files, finding the newest file.
-		
 		if(ts14 > tt_latest)
 		{
 			tt_latest := ts14
@@ -297,16 +298,6 @@ vmctl_GetVmLastModifyTime(vmx_filepath, ts14_old:="")
 			break
 		}
 	}
-/*
-	if(tt_latest > tt_latest_listdir)
-	{
-		vmctl_dbg2("Catch: tt_latest NEWER than tt_latest_listdir, for: " vmxdir)
-	}
-	if(tt_latest < tt_latest_listdir)
-	{
-		vmctl_dbg2("Weird: tt_latest OLDER than tt_latest_listdir, for: " vmxdir)
-	}
-*/	
 
 	vmctl_dbg2(Format("Latest file activity: <{}> {}", ts14short(tt_latest), latest_file))
 	
