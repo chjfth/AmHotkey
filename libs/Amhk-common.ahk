@@ -564,8 +564,81 @@ dev_IsSameFiletime(file1, file2)
 
 dev_FileGetTime(filepath, whichtime:="M")
 {
+	; Note: AHK's FileGetTime may return a lagged timestamp, when the file is in use 
+	; by another process. To workaround this, use win32_GetFileTime() .
+
 	FileGetTime, outvar, % filepath, % whichtime
-	return outvar ; 
+	return outvar ; return TS14 format
+}
+
+win32_CreateFile_QueryOnly(filepath)
+{
+	dwDesiredAccess := 0 ; query only
+	dwShareMode := 3 ; FILE_SHARE_READ(1), FILE_SHARE_WRITE(2)
+	dwCreateFlag := 3 ; OPEN_EXISTING
+
+	fh := DllCall("CreateFile"
+		, "Str", filepath
+		, "Int", dwDesiredAccess
+		, "Int", dwShareMode
+		, "Ptr", 0  ; no security attributes
+		, "Int", dwCreateFlag
+		, "Int", 0 ; overlapped flag
+		, "Ptr", 0
+		, "Ptr")
+;	dev_MsgBoxInfo("fh = " fh)
+	
+	return fh
+}
+
+win32_CloseHandle(handle)
+{
+	DllCall("CloseHandle", "Ptr", handle)
+}
+
+win32_GetFileTime(filepath)
+{
+	; This function uses Win32 API GetFileTime() to retrieve real file-modification-time.
+	; AHK's FileGetTime will probably report a lagged time, in case a file is opened by 
+	; another process. For example, a running VM's .vmdk will be this case.
+	
+	fh := win32_CreateFile_QueryOnly(filepath)
+	if((not fh) or fh==-1)
+		return ""
+	
+	VarSetCapacity( ft_utc, 8, 0 )
+	VarSetCapacity( ft_local, 8, 0 )
+	succ := DllCall("GetFileTime"
+		, "Ptr", fh
+		, "Ptr", 0
+		, "Ptr", 0
+		, "Ptr", &ft_utc)
+	
+	win32_CloseHandle(fh)
+	
+	if(!succ)
+		return ""
+	
+	DllCall("FileTimeToLocalFileTime"
+		, "Ptr", &ft_utc
+		, "Ptr", &ft_local)
+	
+	VarSetCapacity( st, 16, 0 )
+	DllCall("FileTimeToSystemTime"
+		, "Ptr", &ft_local
+		, "Ptr", &st)
+	
+	year  := NumGet(st, 0, "UShort")
+	month := NumGet(st, 2, "UShort")
+	mday  := NumGet(st, 6, "UShort")
+	hour  := NumGet(st, 8, "UShort")
+	minute:= NumGet(st, 10, "UShort")
+	second:= NumGet(st, 12, "UShort")
+	
+;	dev_MsgBoxInfo(Format("{}-{}-{} {}:{}:{}", year, month, mday, hour, minute, second))
+	ts14 := Format("{:04d}{:02d}{:02d}{:02d}{:02d}{:02d}", year, month, mday, hour, minute, second)
+	
+	return ts14
 }
 
 dev_FileGetSize(filepath)
@@ -854,6 +927,11 @@ dev_GetDateTimeStrNow()
 	return dt
 }
 
+ts14short(ts14:="now", sep:=".")
+{
+	return dev_GetDateTimeStrCompact(sep, ts14)
+}
+
 dev_GetDateTimeStrCompact(sep:="_", ts14:="now")
 {
 	; I use "now" as default 2nd-param(instead of using empty-string), because:
@@ -873,6 +951,30 @@ dev_GetDateTimeStrCompact(sep:="_", ts14:="now")
 		return SubStr(ts14, 1, 8) . sep . SubStr(ts14, 9, 6)
 	}
 }
+
+dev_Ts14AddSeconds(tsinput, seconds)
+{
+	; Add seconds to AHK 14-char timestamp (YYYYMMDDhhmmss).
+	; A_Now has this format.
+	;
+	; seconds can be positive or negative
+	
+	dev_assert(StrLen(tsinput)==14)
+	
+	tsoutput := tsinput
+	EnvAdd, tsoutput, % seconds, Seconds
+
+	return tsoutput
+}
+
+dev_Ts14Diff(ts1, ts2)
+{
+	diff := ts1
+	EnvSub, diff, % ts2, Seconds
+	return diff
+}
+
+
 
 dev_LocalTimeZoneInMinutes()
 {
@@ -899,7 +1001,7 @@ dev_SetEnvVar(varname, varvalue)
 	EnvSet, % varname, % varvalue
 }
 
-dev_GetWin32ThreadId()
+win32_GetCurrentThreadId()
 {
 	threadid := DllCall("kernel32.dll\GetCurrentThreadId")
 	return threadid
@@ -953,7 +1055,7 @@ dev_RunWaitOneEx(command, is_hidewindow:=false, working_dir:="")
 		; I have to do this because WScript.Shell.Exec does not support "hide window" param,
 		; while Autohotkey's Run allows "hiding".
 		
-		threadid := dev_GetWin32ThreadId()
+		threadid := win32_GetCurrentThreadId()
 		
 		dir_localapp := dev_EnvGet("LocalAppData")
 		tempfile := Format(dir_localapp . "\temp\AHK-dev_RunWaitOne-tid{}.txt", threadid)
@@ -1538,20 +1640,5 @@ dev_IsValidGuid(input)
 		return true
 	else
 		return false
-}
-
-dev_Ts14AddSeconds(tsinput, seconds)
-{
-	; Add seconds to AHK 14-char timestamp (YYYYMMDDhhmmss).
-	; A_Now has this format.
-	;
-	; seconds can be positive or negative
-	
-	dev_assert(StrLen(tsinput)==14)
-	
-	tsoutput := tsinput
-	EnvAdd, tsoutput, % seconds, Seconds
-
-	return tsoutput
 }
 

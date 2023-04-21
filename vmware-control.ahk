@@ -34,7 +34,7 @@ class vmctl
 	static FeatureId := "VmCtl"
 
 	; Cfg:
-	static chk_interval_seconds := 60
+	static chk_interval_seconds := 10 ; 60
 	
 	static delay_seconds_bfr_suspend := 3600
 	; -- this value is changed by Start_MonitorPausedVMsAndSuspendThem()'s argument.
@@ -57,7 +57,12 @@ vmctl_InitEnv()
 
 vmctl_dbg(msg)
 {
-	AmDbg_output(vmctl.FeatureId, msg)
+	AmDbg_Lv1(vmctl.FeatureId, msg)
+}
+
+vmctl_dbg2(msg)
+{
+	AmDbg_Lv2(vmctl.FeatureId, msg)
 }
 
 _vmctl_smsec_inc()
@@ -112,7 +117,17 @@ vmctl_CheckAndSuspendPausedVMs(byref errmsg:="")
 	for index,vmxpath in vmxlist
 	{
 		smsec_now := vmctl.smsec_now
-		LastFiletime := vmctl_GetVmLastModifyTime(vmxpath)
+		
+		if(not vmctl.dictvm.HasKey(vmxpath))
+		{
+			vmctl.dictvm[vmxpath] := {}
+			vmctl.dictvm[vmxpath].LastFiletime := "" ; will be in AHK TS14 format
+			vmctl.dictvm[vmxpath].smsec_idle_start := smsec_now
+		}
+
+		thisvm := vmctl.dictvm[vmxpath]
+		
+		LastFiletime := vmctl_GetVmLastModifyTime(vmxpath, thisvm.LastFiletime)
 		if(not LastFiletime)
 		{
 			errmsg := Format("Error get diskfile modification time, in vmctl_GetVmLastModifyTime(""{}"")", vmxpath)
@@ -121,21 +136,17 @@ vmctl_CheckAndSuspendPausedVMs(byref errmsg:="")
 			continue
 		}
 		
-		if(not vmctl.dictvm.HasKey(vmxpath))
-		{
-			vmctl.dictvm[vmxpath] := {}
-			vmctl.dictvm[vmxpath].LastFiletime := "" ; in AHK TS14 format
-			vmctl.dictvm[vmxpath].smsec_idle_start := smsec_now
-		}
-		
-		thisvm := vmctl.dictvm[vmxpath]
 		
 		if(LastFiletime != thisvm.LastFiletime)
 		{
 			; This means: the VM got some modification since last check.
 			; So, update the two time reference to now-time.
 			
-			if(thisvm.LastFiletime)
+			if(not thisvm.LastFiletime)
+			{
+				vmctl_dbg(Format("#{} Initial folder mtime: {}", index, dev_GetDateTimeStrCompact(".", LastFiletime)))
+			}
+			else
 			{
 				vmctl_dbg(Format("#{} Activity detected: {} -> {}", index
 					, dev_GetDateTimeStrCompact(".", thisvm.LastFiletime), dev_GetDateTimeStrCompact(".", LastFiletime) ))
@@ -226,7 +237,7 @@ N:\_vms_\Win10vwork\Win10vwork.vmx
 	}
 }
 
-vmctl_GetVmLastModifyTime(vmx_filepath)
+vmctl_GetVmLastModifyTime(vmx_filepath, ts14_old:="")
 {
 	; vmx_filepath is a .vmx's fullpath(`vmrun.exe list` reports this)
 	; Check all files in the vmx's folder, the latest modification time
@@ -235,18 +246,69 @@ vmctl_GetVmLastModifyTime(vmx_filepath)
 	; If success, return a string in YYYYMMDD...... format.
 	; If fail, return empty string.
 	
+
+;Dbgwin_Output(Format("##1: <{}> {}", ts14_old ? ts14short(ts14_old) : "", vmx_filepath ))
+
 	if(not dev_IsDiskFile(vmx_filepath))
 		return ""
 	
 	vmxdir := dev_SplitPath(vmx_filepath)
 
+;	tt_latest_listdir := "0"
 	tt_latest := "0"
+	latest_file := ""
+	s_lv2_dbg_sent := false
+	
 	Loop, Files, % vmxdir "\*.*"
 	{
 ;		Dbgwin_Output(A_LoopFileTimeModified " : " A_LoopFileName)
-		 if( A_LoopFileTimeModified > tt_latest )
-		 	tt_latest := A_LoopFileTimeModified
+		
+		; Note: Merely checking A_LoopFileTimeModified is not enough, whose timestamp 
+		; may be lagged quite a bit. We need to explicitly query against the specific file.
+		
+		ts14 := win32_GetFileTime(A_LoopFileFullPath)
+
+;Dbgwin_Output(Format("##2: <{}> {}", ts14short(ts14), A_LoopFileFullPath ))
+
+		if(ts14 > A_LoopFileTimeModified) ; Lv2 debug message for that
+		{
+			if(!s_lv2_dbg_sent)
+			{
+				vmctl_dbg2(Format("Catch: listdir filetime lagged [ fake: {} , actual: {} ] on: {}"
+					, ts14short(A_LoopFileTimeModified), ts14short(ts14), A_LoopFileFullPath))
+				s_lv2_dbg_sent := true
+			}
+		}
+
+		; We need to scan all files, finding the newest file.
+		
+		if(ts14 > tt_latest)
+		{
+			tt_latest := ts14
+			latest_file := A_LoopFileFullPath
+		}
+		
+		if(ts14_old and ts14 > ts14_old)
+		{
+;Dbgwin_Output(Format("##2e: enough, +{}", dev_Ts14Diff(ts14, ts14_old) ))
+			; Enough, no need to check for more files.
+			tt_latest := ts14
+			latest_file := A_LoopFileFullPath
+			break
+		}
 	}
+/*
+	if(tt_latest > tt_latest_listdir)
+	{
+		vmctl_dbg2("Catch: tt_latest NEWER than tt_latest_listdir, for: " vmxdir)
+	}
+	if(tt_latest < tt_latest_listdir)
+	{
+		vmctl_dbg2("Weird: tt_latest OLDER than tt_latest_listdir, for: " vmxdir)
+	}
+*/	
+
+	vmctl_dbg2(Format("Latest file activity: <{}> {}", ts14short(tt_latest), latest_file))
 	
 	return tt_latest
 }

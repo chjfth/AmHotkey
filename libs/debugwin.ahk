@@ -18,7 +18,10 @@ Dbgwin_ShowGui(true)
 Amdbg_ShowGui()
 	; Pop up the dialog UI that allows user to change AHK global vars on the fly.
 
-Amdbg_output(clientId, newmsg)
+Amdbg_output(clientId, newmsg, msglv)
+Amdbg_Lv1(clientId, newmsg)
+Amdbg_Lv2(clientId, newmsg)
+Amdbg_Lv3(clientId, newmsg)
 	; Output a debug message in the name of `clientId`.
 	; By calling Amdbg_ShowGui(), final user can control which clientId's messages appear onto 
 	; Dbgwin GUI instantly.
@@ -44,7 +47,8 @@ global g_dbgwinMsgCount := 0
 
 global g_amdbgHwnd
 
-global gu_amdbgClientId
+global gu_amdbgCbxClientId
+global gu_amdbgBtnRefresh
 global gu_amdbgMleDesc
 global gu_amdbgTxtNewValue
 global gu_amdbgEdtNewValue
@@ -67,6 +71,35 @@ class Dbgwin ; as global var container
 	static IniSection  := "cfg"
 }
 
+class CTimeGapTeller
+{
+	_gap_millisec := 0
+	_msec_prev := 0
+	
+	__New(gap_millisec)
+	{
+		this._msec_prev := 0
+		this._gap_millisec := gap_millisec
+	}
+	
+	CheckGap()
+	{
+		; If _gap_millisec time-period has passed since previous CheckGap() call,
+		; return true, otherwise, return false. First-run returns false.
+		
+		ret := false ; assume false
+		now_msec := dev_GetTickCount64()
+		
+		if(this._msec_prev>0)
+		{
+			if(now_msec - this._msec_prev >= this._gap_millisec)
+				ret := true
+		}
+
+		this._msec_prev := now_msec
+		return ret
+	}
+}
 
 Dbgwin_Output_fg(msg)
 {
@@ -75,12 +108,18 @@ Dbgwin_Output_fg(msg)
 
 Dbgwin_Output(msg, force_fgwin:=false)
 {
-	linemsg := AmDbg_MakeLineMsg(newmsg)
+	linemsg := AmDbg_MakeLineMsg(msg, 1)
+	
 	Dbgwin_AppendRaw(linemsg)
 }
 	
 Dbgwin_AppendRaw(linemsg, force_fgwin:=false)
 {	
+	static s_tgt := new CTimeGapTeller(1000)
+
+	if(s_tgt.CheckGap())
+		linemsg := ".`r`n" linemsg
+	
 	Dbgwin_ShowGui(force_fgwin)
 	
 	; We append msg to end of current multiline-editbox. (AppendText)
@@ -251,7 +290,9 @@ Amdbg_CreateGui()
 	Gui_Add_TxtLabel(GuiName, "", -1, "xm", "Configure debug message UI output levels.")
 	Gui_Add_TxtLabel(GuiName, "", -1, "xm", "AmDbg client id:")
 	
-	Gui_Add_Combobox(GuiName, "gu_amdbgClientId", 300, "xm g" "Amdbg_SyncUI")
+	Gui_Add_Combobox(GuiName, "gu_amdbgCbxClientId", 300, "xm g" "Amdbg_SyncUI")
+	Gui_Add_Button(  GuiName, "gu_amdbgBtnRefresh", 40, "yp x+5 g" "Amdbg_RefreshClients", "&Refresh")
+	
 	Gui_Add_Editbox( GuiName, "gu_amdbgMleDesc", Amdbg.GuiWidth-20, "xm-2 readonly r3 -E0x200")
 	
 	Gui_Add_TxtLabel(GuiName, "gu_amdbgTxtNewValue", -1, "xm", "New output level:")
@@ -259,12 +300,30 @@ Amdbg_CreateGui()
 
 	Gui_Add_Button(  GuiName, "gu_amdbgSetBtn", -1, "Default g" "Amdbg_SetValueBtn", "&Set new")
 	
+	Amdbg_RefreshClients()
+}
+
+Amdbg_RefreshClients()
+{
+	; Amdbg clients can be dynamically created/deleted, so we need this function.
+	
+	GuiName := Amdbg.GuiName
+	vnCbx := "gu_amdbgCbxClientId"
+	
+	cbTextOrig := GuiControl_GetText(GuiName, vnCbx)
+	
+	hwndCombobox := GuiControl_GetHwnd(GuiName, vnCbx)
+	dev_assert(hwndCombobox)
+	dev_Combobox_Clear(hwndCombobox)
+
 	varlist := []
 	for clientId in Amdbg.dictVars
 	{
 		varlist.Push(clientId)
 	}
-	GuiControl_ComboboxAddItems(GuiName, "gu_amdbgClientId", varlist) ; already sorted by AHKGUI
+	GuiControl_ComboboxAddItems(GuiName, vnCbx, varlist) ; already sorted by AHKGUI
+	
+	Combobox_SetText(GuiName, vnCbx, cbTextOrig)
 }
 
 Amdbg_ShowGui()
@@ -300,7 +359,7 @@ Amdbg_SetValue()
 {
 	GuiName := Amdbg.GuiName
 
-	clientId := GuiControl_GetText(GuiName, "gu_amdbgClientId")
+	clientId := GuiControl_GetText(GuiName, "gu_amdbgCbxClientId")
 	outputlv := GuiControl_GetText(GuiName, "gu_amdbgEdtNewValue")
 	
 ;	GuiControl_SetText(GuiName, "gu_amdbgMleDesc", Amdbg.dictVars[uservar]) ; to-delete
@@ -337,7 +396,7 @@ Amdbg_SyncUI()
 {
 	GuiName := Amdbg.GuiName
 
-	clientId := GuiControl_GetText(GuiName, "gu_amdbgClientId")
+	clientId := GuiControl_GetText(GuiName, "gu_amdbgCbxClientId")
 	
 	GuiControl_SetText(GuiName, "gu_amdbgMleDesc", Amdbg.dictVars[clientId].desc)
 	
@@ -351,7 +410,7 @@ Amdbg_SyncUI()
 ; Implement Amdbg_output()
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-AmDbg_MakeLineMsg(msg)
+AmDbg_MakeLineMsg(msg, lv)
 {
 	; Makes single \n become \r\n, bcz Win32 editbox recognized only \r\n as newline.
 	msg := StrReplace(msg, "`r`n", "`n")
@@ -363,8 +422,11 @@ AmDbg_MakeLineMsg(msg)
 	static s_start_ymdhms := A_Now
 	static s_prev_msec    := s_start_msec
 	
+	
 	now_tick := A_TickCount
 	msec_from_prev := now_tick - s_prev_msec
+
+;Dbgwin_AppendRaw(Format("s_prev_msec={} , now_tick={} ({})`r`n", s_prev_msec, now_tick, now_tick-s_prev_msec))
 	
 	sec_from_start := (A_TickCount-s_start_msec) // 1000
 	msec_frac := Mod(A_TickCount-s_start_msec, 1000)
@@ -385,22 +447,22 @@ AmDbg_MakeLineMsg(msg)
 	
 ;	msg := now_ymdhsm "  " msg . "`r`n"
 	
-	linemsg := Format("{1}[{2}] ({3}) {4}`r`n"
-		, msec_from_prev>=1000 ? ".`r`n" : ""
-		, stimestamp, stimeplus, msg)
+	linemsg := Format("{1}*[{2}] ({3}) {4}`r`n"
+		, lv, stimestamp, stimeplus, msg)
 	
     s_prev_msec := now_tick
 	
 	return linemsg
 }
 
-_Amdbg_CreateClientId(clientId)
+_Amdbg_CreateClientId(clientId) ; Create client object is not-exist yet
 {
 	if(not Amdbg.dictVars.HasKey(clientId))
 	{
 		Amdbg.dictVars[clientId] := {}
 		Amdbg.dictVars[clientId].desc := "Unset yet"
 		Amdbg.dictVars[clientId].allmsg := ""
+		Amdbg.dictVars[clientId].timegapteller := new CTimeGapTeller(1000)
 		
 		; Check for g_DefaultDbgLv_xxx global var to determine initial dbgLv .
 		; User can set those vars in custom_env.ahk, for example, if 
@@ -420,7 +482,17 @@ _Amdbg_CreateClientId(clientId)
 	return Amdbg.dictVars[clientId]
 }
 
-Amdbg_output(clientId, newmsg)
+_Amdbg_AppendLineMsg(client, linemsg)
+{
+	; client is the object returned by _Amdbg_CreateClientId()
+	
+	if(client.timegapteller.CheckGap())
+		linemsg := ".`r`n" linemsg
+	
+	client.allmsg .= linemsg
+}
+
+Amdbg_output(clientId, newmsg, msglv:=1)
 {
 	; clientId is a short string describing to which client this newmsg belongs
 	
@@ -438,14 +510,29 @@ Amdbg_output(clientId, newmsg)
 		client.allmsg := SubStr(client.allmsg, halfmax)
 	}
 	
-	linemsg := AmDbg_MakeLineMsg(newmsg)
+	linemsg := AmDbg_MakeLineMsg(newmsg, msglv)
 	
-	client.allmsg .= linemsg ; append it
+	_Amdbg_AppendLineMsg(client, linemsg)
 	
-	if(client.outputlv>0)
+	if(msglv <= client.outputlv)
 	{
 		Dbgwin_AppendRaw(linemsg)
 	}
+}
+
+Amdbg_Lv1(clientId, newmsg)
+{
+	Amdbg_output(clientId, newmsg, 1)
+}
+
+Amdbg_Lv2(clientId, newmsg)
+{
+	Amdbg_output(clientId, newmsg, 2)
+}
+
+Amdbg_Lv3(clientId, newmsg)
+{
+	Amdbg_output(clientId, newmsg, 3)
 }
 
 Amdbg_SetDesc(clientId, desc)

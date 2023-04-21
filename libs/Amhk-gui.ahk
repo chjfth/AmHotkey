@@ -250,6 +250,8 @@ GuiControl_SetText(GuiName, CtrlVarname, text)
 {
 	; CtrlVarname can also be an HWND value.
 	; If it is an HWND, GuiName can be empty string.
+	;
+	; For Combobox, we should use Combobox_SetText()
 
 	dev_assert(Gui_IsValidVar(CtrlVarname))
 	cmd := GuiName ? GuiName ":" : ""
@@ -260,6 +262,14 @@ GuiControl_SetValue(GuiName, CtrlVarname, text)
 {
 	GuiControl_SetText(GuiName, CtrlVarname, text)
 }
+
+Combobox_SetText(GuiName, CtrlVarname, text)
+{
+	dev_assert(Gui_IsValidVar(CtrlVarname))
+	cmd := (GuiName ? GuiName ":" : "") . "Text"
+	GuiControl, % cmd, % CtrlVarname, % text
+}
+
 
 GuiControl_GetPos(GuiName, CtrlVarname)
 {
@@ -466,8 +476,14 @@ GuiButton_SetIconFromDll(GuiName, CtrlVarName, dllname, icon_idx, icon_width, is
 
 dev_Listbox_Clear(hwndListbox)
 {
-	LB_RESETCONTENT := 0x0184 
+	LB_RESETCONTENT := 0x0184
 	dev_SendMessage(hwndListbox, LB_RESETCONTENT, 0, 0)
+}
+
+dev_Combobox_Clear(hwndCombobox)
+{
+	CB_RESETCONTENT := 0x014B
+	dev_SendMessage(hwndCombobox, CB_RESETCONTENT, 0, 0)
 }
 
 
