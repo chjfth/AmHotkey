@@ -405,7 +405,7 @@ Evp_ShowGui()
 	dev_OnMessageRegister(0x111, "Evp_WM_COMMAND")
 	dev_OnMessageRegister(0x205, "Evp_WM_RBUTTONUP")
 
-	g_evp_hClipmon := Clipmon_CreateMonitor(Func("Evp_ClipmonCallback"))
+	g_evp_hClipmon := Clipmon_CreateMonitor(Func("Evp_ClipmonCallback"), "Evp_ShowGui")
 	g_evp_ClipmonSeqNow := 0
 	g_evp_ClipmonSeqAct := 0
 	
@@ -4054,7 +4054,7 @@ CF_HTML_PasteCodeBlock(line_comment, block_comment:="", lnprefix_start:=0)
 
 evernote_InitEvxLinks()
 {
-	Evnt.hcmEvxlink := Clipmon_CreateMonitor("evernote_PickupEvxlink")
+	Evnt.hcmEvxlink := Clipmon_CreateMonitor("evernote_PickupEvxlink", "evernote_InitEvxLinks")
 	dev_assert(Evnt.hcmEvxlink)
 	
 	Loop, Read, % Evnt.filenamEvxlinks

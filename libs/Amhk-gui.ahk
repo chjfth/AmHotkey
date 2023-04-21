@@ -18,6 +18,11 @@ Gui_Hide(GuiName)
 	Gui, % (GuiName ? GuiName ":" : "") . "Hide"
 }
 
+Gui_Destroy(GuiName)
+{
+	Gui, % (GuiName ? GuiName ":" : "") . "Destroy"
+}
+
 Gui_Show(GuiName, options="", title:="AHKGUI")
 {
 	; options:

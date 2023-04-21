@@ -20,6 +20,7 @@ Stop_MonitorPausedVMsAndSuspendThem()
 
 global g_vmwks_exedir := "C:\Program Files (x86)\VMware\VMware Workstation"
 
+vmctl_InitEnv()
 
 return ; The first return in this ahk. It marks the End of auto-execute section.
 ;
@@ -30,16 +31,45 @@ return ; The first return in this ahk. It marks the End of auto-execute section.
 
 class vmctl
 {
+	static FeatureId := "VmCtl"
+
 	; Cfg:
 	static chk_interval_seconds := 60
 	
 	static delay_seconds_bfr_suspend := 3600
 	; -- this value is changed by Start_MonitorPausedVMsAndSuspendThem()'s argument.
 	
+	;
 	; Runtime data:
+	;
+	
 	static dictvm := {} ; dict-key is vmxpath
+	
+	static smsec_now := 0 ; self maintained seconds as time-reference
 }
 
+vmctl_InitEnv()
+{
+	AmDbg_SetDesc(vmctl.FeatureId, "Debug message for vmware-control.ahk")
+	
+	dev_StartTimerPeriodic("_vmctl_smsec_inc", 1000)
+}
+
+vmctl_dbg(msg)
+{
+	AmDbg_output(vmctl.FeatureId, msg)
+}
+
+_vmctl_smsec_inc()
+{
+	; smsec: Self-maintained time-point in second.
+	;
+	; Yes, we need to measure only our program's running time elapse.
+	; If Windows sleeps(so all VMs are implicitly paused), we do not want to count up during the sleep.
+	; Timer delay accumulation error is not a matter for this scenario.
+	
+	vmctl.smsec_now++
+}
 
 Start_MonitorPausedVMsAndSuspendThem(minutes:=60)
 {
@@ -52,23 +82,25 @@ Start_MonitorPausedVMsAndSuspendThem(minutes:=60)
 		vmctl.delay_seconds_bfr_suspend := -minutes ; take it as seconds, debug purpose
 
 	first_err := ""
-	if(not vmctl_timer_MonitorPausedVMs(first_err))
+	if(not vmctl_CheckAndSuspendPausedVMs(first_err))
 	{
 		dev_MsgBoxError("Error occurred querying VM running state, so timer will not start.`n`n" . first_err)
 		return
 	}
 
-	dev_StartTimerPeriodic("vmctl_timer_MonitorPausedVMs", 1000*vmctl.chk_interval_seconds)
-;	Dbgwin_Output(Format("Timer vmctl_timer_MonitorPausedVMs() started, every {} seconds. (delay {} secs)", vmctl.chk_interval_seconds, vmctl.delay_seconds_bfr_suspend)) ;debug
+	dev_StartTimerPeriodic("vmctl_CheckAndSuspendPausedVMs", 1000*vmctl.chk_interval_seconds)
+
+	vmctl_dbg(Format("vmctl_CheckAndSuspendPausedVMs() timer started, check every {} seconds, delay {} seconds before suspend."
+		, vmctl.chk_interval_seconds, vmctl.delay_seconds_bfr_suspend))
 }
 
 Stop_MonitorPausedVMsAndSuspendThem()
 {
-	dev_StopTimer("vmctl_timer_MonitorPausedVMs")
+	dev_StopTimer("vmctl_CheckAndSuspendPausedVMs")
 }
 
 
-vmctl_timer_MonitorPausedVMs(byref errmsg:="")
+vmctl_CheckAndSuspendPausedVMs(byref errmsg:="")
 {
 	vmxlist := vmctl_GetRunningVmxList()
 	if(StrIsStartsWith(vmxlist, "[ERROR]"))
@@ -79,45 +111,63 @@ vmctl_timer_MonitorPausedVMs(byref errmsg:="")
 	
 	for index,vmxpath in vmxlist
 	{
+		smsec_now := vmctl.smsec_now
 		LastFiletime := vmctl_GetVmLastModifyTime(vmxpath)
+		if(not LastFiletime)
+		{
+			errmsg := Format("Error get diskfile modification time, in vmctl_GetVmLastModifyTime(""{}"")", vmxpath)
+			vmctl_dbg(errmsg)
+			dev_MsgBoxError(errmsg)
+			continue
+		}
 		
 		if(not vmctl.dictvm.HasKey(vmxpath))
 		{
 			vmctl.dictvm[vmxpath] := {}
-			vmctl.dictvm[vmxpath].LastFiletime := "0"
-			vmctl.dictvm[vmxpath].tickcount := 0 ; OS millisec
+			vmctl.dictvm[vmxpath].LastFiletime := "" ; in AHK TS14 format
+			vmctl.dictvm[vmxpath].smsec_idle_start := smsec_now
 		}
-
-		if(LastFiletime != vmctl.dictvm[vmxpath].LastFiletime)
+		
+		thisvm := vmctl.dictvm[vmxpath]
+		
+		if(LastFiletime != thisvm.LastFiletime)
 		{
 			; This means: the VM got some modification since last check.
 			; So, update the two time reference to now-time.
-			;
-			vmctl.dictvm[vmxpath].LastFiletime := LastFiletime
-			vmctl.dictvm[vmxpath].tickcount := A_TickCount ; OS millisec
+			
+			if(thisvm.LastFiletime)
+			{
+				vmctl_dbg(Format("#{} Activity detected: {} -> {}", index
+					, dev_GetDateTimeStrCompact(".", thisvm.LastFiletime), dev_GetDateTimeStrCompact(".", LastFiletime) ))
+			}
+			
+			thisvm.LastFiletime := LastFiletime
+			thisvm.smsec_idle_start := smsec_now ; consider it idle from now
+		}
+		
+		idle_secs := smsec_now - thisvm.smsec_idle_start
+		remain_secs := vmctl.delay_seconds_bfr_suspend - idle_secs
+		
+		if(remain_secs>0)
+		{
+			vmctl_dbg(Format("#{}: Remain {} seconds for: {}", index, remain_secs, vmxpath))
 		}
 		else
 		{
-			; The VM has not been modified for a while, so check whether it has been
-			; idle for long enough.
-			idle_secs := (A_TickCount - vmctl.dictvm[vmxpath].tickcount) / 1000
-;			Dbgwin_Output("vmctl:: idle_secs: " idle_secs)
+			vmctl_dbg(Format("#{}: Expired {} seconds, now suspend: {}", index, -remain_secs, vmxpath))
 
-			if(idle_secs >= vmctl.delay_seconds_bfr_suspend)
-			{
-				msg := "Start suspending VM: " vmxpath
-				dev_TooltipAutoClear(msg)
+			msg := "Start suspending VM: " vmxpath
+			dev_TooltipAutoClear(msg)
 				
-;				Dbgwin_Output(msg) ; debug
-				
-				vmctl_SuspendVmx(vmxpath)
+			vmctl_SuspendVmx(vmxpath)
 
-				msg := "Done suspending VM: " vmxpath
-				dev_TooltipAutoClear(msg)
+			msg := "Done suspending VM: " vmxpath
+			dev_TooltipAutoClear(msg)
 
-				vmctl.dictvm[vmxpath].tickcount := A_TickCount
-				; -- on simulating VM Suspend, this avoids triggering frequently
-			}
+			vmctl_dbg(Format("#{}: VM suspend done.", index))
+
+			thisvm.smsec_idle_start := smsec_now
+			; -- on simulating VM Suspend, this avoids triggering frequently
 		}
 	}
 	return true
@@ -200,5 +250,4 @@ vmctl_GetVmLastModifyTime(vmx_filepath)
 	
 	return tt_latest
 }
-
 

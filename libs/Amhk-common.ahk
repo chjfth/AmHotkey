@@ -854,10 +854,24 @@ dev_GetDateTimeStrNow()
 	return dt
 }
 
-dev_GetDateTimeStrCompact(sep:="_")
+dev_GetDateTimeStrCompact(sep:="_", ts14:="now")
 {
-	FormatTime, dt, , % "yyyyMMdd" . sep .  "HHmmss"
-	return dt
+	; I use "now" as default 2nd-param(instead of using empty-string), because:
+	; If user wants to pass-in an explicit ts14 but accidentally the passed argument
+	; is an empty string, I want it to error out loudly, instead of returning 
+	; a false "now" timestamp.
+
+	if(ts14=="now")
+	{
+		; return current time
+		FormatTime, dt, , % "yyyyMMdd" . sep .  "HHmmss"
+		return dt
+	}
+	else 
+	{
+		dev_assert(StrLen(ts14)==14)
+		return SubStr(ts14, 1, 8) . sep . SubStr(ts14, 9, 6)
+	}
 }
 
 dev_LocalTimeZoneInMinutes()
@@ -1524,5 +1538,20 @@ dev_IsValidGuid(input)
 		return true
 	else
 		return false
+}
+
+dev_Ts14AddSeconds(tsinput, seconds)
+{
+	; Add seconds to AHK 14-char timestamp (YYYYMMDDhhmmss).
+	; A_Now has this format.
+	;
+	; seconds can be positive or negative
+	
+	dev_assert(StrLen(tsinput)==14)
+	
+	tsoutput := tsinput
+	EnvAdd, tsoutput, % seconds, Seconds
+
+	return tsoutput
 }
 

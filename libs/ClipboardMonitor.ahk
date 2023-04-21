@@ -13,13 +13,11 @@ APIs:
 global g_clipmonHwndTmp
 global g_clipmon ; the only clipmon instance, dynamically created/destroyed
 
-global g_clipmonSeeDebugMsg
-; -- If override to true(e.g. in custom_env.ahk), it will show debug-messsage and small debug window.
-; -- Note: Setting g_clipmonSeeDebugMsg:=true here is useless, bcz this file is not a Amhotkey module.
-
 
 class CClipboardMonitor
 {
+	static FeatureId := "Clipmon"
+
 	_GuiHwnd := 0
 	_hwndNextClipViewer := 0 ; the Win32 detail from WM_CHANGECBCHAIN
 	_testmember := 7
@@ -43,7 +41,13 @@ class CClipboardMonitor
 
 	__Delete()
 	{
-		this.dbg("CClipboardMonitor.__Delete().")
+		if(CClipboardMonitor.FeatureId)
+		{
+			; AHK 1.1.32 buggy! If user exits current Autohotkey.exe process, or,
+			; user executes a Reload command, CClipboardMonitor.FeatureId becomes empty
+			; when this __Delete() is executed. So, if it is empty, do not call .dbg() .
+			this.dbg("CClipboardMonitor.__Delete().")
+		}
 		
 		DllCall("ChangeClipboardChain"
 			, "Ptr", this._GuiHwnd
@@ -54,24 +58,28 @@ class CClipboardMonitor
 
 	dbg(msg)
 	{
-		if(g_clipmonSeeDebugMsg)
-			Dbgwin_Output(msg)
+		static s_prepared := false
+		if(!s_prepared) {
+			AmDbg_SetDesc(CClipboardMonitor.FeatureId, "Debug ClipboardMonitor.ahk: 0/1")
+			s_prepared := true
+		}
+	
+		AmDbg_output(CClipboardMonitor.FeatureId, msg)
 	}
 
 	DestroyGui()
 	{
-		GuiName := "CLIPMON"
+		GuiName := CClipboardMonitor.FeatureId
 		
-		Gui, % GuiName ":Destroy" 
+		Gui_Destroy(GuiName)
 	}
 
 	CreateGui()
 	{
-		GuiName := "CLIPMON"
+		GuiName := CClipboardMonitor.FeatureId
 		
-		Gui, % GuiName ":New" 
+		Gui_New(GuiName)
 		; -- Would destroy old window with the same GuiName.
-		;    Solution pending.
 
 		Gui_ChangeOpt(GuiName, "+E0x0080 +E0x40000")
 		; -- +E0x0080: WS_EX_TOOLWINDOW (thin title);  +E0x40000: WS_EX_APPWINDOW (want taskbar thumbnail)
@@ -92,9 +100,9 @@ class CClipboardMonitor
 		Gui, % GuiName ":Add", Text, % Format("w200 hwnd{}", "g_clipmonHwndTmp")
 		this._hctlTxtChanges := g_clipmonHwndTmp
 		
-		if(g_clipmonSeeDebugMsg)
+		if(g_DefaultDbgLv_Clipmon>0)
 		{
-			Gui, % GuiName ":Show", , % "ClipboardMonitor.ahk" ; Show it only for debugging purpose
+			Gui_Show(GuiName, "", "ClipboardMonitor.ahk") ; Show it only for debugging purpose
 		}
 
 		GuiControl_SetText(GuiName, this._hctlTxtClients, "Clients: 0")
@@ -133,16 +141,16 @@ class CClipboardMonitor
 		return outvar
 	}
 	
-	AddClient(fnobj)
+	AddClient(fnobj, client_name)
 	{
 		Loop 
 		{
 			clientid := this.GenRandom()
 		} Until not this._clients.haskey(clientid)
 		
-		this._clients[clientid] := { "fnobj":fnobj, "datetime":dev_GetDateTimeStrNow() }
+		this._clients[clientid] := { "fnobj":fnobj, "datetime":dev_GetDateTimeStrNow(), "client_name":client_name }
 
-		this.dbg(Format("CClipboardMonitor.AddClient() returns clientid: {}", clientid))
+		this.dbg(Format("CClipboardMonitor.AddClient(""{}"") returns clientid: {}", client_name, clientid))
 
 		this.UIRefreshClients()
 		
@@ -162,6 +170,7 @@ class CClipboardMonitor
 		
 		if(dev_mapping_count(this._clients)==0)
 		{
+dev_MsgBoxInfo("FeatureId1 = " CClipboardMonitor.FeatureId)
 			g_clipmon := "" 
 			; -- destroy the CClipboardMonitor instance, 
 			; __Delete() gets called internally, `this` vanishes.
@@ -214,7 +223,7 @@ CLIPMONEscape()
 
 CLIPMONClose()
 {
-	Gui_Hide("CLIPMON")
+	Gui_Hide(CClipboardMonitor.FeatureId)
 }
 
 Clipmon_WM_CHANGECBCHAIN(wParam, lParam, msg, hwnd)
@@ -229,7 +238,7 @@ Clipmon_WM_DRAWCLIPBOARD(wParam, lParam, msg, hwnd)
 	g_clipmon.Do_WM_DRAWCLIPBOARD(wParam, lParam, msg, hwnd)
 }
 
-Clipmon_CreateMonitor(fnobj)
+Clipmon_CreateMonitor(fnobj, client_name)
 {
 	; fnobj can be either a function-object or just a function-name string.
 
@@ -266,10 +275,8 @@ Clipmon_CreateMonitor(fnobj)
 	
 	dev_assert(g_clipmon) ; should have been assigned inside CClipboardMonitor's __New()
 	
-	clientid := g_clipmon.AddClient(fnobj)
+	clientid := g_clipmon.AddClient(fnobj, client_name)
 	
-	Dbgvar_AddVarname("g_clipmonSeeDebugMsg", "Debug Clipboard monitor: 0/1")
-
 	return clientid
 }
 

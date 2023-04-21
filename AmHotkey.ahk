@@ -117,13 +117,18 @@ return
 #include %A_LineFile%\..\libs\Amhk-common.ahk
 #include %A_LineFile%\..\libs\Amhk-gui.ahk
 
+class AmHotkey ; Store global vars here
+{
+	static dbgid_HotkeyFlex := "HotkeyFlex"
+	static dbgid_HotkeyLegacy := "HotkeyLegacy"
+}
+
+
 AmDoInit()
 {
-	; [2022-11-02] Move this to chjmisc.ahk, other people may not need it.
-;	Menu, tray, add  ; Creates a separator line.
-;	SystrayMenu_Add_MuteClicking()
+	AmDbg_SetDesc(AmHotkey.dbgid_HotkeyFlex,   "Debug message for fxhk_DefineHotkey() ...")
+	AmDbg_SetDesc(AmHotkey.dbgid_HotkeyLegacy, "Debug message for dev_DefineHotkey() ...")
 
-	Dbgvar_AddVarname("g_isdbg_DefineHotkeyFlex", "Debug fxhk_DefineHotkey...()")
 }
 
 ; ########## Some debugging hotkeys first ##########
@@ -847,16 +852,15 @@ GetMonitorWorkArea(monidx)
 
 ; ===============================================================================================
 
-dbgHotkeyFlex(s)
+dbgHotkeyFlex(msg)
 {
-	if(g_isdbg_DefineHotkeyFlex)
-		Dbgwin_Output("HotkeyFlex: " s)
+
+	AmDbg_output(AmHotkey.dbgid_HotkeyFlex, msg)
 }
 
-dbgHotkeyLegacy(s)
+dbgHotkeyLegacy(msg)
 {
-	if(g_isdbg_DefineHotkeyLegacy)
-		Dbgwin_Output("HotkeyLegacy: " s)
+	AmDbg_output(AmHotkey.dbgid_HotkeyLegacy, msg)
 }
 
 _fxhk_KeynameStripPrefix(keyname)
@@ -3248,31 +3252,6 @@ dev_TooltipDisableCloseWindow(msg_prefix)
 	dev_TooltipAutoClear(msg_prefix . " closing window/tab is disabled by AmHotkey.")
 }
 
-/* 
-dev_DbgAskAHKVar_OnOff()
-{
-	static s_varname := ""
-	
-	prompt := "Input a AHK varname so to make it true or false.`r`n"
-		. "OK to set true; Cancel to set false.`r`n`r`n"
-		. "g_isdbg_DefineHotkeyFlex `r`n"
-		. "g_clipmonSeeDebugMsg `r`n"
-
-	isok := dev_InputBox_DefaultText("", prompt, s_varname) ; s_varname will change on output
-	
-	s_varname := Trim(s_varname)
-	
-	if(s_varname)
-	{
-		if(isok)
-			%s_varname% := 1
-		else
-			%s_varname% := 0
-	}
-
-	Dbgwin_Output(Format("{} = {}", s_varname, %s_varname%))
-}
-*/
 
 ;==============================================================================
 #Include *i _more_includes_.ahk ;This should be the final statement of this ahk

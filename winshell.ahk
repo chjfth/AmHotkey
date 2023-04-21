@@ -946,8 +946,13 @@ winshell_WindowOp_Init()
 	fn := Func("winshell_SetDwmNcRendering_ActiveWindow").Bind(true)
 	dev_MenuAddItem("winshell_menutext_WindowOp", "Active-window DWM rendering on", fn)
 
-	; Finally, Attach submenu to main menu
+	; Attach above submenu to main menu
 	dev_MenuAddSubmenu("TRAY", winshell_menutext_WindowOp, "winshell_menutext_WindowOp")
+	
+	
+	dev_MenuAddItem("TRAY", "Change Debug vars UI", "Amdbg_ShowGui")
+	
+	; ...
 	
 	winshell_DefineUtilitiesMenu()
 }

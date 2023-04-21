@@ -82,7 +82,7 @@ Amtp_ShowGui()
 	
 	Amtp_SyncUIFromClipboard()
 	
-	AmTrimPath.hClipmon := Clipmon_CreateMonitor("Amtp_SyncUIFromClipboard")
+	AmTrimPath.hClipmon := Clipmon_CreateMonitor("Amtp_SyncUIFromClipboard", "AmTrimPath:Amtp_ShowGui")
 }
 
 Amtp_HideGui()

@@ -15,11 +15,17 @@ Dbgwin_ShowGui(true)
 	; Show the Gui, in case it was hidden(closed by user).
 	; Parameter: `true` to bring it to front; `false` to keep it background(not have keyboard focus).
 
-Dbgvar_ShowGui()
+Amdbg_ShowGui()
 	; Pop up the dialog UI that allows user to change AHK global vars on the fly.
 
-Dbgvar_AddVarname(uservar, desc:="")
-	; Module author use this function to add varnames to Dbgvar's UI so that user knows they exist.
+Amdbg_output(clientId, newmsg)
+	; Output a debug message in the name of `clientId`.
+	; By calling Amdbg_ShowGui(), final user can control which clientId's messages appear onto 
+	; Dbgwin GUI instantly.
+
+AmDbg_SetDesc(clientId, desc)
+	; [Optional] Associate a piece of description text to `clientId`, which can be seen in 
+	; Dbgwin GUI instantly, so tht final user knows what is `clientId` is for.
 
 */
 
@@ -34,15 +40,15 @@ global gu_dbgwinMLE
 
 global g_dbgwinMsgCount := 0
 
-; [[ Dbgvar ]]
+; [[ Amdbg ]]
 
-global g_dbgvarHwnd
+global g_amdbgHwnd
 
-global gu_dbgvarCbxVarSelect
-global gu_dbgvarMleDesc
-global gu_dbgvarEdtNewValue
-global gu_dbgvarTxtNewValue
-global gu_dbgvarSetBtn
+global gu_amdbgClientId
+global gu_amdbgMleDesc
+global gu_amdbgTxtNewValue
+global gu_amdbgEdtNewValue
+global gu_amdbgSetBtn
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -69,49 +75,15 @@ Dbgwin_Output_fg(msg)
 
 Dbgwin_Output(msg, force_fgwin:=false)
 {
-	; This function will append msg to end of curent multiline-editbox,
-	; adding time-stamp prefix and \r\n suffix .
+	linemsg := AmDbg_MakeLineMsg(newmsg)
+	Dbgwin_AppendRaw(linemsg)
+}
 	
-	; Makes single \n become \r\n, bcz Win32 editbox recognized only \r\n as newline.
-	msg := StrReplace(msg, "`r`n", "`n")
-	msg := StrReplace(msg, "`n", "`r`n")
-	
-	; I will report millisecond fraction, so need some extra work.
-	;
-	static s_start_msec   := A_TickCount
-	static s_start_ymdhms := A_Now
-	static s_prev_msec    := s_start_msec
-	
-	now_tick := A_TickCount
-	msec_from_prev := now_tick - s_prev_msec
-	
-	sec_from_start := (A_TickCount-s_start_msec) // 1000
-	msec_frac := Mod(A_TickCount-s_start_msec, 1000)
-	
-	now_ymdhsm := s_start_ymdhms
-	EnvAdd, now_ymdhsm, sec_from_start, Seconds
-
-	; now_ymdhsm is like "20221212115851"
-;	year := substr(now_ymdhsm, 1, 4)
-;	mon  := substr(now_ymdhsm, 5, 2)
-;	day  := substr(now_ymdhsm, 7, 2)
-	ymd  := substr(now_ymdhsm, 1, 8)
-	hour := substr(now_ymdhsm, 9, 2)
-	minu := substr(now_ymdhsm, 11, 2)
-	sec  := substr(now_ymdhsm, 13, 2)
-	
-	stimestamp := Format("{}_{}:{}:{}.{:03}", ymd, hour, minu, sec, msec_frac)
-	stimeplus  := Format("+{}.{:03}s", msec_from_prev//1000, Mod(msec_from_prev,1000)) ; "+1.002s" etc
-	
-;	msg := now_ymdhsm "  " msg . "`r`n"
-	
-	soutput := Format("{1}[{2}] ({3}) {4}`r`n"
-		, msec_from_prev>=1000 ? ".`r`n" : ""
-		, stimestamp, stimeplus, msg)
-
+Dbgwin_AppendRaw(linemsg, force_fgwin:=false)
+{	
 	Dbgwin_ShowGui(force_fgwin)
 	
-	; We we append msg to end of curent multiline-editbox. (AppendText)
+	; We append msg to end of current multiline-editbox. (AppendText)
 	; Using WinAPI like this:
 	;
     ; int pos = GetWindowTextLength (hedit);
@@ -126,15 +98,14 @@ Dbgwin_Output(msg, force_fgwin:=false)
     EM_SETSEL := 0x00B1
     EM_REPLACESEL := 0x00C2
     dev_SendMessage(hwndEdit, EM_SETSEL, pos, pos)
-    dev_SendMessage(hwndEdit, EM_REPLACESEL, 0, &soutput)
+    dev_SendMessage(hwndEdit, EM_REPLACESEL, 0, &linemsg)
     
    	g_dbgwinMsgCount += 1
 	;
     GuiControl_SetText("Dbgwin", "gu_dbgwinHint"
     	, Format("{} Messages from Dbgwin_Output():", g_dbgwinMsgCount))
 
-    s_prev_msec := now_tick
-}	
+}
 
 
 Dbgwin_CreateGui()
@@ -249,127 +220,237 @@ Dbgwin_evtClear()
 ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; 
 ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; 
 
-; Dbgvar : a GUI that allow user to change global vars on the fly.
+; Amdbg : a GUI that allow user to change global vars on the fly.
 
-class Dbgvar ; as global var container
+class Amdbg ; as global var container
 {
-	static GuiName := "Dbgvar"
+	static GuiName := "Amdbg"
 	static GuiWidth := 400 ; px
 	
-	static dictVars := {}
+	static dictVars := {} ; TODO: rename to dictClient
+	; -- each dict-key represent a "client", and each client is described in
+	; 	yet another dict which has the following keys:
+	;	.desc     : description text of  
+	; 	.allmsg   : all debug messaged accumulated(as a circular buffer).
+	;	.outputlv : output level, 0,1,2... If 0, msg is only buffered but not sent to Dbgwin_Output().
+	
+	static maxbuf := 1024000 ; allmsg buffer size, in bytes
 }
 
-Dbgvar_CreateGui()
+Amdbg_CreateGui()
 {
-	GuiName := Dbgvar.GuiName
+	GuiName := Amdbg.GuiName
 	guiwidth := 400
 	
 	Gui_New(GuiName)
-	Gui_AssociateHwndVarname(GuiName, "g_dbgvarHwnd")
+	Gui_AssociateHwndVarname(GuiName, "g_amdbgHwnd")
 	Gui_ChangeOpt(GuiName, "+Resize +MinSize")
 	
 	Gui_Switch_Font( GuiName, 9, "", "Tahoma")
 	
-	Gui_Add_TxtLabel(GuiName, "", -1, "xm", "Change global vars on the fly.")
-	Gui_Add_TxtLabel(GuiName, "", -1, "xm", "Var name:")
+	Gui_Add_TxtLabel(GuiName, "", -1, "xm", "Configure debug message UI output levels.")
+	Gui_Add_TxtLabel(GuiName, "", -1, "xm", "AmDbg client id:")
 	
-	Gui_Add_Combobox(GuiName, "gu_dbgvarCbxVarSelect", 300, "xm g" "Dbgvar_SyncUI")
-	Gui_Add_Editbox( GuiName, "gu_dbgvarMleDesc", Dbgvar.GuiWidth-20, "xm-2 readonly r3 -E0x200")
+	Gui_Add_Combobox(GuiName, "gu_amdbgClientId", 300, "xm g" "Amdbg_SyncUI")
+	Gui_Add_Editbox( GuiName, "gu_amdbgMleDesc", Amdbg.GuiWidth-20, "xm-2 readonly r3 -E0x200")
 	
-	Gui_Add_TxtLabel(GuiName, "gu_dbgvarTxtNewValue", -1, "xm", "New value:")
-	Gui_Add_Editbox( GuiName, "gu_dbgvarEdtNewValue", Dbgvar.GuiWidth-20, "")
+	Gui_Add_TxtLabel(GuiName, "gu_amdbgTxtNewValue", -1, "xm", "New output level:")
+	Gui_Add_Editbox( GuiName, "gu_amdbgEdtNewValue", 60, "")
 
-	Gui_Add_Button(  GuiName, "gu_dbgvarSetBtn", -1, "Default g" "Dbgvar_SetValueBtn", "&Set new value")
+	Gui_Add_Button(  GuiName, "gu_amdbgSetBtn", -1, "Default g" "Amdbg_SetValueBtn", "&Set new")
 	
 	varlist := []
-	for varname,desc in Dbgvar.dictVars
+	for clientId in Amdbg.dictVars
 	{
-		varlist.Push(varname)
+		varlist.Push(clientId)
 	}
-	GuiControl_ComboboxAddItems(GuiName, "gu_dbgvarCbxVarSelect", varlist) ; already sorted by AHKGUI
+	GuiControl_ComboboxAddItems(GuiName, "gu_amdbgClientId", varlist) ; already sorted by AHKGUI
 }
 
-Dbgvar_ShowGui()
+Amdbg_ShowGui()
 {
-	GuiName := Dbgvar.GuiName
+	GuiName := Amdbg.GuiName
 
-	if(!g_dbgvarHwnd) {
-		Dbgvar_CreateGui() ; destroy old and create new
+	if(!g_amdbgHwnd) {
+		Amdbg_CreateGui() ; destroy old and create new
 	}
 	
-	Gui_Show(GuiName, Format("w{} center", Dbgvar.GuiWidth), "AHK change global var")
+	Gui_Show(GuiName, Format("w{} center", Amdbg.GuiWidth), "AmHotkey AmDbg configurations")
 	
 }
 
-Dbgvar_HideGui()
+Amdbg_HideGui()
 {
-	GuiName := Dbgvar.GuiName
+	GuiName := Amdbg.GuiName
 
 	Gui_Hide(GuiName)
 }
 
-DbgvarGuiClose()
+AmdbgGuiClose()
 {
-	Dbgvar_HideGui()
+	Amdbg_HideGui()
 }
 
-DbgvarGuiEscape()
+AmdbgGuiEscape()
 {
-	Dbgvar_HideGui()
+	Amdbg_HideGui()
 }
 
-Dbgvar_SetValue()
+Amdbg_SetValue()
 {
-	GuiName := Dbgvar.GuiName
+	GuiName := Amdbg.GuiName
 
-	uservar := GuiControl_GetText(GuiName, "gu_dbgvarCbxVarSelect")
-	uservalue := GuiControl_GetText(GuiName, "gu_dbgvarEdtNewValue")
+	clientId := GuiControl_GetText(GuiName, "gu_amdbgClientId")
+	outputlv := GuiControl_GetText(GuiName, "gu_amdbgEdtNewValue")
 	
-	GuiControl_SetText(GuiName, "gu_dbgvarMleDesc", Dbgvar.dictVars[uservar])
+;	GuiControl_SetText(GuiName, "gu_amdbgMleDesc", Amdbg.dictVars[uservar]) ; to-delete
 	
-	%uservar% := uservalue
+	Amdbg.dictVars[clientId].outputlv := outputlv
 }
 
-Dbgvar_SetValueBtn()
+Amdbg_SetValueBtn()
 {
-	Dbgvar_SetValue()
+	Amdbg_SetValue()
 	
-	Dbgvar_HideGui()
+	Amdbg_HideGui()
 }
 
-DbgvarGuiSize()
+AmdbgGuiSize()
 {
 	rsdict := {}
-    rsdict.gu_dbgvarMleDesc := "0,0,100,100" ; Left/Top/Right/Bottom pct
-    rsdict.gu_dbgvarEdtNewValue := "0,100,100,100"
-    rsdict.gu_dbgvarTxtNewValue := "0,100,0,100"
-    rsdict.gu_dbgvarSetBtn := "0,100,0,100"
-    dev_GuiAutoResize(Dbgvar.GuiName, rsdict, A_GuiWidth, A_GuiHeight, true)
+    rsdict.gu_amdbgMleDesc := "0,0,100,100" ; Left/Top/Right/Bottom pct
+    rsdict.gu_amdbgEdtNewValue := "0,100,100,100"
+    rsdict.gu_amdbgTxtNewValue := "0,100,0,100"
+    rsdict.gu_amdbgSetBtn := "0,100,0,100"
+    dev_GuiAutoResize(Amdbg.GuiName, rsdict, A_GuiWidth, A_GuiHeight, true)
 }
 
 
 
-;Dbgvar_evtCbxVarSelect()
+;Amdbg_evtCbxVarSelect()
 ;{
-;	Dbgvar_SyncUI()
+;	Amdbg_SyncUI()
 ;}
 ;
 
-Dbgvar_SyncUI()
+Amdbg_SyncUI()
 {
-	GuiName := Dbgvar.GuiName
+	GuiName := Amdbg.GuiName
 
-	uservar := GuiControl_GetText(GuiName, "gu_dbgvarCbxVarSelect")
+	clientId := GuiControl_GetText(GuiName, "gu_amdbgClientId")
 	
-	GuiControl_SetText(GuiName, "gu_dbgvarMleDesc", Dbgvar.dictVars[uservar])
+	GuiControl_SetText(GuiName, "gu_amdbgMleDesc", Amdbg.dictVars[clientId].desc)
 	
-	uservalue := %uservar%
-	GuiControl_SetText(GuiName, "gu_dbgvarEdtNewValue", uservalue)
+	outputlv := Amdbg.dictVars[clientId].outputlv
+	GuiControl_SetText(GuiName, "gu_amdbgEdtNewValue", outputlv)
 }
 
 
-Dbgvar_AddVarname(uservar, desc:="")
+
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+; Implement Amdbg_output()
+;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
+
+AmDbg_MakeLineMsg(msg)
 {
-	Dbgvar.dictVars[uservar] := desc
+	; Makes single \n become \r\n, bcz Win32 editbox recognized only \r\n as newline.
+	msg := StrReplace(msg, "`r`n", "`n")
+	msg := StrReplace(msg, "`n", "`r`n")
+	
+	; I will report millisecond fraction, so need some extra work.
+	;
+	static s_start_msec   := A_TickCount
+	static s_start_ymdhms := A_Now
+	static s_prev_msec    := s_start_msec
+	
+	now_tick := A_TickCount
+	msec_from_prev := now_tick - s_prev_msec
+	
+	sec_from_start := (A_TickCount-s_start_msec) // 1000
+	msec_frac := Mod(A_TickCount-s_start_msec, 1000)
+	
+	now_ymdhsm := dev_Ts14AddSeconds(s_start_ymdhms, sec_from_start)
+
+	; now_ymdhsm is like "20221212115851"
+;	year := substr(now_ymdhsm, 1, 4)
+;	mon  := substr(now_ymdhsm, 5, 2)
+;	day  := substr(now_ymdhsm, 7, 2)
+	ymd  := substr(now_ymdhsm, 1, 8)
+	hour := substr(now_ymdhsm, 9, 2)
+	minu := substr(now_ymdhsm, 11, 2)
+	sec  := substr(now_ymdhsm, 13, 2)
+	
+	stimestamp := Format("{}_{}:{}:{}.{:03}", ymd, hour, minu, sec, msec_frac)
+	stimeplus  := Format("+{}.{:03}s", msec_from_prev//1000, Mod(msec_from_prev,1000)) ; "+1.002s" etc
+	
+;	msg := now_ymdhsm "  " msg . "`r`n"
+	
+	linemsg := Format("{1}[{2}] ({3}) {4}`r`n"
+		, msec_from_prev>=1000 ? ".`r`n" : ""
+		, stimestamp, stimeplus, msg)
+	
+    s_prev_msec := now_tick
+	
+	return linemsg
 }
 
+_Amdbg_CreateClientId(clientId)
+{
+	if(not Amdbg.dictVars.HasKey(clientId))
+	{
+		Amdbg.dictVars[clientId] := {}
+		Amdbg.dictVars[clientId].desc := "Unset yet"
+		Amdbg.dictVars[clientId].allmsg := ""
+		
+		; Check for g_DefaultDbgLv_xxx global var to determine initial dbgLv .
+		; User can set those vars in custom_env.ahk, for example, if 
+		; clientId="Clipmon", then put this into custom_env.ahk :
+		;
+		; 	global g_DefaultDbgLv_Clipmon := 1
+		;
+		gvarname := "g_DefaultDbgLv_" clientId 
+		defaultlv := %gvarname%
+		
+		if(defaultlv>0)
+			Amdbg.dictVars[clientId].outputlv := defaultlv
+		else
+			Amdbg.dictVars[clientId].outputlv := 0
+	}
+
+	return Amdbg.dictVars[clientId]
+}
+
+Amdbg_output(clientId, newmsg)
+{
+	; clientId is a short string describing to which client this newmsg belongs
+	
+	dev_assert(clientId) ; clientId must NOT be empty
+	dev_assert(dev_IsString(clientId))
+	dev_assert(dev_IsString(newmsg))
+	
+	client := _Amdbg_CreateClientId(clientId)
+	
+	; Truncate buffer if full
+	if(StrLen(client.allmsg)>=Amdbg.maxbuf)
+	{
+		halfmax := Amdbg.maxbuf / 2
+		
+		client.allmsg := SubStr(client.allmsg, halfmax)
+	}
+	
+	linemsg := AmDbg_MakeLineMsg(newmsg)
+	
+	client.allmsg .= linemsg ; append it
+	
+	if(client.outputlv>0)
+	{
+		Dbgwin_AppendRaw(linemsg)
+	}
+}
+
+Amdbg_SetDesc(clientId, desc)
+{
+	client := _Amdbg_CreateClientId(clientId)
+	
+	client.desc := desc
+}

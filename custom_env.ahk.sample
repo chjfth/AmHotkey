@@ -1,4 +1,4 @@
 
-; global g_clipmonSeeDebugMsg := true
+; global g_isdbg_DefineHotkeyFlex_default := true ; [2023-04-21] deprecated
 
-; g_isdbg_DefineHotkeyFlex_default := true
+global g_DefaultDbgLv_Clipmon := 1
