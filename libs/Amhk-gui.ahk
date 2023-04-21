@@ -333,6 +333,16 @@ GuiControl_SetFocus(GuiName, CtrlVarname)
 	GuiControl, % cmd, % CtrlVarname
 }
 
+GuiControl_ChooseN(GuiName, CtrlVarname, item_index)
+{
+	dev_assert(Gui_IsValidVar(CtrlVarname))
+	cmd := (GuiName ? GuiName ":" : "") . "Choose"
+	
+	GuiControl, % cmd, % CtrlVarname, % item_index
+}
+
+; =================================
+
 dev_GuiAutoResize(GuiName, rsdict, gui_nowwidth, gui_nowheight, force_redraw:=false, qmargin:="")
 {
 	; gui_nowwidth, gui_nowheight tells the GUI's client area size

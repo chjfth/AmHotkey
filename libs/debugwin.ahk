@@ -49,6 +49,8 @@ global g_amdbgHwnd
 
 global gu_amdbgCbxClientId
 global gu_amdbgBtnRefresh
+global gu_amdbgTxtDbgBuffer
+global gu_amdbgBtnCopyDbgBuffer
 global gu_amdbgMleDesc
 global gu_amdbgTxtNewValue
 global gu_amdbgEdtNewValue
@@ -273,7 +275,7 @@ class Amdbg ; as global var container
 	; 	.allmsg   : all debug messaged accumulated(as a circular buffer).
 	;	.outputlv : output level, 0,1,2... If 0, msg is only buffered but not sent to Dbgwin_Output().
 	
-	static maxbuf := 1024000 ; allmsg buffer size, in bytes
+	static maxbuf := 2048000 ; allmsg buffer size, in bytes
 }
 
 Amdbg_CreateGui()
@@ -290,40 +292,21 @@ Amdbg_CreateGui()
 	Gui_Add_TxtLabel(GuiName, "", -1, "xm", "Configure debug message UI output levels.")
 	Gui_Add_TxtLabel(GuiName, "", -1, "xm", "AmDbg client id:")
 	
-	Gui_Add_Combobox(GuiName, "gu_amdbgCbxClientId", 300, "xm g" "Amdbg_SyncUI")
-	Gui_Add_Button(  GuiName, "gu_amdbgBtnRefresh", 40, "yp x+5 g" "Amdbg_RefreshClients", "&Refresh")
+	Gui_Add_Combobox(GuiName, "gu_amdbgCbxClientId", 320, "xm g" "Amdbg_SyncUI_nocopy")
+	Gui_Add_Button(  GuiName, "gu_amdbgBtnRefresh", 60, "yp-1 x+5 g" "Amdbg_RefreshClients", "&Refresh")
 	
+	Gui_Add_TxtLabel(GuiName, "gu_amdbgTxtDbgBuffer", 260, "xm y+8", "")
+	Gui_Add_Button(  GuiName, "gu_amdbgBtnCopyDbgBuffer", 120, "yp-4 x+5 g" "Amdbg_CopyDbgBuffer", "&Copy to clipboard")
+	
+	Gui_Add_TxtLabel(GuiName, "", 320, "xm", "Description:")
 	Gui_Add_Editbox( GuiName, "gu_amdbgMleDesc", Amdbg.GuiWidth-20, "xm-2 readonly r3 -E0x200")
 	
-	Gui_Add_TxtLabel(GuiName, "gu_amdbgTxtNewValue", -1, "xm", "New output level:")
+	Gui_Add_TxtLabel(GuiName, "gu_amdbgTxtNewValue", -1, "xm", "&New output level:")
 	Gui_Add_Editbox( GuiName, "gu_amdbgEdtNewValue", 60, "")
 
 	Gui_Add_Button(  GuiName, "gu_amdbgSetBtn", -1, "Default g" "Amdbg_SetValueBtn", "&Set new")
 	
 	Amdbg_RefreshClients()
-}
-
-Amdbg_RefreshClients()
-{
-	; Amdbg clients can be dynamically created/deleted, so we need this function.
-	
-	GuiName := Amdbg.GuiName
-	vnCbx := "gu_amdbgCbxClientId"
-	
-	cbTextOrig := GuiControl_GetText(GuiName, vnCbx)
-	
-	hwndCombobox := GuiControl_GetHwnd(GuiName, vnCbx)
-	dev_assert(hwndCombobox)
-	dev_Combobox_Clear(hwndCombobox)
-
-	varlist := []
-	for clientId in Amdbg.dictClients
-	{
-		varlist.Push(clientId)
-	}
-	GuiControl_ComboboxAddItems(GuiName, vnCbx, varlist) ; already sorted by AHKGUI
-	
-	Combobox_SetText(GuiName, vnCbx, cbTextOrig)
 }
 
 Amdbg_ShowGui()
@@ -378,32 +361,89 @@ AmdbgGuiSize()
 {
 	rsdict := {}
     rsdict.gu_amdbgMleDesc := "0,0,100,100" ; Left/Top/Right/Bottom pct
-    rsdict.gu_amdbgEdtNewValue := "0,100,100,100"
     rsdict.gu_amdbgSetBtn := "0,100,0,100"
+    rsdict.gu_amdbgTxtNewValue := "0,100,0,100"
+    rsdict.gu_amdbgEdtNewValue := "0,100,0,100"
     dev_GuiAutoResize(Amdbg.GuiName, rsdict, A_GuiWidth, A_GuiHeight, true)
 }
 
 
 
-;Amdbg_evtCbxVarSelect()
-;{
-;	Amdbg_SyncUI()
-;}
-;
+Amdbg_RefreshClients()
+{
+	; Amdbg clients can be dynamically created/deleted, so we need this function.
+	
+	GuiName := Amdbg.GuiName
+	vnCbx := "gu_amdbgCbxClientId"
+	
+	cbTextOrig := GuiControl_GetText(GuiName, vnCbx)
+	
+	hwndCombobox := GuiControl_GetHwnd(GuiName, vnCbx)
+	dev_assert(hwndCombobox)
+	dev_Combobox_Clear(hwndCombobox)
 
-Amdbg_SyncUI()
+	varlist := []
+	for clientId in Amdbg.dictClients
+	{
+		varlist.Push(clientId)
+	}
+	GuiControl_ComboboxAddItems(GuiName, vnCbx, varlist) ; already sorted by AHKGUI
+	
+	Combobox_SetText(GuiName, vnCbx, cbTextOrig)
+	
+	if(!cbTextOrig)
+	{
+		GuiControl_ChooseN(GuiName, vnCbx, 1)
+	}
+	
+	Amdbg_SyncUI()
+}
+
+Amdbg_SyncUI(is_copybuffer:=false)
 {
 	GuiName := Amdbg.GuiName
 
 	clientId := GuiControl_GetText(GuiName, "gu_amdbgCbxClientId")
-	
-	GuiControl_SetText(GuiName, "gu_amdbgMleDesc", Amdbg.dictClients[clientId].desc)
-	
-	outputlv := Amdbg.dictClients[clientId].outputlv
-	GuiControl_SetText(GuiName, "gu_amdbgEdtNewValue", outputlv)
+	client := Amdbg.dictClients[clientId]
+
+	if(client)
+	{
+		chars := StrLen(client.allmsg)
+		
+		GuiControl_SetText(GuiName, "gu_amdbgTxtDbgBuffer"
+			, Format("{} characters of debug message in buffer.", chars))
+		
+		if(is_copybuffer)
+		{
+			is_ok := dev_SetClipboardWithTimeout(client.allmsg)
+			if(is_ok)
+				dev_MsgBoxInfo(Format("{} characters copied to clipboard.", chars))
+		}
+		
+		GuiControl_SetText(GuiName, "gu_amdbgMleDesc", client.desc)
+		
+		outputlv := client.outputlv
+		GuiControl_SetText(GuiName, "gu_amdbgEdtNewValue", outputlv)
+	}
+	else
+	{
+		GuiControl_SetText(GuiName, "gu_amdbgMleDesc", "")
+		
+		GuiControl_SetText(GuiName, "gu_amdbgTxtDbgBuffer", "")
+		
+		GuiControl_SetText(GuiName, "gu_amdbgEdtNewValue", "")
+	}
 }
 
+Amdbg_SyncUI_nocopy()
+{
+	Amdbg_SyncUI(false)
+}
 
+Amdbg_CopyDbgBuffer()
+{
+	Amdbg_SyncUI(true)
+}
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 ; Implement Amdbg_output()
