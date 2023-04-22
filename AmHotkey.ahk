@@ -128,6 +128,10 @@ AmDoInit()
 {
 	AmDbg_SetDesc(AmHotkey.dbgid_HotkeyFlex,   "Debug message for fxhk_DefineHotkey() ...")
 	AmDbg_SetDesc(AmHotkey.dbgid_HotkeyLegacy, "Debug message for dev_DefineHotkey() ...")
+	
+	dev_MenuAddSepLine("TRAY")
+	dev_MenuAddItem("TRAY", "Show debug-message window", "Dbgwin_ShowGui")
+	dev_MenuAddItem("TRAY", "Configure for debug-clients", "Amdbg_ShowGui")
 
 }
 

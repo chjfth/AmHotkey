@@ -45,7 +45,7 @@ dev_getCallStack(deepness = 20, is_print_code = true)
 		if(lv_first_print==-1) 
 			lv_first_print := A_Index
 		
-		stack .= (stack ? "`n" : "") . Format("#{1}£º ",A_Index-lv_first_print+1) . "File '" oEx.file "', Line " oEx.line (oExPrev.What = lvl-1 ? "" : ", in " oExPrev.What) (is_print_code ? ":`n" line : "") "`n"
+		stack .= (stack ? "`n" : "") . Format("#{1}Â£Âº ",A_Index-lv_first_print+1) . "File '" oEx.file "', Line " oEx.line (oExPrev.What = lvl-1 ? "" : ", in " oExPrev.What) (is_print_code ? ":`n" line : "") "`n"
 	}
 	return stack
 }
@@ -1099,6 +1099,10 @@ dev_SendTextLines(arlines)
     }
 }
 
+dev_MenuAddSepLine(menuname)
+{
+	Menu, % menuname, add
+}
 
 dev_MenuAddItem(menuname, itemtext, target)
 {
@@ -1397,7 +1401,7 @@ dev_IsWin7SaveAsDialog()
 	if(not IsWinClassActive("#32770"))
 		return false
 	
-	if(IsWinTitleMatchRegex("Áí´æÎª")
+	if(IsWinTitleMatchRegex("ÃÃ­Â´Ã¦ÃÂª")
 		or IsWinTitleMatchRegex("Save As") )
 	{
 		return true

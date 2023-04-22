@@ -949,9 +949,6 @@ winshell_WindowOp_Init()
 	; Attach above submenu to main menu
 	dev_MenuAddSubmenu("TRAY", winshell_menutext_WindowOp, "winshell_menutext_WindowOp")
 	
-	
-	dev_MenuAddItem("TRAY", "Configure Debug-clients", "Amdbg_ShowGui")
-	
 	; ...
 	
 	winshell_DefineUtilitiesMenu()

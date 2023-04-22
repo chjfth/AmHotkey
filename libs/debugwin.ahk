@@ -55,6 +55,7 @@ global gu_amdbgMleDesc
 global gu_amdbgTxtNewValue
 global gu_amdbgEdtNewValue
 global gu_amdbgSetBtn
+global gu_amdbgBtnOpenDbgwin
 
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -281,7 +282,6 @@ class Amdbg ; as global var container
 Amdbg_CreateGui()
 {
 	GuiName := Amdbg.GuiName
-	guiwidth := 400
 	
 	Gui_New(GuiName)
 	Gui_AssociateHwndVarname(GuiName, "g_amdbgHwnd")
@@ -289,7 +289,7 @@ Amdbg_CreateGui()
 	
 	Gui_Switch_Font( GuiName, 9, "", "Tahoma")
 	
-	Gui_Add_TxtLabel(GuiName, "", -1, "xm", "Configure debug message UI output levels.")
+;	Gui_Add_TxtLabel(GuiName, "", -1, "xm", "Still contemplating good wording for this banner text.")
 	Gui_Add_TxtLabel(GuiName, "", -1, "xm", "Debug-client id:")
 	
 	Gui_Add_Combobox(GuiName, "gu_amdbgCbxClientId", 320, "xm g" "Amdbg_SyncUI_nocopy")
@@ -301,10 +301,13 @@ Amdbg_CreateGui()
 	Gui_Add_TxtLabel(GuiName, "", 320, "xm", "Description:")
 	Gui_Add_Editbox( GuiName, "gu_amdbgMleDesc", Amdbg.GuiWidth-20, "xm-2 readonly r3 -E0x200")
 	
-	Gui_Add_TxtLabel(GuiName, "gu_amdbgTxtNewValue", -1, "xm", "&New output level:")
+	Gui_Add_TxtLabel(GuiName, "gu_amdbgTxtNewValue", -1, "xm +0x100", "&Limit noise level to: (hover for tip)") ; +0x100 enable SS_NOTIFY so to have tooltip on it
 	Gui_Add_Editbox( GuiName, "gu_amdbgEdtNewValue", 60, "")
 
 	Gui_Add_Button(  GuiName, "gu_amdbgSetBtn", -1, "Default g" "Amdbg_SetValueBtn", "&Set new")
+	Gui_Add_Button(  GuiName, "gu_amdbgBtnOpenDbgwin", 100
+		, Format("x+{} g{}", Amdbg.GuiWidth-175, "Dbgwin_ShowGui")
+		, "&Open Dbgwin")
 	
 	Amdbg_RefreshClients()
 }
@@ -317,6 +320,8 @@ Amdbg_ShowGui()
 		Amdbg_CreateGui() ; destroy old and create new
 	}
 	
+	OnMessage(0x200, Func("Amdbg_WM_MOUSEMOVE")) ; add message hook
+	
 	Gui_Show(GuiName, Format("w{} center", Amdbg.GuiWidth), "AmHotkey AmDbg configurations")
 	
 }
@@ -326,6 +331,9 @@ Amdbg_HideGui()
 	GuiName := Amdbg.GuiName
 
 	Gui_Hide(GuiName)
+	
+	OnMessage(0x200, Func("Amdbg_WM_MOUSEMOVE"), 0) ; remove message hook
+	tooltip
 }
 
 AmdbgGuiClose()
@@ -360,10 +368,14 @@ Amdbg_SetValueBtn()
 AmdbgGuiSize()
 {
 	rsdict := {}
+	rsdict.gu_amdbgCbxClientId := "0,0,100,0"
+	rsdict.gu_amdbgBtnRefresh  := "100,0,100,0"
+	rsdict.gu_amdbgBtnCopyDbgBuffer := "100,0,100,0"
     rsdict.gu_amdbgMleDesc := "0,0,100,100" ; Left/Top/Right/Bottom pct
     rsdict.gu_amdbgSetBtn := "0,100,0,100"
     rsdict.gu_amdbgTxtNewValue := "0,100,0,100"
     rsdict.gu_amdbgEdtNewValue := "0,100,0,100"
+    rsdict.gu_amdbgBtnOpenDbgwin := "100,100,100,100"
     dev_GuiAutoResize(Amdbg.GuiName, rsdict, A_GuiWidth, A_GuiHeight, true)
 }
 
@@ -443,6 +455,53 @@ Amdbg_SyncUI_nocopy()
 Amdbg_CopyDbgBuffer()
 {
 	Amdbg_SyncUI(true)
+}
+
+Amdbg_WM_MOUSEMOVE()
+{
+    static s_prev_tooltiping_uic := 0
+    
+	GuiName := Amdbg.GuiName
+
+	is_from_tooltiping_uic := true ; assume message is from a GuiControl
+	idCtrl := A_GuiControl
+
+	clientId := GuiControl_GetText(GuiName, "gu_amdbgCbxClientId")
+	outputlv := GuiControl_GetText(GuiName, "gu_amdbgEdtNewValue")
+	
+	
+	if(idCtrl=="gu_amdbgTxtNewValue")
+	{
+		dev_TooltipAutoClear(Format("" 
+			. "If debug-client ""{1}"" outputs a message with message level higher than {2}, `n"
+			. "that message is considered too noisy, and will not be visible in Dbgwin window.`n"
+			. "`n"
+			. "On the other hand, if debug-client ""{1}"" outputs a message of level {2} or below, `n"
+			. "that message is considered cozy, and will be immediately visible in Dbgwin window. `n"
+			. "`n"
+			. "Noisy debug-messages are not lost, they can be retrieved by clicking `n"
+			. "[Copy to clipboard] above."
+			, clientId, outputlv))
+	}
+	else
+		is_from_tooltiping_uic := false
+	
+	if(A_Gui==GuiName)
+	{
+		; According to my [20221215.R1]
+        ; If mouse has *just* moved off a tooltiping UIC, we turn off the tooltip.
+        ; We cannot blindly turn off tooltip here, bcz we would get constant WM_MOUSEMOVE 
+        ; even if we do not move the mouse; turning off tooltip blindly would cause 
+        ; other function''s dev_TooltipAutoClear() to vanish immediately.
+        ;
+        if(is_from_tooltiping_uic) {
+            s_prev_tooltiping_uic := A_GuiControl
+        }
+        else if(s_prev_tooltiping_uic) {
+            tooltip ; turn off tooltip
+            s_prev_tooltiping_uic := 0
+        }
+	}
 }
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
