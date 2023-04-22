@@ -26,6 +26,10 @@ Amdbg_Lv3(clientId, newmsg)
 	; By calling Amdbg_ShowGui(), final user can control which clientId's messages appear onto 
 	; Dbgwin GUI instantly.
 
+Amdbg_Lv0(clientId, newmsg)
+	; Lv0 message has the benefit over Dbgwin_Output() that it's content is buffered into RAM,
+	; and can be later retrieved by Amdbg_ShowGui()'s [Copy to clipboard] button.
+
 AmDbg_SetDesc(clientId, desc)
 	; [Optional] Associate a piece of description text to `clientId`, which can be seen in 
 	; Dbgwin GUI instantly, so tht final user knows what is `clientId` is for.
@@ -616,6 +620,11 @@ Amdbg_output(clientId, newmsg, msglv:=1)
 	{
 		Dbgwin_AppendRaw(linemsg)
 	}
+}
+
+Amdbg_Lv0(clientId, newmsg)
+{
+	Amdbg_output(clientId, newmsg, 0)
 }
 
 Amdbg_Lv1(clientId, newmsg)
