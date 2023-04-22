@@ -74,8 +74,8 @@ class Dbgwin ; as global var container
 	; We define Dbgwin class, in order to define these "global constant"
 	; without the help of AUTOEXEC_debugwin label.
 	;
-	static IniFilename := "debugwin.ini"
-	static IniSection  := "cfg"
+	static _IniFilename := "debugwin.ini"
+	static _IniSection  := "cfg"
 }
 
 class CTimeGapTeller
@@ -198,17 +198,17 @@ Dbgwin_SaveWindowPos()
 	if(w!=0 and h!=0)
 	{
 		xywh := Format("{},{},{},{}", x,y,w,h)
-		succ := dev_IniWrite(Dbgwin.IniFilename, Dbgwin.IniSection, "WinposXYWH", xywh)
+		succ := dev_IniWrite(Dbgwin._IniFilename, Dbgwin._IniSection, "WinposXYWH", xywh)
 		if(!succ)
-			dev_MsgBoxWarning(Format("Dbgwin_SaveWindowPos(): Fail to save ini file: {}", Dbgwin.IniFilename))
+			dev_MsgBoxWarning(Format("Dbgwin_SaveWindowPos(): Fail to save ini file: {}", Dbgwin._IniFilename))
 	}
 
-;	Msgbox, % "Dbgwin.IniFilename=" Dbgwin.IniFilename
+;	Msgbox, % "Dbgwin._IniFilename=" Dbgwin._IniFilename
 }
 
 Dbgwin_LoadWindowPos()
 {
-	xywh := dev_IniRead(Dbgwin.IniFilename, Dbgwin.IniSection, "WinposXYWH")
+	xywh := dev_IniRead(Dbgwin._IniFilename, Dbgwin._IniSection, "WinposXYWH")
 
 	num := StrSplit(xywh, ",")
 	x := num[1] , y := num[2] , w := num[3] , h := num[4]
@@ -270,8 +270,8 @@ Dbgwin_evtClear()
 
 class Amdbg ; as global var container
 {
-	static GuiName := "Amdbg"
-	static GuiWidth := 470 ; px
+	static _GuiName := "Amdbg"
+	static _GuiWidth := 470 ; px
 	
 	static dictClients := {}
 	; -- each dict-key represent a "client", and each client is described in
@@ -285,8 +285,8 @@ class Amdbg ; as global var container
 
 Amdbg_CreateGui()
 {
-	GuiName := Amdbg.GuiName
-	gwidth := Amdbg.GuiWidth
+	GuiName := Amdbg._GuiName
+	gwidth := Amdbg._GuiWidth
 	
 	Gui_New(GuiName)
 	Gui_AssociateHwndVarname(GuiName, "g_amdbgHwnd")
@@ -322,7 +322,7 @@ Amdbg_CreateGui()
 
 Amdbg_ShowGui()
 {
-	GuiName := Amdbg.GuiName
+	GuiName := Amdbg._GuiName
 
 	if(!g_amdbgHwnd) {
 		Amdbg_CreateGui() ; destroy old and create new
@@ -330,13 +330,13 @@ Amdbg_ShowGui()
 	
 	OnMessage(0x200, Func("Amdbg_WM_MOUSEMOVE")) ; add message hook
 	
-	Gui_Show(GuiName, Format("w{} center", Amdbg.GuiWidth), "AmHotkey AmDbg configurations")
+	Gui_Show(GuiName, Format("w{} center", Amdbg._GuiWidth), "AmHotkey AmDbg configurations")
 	
 }
 
 Amdbg_HideGui()
 {
-	GuiName := Amdbg.GuiName
+	GuiName := Amdbg._GuiName
 
 	Gui_Hide(GuiName)
 	
@@ -356,7 +356,7 @@ AmdbgGuiEscape()
 
 Amdbg_SetValue()
 {
-	GuiName := Amdbg.GuiName
+	GuiName := Amdbg._GuiName
 
 	clientId := GuiControl_GetText(GuiName, "gu_amdbgCbxClientId")
 	outputlv := GuiControl_GetText(GuiName, "gu_amdbgEdtNewValue")
@@ -384,7 +384,7 @@ AmdbgGuiSize()
     rsdict.gu_amdbgTxtNewValue := "0,100,0,100"
     rsdict.gu_amdbgEdtNewValue := "0,100,0,100"
     rsdict.gu_amdbgBtnOpenDbgwin := "100,100,100,100"
-    dev_GuiAutoResize(Amdbg.GuiName, rsdict, A_GuiWidth, A_GuiHeight, true)
+    dev_GuiAutoResize(Amdbg._GuiName, rsdict, A_GuiWidth, A_GuiHeight, true)
 }
 
 
@@ -393,7 +393,7 @@ Amdbg_RefreshClients()
 {
 	; Amdbg clients can be dynamically created/deleted, so we need this function.
 	
-	GuiName := Amdbg.GuiName
+	GuiName := Amdbg._GuiName
 	vnCbx := "gu_amdbgCbxClientId"
 	
 	cbTextOrig := GuiControl_GetText(GuiName, vnCbx)
@@ -421,7 +421,7 @@ Amdbg_RefreshClients()
 
 Amdbg_SyncUI(is_copybuffer:=false)
 {
-	GuiName := Amdbg.GuiName
+	GuiName := Amdbg._GuiName
 
 	clientId := GuiControl_GetText(GuiName, "gu_amdbgCbxClientId")
 	client := Amdbg.dictClients[clientId]
@@ -469,7 +469,7 @@ Amdbg_WM_MOUSEMOVE()
 {
     static s_prev_tooltiping_uic := 0
     
-	GuiName := Amdbg.GuiName
+	GuiName := Amdbg._GuiName
 
 	is_from_tooltiping_uic := true ; assume message is from a GuiControl
 	idCtrl := A_GuiControl
