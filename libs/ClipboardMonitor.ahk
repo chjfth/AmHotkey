@@ -46,21 +46,17 @@ class CClipboardMonitor
 
 	__Delete()
 	{
-		if(CClipboardMonitor.FeatureId)
+		this.dbg2("CClipboardMonitor.__Delete(), singleton destroying.")
+		
+		if(this._hwndNextClipViewer)
 		{
-			; AHK 1.1.32 buggy! If user exits current Autohotkey.exe process, or,
-			; user executes a Reload command, CClipboardMonitor.FeatureId becomes empty
-			; when this __Delete() is executed. So, if it is empty, do not call .dbg() .
-			this.dbg2("CClipboardMonitor.__Delete(), singleton destroying.")
-		}
-		
-		bSucc := DllCall("ChangeClipboardChain"
-			, "Ptr", this._GuiHwnd
-			, "Ptr", this._hwndNextClipViewer)
+			bSucc := DllCall("ChangeClipboardChain"
+				, "Ptr", this._GuiHwnd
+				, "Ptr", this._hwndNextClipViewer)
+				
 			
-		
-		if(!bSucc) {
-			this.dbg0("[UNEXPECT] win32 ChangeClipboardChain() fails.")
+			if(!bSucc) 
+				this.dbg0("[UNEXPECT] win32 ChangeClipboardChain() fails.")
 		}
 		
 		this.DestroyGui()
@@ -73,8 +69,15 @@ class CClipboardMonitor
 			AmDbg_SetDesc(CClipboardMonitor.FeatureId, CClipboardMonitor._dbghelp)
 			s_prepared := true
 		}
-	
-		AmDbg_output(CClipboardMonitor.FeatureId, msg, lv)
+		
+		if(CClipboardMonitor.FeatureId)
+		{
+			; AHK 1.1.32 buggy! If user exits current Autohotkey.exe process, or,
+			; user executes a Reload command, CClipboardMonitor.FeatureId becomes empty
+			; when this __Delete() is executed. So, if it is empty, do not call .dbg() .
+		
+			AmDbg_output(CClipboardMonitor.FeatureId, msg, lv)
+		}
 	}
 	dbg0(msg)
 	{
@@ -99,6 +102,7 @@ class CClipboardMonitor
 	CreateGui()
 	{
 		GuiName := CClipboardMonitor.FeatureId
+		mywintitle := "AmHotkey Clipmon Status"
 		
 		Gui_New(GuiName)
 		; -- Would destroy old window with the same GuiName.
@@ -108,7 +112,7 @@ class CClipboardMonitor
 
 		Gui, % GuiName ":+Hwndg_clipmonHwndTmp"
 		
-		this.dbg1("Whole GUI hwnd = " g_clipmonHwndTmp)
+		this.dbg1(Format("{}, HWND = {}", mywintitle, g_clipmonHwndTmp))
 		
 		if(!g_clipmonHwndTmp)
 			return false
@@ -116,15 +120,15 @@ class CClipboardMonitor
 		this._GuiHwnd := g_clipmonHwndTmp
 		this._GuiName := GuiName
 		
-		Gui, % GuiName ":Add", Text, % Format("w200 hwnd{}", "g_clipmonHwndTmp")
+		Gui, % GuiName ":Add", Text, % Format("w210 hwnd{}", "g_clipmonHwndTmp")
 		this._hctlTxtClients := g_clipmonHwndTmp
 
-		Gui, % GuiName ":Add", Text, % Format("w200 hwnd{}", "g_clipmonHwndTmp")
+		Gui, % GuiName ":Add", Text, % Format("w210 hwnd{}", "g_clipmonHwndTmp")
 		this._hctlTxtChanges := g_clipmonHwndTmp
 		
 		if(g_DefaultDbgLv_Clipmon>0)
 		{
-			Gui_Show(GuiName, "", "ClipboardMonitor.ahk") ; Show it only for debugging purpose
+			Gui_Show(GuiName, "", mywintitle) ; Show it only for debugging purpose
 		}
 
 		GuiControl_SetText(GuiName, this._hctlTxtClients, "Clients: 0")
@@ -139,15 +143,28 @@ class CClipboardMonitor
 		dev_OnMessage_Register(0x030D, "Clipmon_WM_CHANGECBCHAIN")
 		dev_OnMessage_Register(0x0308, "Clipmon_WM_DRAWCLIPBOARD")
 		
-		this._hwndNextClipViewer := DllCall("SetClipboardViewer", "Ptr", this._GuiHwnd)
+		prevhwnd := DllCall("SetClipboardViewer", "Ptr", this._GuiHwnd)
+		; -- return previous Clipboard viewer's hwnd
+		this._hwndNextClipViewer := prevhwnd
 		
-		if(this._hwndNextClipViewer) {
-			return true
+		this.dbg2(Format("win32 SetClipboardViewer() returns previous clipboard viewer HWND={:08X}", prevhwnd))
+		
+		if(not this._hwndNextClipViewer) 
+		{
+			winerr := win32_GetLastError()
+			this.dbg2("win32 GetLastError() returns " winerr)
+			this.dbg2("Since prevhwnd is NULL, and AHK engine probably overwrites WinErr code internally, "
+				. "so we can not know exactly whether SetClipboardViewer succeeded or failed."
+				. "You need to actually copy some text to Clipboard and see whether more Clipmon "
+				. "debug messages emerge. If they emerge, we can conclude success." )
+			
+			; [2023-04-22] Verified. If we run two AmHotkey instances on the same machine, both
+			; calling Clipmon_CreateMonitor(), we can see that: 
+			; * The first instance reports prevhwnd==NULL 
+			; * The second instance report prevhwnd of first instance's "AmHotkey Clipmon Status" HWND.
 		}
-		else  {
-			this.dbg0("[UNEXPECT] win32 SetClipboardViewer() fails.") ; TODO: try this
-			return false
-		}
+		
+		return true
 	}
 	
 	GenRandom_test()
@@ -237,8 +254,11 @@ class CClipboardMonitor
 			client.fnobj()
 		}
 
-		this.dbg2(Format("Clipmon: Relay WM_DRAWCLIPBOARD from hwnd=0x{:08X} to hwnd=0x{:08X}", hwnd, this._hwndNextClipViewer))
-		dev_SendMessage(this._hwndNextClipViewer, msg, wParam, lParam)
+		if(this._hwndNextClipViewer)
+		{
+			this.dbg2(Format("Clipmon: Relay WM_DRAWCLIPBOARD from hwnd=0x{:08X} to hwnd=0x{:08X}", hwnd, this._hwndNextClipViewer))
+			dev_SendMessage(this._hwndNextClipViewer, msg, wParam, lParam)
+		}
 	}
 }
 

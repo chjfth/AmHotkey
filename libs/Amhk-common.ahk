@@ -571,6 +571,17 @@ dev_FileGetTime(filepath, whichtime:="M")
 	return outvar ; return TS14 format
 }
 
+win32_ResetLastError()
+{
+	DllCall("SetLastError", "UInt", 0, "UInt")
+}
+
+win32_GetLastError()
+{
+	winerr := DllCall("GetLastError", "UInt")
+	return winerr
+}
+
 win32_CreateFile_QueryOnly(filepath)
 {
 	dwDesiredAccess := 0 ; query only
