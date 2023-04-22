@@ -10,17 +10,18 @@ APIs:
 
 */
 
-global g_clipmonHwndTmp
+global g_clipmonStatusHwnd
 global g_clipmon ; the only clipmon instance, dynamically created/destroyed
 
+global gu_clipmonLblClients
+global gu_clipmonLblMsgCounts
 
 class CClipboardMonitor
 {
-	static FeatureId := "Clipmon"
+	static _FeatureId := "Clipmon"
 
 	_GuiHwnd := 0
 	_hwndNextClipViewer := 0 ; the Win32 detail from WM_CHANGECBCHAIN
-	_testmember := 7
 	
 	_hctlTxtClients := 0
 	_hctlTxtChanges := 0 ; clipboard changes detected.
@@ -66,17 +67,17 @@ class CClipboardMonitor
 	{
 		static s_prepared := false
 		if(!s_prepared) {
-			AmDbg_SetDesc(CClipboardMonitor.FeatureId, CClipboardMonitor._dbghelp)
+			AmDbg_SetDesc(CClipboardMonitor._FeatureId, CClipboardMonitor._dbghelp)
 			s_prepared := true
 		}
 		
-		if(CClipboardMonitor.FeatureId)
+		if(CClipboardMonitor._FeatureId)
 		{
 			; AHK 1.1.32 buggy! If user exits current Autohotkey.exe process, or,
-			; user executes a Reload command, CClipboardMonitor.FeatureId becomes empty
+			; user executes a Reload command, CClipboardMonitor._FeatureId becomes empty
 			; when this __Delete() is executed. So, if it is empty, do not call .dbg() .
 		
-			AmDbg_output(CClipboardMonitor.FeatureId, msg, lv)
+			AmDbg_output(CClipboardMonitor._FeatureId, msg, lv)
 		}
 	}
 	dbg0(msg)
@@ -94,14 +95,14 @@ class CClipboardMonitor
 
 	DestroyGui()
 	{
-		GuiName := CClipboardMonitor.FeatureId
+		GuiName := CClipboardMonitor._FeatureId
 		
 		Gui_Destroy(GuiName)
 	}
 
 	CreateGui()
 	{
-		GuiName := CClipboardMonitor.FeatureId
+		GuiName := CClipboardMonitor._FeatureId
 		mywintitle := "AmHotkey Clipmon Status"
 		
 		Gui_New(GuiName)
@@ -109,30 +110,24 @@ class CClipboardMonitor
 
 		Gui_ChangeOpt(GuiName, "+E0x0080 +E0x40000")
 		; -- +E0x0080: WS_EX_TOOLWINDOW (thin title);  +E0x40000: WS_EX_APPWINDOW (want taskbar thumbnail)
-
-		Gui, % GuiName ":+Hwndg_clipmonHwndTmp"
 		
-		this.dbg1(Format("{}, HWND = {}", mywintitle, g_clipmonHwndTmp))
+		Gui_AssociateHwndVarname(GuiName, "g_clipmonStatusHwnd")
 		
-		if(!g_clipmonHwndTmp)
+		this.dbg1(Format("{}, HWND = {}", mywintitle, g_clipmonStatusHwnd))
+		
+		if(!g_clipmonStatusHwnd)
 			return false
 
-		this._GuiHwnd := g_clipmonHwndTmp
+		this._GuiHwnd := g_clipmonStatusHwnd
 		this._GuiName := GuiName
 		
-		Gui, % GuiName ":Add", Text, % Format("w210 hwnd{}", "g_clipmonHwndTmp")
-		this._hctlTxtClients := g_clipmonHwndTmp
-
-		Gui, % GuiName ":Add", Text, % Format("w210 hwnd{}", "g_clipmonHwndTmp")
-		this._hctlTxtChanges := g_clipmonHwndTmp
+		Gui_Add_TxtLabel(GuiName, "gu_clipmonLblClients",   -1, "w210", "Clients: 0")
+		Gui_Add_TxtLabel(GuiName, "gu_clipmonLblMsgCounts", -1, "w210", "WM_DRAWCLIPBOARD received: 0")
 		
 		if(g_DefaultDbgLv_Clipmon>0)
 		{
 			Gui_Show(GuiName, "", mywintitle) ; Show it only for debugging purpose
 		}
-
-		GuiControl_SetText(GuiName, this._hctlTxtClients, "Clients: 0")
-		GuiControl_SetText(GuiName, this._hctlTxtChanges, "WM_DRAWCLIPBOARD received: 0")
 
 		g_clipmon := this 
 		; -- We need to set this now, bcz next-on dev_OnMessage_Register() will cause 
@@ -223,8 +218,8 @@ class CClipboardMonitor
 	
 	UIRefreshClients()
 	{
-		GuiControl_SetText("", this._hctlTxtClients
-			, "Clients: " dev_mapping_count(this._clients)) ; GuiName="" is ok, bcz we use explicit hwnd
+		GuiName := CClipboardMonitor._FeatureId
+		GuiControl_SetText(GuiName, "gu_clipmonLblClients", "Clients: " dev_mapping_count(this._clients))
 	}
 	
 	Do_WM_CHANGECBCHAIN(wParam, lParam, msg, hwnd)
@@ -241,13 +236,13 @@ class CClipboardMonitor
 	
 	Do_WM_DRAWCLIPBOARD(wParam, lParam, msg, hwnd)
 	{
+		GuiName := CClipboardMonitor._FeatureId
+	
 		this.dbg1(Format("Do_WM_DRAWCLIPBOARD(), hwnd=0x{:08X}", this._GuiHwnd))
 
 		this._nChanges++
 		
-		GuiControl_SetText("", this._hctlTxtChanges
-			, "WM_DRAWCLIPBOARD received: " this._nChanges) ; GuiName="" is ok, bcz we use explicit hwnd
-
+		GuiControl_SetText(GuiName, "gu_clipmonLblMsgCounts", "WM_DRAWCLIPBOARD received: " this._nChanges)
 		for key,client in this._clients
 		{
 			this.dbg1(Format("Do_WM_DRAWCLIPBOARD() clientid={} , since={}", key, client.datetime))
@@ -270,7 +265,7 @@ CLIPMONEscape()
 
 CLIPMONClose()
 {
-	Gui_Hide(CClipboardMonitor.FeatureId)
+	Gui_Hide(CClipboardMonitor._FeatureId)
 }
 
 Clipmon_WM_CHANGECBCHAIN(wParam, lParam, msg, hwnd)

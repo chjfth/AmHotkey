@@ -258,6 +258,9 @@ GuiControl_SetText(GuiName, CtrlVarname, text)
 	cmd := GuiName ? GuiName ":" : ""
 	GuiControl, % cmd, % CtrlVarname, % text
 }
+; -- Memo: GuiControl can be called to set a Uic's text without knowing its containing GuiName,
+;    as long as we know the Uic's HWND. This has not been encapsulated yet.
+;    ClipboardMonitor.ahk's pre-20220422 code demonstrates this.
 
 GuiControl_SetValue(GuiName, CtrlVarname, text)
 {
