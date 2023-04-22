@@ -2458,7 +2458,7 @@ SetAlwaysOnTopWithTip()
 +^#Right:: moveWinBorder("L", 1)
 
 
-^#/:: devui_ChangeWindowPosition()
+; ^#/:: devui_ChangeWindowPosition()
 devui_ChangeWindowPosition()
 {
 	Awinid := dev_GetActiveHwnd() ; cache active window unique id

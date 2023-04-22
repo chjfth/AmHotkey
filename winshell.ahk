@@ -986,7 +986,9 @@ winshell_AddOneAhkFunctionMenu(menuitem_text, funcname)
 	dev_assert(StrLen(funcname)>0)
 
 	fnobj := Func(funcname)
-	dev_MenuAddItem("submenu_AhkFuncs", menuitem_text "`t" funcname, fnobj)
+	dev_MenuAddItem("submenu_AhkFuncs"
+		, Format("{}`t{}()", menuitem_text, funcname)
+		, fnobj)
 	
 	dev_MenuAddSubmenu(winshell.UtilityMenu, "AHK Functions >>", "submenu_AhkFuncs")
 }

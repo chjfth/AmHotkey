@@ -232,6 +232,7 @@ chjmisc_InitMenus()
 	Menu, tray, add  ; Creates a separator line.
 	SystrayMenu_Add_MuteClicking()
 	
+	winshell_AddOneAhkFunctionMenu("Accurate move current active window", "devui_ChangeWindowPosition")
 	winshell_AddOneAhkFunctionMenu("AHK Trim path utility", "AmTrimPath_ShowGui")
 	
 	winshell_AddOneSendTextMenu("venv39 - transcode"
