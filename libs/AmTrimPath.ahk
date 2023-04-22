@@ -14,8 +14,8 @@ global g_amtpCkbKeepWindow
 
 class AmTrimPath
 {
-	static GuiName := "AmTrimPath"
-	static hClipmon
+	static _GuiName := "AmTrimPath"
+	static _hClipmon
 }
 
 AmTrimPath_ShowGui()
@@ -25,7 +25,7 @@ AmTrimPath_ShowGui()
 
 Amtp_CreateGui()
 {
-	GuiName := AmTrimPath.GuiName
+	GuiName := AmTrimPath._GuiName
 	
 	Gui_New(GuiName)
 	Gui_AssociateHwndVarname(GuiName, "g_amtpHwnd")
@@ -62,13 +62,12 @@ Hint: You can type "/ to wrap quotes and convert to / at the same time.
 	Gui_Add_Editbox( GuiName, "g_amtpPreviewText", 502, "xm-2 r3")
 	
 	Gui_Add_Button(GuiName, "g_amtpBtnConvert", -1, "g" . "Amtp_SendToClipboard", "&Send to Clipboard")
-	
 	Gui_Add_Checkbox(GuiName, "g_amtpCkbKeepWindow", -1, "x+5 yp+5", "&Keep window")
 }
 
 Amtp_ShowGui()
 {
-	GuiName := AmTrimPath.GuiName
+	GuiName := AmTrimPath._GuiName
 
 	if(!g_amtpHwnd) {
 		Amtp_CreateGui() ; destroy old and create new
@@ -82,19 +81,19 @@ Amtp_ShowGui()
 	
 	Amtp_SyncUIFromClipboard()
 	
-	AmTrimPath.hClipmon := Clipmon_CreateMonitor("Amtp_SyncUIFromClipboard", "AmTrimPath:Amtp_ShowGui")
+	AmTrimPath._hClipmon := Clipmon_CreateMonitor("Amtp_SyncUIFromClipboard", "AmTrimPath:Amtp_ShowGui")
 }
 
 Amtp_HideGui()
 {
-	GuiName := AmTrimPath.GuiName
+	GuiName := AmTrimPath._GuiName
 
 	Gui_Hide(GuiName)
 
 	OnMessage(0x200, Func("Amtp_WM_MOUSEMOVE"), 0) ; remove message hook
 	tooltip
 	
-	Clipmon_DeleteMonitor(AmTrimPath.hClipmon)
+	Clipmon_DeleteMonitor(AmTrimPath._hClipmon)
 }
 
 AmTrimPathGuiClose()
@@ -111,8 +110,10 @@ AmTrimPathGuiSize()
 {
 	rsdict := {}
     rsdict.g_amtpCbdText := "0,0,100,0" ; Left/Top/Right/Bottom pct
-    rsdict.g_amtpPreviewText := "0,0,100,0"
-    dev_GuiAutoResize(AmTrimPath.GuiName, rsdict, A_GuiWidth, A_GuiHeight)
+    rsdict.g_amtpPreviewText := "0,0,100,100"
+    rsdict.g_amtpBtnConvert := "0,100,0,100"
+    rsdict.g_amtpCkbKeepWindow := "0,100,0,100"
+    dev_GuiAutoResize(AmTrimPath._GuiName, rsdict, A_GuiWidth, A_GuiHeight)
 }
 
 Amtp_WM_MOUSEMOVE()
@@ -126,7 +127,7 @@ Amtp_UserInputChange()
 
 Amtp_SyncUIFromClipboard()
 {
-	GuiName := AmTrimPath.GuiName
+	GuiName := AmTrimPath._GuiName
 	
 	text := Clipboard
 	GuiControl_SetText(GuiName, "g_amtpCbdText", text)
@@ -195,7 +196,7 @@ Amtp_SyncUIFromClipboard()
 
 Amtp_SendToClipboard()
 {
-	GuiName := AmTrimPath.GuiName
+	GuiName := AmTrimPath._GuiName
 	text := GuiControl_GetText(GuiName, "g_amtpPreviewText")
 	Clipboard := text
 	
