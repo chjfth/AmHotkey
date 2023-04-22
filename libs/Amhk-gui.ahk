@@ -68,7 +68,8 @@ Gui_Switch_Font(GuiName, sizept:=0, rgbhex:="", fontface:="", weight:=400)
 		cmd := Format("{}:{}", GuiName, cmd)
 
 	opt_sizept := sizept ? ("s" sizept) : ""
-	opt_rgbhex := rgbhex ? ("c" rgbhex) : ""
+	opt_rgbhex := StrLen(rgbhex)!=0 ? ("c" rgbhex) : "" 
+	; -- should not check rgbhex as bool, bcz "000000" is considered false
 	opt_weight := weight ? ("w" weight) : ""
 	
 	optall := opt_sizept " " opt_rgbhex " " opt_weight

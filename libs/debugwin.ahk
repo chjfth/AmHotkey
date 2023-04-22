@@ -271,7 +271,7 @@ Dbgwin_evtClear()
 class Amdbg ; as global var container
 {
 	static GuiName := "Amdbg"
-	static GuiWidth := 400 ; px
+	static GuiWidth := 470 ; px
 	
 	static dictClients := {}
 	; -- each dict-key represent a "client", and each client is described in
@@ -286,6 +286,7 @@ class Amdbg ; as global var container
 Amdbg_CreateGui()
 {
 	GuiName := Amdbg.GuiName
+	gwidth := Amdbg.GuiWidth
 	
 	Gui_New(GuiName)
 	Gui_AssociateHwndVarname(GuiName, "g_amdbgHwnd")
@@ -294,23 +295,26 @@ Amdbg_CreateGui()
 	Gui_Switch_Font( GuiName, 9, "", "Tahoma")
 	
 ;	Gui_Add_TxtLabel(GuiName, "", -1, "xm", "Still contemplating good wording for this banner text.")
-	Gui_Add_TxtLabel(GuiName, "", -1, "xm", "Debug-client id:")
+	Gui_Add_TxtLabel(GuiName, "", -1, "xm", "&Debug-client id:")
 	
-	Gui_Add_Combobox(GuiName, "gu_amdbgCbxClientId", 320, "xm g" "Amdbg_SyncUI_nocopy")
+	Gui_Add_Combobox(GuiName, "gu_amdbgCbxClientId", gwidth-80, "xm g" "Amdbg_SyncUI_nocopy")
 	Gui_Add_Button(  GuiName, "gu_amdbgBtnRefresh", 60, "yp-1 x+5 g" "Amdbg_RefreshClients", "&Refresh")
 	
-	Gui_Add_TxtLabel(GuiName, "gu_amdbgTxtDbgBuffer", 260, "xm y+8", "")
+	Gui_Add_TxtLabel(GuiName, "gu_amdbgTxtDbgBuffer", gwidth-140, "xm y+8", "")
 	Gui_Add_Button(  GuiName, "gu_amdbgBtnCopyDbgBuffer", 120, "yp-4 x+5 g" "Amdbg_CopyDbgBuffer", "&Copy to clipboard")
 	
 	Gui_Add_TxtLabel(GuiName, "", 320, "xm", "Description:")
-	Gui_Add_Editbox( GuiName, "gu_amdbgMleDesc", Amdbg.GuiWidth-20, "xm-2 readonly r3 -E0x200")
+	Gui_Switch_Font( GuiName, 0, "666666") ; change text color to gray
+	Gui_Add_Editbox( GuiName, "gu_amdbgMleDesc", gwidth-20, "xm-2 readonly r4 -E0x200")
+	Gui_Switch_Font( GuiName, 0, "000000") ; revert text color to black
 	
-	Gui_Add_TxtLabel(GuiName, "gu_amdbgTxtNewValue", -1, "xm +0x100", "&Limit noise level to: (hover for tip)") ; +0x100 enable SS_NOTIFY so to have tooltip on it
+	Gui_Add_TxtLabel(GuiName, "gu_amdbgTxtNewValue", -1
+		, "xm +0x100", "&Limit noise level to: (hover for tip)") ; +0x100 enable SS_NOTIFY so to have tooltip on it
 	Gui_Add_Editbox( GuiName, "gu_amdbgEdtNewValue", 60, "")
 
 	Gui_Add_Button(  GuiName, "gu_amdbgSetBtn", -1, "Default g" "Amdbg_SetValueBtn", "&Set new")
 	Gui_Add_Button(  GuiName, "gu_amdbgBtnOpenDbgwin", 100
-		, Format("x+{} g{}", Amdbg.GuiWidth-175, "Dbgwin_ShowGui")
+		, Format("x+{} g{}", gwidth-175, "Dbgwin_ShowGui")
 		, "&Open Dbgwin")
 	
 	Amdbg_RefreshClients()

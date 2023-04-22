@@ -437,7 +437,7 @@ class AutoexecForExe
 	static labels := [ "NullLabel_placeholder"
 {}, "NullLabel_placeholder"]
 }
-)
+) ; Look out. Above 5 lines are AHK strings, not AHK statements. Don't reformat it casually.
 	strlabels := ""
 	for i,label in arAutoexecLabels
 	{

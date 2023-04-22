@@ -29,9 +29,14 @@ class CClipboardMonitor
 	
 	_clients := {} ; Each client is identified by a random key.
 	
+	static _dbghelp := "Debug-message levels from ClipboardMonitor.ahk has the following meaning:`n"
+		. "* Lv0 : Unexpect errors. Will always display on Dbgwin.`n"
+		. "* Lv1 : Mild working state changes, such as new clients arrive/leave.`n"
+		. "* Lv2 : Verbose working state changes."
+	
 	__New()
 	{
-		this.dbg("CClipboardMonitor.__New().")
+		this.dbg2("CClipboardMonitor.__New(), singleton creating.")
 		
 		if(this.CreateGui())
 			return this
@@ -46,25 +51,42 @@ class CClipboardMonitor
 			; AHK 1.1.32 buggy! If user exits current Autohotkey.exe process, or,
 			; user executes a Reload command, CClipboardMonitor.FeatureId becomes empty
 			; when this __Delete() is executed. So, if it is empty, do not call .dbg() .
-			this.dbg("CClipboardMonitor.__Delete().")
+			this.dbg2("CClipboardMonitor.__Delete(), singleton destroying.")
 		}
 		
-		DllCall("ChangeClipboardChain"
+		bSucc := DllCall("ChangeClipboardChain"
 			, "Ptr", this._GuiHwnd
 			, "Ptr", this._hwndNextClipViewer)
 			
+		
+		if(!bSucc) {
+			this.dbg0("[UNEXPECT] win32 ChangeClipboardChain() fails.")
+		}
+		
 		this.DestroyGui()
 	}
 
-	dbg(msg)
+	dbg(msg, lv)
 	{
 		static s_prepared := false
 		if(!s_prepared) {
-			AmDbg_SetDesc(CClipboardMonitor.FeatureId, "Debug ClipboardMonitor.ahk: 0/1")
+			AmDbg_SetDesc(CClipboardMonitor.FeatureId, CClipboardMonitor._dbghelp)
 			s_prepared := true
 		}
 	
-		AmDbg_output(CClipboardMonitor.FeatureId, msg)
+		AmDbg_output(CClipboardMonitor.FeatureId, msg, lv)
+	}
+	dbg0(msg)
+	{
+		this.dbg(msg, 0)
+	}
+	dbg1(msg)
+	{
+		this.dbg(msg, 1)
+	}
+	dbg2(msg)
+	{
+		this.dbg(msg, 2)
 	}
 
 	DestroyGui()
@@ -86,7 +108,7 @@ class CClipboardMonitor
 
 		Gui, % GuiName ":+Hwndg_clipmonHwndTmp"
 		
-		this.dbg("Whole GUI hwnd = " g_clipmonHwndTmp)
+		this.dbg1("Whole GUI hwnd = " g_clipmonHwndTmp)
 		
 		if(!g_clipmonHwndTmp)
 			return false
@@ -119,7 +141,13 @@ class CClipboardMonitor
 		
 		this._hwndNextClipViewer := DllCall("SetClipboardViewer", "Ptr", this._GuiHwnd)
 		
-		return true
+		if(this._hwndNextClipViewer) {
+			return true
+		}
+		else  {
+			this.dbg0("[UNEXPECT] win32 SetClipboardViewer() fails.") ; TODO: try this
+			return false
+		}
 	}
 	
 	GenRandom_test()
@@ -150,7 +178,7 @@ class CClipboardMonitor
 		
 		this._clients[clientid] := { "fnobj":fnobj, "datetime":dev_GetDateTimeStrNow(), "client_name":client_name }
 
-		this.dbg(Format("CClipboardMonitor.AddClient(""{}"") returns clientid: {}", client_name, clientid))
+		this.dbg1(Format("CClipboardMonitor.AddClient(""{}"") returns clientid: {}", client_name, clientid))
 
 		this.UIRefreshClients()
 		
@@ -162,7 +190,7 @@ class CClipboardMonitor
 		if(not this._clients.haskey(clientid))
 			return false
 
-		this.dbg(Format("CClipboardMonitor.DelClient({}).", clientid))
+		this.dbg1(Format("CClipboardMonitor.DelClient({}).", clientid))
 		
 		this._clients.Delete(clientid)
 		
@@ -170,7 +198,6 @@ class CClipboardMonitor
 		
 		if(dev_mapping_count(this._clients)==0)
 		{
-dev_MsgBoxInfo("FeatureId1 = " CClipboardMonitor.FeatureId)
 			g_clipmon := "" 
 			; -- destroy the CClipboardMonitor instance, 
 			; __Delete() gets called internally, `this` vanishes.
@@ -185,7 +212,7 @@ dev_MsgBoxInfo("FeatureId1 = " CClipboardMonitor.FeatureId)
 	
 	Do_WM_CHANGECBCHAIN(wParam, lParam, msg, hwnd)
 	{
-		this.dbg(Format("Do_WM_CHANGECBCHAIN(): wParam=0x{:08X} lParam=0x{:08X} hwnd=0x{:08X}."
+		this.dbg1(Format("Do_WM_CHANGECBCHAIN(): wParam=0x{:08X} lParam=0x{:08X} hwnd=0x{:08X}."
 			,wParam, lParam, hwnd))
 
 		if(wParam == this._hwndNextClipViewer)
@@ -197,7 +224,7 @@ dev_MsgBoxInfo("FeatureId1 = " CClipboardMonitor.FeatureId)
 	
 	Do_WM_DRAWCLIPBOARD(wParam, lParam, msg, hwnd)
 	{
-		this.dbg(Format("Do_WM_DRAWCLIPBOARD(), hwnd=0x{:08X}", this._GuiHwnd))
+		this.dbg1(Format("Do_WM_DRAWCLIPBOARD(), hwnd=0x{:08X}", this._GuiHwnd))
 
 		this._nChanges++
 		
@@ -206,11 +233,11 @@ dev_MsgBoxInfo("FeatureId1 = " CClipboardMonitor.FeatureId)
 
 		for key,client in this._clients
 		{
-			this.dbg(Format("Do_WM_DRAWCLIPBOARD() clientid={} , since={}", key, client.datetime))
+			this.dbg1(Format("Do_WM_DRAWCLIPBOARD() clientid={} , since={}", key, client.datetime))
 			client.fnobj()
 		}
 
-;		Dbgwin_Output(Format("Clipmon: Relay WM_DRAWCLIPBOARD from hwnd=0x{:08X} to hwnd=0x{:08X}", hwnd, this._hwndNextClipViewer)) ;debug
+		this.dbg2(Format("Clipmon: Relay WM_DRAWCLIPBOARD from hwnd=0x{:08X} to hwnd=0x{:08X}", hwnd, this._hwndNextClipViewer))
 		dev_SendMessage(this._hwndNextClipViewer, msg, wParam, lParam)
 	}
 }
@@ -263,10 +290,13 @@ Clipmon_CreateMonitor(fnobj, client_name:="default-client-name")
 	
 		callstack := dev_getCallStack()
 	
-		dev_MsgBoxError(Format("In {}(), fnobj parameter invalid! You should pass in a function-object, like this:`r`n`r`n"
+		errmsg := Format("In {}(), fnobj parameter invalid! You should pass in a function-object, like this:`r`n`r`n"
 			. "Func(""{}"") `r`n`r`n"
 			. "Callstack below:`r`n{}"
-			, A_ThisFunc, fnname, callstack))
+			, A_ThisFunc, fnname, callstack)
+		this.dbg0(errmsg)
+		dev_MsgBoxError(errmsg)
+		
 		return ""
 	}
 
