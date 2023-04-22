@@ -16,21 +16,19 @@
 #Include emeditor.ahk
 
 ; #Include winshell.ahk
-
 ; #Include windev.ahk
+; #Include chjmisc.ahk
+; #Include chjmisc2.ahk
 
 ; #Include mediaplayer.ahk
 ; #Include pdfreader.ahk
 ; #Include evernote.ahk
 
-#Include devmgmt.ahk
+; #Include devmgmt.ahk
 
 ; #Include hypersnap.ahk
 ; #Include hotstrings.ahk
 ; #Include webbrowsers.ahk
-
-; #Include chjmisc.ahk
-; #Include chjmisc2.ahk
 
 ; #Include vmware-control.ahk
 

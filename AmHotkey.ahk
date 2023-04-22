@@ -100,7 +100,7 @@ global g_isdbg_DefineHotkeyFlex   := g_isdbg_DefineHotkeyFlex_default
 ; All global vars should be defined ABOVE this line, otherwise, they will be null.
 ;==========;==========;==========;==========;==========;==========;==========;==========;
 
-AmDoInit()
+AmHotkey_DoInit()
 
 Amhotkey_ScanAndLoadAutoexecLabels()
 
@@ -124,12 +124,13 @@ class AmHotkey ; Store global vars here
 }
 
 
-AmDoInit()
+AmHotkey_DoInit()
 {
 	AmDbg_SetDesc(AmHotkey.dbgid_HotkeyFlex,   "Debug message for fxhk_DefineHotkey() ...")
 	AmDbg_SetDesc(AmHotkey.dbgid_HotkeyLegacy, "Debug message for dev_DefineHotkey() ...")
 	
 	dev_MenuAddSepLine("TRAY")
+	dev_MenuAddItem("TRAY", Format("== {} ==", ts14short()), "dev_nop") ; so to distinguish different AmHotkey instance.
 	dev_MenuAddItem("TRAY", "Show debug-message window", "Dbgwin_ShowGui")
 	dev_MenuAddItem("TRAY", "Configure for debug-clients", "Amdbg_ShowGui")
 
