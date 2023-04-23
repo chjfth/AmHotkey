@@ -295,9 +295,10 @@ Amdbg_CreateGui()
 	Gui_Switch_Font( GuiName, 9, "", "Tahoma")
 	
 ;	Gui_Add_TxtLabel(GuiName, "", -1, "xm", "Still contemplating good wording for this banner text.")
-	Gui_Add_TxtLabel(GuiName, "", -1, "xm", "&Debug-client id:")
+	Gui_Add_TxtLabel(GuiName, "", -1, "xm", "&Debug-client:")
 	
 	Gui_Add_Combobox(GuiName, "gu_amdbgCbxClientId", gwidth-80, "xm g" "Amdbg_SyncUI_nocopy")
+	; -- Use Combobox instead of DropdownList, so that user can copy the client-id string.
 	Gui_Add_Button(  GuiName, "gu_amdbgBtnRefresh", 60, "yp-1 x+5 g" "Amdbg_RefreshClients", "&Refresh")
 	
 	Gui_Add_TxtLabel(GuiName, "gu_amdbgTxtDbgBuffer", gwidth-140, "xm y+8", "")
@@ -309,7 +310,7 @@ Amdbg_CreateGui()
 	Gui_Switch_Font( GuiName, 0, "000000") ; revert text color to black
 	
 	Gui_Add_TxtLabel(GuiName, "gu_amdbgTxtNewValue", -1
-		, "xm +0x100", "&Limit noise level to: (hover for tip)") ; +0x100 enable SS_NOTIFY so to have tooltip on it
+		, "xm +0x100", "Dbgwin &verbose level: (hover for tip)") ; +0x100 enable SS_NOTIFY so to have tooltip on it
 	Gui_Add_Editbox( GuiName, "gu_amdbgEdtNewValue", 60, "")
 
 	Gui_Add_Button(  GuiName, "gu_amdbgSetBtn", -1, "Default g" "Amdbg_SetValueBtn", "&Set new")
@@ -361,16 +362,37 @@ Amdbg_SetValue()
 	clientId := GuiControl_GetText(GuiName, "gu_amdbgCbxClientId")
 	outputlv := GuiControl_GetText(GuiName, "gu_amdbgEdtNewValue")
 	
-;	GuiControl_SetText(GuiName, "gu_amdbgMleDesc", Amdbg.dictClients[uservar]) ; to-delete
+	errtitle := "Error input"
+	if(not clientId)
+	{
+		dev_MsgBoxError("ClientId input empty.", errtitle)
+		return false
+	}
 	
-	Amdbg.dictClients[clientId].outputlv := outputlv
+	client := Amdbg.dictClients[clientId]
+	if(not client)
+	{
+		dev_MsgBoxError("Invalid debug-client: " clientId, errtitle)
+		return false
+	}
+	
+	if(StrLen(outputlv)==0)
+	{
+		dev_MsgBoxError("Verbose-level input empty.", errtitle)
+		return false
+	}
+	
+	client.outputlv := outputlv
+	
+	return true
 }
 
 Amdbg_SetValueBtn()
 {
-	Amdbg_SetValue()
+	succ := Amdbg_SetValue()
 	
-	Amdbg_HideGui()
+	if(succ)
+		Amdbg_HideGui()
 }
 
 AmdbgGuiSize()
@@ -480,19 +502,23 @@ Amdbg_WM_MOUSEMOVE()
 	
 	if(idCtrl=="gu_amdbgTxtNewValue")
 	{
-		dev_TooltipAutoClear(Format("" 
+		dev_Tooltip(Format("" 
+			. "How verbose you want to see in Dbgwin window.`n"
+			. "`n"
 			. "If debug-client ""{1}"" outputs a message with message level higher than {2}, `n"
-			. "that message is considered too noisy, and will not be visible in Dbgwin window.`n"
+			. "that message is considered too noisy, and will not be visible in Dbgwin.`n"
 			. "`n"
 			. "On the other hand, if debug-client ""{1}"" outputs a message of level {2} or below, `n"
-			. "that message is considered cozy, and will be immediately visible in Dbgwin window. `n"
+			. "that message is considered cozy, and will be immediately visible in Dbgwin. `n"
 			. "`n"
 			. "Noisy debug-messages are not lost, they can be retrieved by clicking `n"
-			. "[Copy to clipboard] above."
+			. "[Copy to clipboard] button."
 			, clientId, outputlv))
 	}
 	else
+	{
 		is_from_tooltiping_uic := false
+	}
 	
 	if(A_Gui==GuiName)
 	{
