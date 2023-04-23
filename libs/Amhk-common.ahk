@@ -227,6 +227,11 @@ dev_WinMoveHwnd(hwnd, x:="", y:="", w:="", h="")
 	WinMove, ahk_id %hwnd%, , % x, % y, % w, % h
 }
 
+dev_Tooltip(text)
+{
+	tooltip, % text
+}
+
 dev_TooltipAutoClear(text, keep_millisec:=2000)
 {
 	tooltip, %text%

@@ -301,10 +301,10 @@ Amdbg_CreateGui()
 	; -- Use Combobox instead of DropdownList, so that user can copy the client-id string.
 	Gui_Add_Button(  GuiName, "gu_amdbgBtnRefresh", 60, "yp-1 x+5 g" "Amdbg_RefreshClients", "&Refresh")
 	
-	Gui_Add_TxtLabel(GuiName, "gu_amdbgTxtDbgBuffer", gwidth-140, "xm y+8", "")
-	Gui_Add_Button(  GuiName, "gu_amdbgBtnCopyDbgBuffer", 120, "yp-4 x+5 g" "Amdbg_CopyDbgBuffer", "&Copy to clipboard")
+	Gui_Add_TxtLabel(GuiName, "gu_amdbgTxtDbgBuffer", gwidth-120, "xm y+8", "")
+	Gui_Add_Button(  GuiName, "gu_amdbgBtnCopyDbgBuffer", 100, "yp-4 x+5 g" "Amdbg_CopyDbgBuffer", "&Copy buffer")
 	
-	Gui_Add_TxtLabel(GuiName, "", 320, "xm", "Description:")
+	Gui_Add_TxtLabel(GuiName, "", 320, "xm", "Client description:")
 	Gui_Switch_Font( GuiName, 0, "666666") ; change text color to gray
 	Gui_Add_Editbox( GuiName, "gu_amdbgMleDesc", gwidth-20, "xm-2 readonly r4 -E0x200")
 	Gui_Switch_Font( GuiName, 0, "000000") ; revert text color to black

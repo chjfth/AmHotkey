@@ -31,9 +31,9 @@ class CClipboardMonitor
 	_clients := {} ; Each client is identified by a random key.
 	
 	static _dbghelp := "Debug-message levels from ClipboardMonitor.ahk has the following meaning:`n"
-		. "* Lv0 : Unexpect errors. Will always display on Dbgwin.`n"
+		. "* Lv0 : Unexpected errors. Will always display on Dbgwin.`n"
 		. "* Lv1 : Mild working state changes, such as new clients arrive/leave.`n"
-		. "* Lv2 : Verbose working state changes."
+		. "* Lv2 : Verbose working diagnostic message."
 	
 	__New()
 	{
