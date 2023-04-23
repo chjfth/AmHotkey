@@ -116,6 +116,7 @@ return
 #Include %A_LineFile%\..\libs\WinClip.ahk
 #include %A_LineFile%\..\libs\Amhk-common.ahk
 #include %A_LineFile%\..\libs\Amhk-gui.ahk
+#include %A_LineFile%\..\libs\ClipboardMonitor.ahk
 
 class AmHotkey ; Store global vars here
 {
