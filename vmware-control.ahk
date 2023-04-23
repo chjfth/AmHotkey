@@ -34,7 +34,7 @@ class vmctl
 	static FeatureId := "VmCtl"
 
 	; Cfg:
-	static chk_interval_seconds := 10 ; 60
+	static chk_interval_seconds := 60
 	
 	static delay_seconds_bfr_suspend := 3600
 	; -- this value is changed by Start_MonitorPausedVMsAndSuspendThem()'s argument.
@@ -247,8 +247,6 @@ vmctl_GetVmLastModifyTime(vmx_filepath, ts14_old:="")
 	; If fail, return empty string.
 	
 
-;Dbgwin_Output(Format("##1: <{}> {}", ts14_old ? ts14short(ts14_old) : "", vmx_filepath ))
-
 	if(not dev_IsDiskFile(vmx_filepath))
 		return ""
 	
@@ -264,14 +262,11 @@ vmctl_GetVmLastModifyTime(vmx_filepath, ts14_old:="")
 	
 	Loop, Files, % vmxdir "\*.vmdk"
 	{
-;		Dbgwin_Output(A_LoopFileTimeModified " : " A_LoopFileName)
 		
 		; Note: Merely checking A_LoopFileTimeModified is not enough, whose timestamp 
 		; may be lagged quite a bit. We need to explicitly query against the specific file.
 		
 		ts14 := win32_GetFileTime(A_LoopFileFullPath)
-
-;Dbgwin_Output(Format("##2: <{}> {}", ts14short(ts14), A_LoopFileFullPath ))
 
 		if(ts14 > A_LoopFileTimeModified) ; Lv2 debug message for that
 		{
@@ -291,7 +286,6 @@ vmctl_GetVmLastModifyTime(vmx_filepath, ts14_old:="")
 		
 		if(ts14_old and ts14 > ts14_old)
 		{
-;Dbgwin_Output(Format("##2e: enough, +{}", dev_Ts14Diff(ts14, ts14_old) ))
 			; Enough, no need to check for more files.
 			tt_latest := ts14
 			latest_file := A_LoopFileFullPath

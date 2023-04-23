@@ -278,7 +278,10 @@ class Amdbg ; as global var container
 	; 	yet another dict which has the following keys:
 	;	.desc     : description text of  
 	; 	.allmsg   : all debug messaged accumulated(as a circular buffer).
-	;	.outputlv : output level, 0,1,2... If 0, msg is only buffered but not sent to Dbgwin_Output().
+	;	.displaylimitlv : 
+	;               debug-message display-limit level, 0,1,2... 
+	;               If 1, msg with level less than 1 is is sent to Dbgwin_Output(), 
+	;               msg with larger-levels are buffered to memory.
 	
 	static maxbuf := 2048000 ; allmsg buffer size, in bytes
 }
@@ -360,7 +363,7 @@ Amdbg_SetValue()
 	GuiName := Amdbg._GuiName
 
 	clientId := GuiControl_GetText(GuiName, "gu_amdbgCbxClientId")
-	outputlv := GuiControl_GetText(GuiName, "gu_amdbgEdtNewValue")
+	displaylimitlv := GuiControl_GetText(GuiName, "gu_amdbgEdtNewValue")
 	
 	errtitle := "Error input"
 	if(not clientId)
@@ -376,13 +379,13 @@ Amdbg_SetValue()
 		return false
 	}
 	
-	if(StrLen(outputlv)==0)
+	if(StrLen(displaylimitlv)==0)
 	{
 		dev_MsgBoxError("Verbose-level input empty.", errtitle)
 		return false
 	}
 	
-	client.outputlv := outputlv
+	client.displaylimitlv := displaylimitlv
 	
 	return true
 }
@@ -464,8 +467,8 @@ Amdbg_SyncUI(is_copybuffer:=false)
 		
 		GuiControl_SetText(GuiName, "gu_amdbgMleDesc", client.desc)
 		
-		outputlv := client.outputlv
-		GuiControl_SetText(GuiName, "gu_amdbgEdtNewValue", outputlv)
+		displaylimitlv := client.displaylimitlv
+		GuiControl_SetText(GuiName, "gu_amdbgEdtNewValue", displaylimitlv)
 	}
 	else
 	{
@@ -497,7 +500,7 @@ Amdbg_WM_MOUSEMOVE()
 	idCtrl := A_GuiControl
 
 	clientId := GuiControl_GetText(GuiName, "gu_amdbgCbxClientId")
-	outputlv := GuiControl_GetText(GuiName, "gu_amdbgEdtNewValue")
+	displaylimitlv := GuiControl_GetText(GuiName, "gu_amdbgEdtNewValue")
 	
 	
 	if(idCtrl=="gu_amdbgTxtNewValue")
@@ -513,7 +516,7 @@ Amdbg_WM_MOUSEMOVE()
 			. "`n"
 			. "Noisy debug-messages are not lost, they can be retrieved by clicking `n"
 			. "[Copy to clipboard] button."
-			, clientId, outputlv))
+			, clientId, displaylimitlv))
 	}
 	else
 	{
@@ -606,9 +609,9 @@ _Amdbg_CreateClientId(clientId) ; Create client object is not-exist yet
 		defaultlv := %gvarname%
 		
 		if(defaultlv>0)
-			Amdbg.dictClients[clientId].outputlv := defaultlv
+			Amdbg.dictClients[clientId].displaylimitlv := defaultlv
 		else
-			Amdbg.dictClients[clientId].outputlv := 0
+			Amdbg.dictClients[clientId].displaylimitlv := 0
 	}
 
 	return Amdbg.dictClients[clientId]
@@ -646,7 +649,7 @@ Amdbg_output(clientId, newmsg, msglv:=1)
 	
 	_Amdbg_AppendLineMsg(client, linemsg)
 	
-	if(msglv <= client.outputlv)
+	if(msglv <= client.displaylimitlv)
 	{
 		Dbgwin_AppendRaw(linemsg)
 	}
