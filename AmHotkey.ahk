@@ -406,6 +406,12 @@ amhk_ScanAhkFilesForAutoexecLabels(arAutoexecLabels)
 		; Loop, %A_ScriptDir%\*.ahk ; this matches XXX.ahkx , XXX.ahky etc (AHK bug?)
 		; so I have to filter it once more.
 		
+		if(InStr(A_LoopFileFullPath, ".no-ahk"))
+		{
+			; We deliberately skip those dir with ".no-ahk" suffix.
+			continue
+		}
+		
 		if(amhk_IsAutoGlobalFilename(A_LoopFileName))
 		{
 			amhk_AddAutoExecAhk(arAutoexecLabels, A_LoopFileDir, A_LoopFileName)
