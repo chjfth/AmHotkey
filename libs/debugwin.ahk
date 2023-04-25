@@ -18,21 +18,21 @@ Dbgwin_ShowGui(true)
 Amdbg_ShowGui()
 	; Pop up the dialog UI that allows user to change AHK global vars on the fly.
 
-Amdbg_output(clientId, newmsg, msglv)
-Amdbg_Lv1(clientId, newmsg)
-Amdbg_Lv2(clientId, newmsg)
-Amdbg_Lv3(clientId, newmsg)
-	; Output a debug message in the name of `clientId`.
-	; By calling Amdbg_ShowGui(), final user can control which clientId's messages appear onto 
+Amdbg_output(modu, newmsg, msglv)
+Amdbg_Lv1(modu, newmsg)
+Amdbg_Lv2(modu, newmsg)
+Amdbg_Lv3(modu, newmsg)
+	; Output a debug message in the name of modu(debug-module). 
+	; By calling Amdbg_ShowGui(), final user can control which modu's messages appear onto 
 	; Dbgwin GUI instantly.
 
-Amdbg_Lv0(clientId, newmsg)
+Amdbg_Lv0(modu, newmsg)
 	; Lv0 message has the benefit over Dbgwin_Output() that it's content is buffered into RAM,
 	; and can be later retrieved by Amdbg_ShowGui()'s [Copy to clipboard] button.
 
-AmDbg_SetDesc(clientId, desc)
-	; [Optional] Associate a piece of description text to `clientId`, which can be seen in 
-	; Dbgwin GUI instantly, so tht final user knows what is `clientId` is for.
+AmDbg_SetDesc(modu, desc)
+	; [Optional] Associate a piece of description text to modu, which can be seen in 
+	; Dbgwin GUI instantly, so the final user knows what the modu name stands for.
 
 */
 
@@ -51,7 +51,7 @@ global g_dbgwinMsgCount := 0
 
 global g_amdbgHwnd
 
-global gu_amdbgCbxClientId
+global gu_amdbgCbxDbgModu
 global gu_amdbgBtnRefresh
 global gu_amdbgTxtDbgBuffer
 global gu_amdbgBtnCopyDbgBuffer
@@ -266,21 +266,21 @@ Dbgwin_evtClear()
 ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; 
 ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; ; 
 
-; Amdbg : a GUI that allow user to change global vars on the fly.
+; Amdbg : a GUI that allows user to change global vars on the fly.
 
 class Amdbg ; as global var container
 {
 	static _GuiName := "Amdbg"
 	static _GuiWidth := 470 ; px
 	
-	static dictClients := {}
-	; -- each dict-key represent a "client", and each client is described in
+	static dictModules := {}
+	; -- each dict-key represent a debug-module, and the module's content is described in
 	; 	yet another dict which has the following keys:
-	;	.desc     : description text of  
+	;	.desc     : description text of this debug-module.
 	; 	.allmsg   : all debug messaged accumulated(as a circular buffer).
 	;	.displaylimitlv : 
-	;               debug-message display-limit level, 0,1,2... 
-	;               If 1, msg with level less than 1 is is sent to Dbgwin_Output(), 
+	;               debug-message display-limit level, 0,1,2... (sift-level)
+	;               If 1, msg with level equal or less than 1 is is sent to Dbgwin_Output(), 
 	;               msg with larger-levels are buffered to memory.
 	
 	static maxbuf := 2048000 ; allmsg buffer size, in bytes
@@ -298,22 +298,22 @@ Amdbg_CreateGui()
 	Gui_Switch_Font( GuiName, 9, "", "Tahoma")
 	
 ;	Gui_Add_TxtLabel(GuiName, "", -1, "xm", "Still contemplating good wording for this banner text.")
-	Gui_Add_TxtLabel(GuiName, "", -1, "xm", "&Debug-client:")
+	Gui_Add_TxtLabel(GuiName, "", -1, "xm", "&Debug-module:")
 	
-	Gui_Add_Combobox(GuiName, "gu_amdbgCbxClientId", gwidth-80, "xm g" "Amdbg_SyncUI_nocopy")
-	; -- Use Combobox instead of DropdownList, so that user can copy the client-id string.
-	Gui_Add_Button(  GuiName, "gu_amdbgBtnRefresh", 60, "yp-1 x+5 g" "Amdbg_RefreshClients", "&Refresh")
+	Gui_Add_Combobox(GuiName, "gu_amdbgCbxDbgModu", gwidth-80, "xm g" "Amdbg_SyncUI_nocopy")
+	; -- Use Combobox instead of DropdownList, so that user can copy the module name.
+	Gui_Add_Button(  GuiName, "gu_amdbgBtnRefresh", 60, "yp-1 x+5 g" "Amdbg_RefreshModules", "&Refresh")
 	
 	Gui_Add_TxtLabel(GuiName, "gu_amdbgTxtDbgBuffer", gwidth-120, "xm y+8", "")
 	Gui_Add_Button(  GuiName, "gu_amdbgBtnCopyDbgBuffer", 100, "yp-4 x+5 g" "Amdbg_CopyDbgBuffer", "&Copy buffer")
 	
-	Gui_Add_TxtLabel(GuiName, "", 320, "xm", "Client description:")
+	Gui_Add_TxtLabel(GuiName, "", 320, "xm", "Debug-module description:")
 	Gui_Switch_Font( GuiName, 0, "666666") ; change text color to gray
 	Gui_Add_Editbox( GuiName, "gu_amdbgMleDesc", gwidth-20, "xm-2 readonly r4 -E0x200")
 	Gui_Switch_Font( GuiName, 0, "000000") ; revert text color to black
 	
 	Gui_Add_TxtLabel(GuiName, "gu_amdbgTxtNewValue", -1
-		, "xm +0x100", "Dbgwin &verbose level: (hover for tip)") ; +0x100 enable SS_NOTIFY so to have tooltip on it
+		, "xm +0x100", "Dbgwin &verbose level for this module: (hover for tip)") ; +0x100 enable SS_NOTIFY so to have tooltip on it
 	Gui_Add_Editbox( GuiName, "gu_amdbgEdtNewValue", 60, "")
 
 	Gui_Add_Button(  GuiName, "gu_amdbgSetBtn", -1, "Default g" "Amdbg_SetValueBtn", "&Set new")
@@ -321,7 +321,7 @@ Amdbg_CreateGui()
 		, Format("x+{} g{}", gwidth-175, "Dbgwin_ShowGui")
 		, "&Open Dbgwin")
 	
-	Amdbg_RefreshClients()
+	Amdbg_RefreshModules()
 }
 
 Amdbg_ShowGui()
@@ -362,20 +362,20 @@ Amdbg_SetValue()
 {
 	GuiName := Amdbg._GuiName
 
-	clientId := GuiControl_GetText(GuiName, "gu_amdbgCbxClientId")
+	modu := GuiControl_GetText(GuiName, "gu_amdbgCbxDbgModu")
 	displaylimitlv := GuiControl_GetText(GuiName, "gu_amdbgEdtNewValue")
 	
 	errtitle := "Error input"
-	if(not clientId)
+	if(not modu)
 	{
-		dev_MsgBoxError("ClientId input empty.", errtitle)
+		dev_MsgBoxError("Debug-module input empty.", errtitle)
 		return false
 	}
 	
-	client := Amdbg.dictClients[clientId]
-	if(not client)
+	moduobj := Amdbg.dictModules[modu]
+	if(not moduobj)
 	{
-		dev_MsgBoxError("Invalid debug-client: " clientId, errtitle)
+		dev_MsgBoxError("No such debug-module exists: " modu, errtitle)
 		return false
 	}
 	
@@ -385,7 +385,7 @@ Amdbg_SetValue()
 		return false
 	}
 	
-	client.displaylimitlv := displaylimitlv
+	moduobj.displaylimitlv := displaylimitlv
 	
 	return true
 }
@@ -401,7 +401,7 @@ Amdbg_SetValueBtn()
 AmdbgGuiSize()
 {
 	rsdict := {}
-	rsdict.gu_amdbgCbxClientId := "0,0,100,0"
+	rsdict.gu_amdbgCbxDbgModu := "0,0,100,0"
 	rsdict.gu_amdbgBtnRefresh  := "100,0,100,0"
 	rsdict.gu_amdbgBtnCopyDbgBuffer := "100,0,100,0"
     rsdict.gu_amdbgMleDesc := "0,0,100,100" ; Left/Top/Right/Bottom pct
@@ -413,13 +413,13 @@ AmdbgGuiSize()
 }
 
 
-
-Amdbg_RefreshClients()
+Amdbg_RefreshModules()
 {
-	; Amdbg clients can be dynamically created/deleted, so we need this function.
+	; Amdbg modules can be dynamically created/deleted, so we need this operation
+	; to list new modules.
 	
 	GuiName := Amdbg._GuiName
-	vnCbx := "gu_amdbgCbxClientId"
+	vnCbx := "gu_amdbgCbxDbgModu"
 	
 	cbTextOrig := GuiControl_GetText(GuiName, vnCbx)
 	
@@ -428,9 +428,9 @@ Amdbg_RefreshClients()
 	dev_Combobox_Clear(hwndCombobox)
 
 	varlist := []
-	for clientId in Amdbg.dictClients
+	for modu in Amdbg.dictModules
 	{
-		varlist.Push(clientId)
+		varlist.Push(modu)
 	}
 	GuiControl_ComboboxAddItems(GuiName, vnCbx, varlist) ; already sorted by AHKGUI
 	
@@ -448,26 +448,26 @@ Amdbg_SyncUI(is_copybuffer:=false)
 {
 	GuiName := Amdbg._GuiName
 
-	clientId := GuiControl_GetText(GuiName, "gu_amdbgCbxClientId")
-	client := Amdbg.dictClients[clientId]
+	modu := GuiControl_GetText(GuiName, "gu_amdbgCbxDbgModu")
+	moduobj := Amdbg.dictModules[modu]
 
-	if(client)
+	if(moduobj)
 	{
-		chars := StrLen(client.allmsg)
+		chars := StrLen(moduobj.allmsg)
 		
 		GuiControl_SetText(GuiName, "gu_amdbgTxtDbgBuffer"
 			, Format("{} characters of debug message in buffer.", chars))
 		
 		if(is_copybuffer)
 		{
-			is_ok := dev_SetClipboardWithTimeout(client.allmsg)
+			is_ok := dev_SetClipboardWithTimeout(moduobj.allmsg)
 			if(is_ok)
 				dev_MsgBoxInfo(Format("{} characters copied to clipboard.", chars))
 		}
 		
-		GuiControl_SetText(GuiName, "gu_amdbgMleDesc", client.desc)
+		GuiControl_SetText(GuiName, "gu_amdbgMleDesc", moduobj.desc)
 		
-		displaylimitlv := client.displaylimitlv
+		displaylimitlv := moduobj.displaylimitlv
 		GuiControl_SetText(GuiName, "gu_amdbgEdtNewValue", displaylimitlv)
 	}
 	else
@@ -499,24 +499,23 @@ Amdbg_WM_MOUSEMOVE()
 	is_from_tooltiping_uic := true ; assume message is from a GuiControl
 	idCtrl := A_GuiControl
 
-	clientId := GuiControl_GetText(GuiName, "gu_amdbgCbxClientId")
+	modu := GuiControl_GetText(GuiName, "gu_amdbgCbxDbgModu")
 	displaylimitlv := GuiControl_GetText(GuiName, "gu_amdbgEdtNewValue")
-	
 	
 	if(idCtrl=="gu_amdbgTxtNewValue")
 	{
 		dev_Tooltip(Format("" 
 			. "How verbose you want to see in Dbgwin window.`n"
 			. "`n"
-			. "If debug-client ""{1}"" outputs a message with message level higher than {2}, `n"
+			. "If debug-modu ""{1}"" outputs a message with message level higher than {2}, `n"
 			. "that message is considered too noisy, and will not be visible in Dbgwin.`n"
 			. "`n"
-			. "On the other hand, if debug-client ""{1}"" outputs a message of level {2} or below, `n"
+			. "On the other hand, if debug-modu ""{1}"" outputs a message of level {2} or below, `n"
 			. "that message is considered cozy, and will be immediately visible in Dbgwin. `n"
 			. "`n"
 			. "Noisy debug-messages are not lost, they can be retrieved by clicking `n"
 			. "[Copy to clipboard] button."
-			, clientId, displaylimitlv))
+			, modu, displaylimitlv))
 	}
 	else
 	{
@@ -590,94 +589,94 @@ AmDbg_MakeLineMsg(msg, lv)
 	return linemsg
 }
 
-_Amdbg_CreateClientId(clientId) ; Create client object is not-exist yet
+_Amdbg_CreateDbgModule(modu) ; Create debug-module object is not-exist yet
 {
-	if(not Amdbg.dictClients.HasKey(clientId))
+	if(not Amdbg.dictModules.HasKey(modu))
 	{
-		Amdbg.dictClients[clientId] := {}
-		Amdbg.dictClients[clientId].desc := "Unset yet"
-		Amdbg.dictClients[clientId].allmsg := ""
-		Amdbg.dictClients[clientId].timegapteller := new CTimeGapTeller(1000)
+		Amdbg.dictModules[modu] := {}
+		Amdbg.dictModules[modu].desc := "Unset yet"
+		Amdbg.dictModules[modu].allmsg := ""
+		Amdbg.dictModules[modu].timegapteller := new CTimeGapTeller(1000)
 		
 		; Check for g_DefaultDbgLv_xxx global var to determine initial dbgLv .
 		; User can set those vars in custom_env.ahk, for example, if 
-		; clientId="Clipmon", then put this into custom_env.ahk :
+		; modu="Clipmon", then put this into custom_env.ahk :
 		;
 		; 	global g_DefaultDbgLv_Clipmon := 1
 		;
-		gvarname := "g_DefaultDbgLv_" clientId 
+		gvarname := "g_DefaultDbgLv_" modu 
 		defaultlv := %gvarname%
 		
 		if(defaultlv>0)
-			Amdbg.dictClients[clientId].displaylimitlv := defaultlv
+			Amdbg.dictModules[modu].displaylimitlv := defaultlv
 		else
-			Amdbg.dictClients[clientId].displaylimitlv := 0
+			Amdbg.dictModules[modu].displaylimitlv := 0
 	}
 
-	return Amdbg.dictClients[clientId]
+	return Amdbg.dictModules[modu]
 }
 
-_Amdbg_AppendLineMsg(client, linemsg)
+_Amdbg_AppendLineMsg(moduobj, linemsg)
 {
-	; client is the object returned by _Amdbg_CreateClientId()
+	; moduobj is the object returned by _Amdbg_CreateDbgModule()
 	
-	if(client.timegapteller.CheckGap())
+	if(moduobj.timegapteller.CheckGap())
 		linemsg := ".`r`n" linemsg
 	
-	client.allmsg .= linemsg
+	moduobj.allmsg .= linemsg
 }
 
-Amdbg_output(clientId, newmsg, msglv:=1)
+Amdbg_output(modu, newmsg, msglv:=1)
 {
-	; clientId is a short string describing to which client this newmsg belongs
+	; modu is a short string describing to which debug-module this newmsg belongs
 	
-	dev_assert(clientId) ; clientId must NOT be empty
-	dev_assert(dev_IsString(clientId))
+	dev_assert(modu) ; modu must NOT be empty
+	dev_assert(dev_IsString(modu))
 	dev_assert(dev_IsString(newmsg))
 	
-	client := _Amdbg_CreateClientId(clientId)
+	moduobj := _Amdbg_CreateDbgModule(modu)
 	
 	; Truncate buffer if full
-	if(StrLen(client.allmsg)>=Amdbg.maxbuf)
+	if(StrLen(moduobj.allmsg)>=Amdbg.maxbuf)
 	{
 		halfmax := Amdbg.maxbuf / 2
 		
-		client.allmsg := SubStr(client.allmsg, halfmax)
+		moduobj.allmsg := SubStr(moduobj.allmsg, halfmax)
 	}
 	
 	linemsg := AmDbg_MakeLineMsg(newmsg, msglv)
 	
-	_Amdbg_AppendLineMsg(client, linemsg)
+	_Amdbg_AppendLineMsg(moduobj, linemsg)
 	
-	if(msglv <= client.displaylimitlv)
+	if(msglv <= moduobj.displaylimitlv)
 	{
 		Dbgwin_AppendRaw(linemsg)
 	}
 }
 
-Amdbg_Lv0(clientId, newmsg)
+Amdbg_Lv0(modu, newmsg)
 {
-	Amdbg_output(clientId, newmsg, 0)
+	Amdbg_output(modu, newmsg, 0)
 }
 
-Amdbg_Lv1(clientId, newmsg)
+Amdbg_Lv1(modu, newmsg)
 {
-	Amdbg_output(clientId, newmsg, 1)
+	Amdbg_output(modu, newmsg, 1)
 }
 
-Amdbg_Lv2(clientId, newmsg)
+Amdbg_Lv2(modu, newmsg)
 {
-	Amdbg_output(clientId, newmsg, 2)
+	Amdbg_output(modu, newmsg, 2)
 }
 
-Amdbg_Lv3(clientId, newmsg)
+Amdbg_Lv3(modu, newmsg)
 {
-	Amdbg_output(clientId, newmsg, 3)
+	Amdbg_output(modu, newmsg, 3)
 }
 
-Amdbg_SetDesc(clientId, desc)
+Amdbg_SetDesc(modu, desc)
 {
-	client := _Amdbg_CreateClientId(clientId)
+	moduobj := _Amdbg_CreateDbgModule(modu)
 	
-	client.desc := desc
+	moduobj.desc := desc
 }
