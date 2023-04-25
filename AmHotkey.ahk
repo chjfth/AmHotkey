@@ -133,7 +133,7 @@ AmHotkey_DoInit()
 	dev_MenuAddSepLine("TRAY")
 	dev_MenuAddItem("TRAY", Format("== {} ==", ts14short()), "dev_nop") ; so to distinguish different AmHotkey instance.
 	dev_MenuAddItem("TRAY", "Show debug-message window", "Dbgwin_ShowGui")
-	dev_MenuAddItem("TRAY", "Configure for debug-clients", "Amdbg_ShowGui")
+	dev_MenuAddItem("TRAY", "Configure debug-modules", "Amdbg_ShowGui")
 
 }
 
