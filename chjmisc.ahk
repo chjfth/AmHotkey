@@ -133,7 +133,7 @@ chj_DefineQuickSwitchApps() ; as template for actual users
 	QSA_DefineActivateGroup_Caps("c", "VirtualConsoleClass", "ConEmu")
 	QSA_DefineActivateGroup_Caps("p", "PuTTY", "PuTTY")
 
-	QSA_DefineActivateGroupFlex_Caps("u", "ConsoleWindowClass", QSA_NO_WNDCLS_REGEX, "^Ubuntu", "WSL Ubuntu")
+	QSA_DefineActivateGroupFlex_Caps("u", "ConsoleWindowClass", QSA_NO_WNDCLS_REGEX, "Ubuntu", "WSL Ubuntu")
 	QSA_DefineActivateGroupFlex_Caps("o", "ConsoleWindowClass", QSA_NO_WNDCLS_REGEX, "^openSUSE", "WSL openSUSE")
 
 	QSA_DefineActivateGroupFlex_Caps("j", QSA_NO_WNDCLASS, "HyperSnap (7|8) Window Class",  "", "Hypersnap 7 or 8")

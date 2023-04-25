@@ -5,12 +5,12 @@
 ; API: AmTrimPath_ShowGui()
 
 global g_amtpHwnd
-global g_amtpCbdSum   ; Clipboard summary text: "Clipboard has ... chars" 
-global g_amtpCbdText  ; Current clipboard text
-global g_amtpUserInput
-global g_amtpPreviewText ; Preview of converted text
-global g_amtpBtnConvert
-global g_amtpCkbKeepWindow
+global gu_amtpCbdSum   ; Clipboard summary text: "Clipboard has ... chars" 
+global gu_amtpCbdText  ; Current clipboard text
+global gu_amtpUserInput
+global gu_amtpPreviewText ; Preview of converted text
+global gu_amtpBtnConvert
+global gu_amtpCkbKeepWindow
 
 class AmTrimPath
 {
@@ -33,10 +33,10 @@ Amtp_CreateGui()
 	
 	Gui_Switch_Font( GuiName, 9, "", "Tahoma")
 	
-	Gui_Add_TxtLabel(GuiName, "g_amtpCbdSum", 500, "xm", "To be filled...")
+	Gui_Add_TxtLabel(GuiName, "gu_amtpCbdSum", 500, "xm", "To be filled...")
 
 	Gui_Switch_Font( GuiName, 0, "blue")
-	Gui_Add_Editbox( GuiName, "g_amtpCbdText", 502, "xm-2 readonly r3 -E0x200")
+	Gui_Add_Editbox( GuiName, "gu_amtpCbdText", 502, "xm-2 readonly r3 -E0x200")
 
 	Gui_Switch_Font( GuiName, 0, "666666")
 	helptext = 
@@ -56,13 +56,13 @@ Hint: You can type "/ to wrap quotes and convert to / at the same time.
 	
 	Gui_Switch_Font( GuiName, 0, "black")
 	Gui_Add_TxtLabel(GuiName, "", -1, "xm y+10", "&Instructions: ")
-	Gui_Add_Editbox( GuiName, "g_amtpUserInput", 50, "x+10 yp-2 g" . "Amtp_UserInputChange")
+	Gui_Add_Editbox( GuiName, "gu_amtpUserInput", 50, "x+10 yp-2 g" . "Amtp_UserInputChange")
 
 	Gui_Add_TxtLabel(GuiName, "", -1, "xm y+10", "Convert preview:")
-	Gui_Add_Editbox( GuiName, "g_amtpPreviewText", 502, "xm-2 r3")
+	Gui_Add_Editbox( GuiName, "gu_amtpPreviewText", 502, "xm-2 r3")
 	
-	Gui_Add_Button(GuiName, "g_amtpBtnConvert", -1, "g" . "Amtp_SendToClipboard", "&Send to Clipboard")
-	Gui_Add_Checkbox(GuiName, "g_amtpCkbKeepWindow", -1, "x+5 yp+5", "&Keep window")
+	Gui_Add_Button(GuiName, "gu_amtpBtnConvert", -1, "g" . "Amtp_SendToClipboard", "&Send to Clipboard")
+	Gui_Add_Checkbox(GuiName, "gu_amtpCkbKeepWindow", -1, "x+5 yp+5", "&Keep window")
 }
 
 Amtp_ShowGui()
@@ -77,7 +77,7 @@ Amtp_ShowGui()
 	
 	Gui_Show(GuiName, "", "AHK Trim path utility")
 
-	GuiControl_SetFocus(GuiName, "g_amtpUserInput")
+	GuiControl_SetFocus(GuiName, "gu_amtpUserInput")
 	
 	Amtp_SyncUIFromClipboard()
 	
@@ -109,10 +109,10 @@ AmTrimPathGuiEscape()
 AmTrimPathGuiSize()
 {
 	rsdict := {}
-    rsdict.g_amtpCbdText := "0,0,100,0" ; Left/Top/Right/Bottom pct
-    rsdict.g_amtpPreviewText := "0,0,100,100"
-    rsdict.g_amtpBtnConvert := "0,100,0,100"
-    rsdict.g_amtpCkbKeepWindow := "0,100,0,100"
+    rsdict.gu_amtpCbdText := "0,0,100,0" ; Left/Top/Right/Bottom pct
+    rsdict.gu_amtpPreviewText := "0,0,100,100"
+    rsdict.gu_amtpBtnConvert := "0,100,0,100"
+    rsdict.gu_amtpCkbKeepWindow := "0,100,0,100"
     dev_GuiAutoResize(AmTrimPath._GuiName, rsdict, A_GuiWidth, A_GuiHeight)
 }
 
@@ -130,11 +130,11 @@ Amtp_SyncUIFromClipboard()
 	GuiName := AmTrimPath._GuiName
 	
 	text := Clipboard
-	GuiControl_SetText(GuiName, "g_amtpCbdText", text)
+	GuiControl_SetText(GuiName, "gu_amtpCbdText", text)
 	
 	if(text=="")
 	{
-		GuiControl_SetText(GuiName, "g_amtpCbdSum", "Clipboard has no text yet.")
+		GuiControl_SetText(GuiName, "gu_amtpCbdSum", "Clipboard has no text yet.")
 		return
 	}
 	
@@ -155,13 +155,13 @@ Amtp_SyncUIFromClipboard()
 	else
 		sumtext := Format("Clipboard has {} lines, {} chars total (not counting CRLF)", nlines, nchars)
 	
-	GuiControl_SetText(GuiName, "g_amtpCbdSum", sumtext)
+	GuiControl_SetText(GuiName, "gu_amtpCbdSum", sumtext)
 	
 	;
 	; Start converting clipboard content
 	;
 	
-	howto := GuiControl_GetText(GuiName, "g_amtpUserInput")
+	howto := GuiControl_GetText(GuiName, "gu_amtpUserInput")
 	; -- howto may include chars of / \ " ' -
 	
 	if(InStr(howto, """")>1 or InStr(howto, "'") or InStr(howto, "-"))
@@ -191,16 +191,16 @@ Amtp_SyncUIFromClipboard()
 	
 	textfinal := dev_JoinStrings(arlines_output, "`r`n")
 	
-	GuiControl_SetText(GuiName, "g_amtpPreviewText", textfinal)
+	GuiControl_SetText(GuiName, "gu_amtpPreviewText", textfinal)
 }
 
 Amtp_SendToClipboard()
 {
 	GuiName := AmTrimPath._GuiName
-	text := GuiControl_GetText(GuiName, "g_amtpPreviewText")
+	text := GuiControl_GetText(GuiName, "gu_amtpPreviewText")
 	Clipboard := text
 	
-	is_keepwindow := GuiControl_GetValue(GuiName, "g_amtpCkbKeepWindow")
+	is_keepwindow := GuiControl_GetValue(GuiName, "gu_amtpCkbKeepWindow")
 	
 	if(is_keepwindow)
 		dev_TooltipAutoClear("Sent to clipboard")
