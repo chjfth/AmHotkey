@@ -3233,6 +3233,25 @@ dev_TooltipDisableCloseWindow(msg_prefix)
 }
 
 
+dev_SendKeyToExeMainWindow(keyspec, wintitle:="A")
+{
+	; wintitle can be:
+	;	"A"
+	;	"ahk_id XXXXXXXX"
+	;	"ahk_class Notepad"
+	; etc
+
+	; [2023-04-26] This function use ControlSend to send keys. 
+	; You should know the caveat: If you want to send Ctrl+Shift+n , keyspec cannot be:
+	;	"^+n"
+	; instead, you should pass:
+	;	"{Ctrl down}{Shift down}n{Shift up}{Ctrl up}"
+	;
+	; -- yes, as for Autohotkey 1.1.32, the keyspec meaning is different from that of `SendRaw` command.
+
+	ControlSend ahk_parent, % keyspec, % wintitle
+}
+
 ;==============================================================================
 #Include *i _more_includes_.ahk ;This should be the final statement of this ahk
 ;==============================================================================

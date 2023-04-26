@@ -512,6 +512,15 @@ return
 	ModifyMouseNudgeUnitAM(21)
 return 
 
+; Alt+p to pause/unpause VM, for VMwks 15+
+!p:: vmwks_PauseVM()
+; -- [2023-04-26] This hotkey cannot be activated for VMwks 16.2.3 on Win10, don't know why.
+vmwks_PauseVM()
+{
+	dev_TooltipAutoClear("Sending Ctrl+Shift+p to pause/unpause the VM ...")
+	dev_SendKeyToExeMainWindow("{Ctrl down}{Shift down}p{Shift up}{Ctrl up}", "A")
+}
+
 #IfWinActive
 
 

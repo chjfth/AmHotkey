@@ -746,26 +746,28 @@ MPC_PromptDisablePgupPgdn()
 #If
 
 
-MPC_Bg_Back5sec(showtip=false)
+MPC_Bg_Back5sec(showtip:=false)
 {
 	WinGet, winid, ID, ahk_class MediaPlayerClassicW ; cache MPC window unique id
-	ControlSend , ahk_parent, {Left}, ahk_id %winid%
+	dev_SendKeyToExeMainWindow("{Left}", "ahk_id " winid)
 	if(showtip)
 		dev_TooltipAutoClear("MPC back 5 sec [" MPC_GetCurrentPlaytimeStr("ahk_id " winid) "]")
 }
-MPC_Bg_Forward5sec(showtip=false)
+MPC_Bg_Forward5sec(showtip:=false)
 {
 	WinGet, winid, ID, ahk_class MediaPlayerClassicW ; cache MPC window unique id
-	ControlSend , ahk_parent, {Right}, ahk_id %winid%
+	dev_SendKeyToExeMainWindow("{Right}", "ahk_id " winid)
 	if(showtip)
 		dev_TooltipAutoClear("MPC forward 5 sec [" MPC_GetCurrentPlaytimeStr("ahk_id " winid) "]")
 }
-MPC_Bg_PausePlay(showtip=false, bringfront=false)
+MPC_Bg_PausePlay(showtip:=false, bringfront:=false)
 {
 	if(showtip)
 		dev_TooltipAutoClear("MPC Pause/Play")
-	ControlSend , ahk_parent, {Space}, ahk_class MediaPlayerClassicW
 
+	WinGet, winid, ID, ahk_class MediaPlayerClassicW ; cache MPC window unique id
+	dev_SendKeyToExeMainWindow("{Space}", "ahk_id " winid)
+	
 	if(bringfront)
 	{
 		WinGet, Awinid, ID, A ; cache active window unique id
@@ -775,7 +777,7 @@ MPC_Bg_PausePlay(showtip=false, bringfront=false)
 	}
 }
 
-MPC_Bg_PausePlay_front(showtip=false)
+MPC_Bg_PausePlay_front(showtip:=false)
 {
 	MPC_Bg_PausePlay(showtip, true)
 }
