@@ -47,7 +47,6 @@ global gc_AutoexecLabelsFilepath := A_ScriptDir "\autoexec-labels.autogen.ahk"
 #Include *i %A_ScriptDir%\autoexec-labels.autogen.ahk
 
 
-global gtc_last_RCtrl = 0 ; Last RCtrl release tickcount
 global Eme_Fn_idle = true ; no need to configure
 
 global g_clipboard_cache
@@ -831,17 +830,6 @@ HiliStepTimer:
 	}	
 	return
 }
-
-;##############################################################################
-; Something with global effects
-;##############################################################################
-
-~RCtrl up:: ; [2015-02-06] moveWinRelative() requires this
-	gtc_last_RCtrl := A_TickCount
-;	Send {Blind}{RCtrl up}
-return
-
-
 
 
 ;##############################################################################
@@ -2142,35 +2130,15 @@ IsDirectionKey(key)
 		}
 }
 
-movewinGetScale()
+_movewinGetScale()
 {
-	; Note: This function requires a prior RCtrl relative hotkey defnition, such as 
-	;
-	; RCtrl::RCtrl
-	;
-	; ~RCtrl:: ...
-	;
-	; -- any one is ok.
-	
-	static scale = 1
-	matchpos := RegExMatch(A_PriorHotKey, "RCtrl")
-
-	if (matchpos>0 && A_TickCount-gtc_last_RCtrl<g_RCtrl_WinMoveScale_graceticks)
-	{	; A pre RCtrl tap will scale the move step
-		scale := g_winmove_scale
-	}
-	else if ( scale!=1 && not (IsDirectionKey(A_PriorKey)||A_PriorKey=="LShift") ) 
-	{
-		; That means user release Win+Alt and then press them again, so reset the scale.
-		scale = 1
-	}
-	return scale
+	return 1
 }
 
 moveWinRelative(rx, ry)
 {
 	; Move current window by a relative rx, ry value. rx, ry can be positive or negative
-	scale := movewinGetScale()
+	scale := _movewinGetScale()
 	WinGetPos, x, y, width, height, A
 	absx := x + rx*g_winmove_unit*scale
 	absy := y + ry*g_winmove_unit*scale
@@ -2181,7 +2149,7 @@ moveWinBorder(whichb, direction)
 {
 	; whichb can be "L", "T", "R", "B" for Left, Top, Right, Bottom respectively
 	
-	scale := movewinGetScale()
+	scale := _movewinGetScale()
 	value := direction * g_winmove_unit*scale
 	WinGetPos, x, y, width, height, A
 	
