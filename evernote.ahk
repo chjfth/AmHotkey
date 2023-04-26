@@ -3326,7 +3326,7 @@ Evernote_PastePlainText()
 	; Evernote 6.5.4: Paste plain text.
 	; via Evernote internal hotkey: Ctrl+Shift+v , Paste and matching style.
 	
-	ControlSend, ahk_parent, {Ctrl down}{Shift down}v{Shift up}{Control up}, A
+	dev_SendKeyToExeMainWindow("{Ctrl down}{Shift down}v{Shift up}{Control up}")
 	; -- by using ControlSend to specific target, we will not trigger global hotkey Ctrl+Shift+v, great.
 	
 	;Send !em ;// -- old style, Popping up main menu is not so reliable.
