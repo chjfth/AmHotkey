@@ -8,6 +8,7 @@ EverTable_LaunchUI()
 PreviewHtml_ShowGui(html)
 ColorMatrix_ShowGui()
 ;
+evernote_InitEvxLinks() ; optional, auto called by the following two:
 Evernote_PopLinkShowMenu()
 Evernote_PopLinkShowAutoPickupMenu()
 ;
@@ -308,7 +309,10 @@ Evernote_InitThisModule()
 
 	evernote_InitHotkeys()
 	
-	evernote_InitEvxLinks()
+;	evernote_InitEvxLinks()
+	; -- This will create a clipboard monitor client, which is a cost of system-resource,
+	;    so postpone it to Evernote_PopLinkShowMenu() and Evernote_PopLinkShowAutoPickupMenu()
+	;    If you really need it as early as possible, please call it in customize.ahk .
 }
 
 
@@ -3712,6 +3716,8 @@ Evernote_PopLinkShowMenu_2x()
 
 Evernote_PopLinkShowMenu()
 {
+	evernote_InitEvxLinks()
+
 	submenus_seen := []
 
 	try {
@@ -3800,6 +3806,8 @@ Evernote_PopLinkShowMenu()
 
 Evernote_PopLinkShowAutoPickupMenu()
 {
+	evernote_InitEvxLinks()
+
 	if(evernote_ConstructAutoPickupMenu())
 	{
 		dev_MenuShow("EvernoteAutopickupEvx")
@@ -4054,6 +4062,12 @@ CF_HTML_PasteCodeBlock(line_comment, block_comment:="", lnprefix_start:=0)
 
 evernote_InitEvxLinks()
 {
+	static s_inited := false
+	if(s_inited)
+		return
+
+	s_inited := true
+
 	Evnt.hcmEvxlink := Clipmon_CreateMonitor("evernote_PickupEvxlink", "evernote_InitEvxLinks")
 	dev_assert(Evnt.hcmEvxlink)
 	
