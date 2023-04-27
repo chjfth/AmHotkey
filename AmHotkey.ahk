@@ -3112,8 +3112,8 @@ dev_ClipboardSetHTML(html, is_paste_now:=false, wait_hwnd:=0)
 	; one format("HTML Format"), i.e. no "Text" format. So, subsequent 
 	; `Clipboard` variable will return empty text.
 
-	dbgm := "ClipboardSetHtml"
-	AmDbg_SetDesc(dbgm, "Debugging dev_ClipboardSetHTML()")
+	dbgm := A_ThisFunc
+	AmDbg_SetDesc(dbgm, Format("Debugging {}()", A_ThisFunc))
 
 	WinClip.Clear()
 	
@@ -3140,28 +3140,26 @@ dev_ClipboardSetHTML(html, is_paste_now:=false, wait_hwnd:=0)
 	{
 		if(wait_hwnd)
 		{
-			dev_TooltipAutoClear(Format("Wait for paste-target window to be active. Hwnd={}", wait_hwnd))
+			Amdbg_Lv1(dbgm, Format("Wait for paste-target window to be active. Hwnd={}", wait_hwnd))
 			
 			dev_WinActivateHwnd(wait_hwnd)
 			
-			WinWaitActive, % "ahk_id " wait_hwnd, , 1.0
-
-			if not ErrorLevel 
+			if(not dev_WinWaitActive(wait_hwnd, 1000))
 			{
-				tooltip ; clear tooltip
-			}
-			else
-			{
-				dev_MsgBoxWarning(Format("Fail to wait for paste-target window to become active.`r`n`r`n"
-						. "Hwnd={}`r`n`r`n"
-						. "So I can not paste for you. You can manually paste it by typing Ctrl+V ."
-						, wait_hwnd)
-					, "AmHotkey - Everpic Wrinkle")
+				errmsg := Format("Fail to wait for paste-target window to become active.`r`n`r`n"
+					. "Hwnd={}`r`n`r`n"
+					. "So I can not paste for you. You can manually paste it by typing Ctrl+V ."
+					, wait_hwnd)
+				
+				Amdbg_Lv1(dbgm, errmsg)
+				dev_MsgBoxWarning(errmsg, "AmHotkey - Everpic Wrinkle")
 				return ; So not paste into wrong window.
 			}
 		}
 		
+		Amdbg_Lv1(dbgm, "Calling WinClip.Paste() >>>")
 		WinClip.Paste()
+		Amdbg_Lv1(dbgm, "Calling WinClip.Paste() <<<")
 	}
 }
 
