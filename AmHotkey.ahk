@@ -3112,8 +3112,29 @@ dev_ClipboardSetHTML(html, is_paste_now:=false, wait_hwnd:=0)
 	; one format("HTML Format"), i.e. no "Text" format. So, subsequent 
 	; `Clipboard` variable will return empty text.
 
+	dbgm := "ClipboardSetHtml"
+	AmDbg_SetDesc(dbgm, "Debugging dev_ClipboardSetHTML()")
+
 	WinClip.Clear()
-	WinClip.SetHTML(html)
+	
+	Amdbg_Lv1(dbgm, Format("dev_ClipboardSetHTML(), html length {} bytes", StrLen(html)))
+	
+	Loop, 10
+	{
+		WinClip.SetHTML(html)
+		
+		htmlret := WinClip.GetHTML()
+		if(htmlret)
+		{
+			Amdbg_Lv1(dbgm, Format("dev_ClipboardSetHTML() done."))
+			break
+		}
+		else 
+		{
+			Amdbg_Lv1(dbgm, Format("dev_ClipboardSetHTML() retrying {} ...", A_Index))
+			dev_Sleep(100)
+		}
+	}
 
 	if(is_paste_now)
 	{

@@ -336,6 +336,7 @@ Amdbg_ShowGui()
 	
 	Gui_Show(GuiName, Format("w{} center", Amdbg._GuiWidth), "AmHotkey AmDbg configurations")
 	
+	Amdbg_RefreshModules()
 }
 
 Amdbg_HideGui()

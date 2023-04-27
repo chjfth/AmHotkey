@@ -1662,3 +1662,7 @@ dev_IsValidGuid(input)
 		return false
 }
 
+dev_Sleep(millisec)
+{
+	Sleep % millisec
+}
