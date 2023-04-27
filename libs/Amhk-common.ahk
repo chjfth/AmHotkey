@@ -1100,7 +1100,7 @@ dev_RunWaitOneEx(command, is_hidewindow:=false, working_dir:="")
 dev_SendRaw(rawstr)
 {
 	; `n represent Line-feed
-	SendRaw, % rawstr
+	SendInput % "{Raw}" rawstr
 }
 
 dev_SendTextLines(arlines)
@@ -1110,7 +1110,7 @@ dev_SendTextLines(arlines)
 
     for index,oneline in arlines
     {
-    	SendInput, % "{raw}" oneline
+    	SendInput % "{Raw}" oneline
         Send {Enter}
     }
 }
