@@ -4098,18 +4098,23 @@ evernote_PickupEvxlink()
 	if(not cfhtml)
 		return
 
-;	dev_WriteLogFile("evxlink.txt", cfhtml, false)
+	AmDbg_Lv2(A_ThisFunc, A_ThisFunc "() got: " cfhtml)
 
 	ptn := "<!--StartFragment-->`r`n<span><span>.{0,5}<a href=""(https://www.evernote.com/shard/s21/nl/[0-9a-z-/]+)""[^>]*>([^<]+?)</a>"
 	; -- allow only 5 (as in .{0,5}) chars before the link-text.
 	foundpos := RegExMatch(cfhtml, ptn, outfound)
 	if( foundpos==0 )
+	{
+		AmDbg_Lv2(A_ThisFunc, "RegEx not match")
 		return
+	}
 	
 	newlink := outfound1 ; https://www.evernote.com/shard/s21/nl/2425275/...
 	newword := outfound2 ; AmHotkey 
 	
 	newword := Trim(newword, "[()]")
+	
+	AmDbg_Lv1(A_ThisFunc, Format("RegEx match: [{}] {}", newword, newlink))
 	
 	if(strlen(newword)>20)
 		return ; ignore it
