@@ -342,16 +342,24 @@
       ret := this.SetText( plainText )
     }
     if( method = 1 )
+    {
       SendInput, +{Ins}
+    }
     else
+    {
       SendInput, ^{vk56sc02F} ;ctrl+v
-    this._waitClipReady( 3000 )
+    }
+
     if ( plainText != "" )
     {
+      this._waitClipReady( 3000 )
       this.Restore( data )
     }
     else
+    {
       ret := !this._isClipEmpty()
+	}
+
     return ret
   }
   
@@ -385,12 +393,12 @@
     return !WinClipAPI.CountClipboardFormats()
   }
   
-  _waitClipReady( timeout = 10000 )
+  _waitClipReady( timeout = 3000 )
   {
     start_time := A_TickCount
-    sleep 100
+;   sleep 100
     while ( WinClipAPI.GetOpenClipboardWindow() && ( A_TickCount - start_time < timeout ) )
-      sleep 100
+      sleep 10 ; [2023-04-28] Chj sleeps it only 10ms, mostly enough.
   }
 
   iSetText( textData )

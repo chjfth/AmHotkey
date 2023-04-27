@@ -3900,15 +3900,24 @@ Evernote_PasteSingleLineCode(bgcolor:="#e0e0e0", keep_orig_clipboard:=true)
 	codetext := evernote_GetClipboardSingleLine()
 	if(!codetext)
 		return
-	
+
 	html := Evtbl_GenHtml_Span(bgcolor, "", codetext, true)
 	
 	dev_ClipboardSetHTML(html, true)
-	
+
 	if(keep_orig_clipboard) {
-		; Restore clipboard text, due to dev_ClipboardSetHTML()'s current limitation.
-		Clipboard := codetext
+		; Restore plain-text to clipboard, bcz dev_ClipboardSetHTML() has .
+		; [2023-04-28] We need to delay the restore a bit(500ms), bcz, 
+		; the target process receiving Ctrl+V needs some time to fetch that
+		; HTML content from clipboard.
+		fn := Func("evernote_RestoreClipboardText").Bind(codetext)
+		dev_StartTimerOnce(fn, 500)
 	} 
+}
+
+evernote_RestoreClipboardText(text)
+{
+	Clipboard := text
 }
 
 evernote_PasteInlineCode_AddMenuItem(bgcolor, desctext, idx)
@@ -4091,12 +4100,14 @@ evernote_PickupEvxlink()
 
 	; [2023-01-22] If no Sleep, following WinClip.GetHtml() may probably returns empty.
 	; Just don't know why.
-	Sleep, 100
+;	Sleep, 100 ; [2023-04-28] Removed this, seems no problem.
 	
 	cfhtml := WinClip.GetHtml("UTF-8")
-;	Dbgwin_Output("cfhtml=" cfhtml)
 	if(not cfhtml)
+	{
+		AmDbg_Lv2(A_ThisFunc, A_ThisFunc "(), WinClip.GetHtml() returns empty.")
 		return
+	}
 
 	AmDbg_Lv2(A_ThisFunc, A_ThisFunc "() got: " cfhtml)
 

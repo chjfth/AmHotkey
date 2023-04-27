@@ -1634,6 +1634,14 @@ dev_InputBox_DefaultText(title, prompt, byref usertext:="")
 
 dev_StartTimerOnce(str_callable, millisec)
 {
+	; str_callable can be 
+	;	a function name in string format, like "DoSomeWork"
+	; or
+	;	a function object(use it to carry function parameters), like this:
+	;	
+	;	fn := Func("evernote_RestoreClipboardText").Bind(codetext)
+	;	dev_StartTimerOnce(fn, 500)
+
 	if(millisec<=0)
 		dev_assert("dev_StartTimerPeriodic() `millisec` must be >0")
 
