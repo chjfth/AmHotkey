@@ -18,6 +18,10 @@ Dbgwin_ShowGui(true)
 Amdbg_ShowGui()
 	; Pop up the dialog UI that allows user to change AHK global vars on the fly.
 
+AmDbg_SetDesc(modu, desc)
+	; [Optional] Associate a piece of description text to modu, which can be seen in 
+	; Dbgwin GUI instantly, so the final user knows what the modu name stands for.
+
 Amdbg_output(modu, newmsg, msglv)
 Amdbg_Lv1(modu, newmsg)
 Amdbg_Lv2(modu, newmsg)
@@ -30,9 +34,11 @@ Amdbg_Lv0(modu, newmsg)
 	; Lv0 message has the benefit over Dbgwin_Output() that it's content is buffered into RAM,
 	; and can be later retrieved by Amdbg_ShowGui()'s [Copy to clipboard] button.
 
-AmDbg_SetDesc(modu, desc)
-	; [Optional] Associate a piece of description text to modu, which can be seen in 
-	; Dbgwin GUI instantly, so the final user knows what the modu name stands for.
+Simpler message output (modu name "_default_"):
+Amdbg0(newmsg)
+Amdbg1(newmsg)
+Amdbg2(newmsg)
+Amdbg3(newmsg)
 
 */
 
@@ -71,11 +77,13 @@ global gu_amdbgBtnOpenDbgwin
 class Amdbg ; as global var container
 {
 	static _default_modu := "_default_"
+	static _default_desc := "Debug-messages without assigning an explicit module-name, belong to the _default_ module. `n"
+		. "Amdbg0(), Amdbg1(), Amdbg2() outputs such messages."
 
 	static _GuiName := "Amdbg"
 	static _GuiWidth := 470 ; px
 	
-	static _dictModules := {}
+	static _dictModules := { Amdbg._default_modu : { "displaylimitlv":0 , "desc":Amdbg._default_desc } }
 	; -- each dict-key represent a debug-module, and the module's content is described in
 	; 	yet another dict which has the following keys:
 	;	.desc     : description text of this debug-module.
@@ -708,3 +716,24 @@ Amdbg_SetDesc(modu, desc)
 	
 	moduobj.desc := desc
 }
+
+Amdbg0(newmsg)
+{
+	Amdbg_Lv0("", newmsg)
+}
+
+Amdbg1(newmsg)
+{
+	Amdbg_Lv1("", newmsg)
+}
+
+Amdbg2(newmsg)
+{
+	Amdbg_Lv2("", newmsg)
+}
+
+Amdbg3(newmsg)
+{
+	Amdbg_Lv3("", newmsg)
+}
+
