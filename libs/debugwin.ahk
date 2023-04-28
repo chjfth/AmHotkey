@@ -68,6 +68,26 @@ global gu_amdbgBtnOpenDbgwin
 ;return ; End of auto-execute section.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+class Amdbg ; as global var container
+{
+	static _default_modu := "_default_"
+
+	static _GuiName := "Amdbg"
+	static _GuiWidth := 470 ; px
+	
+	static _dictModules := {}
+	; -- each dict-key represent a debug-module, and the module's content is described in
+	; 	yet another dict which has the following keys:
+	;	.desc     : description text of this debug-module.
+	; 	.allmsg   : all debug messaged accumulated(as a circular buffer).
+	;	.displaylimitlv : 
+	;               debug-message display-limit level, 0,1,2... (sift-level)
+	;               If 1, msg with level equal or less than 1 is is sent to Dbgwin_Output(), 
+	;               msg with larger-levels are buffered to memory.
+	
+	static _maxbuf := 2048000 ; allmsg buffer size, in bytes
+}
+
 
 class Dbgwin ; as global var container
 {
@@ -77,6 +97,7 @@ class Dbgwin ; as global var container
 	static _IniFilename := "debugwin.ini"
 	static _IniSection  := "cfg"
 }
+
 
 class CTimeGapTeller
 {
@@ -115,7 +136,7 @@ Dbgwin_Output_fg(msg)
 
 Dbgwin_Output(msg, force_fgwin:=false)
 {
-	linemsg := AmDbg_MakeLineMsg(msg, 1)
+	linemsg := AmDbg_MakeLineMsg(Amdbg._default_modu, msg, 1, _unused_output)
 	
 	Dbgwin_AppendRaw(linemsg)
 }
@@ -268,24 +289,6 @@ Dbgwin_evtClear()
 
 ; Amdbg : a GUI that allows user to change global vars on the fly.
 
-class Amdbg ; as global var container
-{
-	static _GuiName := "Amdbg"
-	static _GuiWidth := 470 ; px
-	
-	static dictModules := {}
-	; -- each dict-key represent a debug-module, and the module's content is described in
-	; 	yet another dict which has the following keys:
-	;	.desc     : description text of this debug-module.
-	; 	.allmsg   : all debug messaged accumulated(as a circular buffer).
-	;	.displaylimitlv : 
-	;               debug-message display-limit level, 0,1,2... (sift-level)
-	;               If 1, msg with level equal or less than 1 is is sent to Dbgwin_Output(), 
-	;               msg with larger-levels are buffered to memory.
-	
-	static maxbuf := 2048000 ; allmsg buffer size, in bytes
-}
-
 Amdbg_CreateGui()
 {
 	GuiName := Amdbg._GuiName
@@ -373,7 +376,7 @@ Amdbg_SetValue()
 		return false
 	}
 	
-	moduobj := Amdbg.dictModules[modu]
+	moduobj := Amdbg._dictModules[modu]
 	if(not moduobj)
 	{
 		dev_MsgBoxError("No such debug-module exists: " modu, errtitle)
@@ -429,7 +432,7 @@ Amdbg_RefreshModules()
 	dev_Combobox_Clear(hwndCombobox)
 
 	varlist := []
-	for modu in Amdbg.dictModules
+	for modu in Amdbg._dictModules
 	{
 		varlist.Push(modu)
 	}
@@ -450,7 +453,7 @@ Amdbg_SyncUI(is_copybuffer:=false)
 	GuiName := Amdbg._GuiName
 
 	modu := GuiControl_GetText(GuiName, "gu_amdbgCbxDbgModu")
-	moduobj := Amdbg.dictModules[modu]
+	moduobj := Amdbg._dictModules[modu]
 
 	if(moduobj)
 	{
@@ -545,7 +548,7 @@ Amdbg_WM_MOUSEMOVE()
 ; Implement Amdbg_output()
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-AmDbg_MakeLineMsg(msg, lv)
+AmDbg_MakeLineMsg(modu, msg, lv, byref is_same_modu_as_prev)
 {
 	; Makes single \n become \r\n, bcz Win32 editbox recognized only \r\n as newline.
 	msg := StrReplace(msg, "`r`n", "`n")
@@ -557,6 +560,7 @@ AmDbg_MakeLineMsg(msg, lv)
 	static s_start_ymdhms := A_Now
 	static s_prev_msec    := s_start_msec
 	
+	static s_prev_modu := ""
 	
 	now_tick := A_TickCount
 	msec_from_prev := now_tick - s_prev_msec
@@ -586,18 +590,26 @@ AmDbg_MakeLineMsg(msg, lv)
 		, lv, stimestamp, stimeplus, msg)
 	
     s_prev_msec := now_tick
+
+	if(modu==s_prev_modu) {
+		is_same_modu_as_prev := true
+	}
+	else {
+		is_same_modu_as_prev := false
+		s_prev_modu := modu
+	}
 	
 	return linemsg
 }
 
 _Amdbg_CreateDbgModule(modu) ; Create debug-module object is not-exist yet
 {
-	if(not Amdbg.dictModules.HasKey(modu))
+	if(not Amdbg._dictModules.HasKey(modu))
 	{
-		Amdbg.dictModules[modu] := {}
-		Amdbg.dictModules[modu].desc := "Unset yet"
-		Amdbg.dictModules[modu].allmsg := ""
-		Amdbg.dictModules[modu].timegapteller := new CTimeGapTeller(1000)
+		Amdbg._dictModules[modu] := {}
+		Amdbg._dictModules[modu].desc := "Unset yet"
+		Amdbg._dictModules[modu].allmsg := ""
+		Amdbg._dictModules[modu].timegapteller := new CTimeGapTeller(1000)
 		
 		; Check for g_DefaultDbgLv_xxx global var to determine initial dbgLv .
 		; User can set those vars in custom_env.ahk, for example, if 
@@ -609,20 +621,32 @@ _Amdbg_CreateDbgModule(modu) ; Create debug-module object is not-exist yet
 		defaultlv := %gvarname%
 		
 		if(defaultlv>0)
-			Amdbg.dictModules[modu].displaylimitlv := defaultlv
+			Amdbg._dictModules[modu].displaylimitlv := defaultlv
 		else
-			Amdbg.dictModules[modu].displaylimitlv := 0
+			Amdbg._dictModules[modu].displaylimitlv := 0
 	}
 
-	return Amdbg.dictModules[modu]
+	return Amdbg._dictModules[modu]
 }
 
-_Amdbg_AppendLineMsg(moduobj, linemsg)
+_Amdbg_AppendLineMsg(moduobj, linemsg, is_same_modu_as_prev)
 {
 	; moduobj is the object returned by _Amdbg_CreateDbgModule()
 	
+	line_prefix := ""
+	
 	if(moduobj.timegapteller.CheckGap())
-		linemsg := ".`r`n" linemsg
+		line_prefix .= "." ; Use a dot to indicate a big time gap
+	
+	if(not is_same_modu_as_prev)
+	{
+		; Indicate that there are some intervening dbg-msgs from other dbg-modu 
+		; before this one, so the time-diff, eg. (+0.333ms), is diff to that other msg.
+		line_prefix .= "~" 
+	}
+
+	if(line_prefix)
+		linemsg := line_prefix "`r`n" linemsg
 	
 	moduobj.allmsg .= linemsg
 }
@@ -631,23 +655,26 @@ Amdbg_output(modu, newmsg, msglv:=1)
 {
 	; modu is a short string describing to which debug-module this newmsg belongs
 	
-	dev_assert(modu) ; modu must NOT be empty
+	;dev_assert(modu) ; modu must NOT be empty
+	if(!modu)
+		modu := Amdbg._default_modu
+	
 	dev_assert(dev_IsString(modu))
 	dev_assert(dev_IsString(newmsg))
 	
 	moduobj := _Amdbg_CreateDbgModule(modu)
 	
 	; Truncate buffer if full
-	if(StrLen(moduobj.allmsg)>=Amdbg.maxbuf)
+	if(StrLen(moduobj.allmsg)>=Amdbg._maxbuf)
 	{
-		halfmax := Amdbg.maxbuf / 2
+		halfmax := Amdbg._maxbuf / 2
 		
 		moduobj.allmsg := SubStr(moduobj.allmsg, halfmax)
 	}
 	
-	linemsg := AmDbg_MakeLineMsg(newmsg, msglv)
+	linemsg := AmDbg_MakeLineMsg(modu, newmsg, msglv, is_same_modu_as_prev)
 	
-	_Amdbg_AppendLineMsg(moduobj, linemsg)
+	_Amdbg_AppendLineMsg(moduobj, linemsg, is_same_modu_as_prev)
 	
 	if(msglv <= moduobj.displaylimitlv)
 	{
