@@ -1674,3 +1674,8 @@ dev_Sleep(millisec)
 {
 	Sleep % millisec
 }
+
+dev_WaitKeyRelease(keyname)
+{
+	KeyWait % keyname
+}

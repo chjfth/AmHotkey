@@ -2422,7 +2422,9 @@ Evtbl_GenHtml_Span(hexcolor1, hexcolor2, spantext, is_monofont)
 	htmlptn = 
 (
 <span style="{1}; color:{2}; {3}">{4}</span>&nbsp;
-)
+)	; Note: an extra "&nbsp" at tail, so that user's continued typing after the <span> is in normal text style.
+	; But a little drawback: If there has already been normal text after pasting the <span>, there will be TWO space-chars after <span>.
+	
 	spanhtml := dev_EscapeHtmlChars(spantext)
 
 ;	spanhtml := "<tt>" spanhtml "</tt>" ; This renders extra borders on span text, not good.
@@ -3421,11 +3423,12 @@ F10::
 	ControlClick ENHtmlToolbarFontFace1, A, , LEFT, 1, X148 Y18
 	ControlSend ENHtmlToolbarFontFace1, Consolas{enter}, A
 return 
-+F10:: ; Set Tahoma font
-	ControlClick ENHtmlToolbarFontFace1, A, , LEFT, 1, X148 Y18
-	ControlSend ENHtmlToolbarFontFace1, Tahoma{enter}, A
-return 
 
+;+F10:: ; Set Tahoma font // [2023-04-29] use this for Evernote_CutAndPasteInlineCode_DynBg()
+;	ControlClick ENHtmlToolbarFontFace1, A, , LEFT, 1, X148 Y18
+;	ControlSend ENHtmlToolbarFontFace1, Tahoma{enter}, A
+;return 
+;
 F11:: ControlClick ENHtmlToolbarFontSize1, A, , LEFT, 1, X44 Y18
 F12:: Evernote_BringupPalette()
 Evernote_BringupPalette()
@@ -3902,7 +3905,7 @@ Evernote_PasteSingleLineCode(bgcolor:="#e0e0e0", keep_orig_clipboard:=true)
 		return
 
 	html := Evtbl_GenHtml_Span(bgcolor, "", codetext, true)
-	
+
 	dev_ClipboardSetHTML(html, true)
 
 	if(keep_orig_clipboard) {
@@ -4064,6 +4067,25 @@ CF_HTML_PasteCodeBlock(line_comment, block_comment:="", lnprefix_start:=0)
 	
 		Evnt.pastecode_start_numline := 1 ; reset it
 	}
+}
+
+; [2023-04-29] Shift+F10 : cut current (single-line) text, then paste it as inline <code> style
++F10:: Evernote_CutAndPasteInlineCode_DynBg()
+Evernote_CutAndPasteInlineCode_DynBg()
+{
+	dev_WaitKeyRelease("Ctrl") ; to avoid triggering Ctrl+Shift+X (Encrypt selected text)
+
+	if(!dev_CutToClipboard()) ; will send Ctrl+X internally
+		return
+	
+	nowtext := Clipboard
+	if(!nowtext)
+	{
+		dev_MsgBoxWarning("Unexpect! No text cut to Clipboard.") ; user may have cut an image etc
+		return
+	}
+
+	Evernote_PasteInlineCode_DynBg()
 }
 
 #If

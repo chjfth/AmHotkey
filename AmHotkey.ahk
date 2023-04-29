@@ -3271,6 +3271,59 @@ dev_SendKeyToExeMainWindow(keyspec, wintitle:="A")
 	ControlSend ahk_parent, % keyspec, % wintitle
 }
 
+
+dev_SetClipboardEmpty(wait_millisec:=500)
+{
+	tick_end := A_TickCount + wait_millisec
+	while(A_TickCount<tick_end)
+	{
+		if( WinClip.Clear() )
+			return true
+		
+		dev_Sleep(10)
+	}
+	return false
+}
+
+dev_WaitForClipboardFill(wait_millisec:=500)
+{
+	tick_end := A_TickCount + wait_millisec
+	while(A_TickCount<tick_end)
+	{
+		if(!WinClip.IsEmpty())
+			return true
+		
+		dev_Sleep(10)
+	}
+	return false
+}
+
+dev_CutToClipboard(wait_millisec:=500)
+{
+	; Send Ctrl+X to current active window, then wait for wait_millisec
+	; for new text to appear in clipboard. If timeout, assert error.
+	
+	if(!dev_SetClipboardEmpty(wait_millisec))
+	{
+		dev_MsgBoxWarning("ERROR in dev_CutToClipboard(): Cannot clear Clipboard.")
+		return false
+	}
+	
+	dev_SendKeyToExeMainWindow("{Ctrl down}x{Ctrl up}")
+	
+	if(!dev_WaitForClipboardFill(wait_millisec))
+	{
+		dev_MsgBoxWarning(Format("ERROR in dev_CutToClipboard(): Clipboard remains empty after {}ms's wait.", wait_millisec))
+		return false
+	}
+	
+	return true
+}
+
+
+
+
+
 ;==============================================================================
 #Include *i _more_includes_.ahk ;This should be the final statement of this ahk
 ;==============================================================================
