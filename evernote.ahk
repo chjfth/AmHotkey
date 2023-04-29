@@ -4104,7 +4104,9 @@ CF_HTML_PasteCodeBlock(line_comment, block_comment:="", lnprefix_start:=0)
 	}
 }
 
+/*
 ; [2023-04-29] Shift+F10 : cut current (single-line) text, then paste it as inline <code> style
+; // And redundant on the very day. Just call Evernote_PasteInlineCode_DynBg() is enough.
 +F10:: Evernote_CutAndPasteInlineCode_DynBg()
 Evernote_CutAndPasteInlineCode_DynBg()
 {
@@ -4122,6 +4124,7 @@ Evernote_CutAndPasteInlineCode_DynBg()
 
 	Evernote_PasteInlineCode_DynBg()
 }
+*/
 
 #If
 
