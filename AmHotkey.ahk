@@ -3298,14 +3298,15 @@ dev_WaitForClipboardFill(wait_millisec:=500)
 	return false
 }
 
-dev_CutToClipboard(wait_millisec:=500)
+dev_CutToClipboard(wait_millisec:=500, is_msgbox_warn:=true)
 {
 	; Send Ctrl+X to current active window, then wait for wait_millisec
 	; for new text to appear in clipboard. If timeout, assert error.
 	
 	if(!dev_SetClipboardEmpty(wait_millisec))
 	{
-		dev_MsgBoxWarning("ERROR in dev_CutToClipboard(): Cannot clear Clipboard.")
+		if(is_msgbox_warn)
+			dev_MsgBoxWarning("ERROR in dev_CutToClipboard(): Cannot clear Clipboard.")
 		return false
 	}
 	
@@ -3313,14 +3314,36 @@ dev_CutToClipboard(wait_millisec:=500)
 	
 	if(!dev_WaitForClipboardFill(wait_millisec))
 	{
-		dev_MsgBoxWarning(Format("ERROR in dev_CutToClipboard(): Clipboard remains empty after {}ms's wait.", wait_millisec))
+		if(is_msgbox_warn)
+			dev_MsgBoxWarning(Format("ERROR in dev_CutToClipboard(): Clipboard remains empty after {}ms's wait.", wait_millisec))
 		return false
 	}
 	
 	return true
 }
 
-
+dev_CutToOrUseClipboard(cutwait_millisec:=100)
+{
+	; If we can cut something(via Ctrl+X) to clipboard, then use the cut content.
+	; If there is nothing cut(after cutwait_millisec), we'll use(=restore) initial Clipboard text.
+	
+	backup_text := Clipboard
+	
+	if(dev_CutToClipboard(cutwait_millisec, false))
+		return true ; Some text has put into Clipboard
+	
+	; We cut nothing, so restore initual clipboard text.
+	
+	Clipboard := backup_text
+	
+	if(backup_text=="")
+		return false ; seeing empty clipboard
+	
+	if(WinClip.SetText(backup_text))
+		return true
+	else
+		return false
+}
 
 
 

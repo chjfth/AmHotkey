@@ -3881,9 +3881,12 @@ Evernote_PopLinkFile_OpenEditor()
 
 evernote_GetClipboardSingleLine()
 {
-	codetext := Trim(Clipboard, "`r`n")
+	codetext := ""
+	if(dev_CutToOrUseClipboard())
+		codetext := Trim(Clipboard, "`r`n")
+	
 	if(!codetext) {
-		dev_MsgBoxInfo("Clipboard is empty, nothing to paste")
+		dev_MsgBoxInfo("Clipboard is empty, nothing to paste.")
 		return ""
 	}
 	
@@ -3898,13 +3901,19 @@ evernote_GetClipboardSingleLine()
 Evernote_PasteSingleLineCode(bgcolor:="#e0e0e0", keep_orig_clipboard:=true)
 {
 	; This is a special-case shortcut for Evtbl_GenHtml_Span() .
-	; We paste clipboard text in dark background, mono-font .
+	; We paste clipboard text in colored background. 
+	; Current Shift-key state controls whether the font is mono.
+
+	isShiftDown := GetKeyState("Shift")
+	
+	dev_WaitKeyRelease("Shift") ; to avoid triggering Ctrl+Shift+X (Encrypt selected text)
 	
 	codetext := evernote_GetClipboardSingleLine()
 	if(!codetext)
 		return
 
-	html := Evtbl_GenHtml_Span(bgcolor, "", codetext, true)
+	
+	html := Evtbl_GenHtml_Span(bgcolor, "", codetext, isShiftDown ? true : false)
 
 	dev_ClipboardSetHTML(html, true)
 
@@ -3928,20 +3937,22 @@ evernote_PasteInlineCode_AddMenuItem(bgcolor, desctext, idx)
 	menutext := Format("&{1}. Bgcolor: {2} {3}", idx, bgcolor, desctext)
 	
 	fn := Func("Evernote_PasteSingleLineCode").Bind(bgcolor)
-	
-	Menu, evernote_menuInlinePaste, add, %menutext%, %fn%
+	dev_MenuAddItem("evernote_menuInlinePaste", menutext, fn)
 }
 
 evernote_InlinePaste_InitMenu()
 {
 	color_presets := [ "#e0e0e0,代码灰"
+	, "#F0F0E0,药片黄"
 	, "#C6E2FF,多云蓝"
 	, "#B0E0B0,青瓷绿(celadon)"
-	, "#F0F0E0,药片黄"
 	, "#FFE0B0,霞光橙"
 	, "#F49292,故障红" ]
 	
-	Menu, evernote_menuInlinePaste, add, % "&0. Paste as plain text (or F1)", Evernote_PastePlainText
+	dev_MenuAddItem("evernote_menuInlinePaste", "Paste as plain text (or F1 outside)", "Evernote_PastePlainText")
+	
+	dev_MenuAddSepLine("evernote_menuInlinePaste")
+	dev_MenuAddItem("evernote_menuInlinePaste", "(Hold down Shift to use mono-font) below", "dev_nop")
 	
 	for idx, colorspec in color_presets
 	{
