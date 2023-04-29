@@ -51,8 +51,29 @@ class WinClipAPI extends WinClip_base
   GlobalAlloc( flags, size ) {
     return DllCall( "GlobalAlloc", "Uint", flags, "Uint", size )
   }
+  in_OpenClipboard() {
+      return DllCall( "OpenClipboard", "Ptr", 0 )
+  }
   OpenClipboard() {
-    return DllCall( "OpenClipboard", "Ptr", 0 )
+
+    if(WinClipAPI.in_OpenClipboard())
+    	return true
+
+    ; [2023-04-30] Chj: Better do it in a retry loop.
+    start_time := A_TickCount
+    while ( A_TickCount - start_time < 100 )
+    {
+      hwndco := WinClipAPI.GetOpenClipboardWindow() ; co: Clipboard Owner
+      Amdbg_Lv1("WinClipAPI_ahk", Format("Clipboard is occupied by HWND={:08X}", hwndco))
+      
+      Sleep 10
+      if(WinClipAPI.in_OpenClipboard())
+      {
+        Amdbg_Lv1("WinClipAPI_ahk", Format("Retrying OpenClipboard() success.", hwndco))
+      	return true
+      }
+    }
+    return false
   }
   CloseClipboard() {
     return DllCall( "CloseClipboard" )

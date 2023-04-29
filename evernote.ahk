@@ -4158,9 +4158,7 @@ evernote_PickupEvxlink()
 	; Evernote internal-cross-link(call it evxlink) in it. If it has, then pick up
 	; the evxlink and add it to Evnt.arAutoEvxlinks{} .
 
-	; [2023-01-22] If no Sleep, following WinClip.GetHtml() may probably returns empty.
-	; Just don't know why.
-;	Sleep, 100 ; [2023-04-28] Removed this, seems no problem.
+;	Sleep, 100 ; [2023-04-30] This is not required. We now auto retry in WinClipAPI.OpenClipboard().
 	
 	cfhtml := WinClip.GetHtml("UTF-8")
 	if(not cfhtml)
