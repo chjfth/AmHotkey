@@ -15,7 +15,7 @@ Evernote_PopLinkShowAutoPickupMenu()
 Evernote_PopupInlinePasteMenu()
 Evernote_PopupBlockPasteMenu()
 
-Evernote_PasteSingleLineCode()
+Evernote_PasteSingleLineCode(bgcolor, is_monofont, keep_orig_clipboard)
 Evernote_PasteSingleLineWithHtmlDeco(str_decofunc)
 
 */
@@ -3899,13 +3899,16 @@ evernote_GetClipboardSingleLine()
 	return codetext
 }
 
-Evernote_PasteSingleLineCode(bgcolor:="#e0e0e0", keep_orig_clipboard:=true)
+Evernote_PasteSingleLineCode(bgcolor:="#e0e0e0", is_monofont:=true, keep_orig_clipboard:=true)
 {
 	; This is a special-case shortcut for Evtbl_GenHtml_Span() .
 	; We paste clipboard text in colored background. 
-	; Current Shift-key state controls whether the font is mono.
+	;
+	; Current Shift-key state will force using mono-font.
 
 	isShiftDown := GetKeyState("Shift")
+	if(isShiftDown)
+		is_monofont := true
 	
 	dev_WaitKeyRelease("Shift") ; to avoid triggering Ctrl+Shift+X (Encrypt selected text)
 	
@@ -3913,7 +3916,7 @@ Evernote_PasteSingleLineCode(bgcolor:="#e0e0e0", keep_orig_clipboard:=true)
 	if(!codetext)
 		return
 	
-	html := Evtbl_GenHtml_Span(bgcolor, "", codetext, isShiftDown ? true : false)
+	html := Evtbl_GenHtml_Span(bgcolor, "", codetext, is_monofont ? true : false)
 
 	dev_ClipboardSetHTML(html, true)
 
@@ -3962,7 +3965,7 @@ evernote_PasteInlineCode_AddMenuItem(bgcolor, desctext, idx)
 {
 	menutext := Format("&{1}. Bgcolor: {2} {3}", idx, bgcolor, desctext)
 	
-	fn := Func("Evernote_PasteSingleLineCode").Bind(bgcolor)
+	fn := Func("Evernote_PasteSingleLineCode").Bind(bgcolor, "")
 	dev_MenuAddItem("evernote_menuInlinePaste", menutext, fn)
 }
 
@@ -4063,7 +4066,7 @@ Evernote_PasteInlineCode_DynBg()
 	else 
 		bgcolor := "#e0e0e0"
 	
-	Evernote_PasteSingleLineCode(bgcolor)
+	Evernote_PasteSingleLineCode(bgcolor, "monofont")
 }
 
 
