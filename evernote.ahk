@@ -16,7 +16,8 @@ Evernote_PopupInlinePasteMenu()
 Evernote_PopupBlockPasteMenu()
 
 Evernote_PasteSingleLineCode()
-Evernote_PasteSingleLineCode_SelectBg() ; redundant
+Evernote_PasteSingleLineWithHtmlDeco(str_decofunc)
+
 */
 
 ; User can define g_evtblColorCustoms[] to append custom colors to g_evtblColorPresets
@@ -3911,7 +3912,6 @@ Evernote_PasteSingleLineCode(bgcolor:="#e0e0e0", keep_orig_clipboard:=true)
 	codetext := evernote_GetClipboardSingleLine()
 	if(!codetext)
 		return
-
 	
 	html := Evtbl_GenHtml_Span(bgcolor, "", codetext, isShiftDown ? true : false)
 
@@ -3930,6 +3930,32 @@ Evernote_PasteSingleLineCode(bgcolor:="#e0e0e0", keep_orig_clipboard:=true)
 evernote_RestoreClipboardText(text)
 {
 	Clipboard := text
+}
+
+Evernote_PasteSingleLineWithHtmlDeco(str_decofunc)
+{
+	puretext := evernote_GetClipboardSingleLine()
+	if(!puretext)
+		return
+	
+	puretext := dev_EscapeHtmlChars(puretext)
+	
+	html := %str_decofunc%(puretext)
+
+	dev_ClipboardSetHTML(html, true)
+}
+
+Htmldeco_Kbd(puretext)
+{
+	style := Format("border: 1px solid #ccc;"
+		. "padding: 0em 0.2em;"
+		. "border-radius: 3px;"
+		. "box-shadow: 1px 1px 0 rgba(0, 0, 0, 0.4);"
+		. "background: linear-gradient(315deg, #fff, #ddd);"
+		. "")
+
+	html := Format("<span style=""{}"">{}</span>&nbsp;", style, puretext)
+	return html
 }
 
 evernote_PasteInlineCode_AddMenuItem(bgcolor, desctext, idx)
@@ -3951,8 +3977,11 @@ evernote_InlinePaste_InitMenu()
 	
 	dev_MenuAddItem("evernote_menuInlinePaste", "Paste as plain text (or F1 outside)", "Evernote_PastePlainText")
 	
+	fn := Func("Evernote_PasteSingleLineWithHtmlDeco").Bind("Htmldeco_Kbd")
+	dev_MenuAddItem("evernote_menuInlinePaste", "&Kbd style it", fn)
+	
 	dev_MenuAddSepLine("evernote_menuInlinePaste")
-	dev_MenuAddItem("evernote_menuInlinePaste", "(Hold down Shift to use mono-font) below", "dev_nop")
+	dev_MenuAddItem("evernote_menuInlinePaste", "(Hold down Shift to use mono-font below)", "dev_nop")
 	
 	for idx, colorspec in color_presets
 	{
@@ -3963,14 +3992,6 @@ evernote_InlinePaste_InitMenu()
 	}
 }
 
-Evernote_PasteSingleLineCode_SelectBg()
-{
-	codetext := evernote_GetClipboardSingleLine()
-	if(!codetext)
-		return
-
-	Menu, evernote_menuInlinePaste, Show
-}
 
 Evernote_PopupInlinePasteMenu()
 {
