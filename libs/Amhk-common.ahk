@@ -81,6 +81,12 @@ dev_str2num(str)
 ;}
 ;
 
+dev_GetActiveHwnd()
+{
+	WinGet, Awinid, ID, A
+	return Awinid
+}
+
 
 dev_MsgBoxInfo(text, wintitle:="") ; with a blue (i) icon
 {
@@ -253,6 +259,19 @@ lb_TooltipDelayHide:
 	tooltip
 	return
 }
+
+
+dev_TooltipDisableCloseWindow(msg_prefix)
+{
+	; In many applications, Ctrl+W etc would close current window/tab, and I hate it. 
+	; So call this function to hint that.
+	; msg_prefix is some hotkey names like "Ctrl+W" or "Ctrl+Shift+W".
+	dev_TooltipAutoClear(msg_prefix . " closing window/tab is disabled by AmHotkey.")
+}
+
+
+
+
 
 dev_FileDelete(filepath)
 {
@@ -1114,6 +1133,46 @@ dev_SendTextLines(arlines)
         Send {Enter}
     }
 }
+
+dev_SendKeyToExeMainWindow(keyspec, wintitle:="A")
+{
+	; wintitle can be:
+	;	"A"
+	;	"ahk_id XXXXXXXX"
+	;	"ahk_class Notepad"
+	; etc
+
+	; [2023-04-26] This function use ControlSend to send keys. 
+	; You should know the caveat: If you want to send Ctrl+Shift+n , keyspec cannot be:
+	;	"^+n"
+	; instead, you should pass:
+	;	"{Ctrl down}{Shift down}n{Shift up}{Ctrl up}"
+	;
+	; -- yes, as for Autohotkey 1.1.32, the keyspec meaning is different from that of `SendRaw` command.
+
+	WinGet, winid, ID, % wintitle
+	ControlSend , , % keyspec, % "ahk_id " winid
+}
+
+dev_SendRawToExeMainWindow(keyspec, wintitle:="A")
+{
+	; Similar to dev_SendKeyToExeMainWindow, but use ControlSendRaw instead.
+	WinGet, winid, ID, % wintitle
+	ControlSendRaw , , % keyspec, % "ahk_id " winid
+}
+
+dev_SendKeyToExeMainWindow_ap(keyspec, wintitle:="A")
+{
+	; [2023-04-30] Weird: If keyspec=="F5", Notepad does not get "F5" into editing area, why?
+	; But if keyspec=="{F5}", it triggers Notepad's F5 hotkey(insert current datetime).
+	ControlSend ahk_parent, % keyspec, % wintitle
+}
+dev_SendRawToExeMainWindow_ap(keyspec, wintitle:="A")
+{
+	ControlSendRaw ahk_parent, % keyspec, % wintitle
+}
+
+
 
 dev_MenuAddSepLine(menuname)
 {

@@ -154,12 +154,6 @@ dev_CheckActiveWindowInfo()
 	dev_CheckWindowInfo(Awinid)
 }
 
-dev_GetActiveHwnd()
-{
-	WinGet, Awinid, ID, A
-	return Awinid
-}
-
 dev_ActivateLastSeenWindow()
 {
 	; Usage scenario: 
@@ -3240,35 +3234,6 @@ devcb_EnumDisplayMonitors(hMonitor, hDC, pRect, arg)
 ;		, rect.left, rect.top, rect.right, rect.bottom, (rect.right-rect.left), (rect.bottom-rect.top)
 ;		, rect_workarea.left, rect_workarea.top, rect_workarea.right, rect_workarea.bottom, (rect_workarea.right-rect_workarea.left), (rect_workarea.bottom-rect_workarea.top)) ; debug
 	return true
-}
-
-
-dev_TooltipDisableCloseWindow(msg_prefix)
-{
-	; In many applications, Ctrl+W etc would close current window/tab, and I hate it. 
-	; So call this function to hint that.
-	; msg_prefix is some hotkey names like "Ctrl+W" or "Ctrl+Shift+W".
-	dev_TooltipAutoClear(msg_prefix . " closing window/tab is disabled by AmHotkey.")
-}
-
-
-dev_SendKeyToExeMainWindow(keyspec, wintitle:="A")
-{
-	; wintitle can be:
-	;	"A"
-	;	"ahk_id XXXXXXXX"
-	;	"ahk_class Notepad"
-	; etc
-
-	; [2023-04-26] This function use ControlSend to send keys. 
-	; You should know the caveat: If you want to send Ctrl+Shift+n , keyspec cannot be:
-	;	"^+n"
-	; instead, you should pass:
-	;	"{Ctrl down}{Shift down}n{Shift up}{Ctrl up}"
-	;
-	; -- yes, as for Autohotkey 1.1.32, the keyspec meaning is different from that of `SendRaw` command.
-
-	ControlSend ahk_parent, % keyspec, % wintitle
 }
 
 
