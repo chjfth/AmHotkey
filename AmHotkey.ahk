@@ -3138,7 +3138,7 @@ dev_ClipboardSetHTML(html, is_paste_now:=false, wait_hwnd:=0)
 			
 			dev_WinActivateHwnd(wait_hwnd)
 			
-			if(not dev_WinWaitActive(wait_hwnd, 1000))
+			if(not dev_WinWaitActiveHwnd(wait_hwnd, 1000))
 			{
 				errmsg := Format("Fail to wait for paste-target window to become active.`r`n`r`n"
 					. "Hwnd={}`r`n`r`n"

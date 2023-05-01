@@ -127,7 +127,7 @@ foxit_ActivateMainWindow()
 	
 	dev_WinActivateHwnd(hwnd)
 
-	return dev_WinWaitActive(hwnd, 500)
+	return dev_WinWaitActiveHwnd(hwnd, 500)
 }
 
 #If foxit_IsAnnoationPropertyWindowActive()
@@ -464,7 +464,7 @@ foxit_PropertiesClickSlidebar(left_or_right)
 		
 /*
 		dev_WinActivateHwnd(hwnd) ; no use, bcz Comment Properties Dlgbox is *owned* by Foxit main-window.
-		waitok := dev_WinWaitActive(awinid, 500)
+		waitok := dev_WinWaitActiveHwnd(awinid, 500)
 		if(!waitok)
 		{
 			dev_TooltipAutoClear("[Unexpect]Foxit main window is not re-activated.")

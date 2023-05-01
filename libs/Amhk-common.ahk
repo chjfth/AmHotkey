@@ -1399,7 +1399,7 @@ dev_WinActivateHwnd(hwnd)
 	WinActivate, ahk_id %hwnd%
 }
 
-dev_WinWaitActive(hwnd, timeout_millisec:=2000)
+dev_WinWaitActiveHwnd(hwnd, timeout_millisec:=2000)
 {
 	WinWaitActive, ahk_id %hwnd%, , % timeout_millisec/1000
 	if not ErrorLevel
