@@ -3976,6 +3976,7 @@ evernote_InlinePaste_InitMenu()
 	, "#C6E2FF,多云蓝"
 	, "#B0E0B0,青瓷绿(celadon)"
 	, "#FFE0B0,霞光橙"
+	, "#EE99DD,暗洋红"
 	, "#F49292,故障红" ]
 	
 	dev_MenuAddItem("evernote_menuInlinePaste", "Paste as plain text (or F1 outside)", "Evernote_PastePlainText")
