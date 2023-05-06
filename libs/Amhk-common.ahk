@@ -1738,3 +1738,17 @@ dev_WaitKeyRelease(keyname)
 {
 	KeyWait % keyname
 }
+
+dev_IsUnicodeInString(s)
+{
+	slen := StrLen(s)
+	
+	Loop, % slen
+	{
+		c := SubStr(s, A_Index, 1)
+		if(Ord(c)>255)
+			return true
+	}
+	
+	return false
+}

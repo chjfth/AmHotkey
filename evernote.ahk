@@ -282,6 +282,7 @@ class Evnt
 	static hcmEvxlink := 0 ; HANDLE from Clipmon_CreateMonitor()
 	
 	static filenamEvxlinks := "EvernoteAutoEvxLinks.txt"
+	static _linktext_allow_chinese := false
 	
 	static pastecode_start_numline := 1
 }
@@ -4138,7 +4139,7 @@ evernote_InitEvxLinks()
 
 	s_inited := true
 
-	Evnt.hcmEvxlink := Clipmon_CreateMonitor("evernote_PickupEvxlink", "evernote_InitEvxLinks")
+	Evnt.hcmEvxlink := Clipmon_CreateMonitor("evernote_ClipmonPickupEvxlink", "evernote_InitEvxLinks")
 	dev_assert(Evnt.hcmEvxlink)
 	
 	Loop, Read, % Evnt.filenamEvxlinks
@@ -4152,7 +4153,7 @@ evernote_InitEvxLinks()
 	; The truncation has been moved to evernote_ConstructAutoPickupMenu().
 }
 
-evernote_PickupEvxlink()
+evernote_ClipmonPickupEvxlink()
 {
 	; This acts as a Clipmon callback.
 	; It checks if [Clipboard has CF_HTML content and has a piece of short text with 
@@ -4169,6 +4170,15 @@ evernote_PickupEvxlink()
 	}
 
 	AmDbg_Lv2(A_ThisFunc, A_ThisFunc "() got: " cfhtml)
+	
+	if(not Evnt._linktext_allow_chinese)
+	{
+		if(dev_IsUnicodeInString(cfhtml))
+		{
+			AmDbg_Lv2(A_ThisFunc, A_ThisFunc "() sees non-ASCII chars, ignore it.")
+			return
+		}
+	}
 
 	ptn := "<!--StartFragment-->`r`n<span><span>.{0,5}<a href=""(https://www.evernote.com/shard/s21/nl/[0-9a-z-/]+)""[^>]*>([^<]+?)</a>"
 	; -- allow only 5 (as in .{0,5}) chars before the link-text.
