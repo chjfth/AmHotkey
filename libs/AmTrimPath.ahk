@@ -23,6 +23,16 @@ AmTrimPath_ShowGui()
 	Amtp_ShowGui()
 }
 
+amtp_Gui_add_onehint(charhint, desctext)
+{
+	GuiName := AmTrimPath._GuiName
+
+	Gui_Switch_Font( GuiName, 0, "", "Consolas")
+	Gui_Add_TxtLabel(GuiName, "", 30, "xm+10", charhint)
+	Gui_Switch_Font( GuiName, 0, "", "Tahoma")
+	Gui_Add_TxtLabel(GuiName, "", -1, "x+5 yp", desctext)
+}
+
 Amtp_CreateGui()
 {
 	GuiName := AmTrimPath._GuiName
@@ -39,20 +49,16 @@ Amtp_CreateGui()
 	Gui_Add_Editbox( GuiName, "gu_amtpCbdText", 502, "xm-2 readonly r3 -E0x200")
 
 	Gui_Switch_Font( GuiName, 0, "666666")
-	helptext = 
-(
-Type some letter instructions to manipulate text above.
-
-/   Convert back-slashes to forward-slashes
-\   Convert forward-slashes to back-slashes
-"   Wrap string with double-quotes
-'   Wrap string with single-quotes
--   Remove all double- and single- quotes.
-
-Hint: You can type "/ to wrap quotes and convert to / at the same time.
-)
-;--  Remove all double-/single- quotes and colons.
-	Gui_Add_TxtLabel(GuiName, "", -1, "xm", helptext)
+	
+	Gui_Add_TxtLabel(GuiName, "", -1, "xm", "Type some letter instructions to manipulate text above.")
+	amtp_Gui_add_onehint("/",  "Convert back-slashes to forward-slashes")
+	amtp_Gui_add_onehint("\",  "Convert forward-slashes to back-slashes")
+	amtp_Gui_add_onehint("""", "Wrap string with double-quotes")
+	amtp_Gui_add_onehint("'",  "Wrap string with single-quotes")
+	amtp_Gui_add_onehint("-",  "Remove all double- and single- quotes")
+	amtp_Gui_add_onehint("w20","Wrap long lines at line-width 20")
+	amtp_Gui_add_onehint("w0", "Remove all line breaks, =concatenate all lines")
+	Gui_Add_TxtLabel(GuiName, "", -1, "xm", "Hint: You can type ""/ to wrap quotes and convert to / at the same time.")
 	
 	Gui_Switch_Font( GuiName, 0, "black")
 	Gui_Add_TxtLabel(GuiName, "", -1, "xm y+10", "&Instructions: ")
@@ -61,7 +67,7 @@ Hint: You can type "/ to wrap quotes and convert to / at the same time.
 	Gui_Add_TxtLabel(GuiName, "", -1, "xm y+10", "Convert preview:")
 	Gui_Add_Editbox( GuiName, "gu_amtpPreviewText", 502, "xm-2 r3")
 	
-	Gui_Add_Button(GuiName, "gu_amtpBtnConvert", -1, "g" . "Amtp_SendToClipboard", "&Send to Clipboard")
+	Gui_Add_Button(GuiName, "gu_amtpBtnConvert", -1, "Default g" . "Amtp_SendToClipboard", "&Send to Clipboard")
 	Gui_Add_Checkbox(GuiName, "gu_amtpCkbKeepWindow", -1, "x+5 yp+5", "&Keep window")
 }
 
@@ -191,6 +197,20 @@ Amtp_SyncUIFromClipboard()
 	
 	textfinal := dev_JoinStrings(arlines_output, "`r`n")
 	
+	foundpos := RegExMatch(howto, "w([0-9]+)", subpat)
+	if(foundpos)
+	{
+		wn := subpat1
+		if(wn>0)
+		{
+			textfinal := Amtp_WrapLines(textfinal, wn)
+		}
+		else if(wn==0)
+		{
+			textfinal := StrReplace(textfinal, "`r`n", " ")
+		}
+	}
+	
 	GuiControl_SetText(GuiName, "gu_amtpPreviewText", textfinal)
 }
 
@@ -208,3 +228,70 @@ Amtp_SendToClipboard()
 		Amtp_HideGui()
 }
 
+
+
+Amtp_WrapLines(inputtext, colwidth)
+{
+	; Return a new text string with extra \n inserted.
+	; If we want to break a very long string(shell command line for example)
+	; into trivial lines so that they looks pretty, we can use this.
+	;
+	; 2023.05.11, modified on the basis of ChatGPT generated code.
+	
+	newtext := ""
+
+	Loop, Parse, inputtext, `n ; Parse the text string into separate lines.
+	{
+	    line := A_LoopField ; Get the current line.
+	    ;word_count := 0      ; Initialize word count to 0.
+	    new_line := ""
+
+	    loop
+	    {
+	        word := _amtp_GetFirstWord(line, remain_words) ; Get the next word in the line.
+	        if (!word)  ; If there are no more words, break the loop.
+	            break
+
+	        if (StrLen(new_line) + StrLen(word) > colwidth) ; If adding the next word would exceed the maximum line length, break the line.
+	        {
+	        	if(new_line != "") {
+	        		newtext .= new_line "`r`n"
+		            ; MsgBox, % "[New line]" new_line  ; Display the new line.
+		        }
+	            
+	            new_line := word                 ; Start a new line with the current word.
+	        }
+	        else ; Otherwise, add the next word to the current line.
+	        {
+	            if (new_line != "") ; If the current line is not empty, add a space before the next word.
+	                new_line .= " "
+	            new_line .= word
+	        }
+
+	        line := remain_words
+	    }
+
+	    if (new_line != "") ; If there is a current line when we exit the loop, display it.
+	    {
+	    	newtext .= new_line "`r`n"
+	        ;MsgBox, % [New line] " new_line
+	    }
+	}
+
+	return newtext
+}
+
+; Get a specific word from a string.
+; Assumes that words are separated by whitespace (space, tab, or newline).
+_amtp_GetFirstWord(str, byref remain_str) {
+    str := Trim(str)
+    index := InStr(str, " ")
+    if(index>0) {
+        remain_str := SubStr(str, index)
+        return SubStr(str, 1, index-1)
+    }
+    else {
+        remain_str := ""
+        return str
+    }
+}
