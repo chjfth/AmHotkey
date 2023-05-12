@@ -1114,7 +1114,22 @@ dev_RunWaitOneEx(command, is_hidewindow:=false, working_dir:="")
 	}
 }
 
-
+dev_PasteTextViaClipboard(usertext)
+{
+	if(!dev_IsString(usertext))
+	{
+		; usertext is a string array.
+		usertext := dev_JoinStrings(usertext, "`r`n") . "`r`n"
+	}
+	
+	if(not dev_SetClipboardWithTimeout(usertext, 500))
+	{
+		dev_MsgBoxWarning("Unexpect: dev_PasteTextViaClipboard() cannot open Clipboard.")
+		return
+	}
+	
+	WinClip.Paste()
+}
 
 dev_SendRaw(rawstr)
 {

@@ -970,11 +970,13 @@ winshell_AddOneSendTextMenu(menuitem_text, textlines)
 	; * may be a string, each line separated by `n 
 	; * or an array of strings, then after sending each line, a `n will be appended.
 	
-	if(dev_IsString(textlines))
-		fnobj := Func("dev_SendRaw").Bind(textlines)
-	else
-		fnobj := Func("dev_SendTextLines").Bind(textlines)
-
+;	if(dev_IsString(textlines))
+;		fnobj := Func("dev_SendRaw").Bind(textlines)
+;	else
+;		fnobj := Func("dev_SendTextLines").Bind(textlines)
+	;
+	fnobj := Func("dev_PasteTextViaClipboard").Bind(textlines)
+	
 	dev_MenuAddItem("submenu_PasteText", menuitem_text, fnobj)
 	
 	dev_MenuAddSubmenu(winshell.UtilityMenu, "Paste text >>", "submenu_PasteText")

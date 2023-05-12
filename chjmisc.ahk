@@ -236,13 +236,27 @@ chjmisc_InitMenus()
 	winshell_AddOneAhkFunctionMenu("Accurate move current active window", "devui_ChangeWindowPosition")
 	winshell_AddOneAhkFunctionMenu("AHK Trim path utility", "AmTrimPath_ShowGui")
 	
+	chjmisc_AddQuickPasteSnippets()
+}
+
+
+chjmisc_AddQuickPasteSnippets()
+{
 	winshell_AddOneSendTextMenu("venv39 - transcode"
 		, ["d:\venv\venv39a\Scripts\activate.bat"
 		, "d:\PFNoInst\chjtranscode\setenv.bat"
 		, "set PYTHONPATH=D:\github\youtube-dl"])
 	
+	text =
+	(
+var m = location.href.match("https://github.com/([^/]+/[^/]+)");
+var reposie = m[1]
+var apiurl = "https://api.github.com/repos/" + reposie
+fetch(apiurl)
+  .then(v => v.json()).then((v) => { console.log(v['size'] + 'KB')  })
+	)
+	winshell_AddOneSendTextMenu("F12 console - Query github.com repo size", text)
 }
-
 
 chj_StartMultiPageScreenGrabber(screenshot_hotkey, pgdn_hotkey, image_dir, pages, pgdn_wait_millisec:=500)
 {
