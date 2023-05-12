@@ -332,7 +332,7 @@
     return bytesCopied
   }
   
-  Paste( plainText = "", method = 1 )
+  Paste( plainText = "", method = 0 )
   {
     ret := 0
     if ( plainText != "" )
@@ -363,7 +363,7 @@
     return ret
   }
   
-  iPaste( method = 1 )
+  iPaste( method = 0 )
   {
     this._IsInstance( A_ThisFunc )
     this.Snap( data )
