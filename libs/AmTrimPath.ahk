@@ -56,6 +56,7 @@ Amtp_CreateGui()
 	amtp_Gui_add_onehint("""", "Wrap string with double-quotes")
 	amtp_Gui_add_onehint("'",  "Wrap string with single-quotes")
 	amtp_Gui_add_onehint("-",  "Remove all double- and single- quotes")
+	amtp_Gui_add_onehint("[",  "Collapse consecutive blank-lines into one")
 	amtp_Gui_add_onehint("w20","Wrap long lines at line-width 20")
 	amtp_Gui_add_onehint("w0", "Remove all line breaks, =concatenate all lines")
 	Gui_Add_TxtLabel(GuiName, "", -1, "xm", "Hint: You can type ""/ to wrap quotes and convert to / at the same time.")
@@ -195,7 +196,18 @@ Amtp_SyncUIFromClipboard()
 		arlines_output[index] := linetext
 	}
 	
-	textfinal := dev_JoinStrings(arlines_output, "`r`n")
+	; ====== Remaining : Processing the output string as a whole ======
+	
+	textfinal := dev_JoinStrings(arlines_output, "`n")
+	
+	; Collapse consecutive blank-lines into one blank-line.
+	
+	if(InStr(howto, "["))
+	{
+		textfinal := RegExReplace(textfinal, "\n{3,}", "`n`n")
+	}
+	
+	; Split lines according to 'w40' etc.
 	
 	foundpos := RegExMatch(howto, "w([0-9]+)", subpat)
 	if(foundpos)
@@ -207,7 +219,7 @@ Amtp_SyncUIFromClipboard()
 		}
 		else if(wn==0)
 		{
-			textfinal := StrReplace(textfinal, "`r`n", " ")
+			textfinal := StrReplace(textfinal, "`n", " ")
 		}
 	}
 	
