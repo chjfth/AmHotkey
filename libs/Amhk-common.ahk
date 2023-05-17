@@ -140,6 +140,11 @@ dev_MsgBoxYesNo_Warning(text, default_yes:=true)
 dev_SendMessage(hwnd, wm_xxx, wparam, lparam)
 {
     SendMessage, % wm_xxx, % wparam, % lparam, , ahk_id %hwnd%
+    
+    if(ErrorLevel=="FAIL")
+    	return ""
+    else
+    	return ErrorLevel
 }
 
 dev_PostMessage(hwnd, wm_xxx, wparam, lparam)
