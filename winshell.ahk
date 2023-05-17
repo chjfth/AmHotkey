@@ -691,23 +691,52 @@ CalPPI_DoAdvanced()
 
 winshell_GrabControlTextUnderMouse()
 {
+	MaxItems := 99999
+	PromptItems := 999
+	warnmsg := ""
+	otext := ""
+
 	MouseGetPos, x, y, tgthwnd, classnn
+	ControlGetPos, x, y, w, h, %classnn%, ahk_id %tgthwnd%
 
 	if(not classnn) {
 		MsgBox, % "Cannot get child window classnn under mouse."
 		return
 	}
 	
-	; First try for Listbox, ListView, Combobox, DropDownList
-	ControlGet, otext, List, , %classnn%, ahk_id %tgthwnd%
-	ControlGetPos, x, y, w, h, %classnn%, ahk_id %tgthwnd%
+	ControlGet, itemcount, List, Count, %classnn%, ahk_id %tgthwnd%
+	
+;	AmDbg0("itemcount=" itemcount)
+	if(itemcount==0)
+	{
+		; Meet an empty ListView etc.
+		warnmsg := "Zero item grabbed."
+	}
+	else if(itemcount>0 and itemcount<=MaxItems)
+	{
+		; For Listbox, ListView, Combobox, DropDownList
+		
+		if(itemcount>PromptItems)
+			dev_TooltipAutoClear(Format("Grabbing {} items...", itemcount), 99000)
+		
+		ControlGet, otext, List, , %classnn%, ahk_id %tgthwnd%
 
-	if(!otext)
-	{	; Try simple control types, Buttons, Static, Edit etc
+		if(itemcount>PromptItems)
+			dev_TooltipAutoClear(Format("Grabbing {} items done.", itemcount))
+		
+	}
+	else if(itemcount>MaxItems)
+	{
+		warnmsg := Format("Items more than {}, I cannot grab that many.", MaxItems)
+	}
+	else
+	{
+		; itemcount is empty-string,
+		; then it is simple control types, Buttons, Static, Edit etc
 		ControlGetText, otext, %classnn%, ahk_id %tgthwnd%
 	}
-	
-	if(otext)
+
+	if(warnmsg=="")
 	{
 		textlen := strlen(otext)
 		Clipboard := otext
@@ -729,10 +758,8 @@ winshell_GrabControlTextUnderMouse()
 	{
 		DoHilightRectInTopwin("ahk_id " tgthwnd, x,y,w,h, 500, "ff8888") ; red 
 		
-		MsgBox, % "No text under mouse grabbed.`n`nClassnn=" classnn
+		dev_MsgBoxWarning(warnmsg)
 	}
-	; ControlGet, OutputVar, List, Options, SysListView321, WinTitle, WinText
-	
 }
 
 AppsKey & g:: winshell_GrabControlTextUnderMouse()
