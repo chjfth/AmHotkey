@@ -691,22 +691,20 @@ CalPPI_DoAdvanced()
 
 winshell_GrabControlTextUnderMouse()
 {
-	MouseGetPos, x, y, tophwnd, classnn
+	MouseGetPos, x, y, tgthwnd, classnn
 
-	; First try for Listbox, ListView, Combobox, DropDownList
-	ControlGet, otext, List, , %classnn%, ahk_id %tophwnd%
-	ControlGetPos, x, y, w, h, %classnn%, ahk_id %tophwnd%
-
-;	tooltip, % "ctrlhwnd=" %ctrlhwnd% " / len=" strlen(otext)
-	
 	if(not classnn) {
 		MsgBox, % "Cannot get child window classnn under mouse."
 		return
 	}
 	
+	; First try for Listbox, ListView, Combobox, DropDownList
+	ControlGet, otext, List, , %classnn%, ahk_id %tgthwnd%
+	ControlGetPos, x, y, w, h, %classnn%, ahk_id %tgthwnd%
+
 	if(!otext)
 	{	; Try simple control types, Buttons, Static, Edit etc
-		ControlGetText, otext, %classnn%, ahk_id %tophwnd%
+		ControlGetText, otext, %classnn%, ahk_id %tgthwnd%
 	}
 	
 	if(otext)
@@ -723,13 +721,13 @@ winshell_GrabControlTextUnderMouse()
 		else
 			color := "ffe088" ; yellow
 		
-		DoHilightRectInTopwin("ahk_id " tophwnd, x,y,w,h, 500, color)
+		DoHilightRectInTopwin("ahk_id " tgthwnd, x,y,w,h, 500, color)
 		
 		MsgBox, % textlen " chars grabbed" prompt_lines ", in clipboard.`n`nClassnn=" classnn
 	}
 	else
 	{
-		DoHilightRectInTopwin("ahk_id " tophwnd, x,y,w,h, 500, "ff8888") ; red 
+		DoHilightRectInTopwin("ahk_id " tgthwnd, x,y,w,h, 500, "ff8888") ; red 
 		
 		MsgBox, % "No text under mouse grabbed.`n`nClassnn=" classnn
 	}
