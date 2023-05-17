@@ -186,6 +186,12 @@ vmctl_CheckAndSuspendPausedVMs(byref errmsg:="")
 
 vmctl_SuspendVmx(vmxpath)
 {
+	suspend_timeout_sec := 60
+	warnmsg := Format("This VM suspending has NOT finished after {} seconds, please check the VM status manually.`n`n"
+		, suspend_timeout_sec, vmxpath)
+	fnWarnFreeze := Func("dev_MsgBoxWarning").Bind(warnmsg)
+	dev_StartTimerOnce(fnWarnFreeze, suspend_timeout_sec*1000)
+
 	; For VMwks 16.2.3, we need to Unpause VM first(in case it was paused), 
 	; to ensure VM Suspend success.
 
@@ -195,6 +201,8 @@ vmctl_SuspendVmx(vmxpath)
 	cmd := Format("""{}\vmrun.exe"" suspend ""{}""", g_vmwks_exedir, vmxpath)
 
 	dev_RunWaitOne(cmd, "hide")
+	
+	dev_StopTimer(fnWarnFreeze)
 }
 
 vmctl_GetRunningVmxList()
