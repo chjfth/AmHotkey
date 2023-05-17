@@ -1900,14 +1900,26 @@ dev_IsClassnnFocused_regex(regex)
 
 ;################### Windows GUI tweaking functions ###########################
 
-dev_ReadRemoteBuffer(hpRemote, RemoteBuffer, ByRef LocalVar, bytes)
+dev_WriteRemoteBuffer(hpRemote, RemoteBuffer, byref iVarBlock, bytes)
 {
-	result := DllCall( "ReadProcessMemory" 
+	succ := DllCall( "WriteProcessMemory"
+				, "Ptr", hpRemote
+				, "Ptr", RemoteBuffer
+				, "Ptr", &iVarBlock
+				, "uint", bytes
+				, "Ptr", 0)
+	return succ
+}
+
+dev_ReadRemoteBuffer(hpRemote, RemoteBuffer, byref oVarBlock, bytes)
+{
+	succ := DllCall( "ReadProcessMemory" 
 	            , "Ptr", hpRemote 
 	            , "Ptr", RemoteBuffer 
-	            , "Ptr", &LocalVar 
+	            , "Ptr", &oVarBlock 
 	            , "uint", bytes 
-	            , "uint", 0 ) 
+	            , "Ptr", 0 ) 
+	return succ
 }
 
 EnumToolbarButtons(ctrlhwnd, is_apply_scale:=false)

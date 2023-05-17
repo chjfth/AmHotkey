@@ -693,6 +693,7 @@ winshell_GetListViewHeaderText(hwndListview)
 {
 	; Return an array, each element is one header text
 	; Thanks to: https://www.autohotkey.com/board/topic/59420-solved-read-listview-column-header-text/
+	; [2023-05-17] Chj updates it to support HWND from both x64 & x86 process.
 
 	Headers := []
 	LVM_GETHEADER := 0x101f
@@ -707,34 +708,39 @@ winshell_GetListViewHeaderText(hwndListview)
 	Delimiter := "`n"  ; 
 
 	PROCESS_VM_OPERATION := 0x8, PROCESS_VM_READ := 0x10
-	PROCESS_VM_WRITE := 0x20,    MEM_COMMIT := 0x1000
+	PROCESS_VM_WRITE := 0x20,    PROCESS_QUERY_INFORMATION := 0x400
+	MEM_COMMIT := 0x1000
 	MEM_DECOMMIT := 0x4000,      PAGE_READWRITE = 0x4
 	HDI_TEXT := 0x2,             HDM_GETITEMCOUNT := 0x1200
 	HDM_GETITEMA := 0x1203
 	HDM_GETITEMW := 0x120B
-	HDITEM_size := 48 ; sizeof(HDITEM)==48
-
-	VarSetCapacity(Buf, MaxName2x, 0)  
-	VarSetCapacity(hdi, HDITEM_size, 0)
-
+	
 	threadid := DllCall("GetWindowThreadProcessId", "uint", hwndHeader
 	                                  , "uint *", PID)
 	if(threadid==0) {
     	Amdbg_Lv0p(A_ThisFunc, Format("For a header-control, GetWindowThreadProcessId(hwnd={}) error.", hwndHeader))
     	return
 	}
-	                                  
-	hProcess := DllCall("OpenProcess", "uint", PROCESS_VM_READ | PROCESS_VM_WRITE | PROCESS_VM_OPERATION
-	                                 , "int", FALSE
-	                                 , "uint", PID)
-	If (hProcess = 0) {
+
+	hProcess := DllCall("OpenProcess"
+		, "uint", PROCESS_VM_READ | PROCESS_VM_WRITE | PROCESS_VM_OPERATION | PROCESS_QUERY_INFORMATION
+	    , "int", FALSE
+	    , "uint", PID)
+	If (hProcess==0) {
     	Amdbg_Lv0p(A_ThisFunc, Format("OpenProcess(pid={}) error.", PID))
     	return
 	}
 
+	is32bit_tgt := dev_IsHe32bitProcess(hProcess)
+	HDITEM_size :=       is32bit_tgt ? 48 : 72 ; sizeof(HDITEM)
+	offset_cchTextMax := is32bit_tgt ? 16 : 24
+
+	VarSetCapacity(Buf, MaxName2x, 0)  
+	VarSetCapacity(hdi, HDITEM_size, 0)
+
 	; Allocate HDITEM struct
-	phdi := DllCall("VirtualAllocEx", "uint", hProcess
-	                                , "uint", 0
+	phdi := DllCall("VirtualAllocEx", "Ptr", hProcess
+	                                , "Ptr", 0
 	                                , "uint", HDITEM_size + MaxName2x
 	                                , "uint", MEM_COMMIT
 	                                , "uint", PAGE_READWRITE)
@@ -743,16 +749,12 @@ winshell_GetListViewHeaderText(hwndListview)
 		Goto, Close_20230517
 	}
 
-	NumPut(HDI_TEXT, hdi)             ; set hdi.mask=HDI_TEXT
-	NumPut(phdi+HDITEM_size, hdi, 8)  ; set hdi.pszText 
-	NumPut(MaxName, hdi, 16)          ; set hdi.cchTextMax
+	NumPut(HDI_TEXT, hdi, 0, "uint")                 ; set hdi.mask=HDI_TEXT
+	NumPut(phdi+HDITEM_size, hdi, 8, "Ptr")          ; set hdi.pszText 
+	NumPut(MaxName, hdi, offset_cchTextMax, "uint")  ; set hdi.cchTextMax
 
-	Ret := DllCall("WriteProcessMemory", "uint", hProcess
-	                                 , "uint", phdi
-	                                 , "uint", &hdi
-	                                 , "uint", HDITEM_size
-	                                 , "uint", 0)
-	If (Ret = 0) {
+	succ := dev_WriteRemoteBuffer(hProcess, phdi, hdi, HDITEM_size)
+	If (not succ) {
 		Amdbg_Lv0p(A_ThisFunc, Format("WriteProcessMemory() error."))
 		Goto, Free_20230517
 	}
@@ -767,12 +769,8 @@ winshell_GetListViewHeaderText(hwndListview)
 	{
 		dev_SendMessage(hwndHeader, HDM_GETITEMW, A_Index - 1, phdi)
 
-		Ret := DllCall("ReadProcessMemory", "uint", hProcess
-		                                  , "uint", phdi+HDITEM_size
-		                                  , "uint", &Buf
-	    	                              , "uint", MaxName2x
-	        	                          , "uint", 0)
-		If (Ret = 0) {
+		succ := dev_ReadRemoteBuffer(hProcess, phdi+HDITEM_size, Buf, MaxName2x)
+		If (not succ) {
 	  		Amdbg_Lv0p(A_ThisFunc, Format("ReadProcessMemory() error."))
 	  		Goto, Free_20230517
 		}
@@ -782,8 +780,8 @@ winshell_GetListViewHeaderText(hwndListview)
 	}
 
 Free_20230517:
-	DllCall("VirtualFreeEx", "uint", hProcess
-	                    , "uint", phdi
+	DllCall("VirtualFreeEx", "Ptr", hProcess
+	                    , "Ptr", phdi
 	                    , "uint", HDITEM_size + MaxName2x
 	                    , "uint", MEM_DECOMMIT)
 

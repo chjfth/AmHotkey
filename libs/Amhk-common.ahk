@@ -1639,6 +1639,19 @@ dev_GetTickCount64()
 	return s_highquad * 0x100000000 + now_dword
 }
 
+dev_IsHe32bitProcess(hProcess)
+{
+	; hProcess is a handle returned by WinAPI OpenProcess(PROCESS_QUERY_INFORMATION)
+	
+	if(not A_Is64bitOS)
+		return true
+	
+	is32Bit := false
+	succ := DllCall("Kernel32.dll\IsWow64Process", "Ptr", hProcess
+							, "int*", is32Bit)
+	return is32Bit
+}
+
 dev_ArrayTruncateAt_(ar, nkeeps)
 {
 	nDel := ar.Length() - nkeeps
