@@ -34,6 +34,9 @@ Amdbg_Lv0(modu, newmsg)
 	; Lv0 message has the benefit over Dbgwin_Output() that it's content is buffered into RAM,
 	; and can be later retrieved by Amdbg_ShowGui()'s [Copy to clipboard] button.
 
+Amdbg_Lv0p(modu, newmsg) ; newmsg auto-prefixed with modu name.
+...
+
 Simpler message output (modu name "_default_"):
 Amdbg0(newmsg)
 Amdbg1(newmsg)
@@ -709,6 +712,27 @@ Amdbg_Lv3(modu, newmsg)
 {
 	Amdbg_output(modu, newmsg, 3)
 }
+
+Amdbg_Lv0p(modu, newmsg)
+{
+	Amdbg_output(modu, modu ": " newmsg, 0)
+}
+
+Amdbg_Lv1p(modu, newmsg)
+{
+	Amdbg_output(modu, modu ": " newmsg, 1)
+}
+
+Amdbg_Lv2p(modu, newmsg)
+{
+	Amdbg_output(modu, modu ": " newmsg, 2)
+}
+
+Amdbg_Lv3p(modu, newmsg)
+{
+	Amdbg_output(modu, modu ": " newmsg, 3)
+}
+
 
 Amdbg_SetDesc(modu, desc)
 {

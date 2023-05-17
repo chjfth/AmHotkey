@@ -689,6 +689,110 @@ CalPPI_DoAdvanced()
 
 ; =======================================================================
 
+winshell_GetListViewHeaderText(hwndListview)
+{
+	; Return an array, each element is one header text
+	; Thanks to: https://www.autohotkey.com/board/topic/59420-solved-read-listview-column-header-text/
+
+	Headers := []
+	LVM_GETHEADER := 0x101f
+	hwndHeader := dev_SendMessage(hwndListview, LVM_GETHEADER, 0, 0)
+	if(hwndHeader==0) {
+    	Amdbg_Lv0p(A_ThisFunc, Format("LVM_GETHEADER for (0x{:08X}) error, probably invalid HWND value input.", hwndListview))
+    	return ""
+	}
+	
+	MaxName := 100     ; header text max length
+	MaxName2x := MaxName*2
+	Delimiter := "`n"  ; 
+
+	PROCESS_VM_OPERATION := 0x8, PROCESS_VM_READ := 0x10
+	PROCESS_VM_WRITE := 0x20,    MEM_COMMIT := 0x1000
+	MEM_DECOMMIT := 0x4000,      PAGE_READWRITE = 0x4
+	HDI_TEXT := 0x2,             HDM_GETITEMCOUNT := 0x1200
+	HDM_GETITEMA := 0x1203
+	HDM_GETITEMW := 0x120B
+	HDITEM_size := 48 ; sizeof(HDITEM)==48
+
+	VarSetCapacity(Buf, MaxName2x, 0)  
+	VarSetCapacity(hdi, HDITEM_size, 0)
+
+	threadid := DllCall("GetWindowThreadProcessId", "uint", hwndHeader
+	                                  , "uint *", PID)
+	if(threadid==0) {
+    	Amdbg_Lv0p(A_ThisFunc, Format("For a header-control, GetWindowThreadProcessId(hwnd={}) error.", hwndHeader))
+    	return
+	}
+	                                  
+	hProcess := DllCall("OpenProcess", "uint", PROCESS_VM_READ | PROCESS_VM_WRITE | PROCESS_VM_OPERATION
+	                                 , "int", FALSE
+	                                 , "uint", PID)
+	If (hProcess = 0) {
+    	Amdbg_Lv0p(A_ThisFunc, Format("OpenProcess(pid={}) error.", PID))
+    	return
+	}
+
+	; Allocate HDITEM struct
+	phdi := DllCall("VirtualAllocEx", "uint", hProcess
+	                                , "uint", 0
+	                                , "uint", HDITEM_size + MaxName2x
+	                                , "uint", MEM_COMMIT
+	                                , "uint", PAGE_READWRITE)
+	if (phdi = 0) {
+		Amdbg_Lv0p(A_ThisFunc, Format("VirtualAllocEx() error."))
+		Goto, Close_20230517
+	}
+
+	NumPut(HDI_TEXT, hdi)             ; set hdi.mask=HDI_TEXT
+	NumPut(phdi+HDITEM_size, hdi, 8)  ; set hdi.pszText 
+	NumPut(MaxName, hdi, 16)          ; set hdi.cchTextMax
+
+	Ret := DllCall("WriteProcessMemory", "uint", hProcess
+	                                 , "uint", phdi
+	                                 , "uint", &hdi
+	                                 , "uint", HDITEM_size
+	                                 , "uint", 0)
+	If (Ret = 0) {
+		Amdbg_Lv0p(A_ThisFunc, Format("WriteProcessMemory() error."))
+		Goto, Free_20230517
+	}
+
+	Count := dev_SendMessage(hwndHeader, HDM_GETITEMCOUNT, 0, 0)
+	If (Count <= 0) {
+		Amdbg_Lv0p(A_ThisFunc, Format("SendMessage() querying HDM_GETITEMCOUNT error. Return={}", Count))
+		Goto, Free_20230517
+	}
+
+	Loop, % Count
+	{
+		dev_SendMessage(hwndHeader, HDM_GETITEMW, A_Index - 1, phdi)
+
+		Ret := DllCall("ReadProcessMemory", "uint", hProcess
+		                                  , "uint", phdi+HDITEM_size
+		                                  , "uint", &Buf
+	    	                              , "uint", MaxName2x
+	        	                          , "uint", 0)
+		If (Ret = 0) {
+	  		Amdbg_Lv0p(A_ThisFunc, Format("ReadProcessMemory() error."))
+	  		Goto, Free_20230517
+		}
+
+		VarSetCapacity(Buf, -1)  ; finish the string
+		Headers.Push(Buf)
+	}
+
+Free_20230517:
+	DllCall("VirtualFreeEx", "uint", hProcess
+	                    , "uint", phdi
+	                    , "uint", HDITEM_size + MaxName2x
+	                    , "uint", MEM_DECOMMIT)
+
+Close_20230517:
+	DllCall("CloseHandle", "uint", hProcess)
+
+  Return Headers
+}
+
 winshell_GrabControlTextUnderMouse()
 {
 	MaxItems := 99999
@@ -696,15 +800,16 @@ winshell_GrabControlTextUnderMouse()
 	warnmsg := ""
 	otext := ""
 
-	MouseGetPos, x, y, tgthwnd, classnn
-	ControlGetPos, x, y, w, h, %classnn%, ahk_id %tgthwnd%
+	MouseGetPos, x, y, tophwnd, classnn
+	ControlGetPos, x, y, w, h, %classnn%, ahk_id %tophwnd%
+	ctlhwnd := dev_GetHwndFromClassNN(classnn, "ahk_id " tophwnd)
 
 	if(not classnn) {
 		MsgBox, % "Cannot get child window classnn under mouse."
 		return
 	}
 	
-	ControlGet, itemcount, List, Count, %classnn%, ahk_id %tgthwnd%
+	ControlGet, itemcount, List, Count, %classnn%, ahk_id %tophwnd%
 	
 ;	AmDbg0("itemcount=" itemcount)
 	if(itemcount==0)
@@ -719,10 +824,18 @@ winshell_GrabControlTextUnderMouse()
 		if(itemcount>PromptItems)
 			dev_TooltipAutoClear(Format("Grabbing {} items...", itemcount), 99000)
 		
-		ControlGet, otext, List, , %classnn%, ahk_id %tgthwnd%
+		ControlGet, otext, List, , %classnn%, ahk_id %tophwnd%
 
 		if(itemcount>PromptItems)
 			dev_TooltipAutoClear(Format("Grabbing {} items done.", itemcount))
+		
+		if(StrIsStartsWith(classnn, "SysListView32"))
+		{
+			; For ListView, we add Header-text at first line(to otext).
+			arhdrtext := winshell_GetListViewHeaderText(ctlhwnd)
+			if(arhdrtext and arhdrtext.Length()>0)
+				otext := dev_JoinStrings(arhdrtext, "`t")  "`r`n" otext
+		}
 		
 	}
 	else if(itemcount>MaxItems)
@@ -733,7 +846,7 @@ winshell_GrabControlTextUnderMouse()
 	{
 		; itemcount is empty-string,
 		; then it is simple control types, Buttons, Static, Edit etc
-		ControlGetText, otext, %classnn%, ahk_id %tgthwnd%
+		ControlGetText, otext, %classnn%, ahk_id %tophwnd%
 	}
 
 	if(warnmsg=="")
@@ -750,13 +863,13 @@ winshell_GrabControlTextUnderMouse()
 		else
 			color := "ffe088" ; yellow
 		
-		DoHilightRectInTopwin("ahk_id " tgthwnd, x,y,w,h, 500, color)
+		DoHilightRectInTopwin("ahk_id " tophwnd, x,y,w,h, 500, color)
 		
 		MsgBox, % textlen " chars grabbed" prompt_lines ", in clipboard.`n`nClassnn=" classnn
 	}
 	else
 	{
-		DoHilightRectInTopwin("ahk_id " tgthwnd, x,y,w,h, 500, "ff8888") ; red 
+		DoHilightRectInTopwin("ahk_id " tophwnd, x,y,w,h, 500, "ff8888") ; red 
 		
 		dev_MsgBoxWarning(warnmsg)
 	}
