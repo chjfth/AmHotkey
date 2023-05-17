@@ -807,47 +807,56 @@ winshell_GrabControlTextUnderMouse()
 		return
 	}
 	
-	ControlGet, itemcount, List, Count, %classnn%, ahk_id %tophwnd%
-	
-;	AmDbg0("itemcount=" itemcount)
-	if(itemcount==0)
+	; For ListView, we first check its item-count.
+	; (ListBox does nnot support 'List')
+	if(StrIsStartsWith(classnn, "SysListView32"))
 	{
-		; Meet an empty ListView etc.
-		warnmsg := "Zero item grabbed."
-	}
-	else if(itemcount>0 and itemcount<=MaxItems)
-	{
-		; For Listbox, ListView, Combobox, DropDownList
-		
-		if(itemcount>PromptItems)
-			dev_TooltipAutoClear(Format("Grabbing {} items...", itemcount), 99000)
-		
-		ControlGet, otext, List, , %classnn%, ahk_id %tophwnd%
+		ControlGet, itemcount, List, Count, %classnn%, ahk_id %tophwnd%
 
-		if(itemcount>PromptItems)
-			dev_TooltipAutoClear(Format("Grabbing {} items done.", itemcount))
-		
-		if(StrIsStartsWith(classnn, "SysListView32"))
+		if(itemcount==0)
 		{
+			; Meet an empty ListView etc.
+			warnmsg := "Listview has zero item."
+		}
+		else if(itemcount>0 and itemcount<=MaxItems)
+		{
+			if(itemcount>PromptItems)
+				dev_TooltipAutoClear(Format("Grabbing {} items...", itemcount), 99000)
+			
+			ControlGet, otext, List, , %classnn%, ahk_id %tophwnd%
+
+			if(itemcount>PromptItems)
+				dev_TooltipAutoClear(Format("Grabbing {} items done.", itemcount))
+			
 			; For ListView, we add Header-text at first line(to otext).
 			arhdrtext := winshell_GetListViewHeaderText(ctlhwnd)
 			if(arhdrtext and arhdrtext.Length()>0)
+			{
 				otext := dev_JoinStrings(arhdrtext, "`t")  "`r`n" otext
+			}
 		}
-		
-	}
-	else if(itemcount>MaxItems)
-	{
-		warnmsg := Format("Items more than {}, I cannot grab that many.", MaxItems)
+		else if(itemcount>MaxItems)
+		{
+			warnmsg := Format("ListView items more than {}, I cannot grab that many.", MaxItems)
+			
+			; -- Partial items grabbing has not been implemented.
+		}
 	}
 	else
 	{
-		; itemcount is empty-string,
-		; then it is simple control types, Buttons, Static, Edit etc
+		; For Listbox, Combobox, DropDownList, call ControlGet directly
+		
+		ControlGet, otext, List, , %classnn%, ahk_id %tophwnd%
+	}
+
+	if(otext=="")
+	{
+		; then consider it simple control types, Buttons, Static, Edit etc
+		;
 		ControlGetText, otext, %classnn%, ahk_id %tophwnd%
 	}
 
-	if(warnmsg=="")
+	if(strlen(otext)>0)
 	{
 		textlen := strlen(otext)
 		Clipboard := otext
@@ -868,6 +877,9 @@ winshell_GrabControlTextUnderMouse()
 	else
 	{
 		DoHilightRectInTopwin("ahk_id " tophwnd, x,y,w,h, 500, "ff8888") ; red 
+		
+		if(warnmsg=="")
+			warnmsg := "No text under mouse grabbed.`n`nClassnn=" classnn
 		
 		dev_MsgBoxWarning(warnmsg)
 	}
