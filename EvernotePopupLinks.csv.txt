@@ -106,6 +106,7 @@ https://www.evernote.com/shard/s21/nl/2425275/67ce244f-80c4-460e-bbd4-09b4f935ae
 https://www.evernote.com/shard/s21/nl/2425275/e3afc836-01d6-42f6-af62-fecfe9154339 , 机器实例:MYPCS , 收集帖
 https://www.evernote.com/shard/s21/nl/2425275/61d348e1-8ab7-4bec-93f4-48e248d89a6c , 机器实例:chja20 , 我的 3950X 台式机
 https://www.evernote.com/shard/s21/nl/2425275/e84984e1-0f3a-4030-aaac-3243ba61ee73 , 机器实例:A320BK , 群升公寓的备份机
+https://www.evernote.com/shard/s21/nl/2425275/7164e757-c616-4248-b7f3-0b453367ff7f , 机器实例:YOGA900, 联想 2017 Yoga 900 笔记本电脑
 https://www.evernote.com/shard/s21/nl/2425275/7e850d61-28f6-4427-940c-93a284e44c82 , 机器实例:Win10vwork
 https://www.evernote.com/shard/s21/nl/2425275/a7f5797b-f464-41e7-9098-93f6d3286dd3 , 机器实例:MyNUCs , Intel NUC
 https://www.evernote.com/shard/s21/nl/2425275/e6f8bb67-de35-4bf8-829e-945c41415c45 , 机器实例:chji , 用了十年的 i7-4770K

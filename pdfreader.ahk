@@ -383,8 +383,8 @@ NumLock:: foxitHotkey_SelectHandMode()
 
 #If foxit_IsAnnoationPropertyWindowActive() or foxit_IsWinActive()
 
-NumpadDiv:: foxit_SwitchTo_SelectAnnotation_mode()
-foxit_SwitchTo_SelectAnnotation_mode()
+NumpadDiv:: foxit_SwitchTo_SelectText_mode()
+foxit_SwitchTo_SelectText_mode()
 {
 	if(not foxit_ActivateMainWindow()) {
 		dev_TooltipAutoClear("foxit_ActivateMainWindow() failed.")
