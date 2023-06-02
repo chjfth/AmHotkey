@@ -117,13 +117,38 @@ foxit_IsVersion7(wintitle="A")
 		return false
 }
 
-foxit_ActivateMainWindow()
+foxit_copynow(is_wait_until_mainwnd_foreground:=false)
+{
+	Send ^c
+	
+	if(is_wait_until_mainwnd_foreground)
+	{
+		; After user press Ctrl+c, Foxit reader may popup a progress-bar at right-bottom corner
+		; which lasts for about 10~100ms(more text, longer wait). During this time, hotkeys 
+		; for marking underline, Squiggly is not effective. 
+		; So, we wait until the main-window re-gains input-focus is required.
+		;
+		hwnd := foxit_GetMainWindow()
+		dev_WinWaitActiveHwnd(hwnd, 500)
+	}
+}
+
+foxit_GetMainWindow()
 {
 	hwnd := dev_GetHwndByWintitle("ahk_class classFoxitReader")
 	if(!hwnd) {
 		dev_MsgBoxInfo("foxit_ActivateMainWindow() Not found: ""ahk_class classFoxitReader"".")
 		return false
 	}
+	
+	return hwnd
+}
+
+foxit_ActivateMainWindow()
+{
+	hwnd := foxit_GetMainWindow()
+	if(!hwnd)
+		return
 	
 	dev_WinActivateHwnd(hwnd)
 
@@ -217,17 +242,23 @@ foxitHotkey_SelectHandMode()
 	Send !3 ; Alt+3
 }
 foxitHotkey_UnderlineText()
-{ 
+{
+	foxit_copynow(true)
+	
 	Send ^- 
 }
 foxitHotkey_SquiggleText() 
 {
+	foxit_copynow(true)
+
 	Send ^{=} 
 		; Writing ^= does not take effect, adding the curly brackets makes it ok,
 		; just don't know the reason. Autohotkey 1.1.19.02
 }
 foxitHotkey_HighlightText()
-{ 
+{
+	foxit_copynow(true)
+	
 	Send ^' 
 }
 
