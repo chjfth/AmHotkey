@@ -28,7 +28,7 @@ amtp_Gui_add_onehint(charhint, desctext)
 	GuiName := AmTrimPath._GuiName
 
 	Gui_Switch_Font( GuiName, 0, "", "Consolas")
-	Gui_Add_TxtLabel(GuiName, "", 30, "xm+10", charhint)
+	Gui_Add_TxtLabel(GuiName, "", 30, "xm+10 y+0", charhint)
 	Gui_Switch_Font( GuiName, 0, "", "Tahoma")
 	Gui_Add_TxtLabel(GuiName, "", -1, "x+5 yp", desctext)
 }
@@ -52,7 +52,9 @@ Amtp_CreateGui()
 	
 	Gui_Add_TxtLabel(GuiName, "", -1, "xm", "Type some letter instructions to manipulate text above.")
 	amtp_Gui_add_onehint("/",  "Convert back-slashes to forward-slashes")
+	amtp_Gui_add_onehint("//", "WLS style: D:\some\path to /mnt/d/some/path")
 	amtp_Gui_add_onehint("\",  "Convert forward-slashes to back-slashes")
+	amtp_Gui_add_onehint("\\", "WLS style: /mnt/d/some/path to D:\some\path")
 	amtp_Gui_add_onehint("""", "Wrap string with double-quotes")
 	amtp_Gui_add_onehint("'",  "Wrap string with single-quotes")
 	amtp_Gui_add_onehint("-",  "Remove all double- and single- quotes")
@@ -184,9 +186,37 @@ Amtp_SyncUIFromClipboard()
 	for index,linetext in arlines_output
 	{
 		if(InStr(howto, "/"))
+		{
+			if(InStr(howto, "//"))
+			{
+				; Special op for WSL: will convert D:\some\path to /mnt/d/some/path
+				foundpos := RegExMatch(linetext, "^([A-Za-z]):\\", subpat)
+				if(foundpos==1)
+				{
+					smallc := dev_StringLower(subpat1)
+					linetext := "/mnt/" smallc SubStr(linetext, 3)
+				}
+			}
+
+			; Regular op: convert each \ to /
 			linetext := StrReplace(linetext, "\", "/")
+		}
 		else if(InStr(howto, "\"))
+		{
+			if(InStr(howto, "\\"))
+			{
+				; Special op for WSL: will convert /mnt/d/some/path to d:\some\path
+				foundpos := RegExMatch(linetext, "^/mnt/([A-Za-z])/", subpat)
+				if(foundpos==1)
+				{
+					smallc := subpat1
+					linetext := smallc ":" SubStr(linetext, 7)
+				}
+			}
+			
+			; Regular op: convert each / to \
 			linetext := StrReplace(linetext, "/", "\")
+		}
 		
 		if(InStr(howto, """"))
 			linetext := """" linetext """"
