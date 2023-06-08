@@ -1054,9 +1054,13 @@ dev_RunCmd(cmd_and_params)
 
 dev_RunWaitOne(command, is_hidewindow:=false, working_dir:="") 
 {
+	; This simplified function returns only output-text from stdin/stderr.
+	; Use dev_RunWaitOneEx() to get sub-process exitcode.
+
 	dret := dev_RunWaitOneEx(command, is_hidewindow, working_dir)
-	if(dret.exitcode==0)
+	if(dret.exitcode==0) {
 		return dret.output
+	}
 	else {
 			return Format("In dev_RunWaitOne(), the following shell command failed:`n`n"
 			. "{}`n`n"
@@ -1088,6 +1092,9 @@ dev_RunWaitOneEx(command, is_hidewindow:=false, working_dir:="")
 		
 		; [2023-04-20] Seems that we can never see stdout,stderr text on the popped out
 		; CMD console, even if we do not call exec.StdOut.ReadAll() and exec.StdErr.ReadAll().
+		
+		; [2023-06-08] Using ComObjCreate() method is NOT recommended, bcz it freezes 
+		; current AHK-thread.
 	}
 	else
 	{
