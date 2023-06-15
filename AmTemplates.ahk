@@ -275,15 +275,18 @@ Amt_CreateGui(inipath)
 		g_amt_arTemplateWords[index] := {"oldword":key, "newword":key, "desc":value}
 	}
 	
-	Gui_Add_TxtLabel(GuiName, "g_OldguidHeader", 280, "xm y+16", "Old GUIDs from template:")
-	Gui_Add_TxtLabel(GuiName, "g_NewguidHeader", -1, "x+10 yp", "New GUIDs to apply:")
-	Gui_Add_Checkbox(GuiName, "g_amtIsAutoGuid", -1, "x+45 yp Checked g" . "Amt_ckbToggledAutoGenGuid", "Auto &generate")
-	
 	;
 	; Get all items from [GUID]
 	;
 	
 	arlinetext := dev_IniReadSection(inipath, "GUID")
+
+	if(arlinetext.Length()>0)
+	{
+		Gui_Add_TxtLabel(GuiName, "g_OldguidHeader", 280, "xm y+16", "Old GUIDs from template:")
+		Gui_Add_TxtLabel(GuiName, "g_NewguidHeader", -1, "x+10 yp", "New GUIDs to apply:")
+		Gui_Add_Checkbox(GuiName, "g_amtIsAutoGuid", -1, "x+45 yp Checked g" . "Amt_ckbToggledAutoGenGuid", "Auto &generate")
+	}
 	
 	for index,itemline in arlinetext
 	{
@@ -310,7 +313,7 @@ Amt_CreateGui(inipath)
 	
 	; CRLF/LF radio boxes
 	
-	Gui_Add_TxtLabel(GuiName, "", -1, "xm", "&New-line style:")
+	Gui_Add_TxtLabel(GuiName, "", -1, "xm y+10", "&New-line style:")
 	Gui_Add_Radiobox(GuiName, "g_amtRadioCRLF", -1, "Group Checked yp x+10", "CRLF")
 	Gui_Add_Radiobox(GuiName, "g_amtRadioLF", -1, "yp x+5", "LF")
 	;

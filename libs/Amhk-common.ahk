@@ -366,7 +366,7 @@ dev_WriteWholeFile_rawstring(filepath, text, codepage:=65001) ; 65001 is CP_UTF8
 		nwr := file.RawWrite(&astr_out, obytes)
 		file.Close()
 		
-		AmDbg0(Format("file.RawWrite({}, {}) returns {}", text, slen, nwr))
+;		AmDbg0(Format("file.RawWrite({}, {}) returns {}", text, slen, nwr))
 
 		return nwr
 	}
