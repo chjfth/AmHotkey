@@ -68,6 +68,9 @@ global CREATE_SUBDIR_WITH_NEW_WORD := "Create a subdir with first new word"
 
 global g_amtIsAutoGuid := true
 
+global g_amtRadioCRLF
+global g_amtRadioLF
+
 global g_amtEdtOutdirUser
 
 global g_amtIsCreateDirForFirstWord := true
@@ -222,7 +225,6 @@ Amt_LaunchMenu()
 
 Amt_ExpandTemplateUI(dirtmpl)
 {
-;	MsgBox, % "TODO: " dirtmpl
 	Amt_ShowGui(Amt_GetIniFilepath(dirtmpl))
 }
 
@@ -281,9 +283,7 @@ Amt_CreateGui(inipath)
 	; Get all items from [GUID]
 	;
 	
-	IniRead, sectlines, % inipath, % "GUID"
-	
-	arlinetext := StrSplit(sectlines, "`n")
+	arlinetext := dev_IniReadSection(inipath, "GUID")
 	
 	for index,itemline in arlinetext
 	{
@@ -308,6 +308,16 @@ Amt_CreateGui(inipath)
 		g_amt_arTemplateGuids[index] := {"oldword":key, "newword":guidnew, "desc":value}
 	}
 	
+	; CRLF/LF radio boxes
+	
+	Gui_Add_TxtLabel(GuiName, "", -1, "xm", "&New-line style:")
+	Gui_Add_Radiobox(GuiName, "g_amtRadioCRLF", -1, "Group Checked yp x+10", "CRLF")
+	Gui_Add_Radiobox(GuiName, "g_amtRadioLF", -1, "yp x+5", "LF")
+	;
+	newline_style := dev_IniRead(inipath, "global", "TextFileNewLineStyle", "CRLF")
+	if(dev_IsStrEqualI(newline_style, "LF"))
+		GuiControl_ButtonCheck(GuiName, "g_amtRadioLF", true)
+	
 	Gui_Add_TxtLabel(GuiName, "", -1, "y+16 xm", "Apply &to:")
 	Gui_Add_Editbox( GuiName, "g_amtEdtOutdirUser", 565, "xm+15 g" . "Amt_ResyncUI") ; text fill later in Amt_ShowGui()
 	
@@ -330,7 +340,8 @@ Amt_ShowGui(inipath)
 
 	if(!g_HwndAmt || inipath!=g_amtPrevInipath || NowIniTime!=g_amtPrevIniTime) {
 		
-		Amt_CreateGui(inipath) ; destroy old and create new
+		; Comes a different ini, so destroy old and create new
+		Amt_CreateGui(inipath) 
 		
 		g_amtPrevInipath := inipath
 		g_amtPrevIniTime := NowIniTime
@@ -659,6 +670,7 @@ Amt_ResyncUI()
 
 Amt_DoExpandTemplate(srcdir, dstdir)
 {
+	GuiName := "AMT"
 	logfile := "AmTemplates.log"
 ;	dev_WriteLogFile(logfile, "", false) ; create logfile
 
@@ -672,8 +684,10 @@ Amt_DoExpandTemplate(srcdir, dstdir)
 	ptns := StrSplit(IncludePatterns, "|")
 	
 	isStrictGuid := dev_IniReadVal(cfgini, "global", "IsStrictGuid", 0)
+	
+	Gui_Submit(GuiName, true)
 
-	; ========== Gather srd -> dst file pairs in a dict.
+	; ========== Gather src -> dst file pairs in a dict.
 
 	Loop, Files, % srcdir "\*", FR
 	{
@@ -824,11 +838,27 @@ Amt_DoExpandTemplate(srcdir, dstdir)
 				}
 			}
 			
-			dev_WriteWholeFile(dstpath,filetext)
-			if(ErrorLevel)
+			if(g_amtRadioLF)
 			{
-				dev_MsgBoxError(Format("ERROR: Fail to create new text file: {}", dstpath))
-				return false
+				; Force LF textfile output(for Unix/Linux)
+				
+				text_lf := dev_StrReplace_CRLF_to_LF(filetext)
+				
+				nwr := dev_WriteWholeFile_rawstring(dstpath, text_lf)
+				if(nwr==0)
+				{
+					dev_MsgBoxError(Format("ERROR: dev_WriteWholeFile_rawstring() fails to create new text file: {}", dstpath))
+					return false
+				}
+			}
+			else
+			{
+				dev_WriteWholeFile(dstpath, filetext)
+				if(ErrorLevel)
+				{
+					dev_MsgBoxError(Format("ERROR: Fail to create new text file: {}", dstpath))
+					return false
+				}
 			}
 		}
 	}
