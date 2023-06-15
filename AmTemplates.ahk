@@ -11,6 +11,7 @@ AUTOEXEC_AmTemplates: ; Workaround for Autohotkey's ugly auto-exec feature. Don'
 
 /* APIs:
 Amt_LaunchMenu()
+Amt_ShowPreviousGui()
 */
 
 global g_dirsAmTemplates := [ A_ScriptDir "\AmTemplates" ]
@@ -336,6 +337,17 @@ Amt_CreateGui(inipath)
 	Gui_Add_Button( GuiName, "", -1, "y+10 xm Default g" . "AMT_BtnOK", " &Apply ")
 }
 
+
+Amt_ShowPreviousGui()
+{
+	if(not g_amtPrevInipath)
+	{
+		dev_MsgBoxWarning("No existing AmTemplates dialog exists yet.")
+		return
+	}
+
+	Amt_ShowGui(g_amtPrevInipath)
+}
 
 Amt_ShowGui(inipath)
 {
