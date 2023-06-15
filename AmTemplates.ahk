@@ -581,7 +581,7 @@ Amt_WM_MOUSEMOVE()
 	
 		index := dev_str2num(dev_StripPrefix(idCtrl, "g_amteditOldword"))
 		
-		dev_TooltipAutoClear(g_amt_arTemplateWords[index].desc)
+		dev_TooltipAutoClear( amt_AdjustTooltipText(g_amt_arTemplateWords[index].desc) )
 		
 ;		MsgBox, % Format("Amt_WM_MOUSEMOVE on Oldword #{1} : {2} , {3} , {4}", index, g_amt_arTemplateWords[index].oldword, g_amt_arTemplateWords[index].newword, g_amt_arTemplateWords[index].desc)
 	}
@@ -591,7 +591,7 @@ Amt_WM_MOUSEMOVE()
 	
 		index := dev_str2num(dev_StripPrefix(idCtrl, "g_amteditOldguid"))
 		
-		dev_TooltipAutoClear(g_amt_arTemplateGuids[index].desc)
+		dev_TooltipAutoClear( amt_AdjustTooltipText(g_amt_arTemplateGuids[index].desc) )
 	}
 	else if(idCtrl=="g_amtIconWarnOverwrite")
 	{
@@ -988,4 +988,9 @@ amt_IsWildcardsMatch(ptns, filename)
 	return false
 }
 
+amt_AdjustTooltipText(ini_text)
+{
+	otext := StrReplace(ini_text, "\n", "`n")
+	return otext
+}
 
