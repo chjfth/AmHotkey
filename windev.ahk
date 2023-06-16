@@ -595,9 +595,16 @@ windbg_IsCommandInputFocused(Awinid:=0)
 
 }
 
+windbg_dbglag(text)
+{
+	Amdbg_Lv2("windbg_dbglag", "windbg_dbglag: " text)
+}
+
 Enter:: windbg_SendCommandAppendTimestamp()
 windbg_SendCommandAppendTimestamp()
 {
+	windbg_dbglag("==========")
+
 	WinGet, Awinid, ID, A ; cache active window unique id
 	hCommandInput := windbg_CommandInput_hctrl(Awinid)
 
@@ -608,7 +615,7 @@ windbg_SendCommandAppendTimestamp()
 		send {enter}
 		return
 	}
-	
+
 	; User just pressed enter from the windbg command prompt.
 	
 ;	clipboard_saved := ClipboardAll ; seems not stable
@@ -621,14 +628,21 @@ windbg_SendCommandAppendTimestamp()
 		return
 	}
 	
+	windbg_dbglag("AAAAA")
 	
 	; Send current cmd to clipboard, will paste later soon.
 	WinClip.SetText(existing_cmd) 
 	
-	Send ^{Home}^+{End}{Del}
+	windbg_dbglag("BBBBB")
+	
+	SendInput ^{Home}^+{End}{Del}
 		; using Ctrl+Home, Ctrl+Shift+End so that we can select multiple lines
 
+	windbg_dbglag("CCCCC")
+	
 	windbg_SendCommentLine()
+
+	windbg_dbglag("DDDDD")
 	
 	; wait until clipboard has our text 
 	Loop, 20
@@ -639,23 +653,24 @@ windbg_SendCommandAppendTimestamp()
 		if(clipped_text==existing_cmd)
 			break
 		
+		windbg_dbglag("ccccc:" A_Index)
+		
 		Sleep, 50
 	}
+	
+	windbg_dbglag("FFFFF")	
 	
 	if(clipped_text!=existing_cmd)
 	{
 		MsgBox, % "Windev.ahk: Something went wrong! Your just typed windbg command cannot be fetched from clipboard.`n`n" . existing_cmd
 		return
 	}
-	
+
 	; ControlSetText, ahk_id %hCommandInput%, % existing_cmd ; 
 	; -- ControlSetText does not work with a RichEdit control, sigh. So we have to rely on clipboard.
-	if(WinClip.Paste) {
-		WinClip.Paste(existing_cmd)
-		SendInput {enter}
-	} else {
-		MsgBox, % "windbg_SendCommandAppendTimestamp Error: You need to #Include WinClipAPI.ahk and WinClip.ahk for this to work."
-	}
+	SendInput ^v{enter}
+
+	windbg_dbglag("GGGGG")
 }
 
 windbg_ScrollCommandOutputOnePage(is_up)
