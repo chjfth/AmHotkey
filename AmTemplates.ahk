@@ -11,6 +11,7 @@ AUTOEXEC_AmTemplates: ; Workaround for Autohotkey's ugly auto-exec feature. Don'
 
 /* APIs:
 Amt_LaunchMenu()
+Amt_ShowPreviousGui()
 */
 
 global g_dirsAmTemplates := [ A_ScriptDir "\AmTemplates" ]
@@ -67,6 +68,9 @@ global g_amt_arTemplateGuids := [] ; an array of object(.oldword .desc .newword)
 global CREATE_SUBDIR_WITH_NEW_WORD := "Create a subdir with first new word"
 
 global g_amtIsAutoGuid := true
+
+global g_amtRadioCRLF
+global g_amtRadioLF
 
 global g_amtEdtOutdirUser
 
@@ -222,7 +226,6 @@ Amt_LaunchMenu()
 
 Amt_ExpandTemplateUI(dirtmpl)
 {
-;	MsgBox, % "TODO: " dirtmpl
 	Amt_ShowGui(Amt_GetIniFilepath(dirtmpl))
 }
 
@@ -273,17 +276,18 @@ Amt_CreateGui(inipath)
 		g_amt_arTemplateWords[index] := {"oldword":key, "newword":key, "desc":value}
 	}
 	
-	Gui_Add_TxtLabel(GuiName, "g_OldguidHeader", 280, "xm y+16", "Old GUIDs from template:")
-	Gui_Add_TxtLabel(GuiName, "g_NewguidHeader", -1, "x+10 yp", "New GUIDs to apply:")
-	Gui_Add_Checkbox(GuiName, "g_amtIsAutoGuid", -1, "x+45 yp Checked g" . "Amt_ckbToggledAutoGenGuid", "Auto &generate")
-	
 	;
 	; Get all items from [GUID]
 	;
 	
-	IniRead, sectlines, % inipath, % "GUID"
-	
-	arlinetext := StrSplit(sectlines, "`n")
+	arlinetext := dev_IniReadSection(inipath, "GUID")
+
+	if(arlinetext.Length()>0)
+	{
+		Gui_Add_TxtLabel(GuiName, "g_OldguidHeader", 280, "xm y+16", "Old GUIDs from template:")
+		Gui_Add_TxtLabel(GuiName, "g_NewguidHeader", -1, "x+10 yp", "New GUIDs to apply:")
+		Gui_Add_Checkbox(GuiName, "g_amtIsAutoGuid", -1, "x+45 yp Checked g" . "Amt_ckbToggledAutoGenGuid", "Auto &generate")
+	}
 	
 	for index,itemline in arlinetext
 	{
@@ -308,6 +312,16 @@ Amt_CreateGui(inipath)
 		g_amt_arTemplateGuids[index] := {"oldword":key, "newword":guidnew, "desc":value}
 	}
 	
+	; CRLF/LF radio boxes
+	
+	Gui_Add_TxtLabel(GuiName, "", -1, "xm y+10", "&New-line style:")
+	Gui_Add_Radiobox(GuiName, "g_amtRadioCRLF", -1, "Group Checked yp x+10", "CRLF")
+	Gui_Add_Radiobox(GuiName, "g_amtRadioLF", -1, "yp x+5", "LF")
+	;
+	newline_style := dev_IniRead(inipath, "global", "TextFileNewLineStyle", "CRLF")
+	if(dev_IsStrEqualI(newline_style, "LF"))
+		GuiControl_ButtonCheck(GuiName, "g_amtRadioLF", true)
+	
 	Gui_Add_TxtLabel(GuiName, "", -1, "y+16 xm", "Apply &to:")
 	Gui_Add_Editbox( GuiName, "g_amtEdtOutdirUser", 565, "xm+15 g" . "Amt_ResyncUI") ; text fill later in Amt_ShowGui()
 	
@@ -324,13 +338,25 @@ Amt_CreateGui(inipath)
 }
 
 
+Amt_ShowPreviousGui()
+{
+	if(not g_amtPrevInipath)
+	{
+		dev_MsgBoxWarning("No existing AmTemplates dialog exists yet.")
+		return
+	}
+
+	Amt_ShowGui(g_amtPrevInipath)
+}
+
 Amt_ShowGui(inipath)
 {
 	FileGetTime, NowIniTime, % inipath
 
 	if(!g_HwndAmt || inipath!=g_amtPrevInipath || NowIniTime!=g_amtPrevIniTime) {
 		
-		Amt_CreateGui(inipath) ; destroy old and create new
+		; Comes a different ini, so destroy old and create new
+		Amt_CreateGui(inipath) 
 		
 		g_amtPrevInipath := inipath
 		g_amtPrevIniTime := NowIniTime
@@ -555,7 +581,7 @@ Amt_WM_MOUSEMOVE()
 	
 		index := dev_str2num(dev_StripPrefix(idCtrl, "g_amteditOldword"))
 		
-		dev_TooltipAutoClear(g_amt_arTemplateWords[index].desc)
+		dev_TooltipAutoClear( amt_AdjustTooltipText(g_amt_arTemplateWords[index].desc) )
 		
 ;		MsgBox, % Format("Amt_WM_MOUSEMOVE on Oldword #{1} : {2} , {3} , {4}", index, g_amt_arTemplateWords[index].oldword, g_amt_arTemplateWords[index].newword, g_amt_arTemplateWords[index].desc)
 	}
@@ -565,7 +591,7 @@ Amt_WM_MOUSEMOVE()
 	
 		index := dev_str2num(dev_StripPrefix(idCtrl, "g_amteditOldguid"))
 		
-		dev_TooltipAutoClear(g_amt_arTemplateGuids[index].desc)
+		dev_TooltipAutoClear( amt_AdjustTooltipText(g_amt_arTemplateGuids[index].desc) )
 	}
 	else if(idCtrl=="g_amtIconWarnOverwrite")
 	{
@@ -659,6 +685,7 @@ Amt_ResyncUI()
 
 Amt_DoExpandTemplate(srcdir, dstdir)
 {
+	GuiName := "AMT"
 	logfile := "AmTemplates.log"
 ;	dev_WriteLogFile(logfile, "", false) ; create logfile
 
@@ -672,8 +699,10 @@ Amt_DoExpandTemplate(srcdir, dstdir)
 	ptns := StrSplit(IncludePatterns, "|")
 	
 	isStrictGuid := dev_IniReadVal(cfgini, "global", "IsStrictGuid", 0)
+	
+	Gui_Submit(GuiName, true)
 
-	; ========== Gather srd -> dst file pairs in a dict.
+	; ========== Gather src -> dst file pairs in a dict.
 
 	Loop, Files, % srcdir "\*", FR
 	{
@@ -824,11 +853,27 @@ Amt_DoExpandTemplate(srcdir, dstdir)
 				}
 			}
 			
-			dev_WriteWholeFile(dstpath,filetext)
-			if(ErrorLevel)
+			if(g_amtRadioLF)
 			{
-				dev_MsgBoxError(Format("ERROR: Fail to create new text file: {}", dstpath))
-				return false
+				; Force LF textfile output(for Unix/Linux)
+				
+				text_lf := dev_StrReplace_CRLF_to_LF(filetext)
+				
+				nwr := dev_WriteWholeFile_rawstring(dstpath, text_lf)
+				if(nwr==0)
+				{
+					dev_MsgBoxError(Format("ERROR: dev_WriteWholeFile_rawstring() fails to create new text file: {}", dstpath))
+					return false
+				}
+			}
+			else
+			{
+				dev_WriteWholeFile(dstpath, filetext)
+				if(ErrorLevel)
+				{
+					dev_MsgBoxError(Format("ERROR: Fail to create new text file: {}", dstpath))
+					return false
+				}
 			}
 		}
 	}
@@ -943,4 +988,9 @@ amt_IsWildcardsMatch(ptns, filename)
 	return false
 }
 
+amt_AdjustTooltipText(ini_text)
+{
+	otext := StrReplace(ini_text, "\n", "`n")
+	return otext
+}
 

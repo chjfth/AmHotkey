@@ -235,6 +235,8 @@ chjmisc_InitMenus()
 	winshell_AddOneAhkFunctionMenu("Configure debug-modules", "Amdbg_ShowGui")
 	winshell_AddOneAhkFunctionMenu("Accurate move current active window", "devui_ChangeWindowPosition")
 	winshell_AddOneAhkFunctionMenu("AHK Trim path utility", "AmTrimPath_ShowGui")
+	winshell_AddOneAhkFunctionMenu("[AmTemplate] Select new", "Amt_LaunchMenu")
+	winshell_AddOneAhkFunctionMenu("[AmTemplate] Show previous", "Amt_ShowPreviousGui")
 	
 	chjmisc_AddQuickPasteSnippets()
 }

@@ -337,6 +337,45 @@ dev_WriteWholeFile(filepath, text)
 	dev_WriteFile(filepath, text, false)
 }
 
+
+dev_WriteWholeFile_rawstring(filepath, text, codepage:=65001) ; 65001 is CP_UTF8
+{
+	; raw means `n will not be replaced with `r`n 
+	
+	slen := StrLen(text)
+	slen_3x := slen * 3
+	VarSetCapacity(astr_out, slen_3x)
+	
+	obytes := DllCall("WideCharToMultiByte"
+		, "uint", codepage
+		, "uint", 0 ; dwFlags
+		, "str", text ; lpWideCharStr :input unicode string
+		, "int", -1   ; cchWideChar: unicode string is NUL-terminated
+		, "Ptr", &astr_out
+		, "int", slen_3x
+		, "Ptr", 0
+		, "Ptr", 0)
+	
+;	AmDbg0(Format("WideCharToMultiByte() input chars {}, output bytes {}", slen, obytes))
+	if(obytes>=1)
+		obytes -= 1 ; remove trailing NUL
+	
+	file := FileOpen(filepath, "w")
+	if(file)
+	{
+		nwr := file.RawWrite(&astr_out, obytes)
+		file.Close()
+		
+;		AmDbg0(Format("file.RawWrite({}, {}) returns {}", text, slen, nwr))
+
+		return nwr
+	}
+	else
+	{
+		return 0
+	}
+}
+
 dev_Copy1File(srcfilepath, dstfilepath, is_overwrite:=false)
 {
 	dev_assert(InStr(srcfilepath, "*")==0)
@@ -446,6 +485,18 @@ dev_AppendToStemname(input, stemname_suffix)
 	return stem . stemname_suffix . dot_ext
 }
 
+dev_StringUpper(s)
+{
+	StringUpper, s, s
+	return s
+}
+
+dev_StringLower(s)
+{
+	StringLower, s, s
+	return s
+}
+
 dev_StrIsEqualI(s1, s2) ; case insensitive compare
 {
 	StringUpper, s1u, s1
@@ -454,6 +505,23 @@ dev_StrIsEqualI(s1, s2) ; case insensitive compare
 		return true
 	else
 		return false
+}
+
+dev_IsStrEqualI(s1, s2)
+{
+	return dev_StrIsEqualI(s1, s2)
+}
+
+dev_stricmp(s1, s2)
+{
+	us1 := dev_StringUpper(s1)
+	us2 := dev_StringUpper(s2)
+	if(us1==us2)
+		return 0
+	else if(us1<us2)
+		return -1
+	else
+		return 1
 }
 
 StrIsStartsWith(str, prefix, anycase:=false)
@@ -803,19 +871,6 @@ dev_JoinStrings(ar_strings, join_with:=",")
 	return ret
 }
 
-dev_StringUpper(s)
-{
-	StringUpper, s, s
-	return s
-}
-
-dev_StringLower(s)
-{
-	StringLower, s, s
-	return s
-}
-
-
 IsWinXP()
 {
 	return IsWin5x()
@@ -1054,9 +1109,13 @@ dev_RunCmd(cmd_and_params)
 
 dev_RunWaitOne(command, is_hidewindow:=false, working_dir:="") 
 {
+	; This simplified function returns only output-text from stdin/stderr.
+	; Use dev_RunWaitOneEx() to get sub-process exitcode.
+
 	dret := dev_RunWaitOneEx(command, is_hidewindow, working_dir)
-	if(dret.exitcode==0)
+	if(dret.exitcode==0) {
 		return dret.output
+	}
 	else {
 			return Format("In dev_RunWaitOne(), the following shell command failed:`n`n"
 			. "{}`n`n"
@@ -1088,6 +1147,9 @@ dev_RunWaitOneEx(command, is_hidewindow:=false, working_dir:="")
 		
 		; [2023-04-20] Seems that we can never see stdout,stderr text on the popped out
 		; CMD console, even if we do not call exec.StdOut.ReadAll() and exec.StdErr.ReadAll().
+		
+		; [2023-06-08] Using ComObjCreate() method is NOT recommended, bcz it freezes 
+		; current AHK-thread.
 	}
 	else
 	{
@@ -1785,3 +1847,14 @@ dev_IsUnicodeInString(s)
 	
 	return false
 }
+
+dev_StrReplace_CRLF_to_LF(s)
+{
+	return StrReplace(s, "`r`n", "`n"`)
+}
+
+dev_StrReplace_LF_to_CRLF(s)
+{
+	return StrReplace(s, "`n", "`r`n"`)
+}
+

@@ -187,7 +187,7 @@ vmctl_CheckAndSuspendPausedVMs(byref errmsg:="")
 vmctl_SuspendVmx(vmxpath)
 {
 	suspend_timeout_sec := 60
-	warnmsg := Format("This VM suspending has NOT finished after {} seconds, please check the VM status manually.`n`n"
+	warnmsg := Format("This VM suspending has NOT finished after {} seconds, please check the VM status manually.`n`n{}"
 		, suspend_timeout_sec, vmxpath)
 	fnWarnFreeze := Func("dev_MsgBoxWarning").Bind(warnmsg)
 	dev_StartTimerOnce(fnWarnFreeze, suspend_timeout_sec*1000)

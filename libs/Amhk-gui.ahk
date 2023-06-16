@@ -35,6 +35,11 @@ Gui_Show(GuiName, options="", title:="AHKGUI")
 	Gui, % cmd, % options, % title
 }
 
+Gui_Submit(GuiName, is_keep_gui:=false)
+{
+	Gui, % (GuiName ? GuiName ":" : "") "Submit", % is_keep_gui ? "NoHide" : ""
+}
+
 Gui_AssociateHwndVarname(GuiName, HwndVarname)
 {
 	dev_assert(GuiName)
@@ -162,6 +167,17 @@ Gui_Add_Checkbox(GuiName, CtrlVarname, width, format, btntext)
 	Gui, % cmdadd, Checkbox, % Format("{} {} {}", vCtrlVarname, wWidth, format), % btntext
 }
 
+Gui_Add_Radiobox(GuiName, CtrlVarname, width, format, btntext)
+{
+	; format: "Group Checked"
+	dev_assert(Gui_IsValidVar(CtrlVarname))
+	cmdadd := GuiName ? (GuiName ":Add") : "Add"
+	vCtrlVarname := StrLen(CtrlVarname)>0 ? "v" CtrlVarname : ""
+	wWidth := width>0 ? "w" width : "" ; so width==-1 will make it auto-width by text length
+	
+	Gui, % cmdadd, Radio, % Format("{} {} {}", vCtrlVarname, wWidth, format), % btntext
+}
+
 Gui_Add_Editbox(GuiName, CtrlVarname, width, format, init_text:="")
 {
 	; format: 
@@ -209,6 +225,14 @@ GuiControl_Enable(GuiName, CtrlVarname, is_enable)
 		cmd := Format("{}:{}", GuiName, cmd)
 
 	GuiControl, % cmd, % CtrlVarname
+}
+
+GuiControl_ButtonCheck(GuiName, CtrlVarname, is_check)
+{
+	dev_assert(Gui_IsValidVar(CtrlVarname))
+	cmd := GuiName ? (GuiName ":") : ""
+
+	GuiControl, % cmd, % CtrlVarname, % is_check ? "1" : "0"
 }
 
 GuiControl_Show(GuiName, CtrlVarname, is_show)
