@@ -2865,7 +2865,11 @@ Evtbl_WM_MOUSEMOVE()
 	}
 	else if(A_GuiControl=="g_evtblBtnOK")
 	{
-		dev_TooltipAutoClear("In case pasted content does not appear, please manually strike Ctrl+V inside your Evernote clip, one or two times.", 3000)
+		dev_TooltipAutoClear("In case pasted content does not appear, please manually strike Ctrl+V inside your Evernote clip.", 3000)
+	}
+	else if(A_GuiControl=="g_evtblChkboxTSV")
+	{
+		dev_TooltipAutoClear("If Clipboard has plain text in TSV or CSV format, this will convert the to HTML table and paste it into Evernote.")
 	}
 	else if(A_Gui=="EVTBL")
 	{
