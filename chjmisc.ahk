@@ -258,6 +258,17 @@ fetch(apiurl)
   .then(v => v.json()).then((v) => { console.log(v['size'] + 'KB')  })
 	)
 	winshell_AddOneSendTextMenu("F12 console - Query github.com repo size", text)
+
+	text = 
+	(
+class C1 {
+public: 
+	C1() { printf("C1 ctor() @[`%p]\n", this); }
+	~C1(){ printf("C1 dtor() @[`%p]\n", this); }
+	int m1;
+};
+	)
+	winshell_AddOneSendTextMenu("a C++ class with ctor/dtor", text)
 }
 
 chj_StartMultiPageScreenGrabber(screenshot_hotkey, pgdn_hotkey, image_dir, pages, pgdn_wait_millisec:=500)
