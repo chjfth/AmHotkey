@@ -208,9 +208,15 @@ foxit_MakeMainWindowFreeScrolling()
 	foxitHotkey_SelectHandMode()
 }
 
+F1:: Foxit_F1_Paste()
+Foxit_F1_Paste()
+{
+	dev_TooltipAutoClear("Foxit reader: F1 paste text.")
+	SendInput ^v
+}
 
-F8:: Send +^{Tab}
-F9:: Send ^{Tab}
+F8:: SendInput +^{Tab}
+F9:: SendInput ^{Tab}
 
 $F5:: Foxit_HkToggleBookmarkSidebar()
 Foxit_HkToggleBookmarkSidebar()
