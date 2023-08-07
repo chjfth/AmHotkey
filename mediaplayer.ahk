@@ -743,6 +743,76 @@ MPC_PromptDisablePgupPgdn()
 	dev_TooltipAutoClear("PgUp/Dn key is disabled by Chj to avoid accidentally jump to Prev/Next audio/video.")
 }
 
+mpc_txc_TsOffset1Second(hhmmss, is_forth)
+{
+	nib_sec := SubStr(hhmmss, -1, 2)
+	nib_min := SubStr(hhmmss, -3, 2)
+	nib_hour := "00"
+	
+	if(StrLen(hhmmss)==6)
+		nib_hour := SubStr(hhmmss, 1, 2)
+	else if(StrLen(hhmmss)==5)
+		nib_hour := SubStr(hhmmss, 1, 1)
+	
+;	Amdbg0(Format("mpc_txc_TsOffset1Second: oldts {}_{}_{}", nib_hour, nib_min, nib_sec))
+	
+	total_sec := nib_hour*3600 + nib_min*60 + nib_sec
+	
+	if(total_sec>0 || (total_sec==0 && is_forth))
+		total_sec += (is_forth ? 1 : -1)
+	
+	nib_sec := Mod(total_sec, 60)
+	total_min := total_sec // 60
+
+	nib_min := Mod(total_min, 60)
+	nib_hour := total_min // 60
+	
+;	Amdbg0(Format("mpc_txc_TsOffset1Second: newts {}_{}_{}", nib_hour, nib_min, nib_sec))
+
+	newts := Format("{:02}{:02}", nib_min, nib_sec)
+	if(nib_hour>0)
+		newts := Format("{:02}", nib_hour) . newts
+	
+	return newts
+}
+
+
+MPC_txc_Adjust1sec(is_forth)
+{
+	; This changes global var g_mpc_txc_string, adjust its trailing timestamp 1 seconds back or forth.
+	; Example:
+	;      I:\temp\TV\filename.ts[0100-]
+	;	=> I:\temp\TV\filename.ts[0059-]
+	;	=> I:\temp\TV\filename.ts[0101-]
+	;
+	;	   I:\temp\TV\filename.ts[0100-010200]
+	;	=> I:\temp\TV\filename.ts[0100-0100159]
+	;	=> I:\temp\TV\filename.ts[0100-0100201]
+	
+	foundpos := RegExMatch(g_mpc_txc_string, "([0-9]{4,6})(-*\])$", subpat)
+	
+	if(not foundpos)
+	{
+		dev_TooltipAutoClear("No trailing timestamp found yet. You should first use [ or ] to mark a timestamp in MPC-HC.")
+		return
+	}
+	
+;	Amdbg0(subpat1)
+
+	hhmmss := subpat1
+	trailmark := subpat2
+
+	newts := mpc_txc_TsOffset1Second(hhmmss, is_forth)
+	
+	g_mpc_txc_string := SubStr(g_mpc_txc_string, 1, foundpos-1) . newts . trailmark
+	
+	MPC_txc_tooltip_display(g_mpc_txc_string)
+}
+
+NumpadSub:: MPC_txc_Adjust1sec(false)
+NumpadAdd:: MPC_txc_Adjust1sec(true)
+
+
 #If
 
 

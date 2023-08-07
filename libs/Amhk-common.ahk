@@ -1,4 +1,4 @@
-; Amhk-common.ahk, part of AmHotkey suite.
+﻿; Amhk-common.ahk, part of AmHotkey suite.
 ;
 ; This ahk is not to be run standalone, it is to be #include-d as AHK function library.
 ;
@@ -1558,7 +1558,7 @@ dev_IsWin7SaveAsDialog()
 	if(not IsWinClassActive("#32770"))
 		return false
 	
-	if(IsWinTitleMatchRegex("Áí´æÎª")
+	if(IsWinTitleMatchRegex("另存为")
 		or IsWinTitleMatchRegex("Save As") )
 	{
 		return true
