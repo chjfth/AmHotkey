@@ -715,7 +715,7 @@ MPC_CopyToClipboardFriendlyCurrentPlayTime()
 }
 
 
-F1:: MPC_CopyToClipboardFriendlyCurrentPlayTime()
+NumpadEnter:: MPC_CopyToClipboardFriendlyCurrentPlayTime()
 
 ; Ctrl+, seek backward %2 , Ctrl+. seek forward %2
 ^,:: MPC_ClickShift_Xpct(-2)
