@@ -624,7 +624,13 @@ windbg_SendCommandAppendTimestamp()
 	ControlGetText, existing_cmd, , ahk_id %hCommandInput%
 	if(not existing_cmd) ; command input box is empty
 	{
-		send {enter} ; relay enter key(windbg will repeat last command)
+		; WinDBG's default behavior for an {enter} is to "repeat last command",
+		; But I think that's stupid behavior. Now I want is:
+		; Bare typing Enter produce an "empty line" onto output screen, which
+		; generates visual comfortable context separator for my command groups.
+		; I achieve this by sending a command with only a space char.
+		
+		send {space}{enter} 
 		return
 	}
 	
