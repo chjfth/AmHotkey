@@ -23,8 +23,8 @@ global g_amtIniCfgFilename := "AmTemplate.cfg.ini"
 global g_amtIniResultFileName := "AmTemplate.result.ini" ; looks useless
 global g_amtRootMenu := "AmtMenu"
 
-global g_amtGuidFormatRegex := "\{CCCCCCCC-0000-0000-[0-9A-Za-z]{4}-[0-9A-Za-z]{12}\}"
-global g_amtGuidFormatFriendly := "{CCCCCCCC-0000-0000-....-............}"
+global g_amtGuidFormatRegex := "\{CCCCCCCC-0000-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}\}"
+global g_amtGuidFormatFriendly := "{CCCCCCCC-0000-....-....-............}"
 ; -- that is, AmtGuidFormat {CCCCCC-0000-0000-...}
 
 global AMT_FOUND_IMMEDIATE_TEMPLATE := -1
