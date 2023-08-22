@@ -192,6 +192,11 @@ Amt_LaunchMenu()
 	menuheadtext := "==== AmTemplates ===="
 	Menu, % g_amtRootMenu, Add, % menuheadtext, dev_nop
 	
+	if(g_amtPrevInipath)
+	{
+		dev_MenuAddItem(g_amtRootMenu, "Show previous dialog", "Amt_ShowPreviousGui")
+	}
+	
 	Loop, % g_dirsAmTemplates.Length()
 	{
 		submenu := g_amtRootMenu "." A_Index
@@ -342,7 +347,7 @@ Amt_ShowPreviousGui()
 {
 	if(not g_amtPrevInipath)
 	{
-		dev_MsgBoxWarning("No existing AmTemplates dialog exists yet.")
+		dev_MsgBoxWarning("No existing AmTemplates selected yet.")
 		return
 	}
 
