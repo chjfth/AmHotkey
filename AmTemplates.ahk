@@ -183,51 +183,82 @@ Amt_PrepareDir(basemenu, basedirpath)
 }
 
 AppsKey & m:: Amt_LaunchMenu()
-Amt_LaunchMenu()
+
+Amt_LaunchMenu(scanrootdir:="")
 {
 ;	g_countAmTemplates := 0 
 	
 	dev_Menu_DeleteAll(g_amtRootMenu)
 	
-	menuheadtext := "==== AmTemplates ===="
-	Menu, % g_amtRootMenu, Add, % menuheadtext, dev_nop
+	dev_MenuAddItem(g_amtRootMenu, "==== AmTemplates ====", "dev_nop")
 	
 	if(g_amtPrevInipath)
 	{
 		dev_MenuAddItem(g_amtRootMenu, "Show previous dialog", "Amt_ShowPreviousGui")
 	}
 	
-	Loop, % g_dirsAmTemplates.Length()
+	if(StrLen(scanrootdir)>0)
 	{
-		submenu := g_amtRootMenu "." A_Index
+		Amt_attach_scandir_to_LaunchMenu("AmtCustomScandir", scanrootdir)
+	}
+	else
+	{
+		; Load AmTemplates from g_dirsAmTemplates[]
 
-		searchdir := g_dirsAmTemplates[A_Index]
-
-		amtfound := Amt_PrepareDir(submenu, searchdir)
-		
-		if(amtfound==AMT_FOUND_IMMEDIATE_TEMPLATE)
+		Loop, % g_dirsAmTemplates.Length()
 		{
-			; append menuitem to basemenu
-			fn := Func("Amt_ExpandTemplateUI").Bind(searchdir)
-			Menu, % g_amtRootMenu, Add, % searchdir, %fn%
+			submenu_name := g_amtRootMenu "." A_Index
+
+			scandir := g_dirsAmTemplates[A_Index]
+
+			Amt_attach_scandir_to_LaunchMenu(submenu_name, scandir)
+		}
+	}
+	
+	dev_MenuAddItem(g_amtRootMenu, "Custom scandir ...", "Amt_InputCustomScandir")
+
+	dev_MenuShow(g_amtRootMenu)
+}
+
+Amt_attach_scandir_to_LaunchMenu(submenu_name, scandir)
+{
+	amtfound := Amt_PrepareDir(submenu_name, scandir)
+	
+	if(amtfound==AMT_FOUND_IMMEDIATE_TEMPLATE)
+	{
+		; append menuitem to basemenu
+		fn := Func("Amt_ExpandTemplateUI").Bind(scandir)
+		dev_MenuAddItem(g_amtRootMenu, scandir, fn)
+	}
+	else
+	{
+		menutext := Format("{1} ({2})", scandir, amtfound)
+		
+		if(amtfound==0)
+		{
+			dev_MenuAddItem(g_amtRootMenu, menutext, "dev_nop")
 		}
 		else
 		{
-			menutext := Format("{1} ({2})", searchdir, amtfound)
-			
-			if(amtfound==0)
-			{
-				Menu, % g_amtRootMenu, Add, % menutext, dev_nop
-			}
-			else
-			{
-				Menu, % g_amtRootMenu, Add, % menutext, :%submenu%
-			}
+			dev_MenuAddItem(g_amtRootMenu, menutext, ":" submenu_name)
 		}
 	}
 
-	Menu, % g_amtRootMenu, Show
 }
+
+Amt_InputCustomScandir()
+{
+	static s_scandir := ""
+	dev_InputBox_DefaultText("AmTemplate"
+		, "Input a directory to scan for " g_amtIniCfgFilename
+		, s_scandir)
+	
+	if(not s_scandir)
+		return
+	
+	Amt_LaunchMenu(s_scandir)
+}
+
 
 Amt_ExpandTemplateUI(dirtmpl)
 {

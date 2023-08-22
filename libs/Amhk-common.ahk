@@ -1264,6 +1264,8 @@ dev_MenuAddSepLine(menuname)
 dev_MenuAddItem(menuname, itemtext, target)
 {
 	; To add a menu-item to AHK's systry popup, use menuname="TRAY"
+	; If `target` is a function, caller should write "some_function" as target, i.e. with double-quotes.
+	; The `target` can be a function-object resulting from Func("some_function").Bind() .
 
 	dev_assert(target)
 
@@ -1768,6 +1770,8 @@ dev_IsWin10()
 
 dev_InputBox_DefaultText(title, prompt, byref usertext:="")
 {
+	; Input param usertext is also the output param.
+
 	if(title=="")
 		title := "AHK InputBox"
 	
