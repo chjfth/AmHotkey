@@ -246,12 +246,15 @@ dev_Tooltip(text)
 dev_TooltipAutoClear(text, keep_millisec:=2000)
 {
 	tooltip, %text%
-	SetTimer, lb_TooltipAutoClear, % 0-keep_millisec
-	return
 	
-lb_TooltipAutoClear:
+	if(keep_millisec>0) {
+		dev_StartTimerOnce("dev_TooltipClear", keep_millisec)
+	}
+}
+
+dev_TooltipClear()
+{
 	tooltip
-	return
 }
 
 dev_TooltipDelayHide(keep_millisec:=2000)
@@ -273,8 +276,6 @@ dev_TooltipDisableCloseWindow(msg_prefix)
 	; msg_prefix is some hotkey names like "Ctrl+W" or "Ctrl+Shift+W".
 	dev_TooltipAutoClear(msg_prefix . " closing window/tab is disabled by AmHotkey.")
 }
-
-
 
 
 

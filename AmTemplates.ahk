@@ -222,7 +222,11 @@ Amt_LaunchMenu(scanrootdir:="")
 
 Amt_attach_scandir_to_LaunchMenu(submenu_name, scandir)
 {
+	dev_TooltipAutoClear("AmTemplate scanning " scandir " ...", -1)
+
 	amtfound := Amt_PrepareDir(submenu_name, scandir)
+	
+	dev_TooltipClear()
 	
 	if(amtfound==AMT_FOUND_IMMEDIATE_TEMPLATE)
 	{
