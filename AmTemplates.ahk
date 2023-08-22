@@ -243,17 +243,16 @@ Amt_attach_scandir_to_LaunchMenu(submenu_name, scandir)
 			dev_MenuAddItem(g_amtRootMenu, menutext, ":" submenu_name)
 		}
 	}
-
 }
 
 Amt_InputCustomScandir()
 {
 	static s_scandir := ""
-	dev_InputBox_DefaultText("AmTemplate"
+	isok := dev_InputBox_InitText("AmTemplate"
 		, "Input a directory to scan for " g_amtIniCfgFilename
 		, s_scandir)
 	
-	if(not s_scandir)
+	if(not isok || not s_scandir)
 		return
 	
 	Amt_LaunchMenu(s_scandir)

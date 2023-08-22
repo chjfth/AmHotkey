@@ -4035,7 +4035,7 @@ Evernote_ChangeStartLinenum()
 {
 	ln := evnt.pastecode_start_numline
 
-	isok := dev_InputBox_DefaultText("", "New paste-code starting line-number:", ln)
+	isok := dev_InputBox_InitText("", "New paste-code starting line-number:", ln)
 	if(isok)
 		Evnt.pastecode_start_numline := ln
 }

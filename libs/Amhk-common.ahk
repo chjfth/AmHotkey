@@ -1768,7 +1768,7 @@ dev_IsWin10()
 	}
 }
 
-dev_InputBox_DefaultText(title, prompt, byref usertext:="")
+dev_InputBox_InitText(title, prompt, byref usertext:="")
 {
 	; Input param usertext is also the output param.
 
