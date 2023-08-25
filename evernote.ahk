@@ -3966,6 +3966,19 @@ Htmldeco_Kbd(puretext)
 	return html
 }
 
+Htmldeco_hexprotocol(puretext)
+{
+	style := Format("border: 1px solid #ccc;"
+		. "padding: 0em 0.2em;"
+		. "border-radius: 3px;"
+		. "box-shadow: 1px 1px 0 rgba(0, 0, 0, 0.4);"
+		. "background: linear-gradient(0deg, #fff, #ccddbb);"
+		. "")
+
+	html := Format("<span style=""{}"">{}</span>&nbsp;", style, puretext)
+	return html
+}
+
 evernote_PasteInlineCode_AddMenuItem(bgcolor, desctext, idx)
 {
 	menutext := Format("&{1}. Bgcolor: {2} {3}", idx, bgcolor, desctext)
@@ -3982,12 +3995,16 @@ evernote_InlinePaste_InitMenu()
 	, "#B0E0B0,青瓷绿(celadon)"
 	, "#FFE0B0,霞光橙"
 	, "#EE99DD,暗洋红"
-	, "#F49292,故障红" ]
+	, "#F49292,故障红" 
+	, "#E0C0F8,修补紫" ]
 	
 	dev_MenuAddItem("evernote_menuInlinePaste", "Paste as plain text (or F1 outside)", "Evernote_PastePlainText")
 	
 	fn := Func("Evernote_PasteSingleLineWithHtmlDeco").Bind("Htmldeco_Kbd")
 	dev_MenuAddItem("evernote_menuInlinePaste", "&Kbd style it", fn)
+	
+	fn := Func("Evernote_PasteSingleLineWithHtmlDeco").Bind("Htmldeco_hexprotocol")
+	dev_MenuAddItem("evernote_menuInlinePaste", "&Hexproto it", fn)
 	
 	dev_MenuAddSepLine("evernote_menuInlinePaste")
 	dev_MenuAddItem("evernote_menuInlinePaste", "(Hold down Shift to use mono-font below)", "dev_nop")
