@@ -30,6 +30,7 @@ return ; End of auto-execute section.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 #Include %A_LineFile%\..\libs\AmTrimPath.ahk
+#Include %A_LineFile%\..\AmTemplates.ahk
 
 ;==============================================================================
 ; Some hotstring auto-replace
