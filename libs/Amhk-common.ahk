@@ -1279,7 +1279,7 @@ dev_MenuAddItem(menuname, itemtext, target)
 	if(dev_IsString(target) && !StrIsStartsWith(target, ":")) ; ":" means a submenu name
 	{
 		dev_assert(IsObject(Func(target))
-			, Format("ERROR in dev_MenuAddItem(): ""{}"" is not a existing function name.", target))
+			, Format("ERROR in dev_MenuAddItem(): ""{}"" is not an existing function name.", target))
 	}
 
 	Menu, % menuname, add, % itemtext, % target

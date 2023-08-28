@@ -1138,7 +1138,7 @@ winshell_AddOneAhkFunctionMenuItem(menuitem_text, funcname)
 	fnobj := Func(funcname)
 
 	dev_assert(IsObject(fnobj)
-		, Format("ERROR in winshell_AddOneAhkFunctionMenuItem(): ""{}"" is not a existing function name.", funcname))
+		, Format("ERROR in winshell_AddOneAhkFunctionMenuItem(): ""{}"" is not an existing function name.", funcname))
 
 	dev_MenuAddItem("submenu_AhkFuncs"
 		, Format("{}`t{}( )", menuitem_text, funcname)
