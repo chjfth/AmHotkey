@@ -10,18 +10,24 @@ dev_nop()
 	; No operation
 }
 
-dev_assert(torf, exitcode_now:=false)
+dev_assert(success_condition, msg_on_error:="")
 {
-	; exitcode_now==false is convenient for user, bcz user can easily press Win+Alt+R to 
-	; "reload/restart" the script.
+	; msg_on_error is the text message you want to say to user, in case success_condition is not met.
 
-	if(!torf)
+	if(success_condition)
+		return
+	
+	fullmsg := ""
+	
+	if(msg_on_error)
 	{
-		dev_MsgBoxError(dev_getCallStack(), "AHK Assertion Fail! Stacktrace >>>")
-		
-		if(exitcode_now)
-			ExitApp, % exitcode_now
+		fullmsg := msg_on_error "`r`n`r`n"
+			. "Stacktrace below: `r`n`r`n"
 	}
+	
+	fullmsg .= dev_getCallStack()
+	
+	dev_MsgBoxError(fullmsg, "AHK Assertion Fail!")
 }
 
 dev_getCallStack(deepness = 20, is_print_code = true)
@@ -1264,15 +1270,16 @@ dev_MenuAddSepLine(menuname)
 
 dev_MenuAddItem(menuname, itemtext, target)
 {
-	; To add a menu-item to AHK's systry popup, use menuname="TRAY"
+	; To add a menu-item to AHK's systray popup, use menuname="TRAY"
 	; If `target` is a function, caller should write "some_function" as target, i.e. with double-quotes.
 	; The `target` can be a function-object resulting from Func("some_function").Bind() .
 
-	dev_assert(target)
+	dev_assert(target, "ERROR: dev_MenuAddItem() gets empty 'target' parameter.")
 
 	if(dev_IsString(target) && !StrIsStartsWith(target, ":")) ; ":" means a submenu name
 	{
-		dev_assert(IsObject(Func(target))) ; target, if a string, must be an existing function name
+		dev_assert(IsObject(Func(target))
+			, Format("ERROR in dev_MenuAddItem(): ""{}"" is not a existing function name.", target))
 	}
 
 	Menu, % menuname, add, % itemtext, % target
@@ -1801,16 +1808,14 @@ dev_StartTimerOnce(str_callable, millisec)
 	;	fn := Func("evernote_RestoreClipboardText").Bind(codetext)
 	;	dev_StartTimerOnce(fn, 500)
 
-	if(millisec<=0)
-		dev_assert("dev_StartTimerPeriodic() `millisec` must be >0")
+	dev_assert(millisec>0, "dev_StartTimerPeriodic() `millisec` must be >0")
 
 	SetTimer, % str_callable, % 0-millisec
 }
 
 dev_StartTimerPeriodic(str_callable, millisec)
 {
-	if(millisec<=0)
-		dev_assert("dev_StartTimerPeriodic() `millisec` must be >0")
+	dev_assert(millisec>0, "dev_StartTimerPeriodic() `millisec` must be >0")
 
 	SetTimer, % str_callable, % millisec
 }

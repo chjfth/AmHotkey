@@ -238,6 +238,8 @@ chjmisc_InitMenus()
 	winshell_AddOneAhkFunctionMenu("[AmTemplate] Select new", "Amt_LaunchMenu")
 	winshell_AddOneAhkFunctionMenu("[AmTemplate] Show previous", "Amt_ShowPreviousGui")
 	
+;	winshell_AddOneAhkFunctionMenu("[BadMenu] BadItem", "NotExistingFunction") ; test error reporting
+	
 	chjmisc_AddQuickPasteSnippets()
 }
 
