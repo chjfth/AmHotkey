@@ -15,6 +15,7 @@ global gu_amtpCkbKeepWindow
 class AmTrimPath
 {
 	static _GuiName := "AmTrimPath"
+	static _isGuiVisible := false
 	static _hClipmon
 }
 
@@ -33,7 +34,7 @@ amtp_Gui_add_onehint(charhint, desctext)
 	Gui_Add_TxtLabel(GuiName, "", -1, "x+5 yp", desctext)
 }
 
-Amtp_CreateGui()
+_Amtp_CreateGui()
 {
 	GuiName := AmTrimPath._GuiName
 	
@@ -79,18 +80,22 @@ Amtp_ShowGui()
 	GuiName := AmTrimPath._GuiName
 
 	if(!g_amtpHwnd) {
-		Amtp_CreateGui() ; destroy old and create new
+		_Amtp_CreateGui() ; destroy old and create new
 	}
 	
-	OnMessage(0x200, Func("Amtp_WM_MOUSEMOVE")) ; add message hook
-	
 	Gui_Show(GuiName, "", "AHK Trim path utility")
+	
+	if(not AmTrimPath._isGuiVisible) 
+	{
+		AmTrimPath._isGuiVisible := true
+		AmTrimPath._hClipmon := Clipmon_CreateMonitor("Amtp_SyncUIFromClipboard", "AmTrimPath:Amtp_ShowGui")
+
+		OnMessage(0x200, Func("Amtp_WM_MOUSEMOVE")) ; add message hook
+	}
 
 	GuiControl_SetFocus(GuiName, "gu_amtpUserInput")
 	
 	Amtp_SyncUIFromClipboard()
-	
-	AmTrimPath._hClipmon := Clipmon_CreateMonitor("Amtp_SyncUIFromClipboard", "AmTrimPath:Amtp_ShowGui")
 }
 
 Amtp_HideGui()
@@ -99,10 +104,14 @@ Amtp_HideGui()
 
 	Gui_Hide(GuiName)
 
-	OnMessage(0x200, Func("Amtp_WM_MOUSEMOVE"), 0) ; remove message hook
-	tooltip
+	if(AmTrimPath._isGuiVisible)
+	{
+		AmTrimPath._isGuiVisible := false
+		Clipmon_DeleteMonitor(AmTrimPath._hClipmon)
 	
-	Clipmon_DeleteMonitor(AmTrimPath._hClipmon)
+		OnMessage(0x200, Func("Amtp_WM_MOUSEMOVE"), 0) ; remove message hook
+		tooltip
+	}
 }
 
 AmTrimPathGuiClose()
