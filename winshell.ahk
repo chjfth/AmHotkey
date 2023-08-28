@@ -1131,14 +1131,14 @@ winshell_AddOneSendTextMenu(menuitem_text, textlines)
 	
 }
 
-winshell_AddOneAhkFunctionMenu(menuitem_text, funcname)
+winshell_AddOneAhkFunctionMenuItem(menuitem_text, funcname)
 {
-	dev_assert(StrLen(funcname)>0, "winshell_AddOneAhkFunctionMenu() gets an empty funcname.")
+	dev_assert(dev_IsString(funcname), "winshell_AddOneAhkFunctionMenuItem() gets an empty funcname.")
 
 	fnobj := Func(funcname)
 
 	dev_assert(IsObject(fnobj)
-		, Format("ERROR in winshell_AddOneAhkFunctionMenu(): ""{}"" is not a existing function name.", funcname))
+		, Format("ERROR in winshell_AddOneAhkFunctionMenuItem(): ""{}"" is not a existing function name.", funcname))
 
 	dev_MenuAddItem("submenu_AhkFuncs"
 		, Format("{}`t{}( )", menuitem_text, funcname)

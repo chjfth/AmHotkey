@@ -232,13 +232,13 @@ chjmisc_InitMenus()
 	Menu, tray, add  ; Creates a separator line.
 	SystrayMenu_Add_MuteClicking()
 
-	winshell_AddOneAhkFunctionMenu("Configure debug-modules", "Amdbg_ShowGui")
-	winshell_AddOneAhkFunctionMenu("Accurate move current active window", "devui_ChangeWindowPosition")
-	winshell_AddOneAhkFunctionMenu("AHK Trim path utility", "AmTrimPath_ShowGui")
-	winshell_AddOneAhkFunctionMenu("[AmTemplate] Select new", "Amt_LaunchMenu")
-	winshell_AddOneAhkFunctionMenu("[AmTemplate] Show previous", "Amt_ShowPreviousGui")
+	winshell_AddOneAhkFunctionMenuItem("Configure debug-modules", "Amdbg_ShowGui")
+	winshell_AddOneAhkFunctionMenuItem("Accurate move current active window", "devui_ChangeWindowPosition")
+	winshell_AddOneAhkFunctionMenuItem("AHK Trim path utility", "AmTrimPath_ShowGui")
+	winshell_AddOneAhkFunctionMenuItem("[AmTemplate] Select new", "Amt_LaunchMenu")
+	winshell_AddOneAhkFunctionMenuItem("[AmTemplate] Show previous", "Amt_ShowPreviousGui")
 	
-;	winshell_AddOneAhkFunctionMenu("[BadMenu] BadItem", "NotExistingFunction") ; test error reporting
+;	winshell_AddOneAhkFunctionMenuItem("[BadMenu] BadItem", "NotExistingFunction") ; test error reporting
 	
 	chjmisc_AddQuickPasteSnippets()
 }
