@@ -3,3 +3,5 @@
 ;global g_DefaultDbgLv_HotkeyLegacy := 1
 
 ;global g_DefaultDbgLv_Clipmon := 1
+
+;global g_DefaultDbgLv_VmCtl := 1
