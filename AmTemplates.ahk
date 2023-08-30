@@ -192,17 +192,17 @@ Amt_LaunchMenu(scanrootdir:="")
 	
 	dev_MenuAddItem(g_amtRootMenu, "==== AmTemplates ====", "dev_nop")
 	
-	if(g_amtPrevInipath)
-	{
-		dev_MenuAddItem(g_amtRootMenu, "Show previous dialog", "Amt_ShowPreviousGui")
-	}
-	
 	if(StrLen(scanrootdir)>0)
 	{
 		Amt_attach_scandir_to_LaunchMenu("AmtCustomScandir", scanrootdir)
 	}
 	else
 	{
+		if(g_amtPrevInipath)
+		{
+			dev_MenuAddItem(g_amtRootMenu, "Show previous dialog", "Amt_ShowPreviousGui")
+		}
+
 		; Load AmTemplates from g_dirsAmTemplates[]
 
 		Loop, % g_dirsAmTemplates.Length()
