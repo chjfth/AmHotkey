@@ -1396,6 +1396,16 @@ dev_IsExeActive(exefile)
 	}
 }
 
+dev_IsWintitleRegexActive(regex)
+{
+	WinGetTitle, title, A
+	
+	if(title ~= regex)
+		return true
+	else
+		return false
+}
+
 dev_GetHwndByExepath(exepath)
 {
 	WinGet topwnd, List
@@ -1460,6 +1470,7 @@ IsWinClassActive(winclass, wintext="") ; Check against active window
 	}
 	return false
 }
+
 
 IsWinClassExist(winclass, wintext="") ; Check existing window
 {

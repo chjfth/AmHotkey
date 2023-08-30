@@ -995,3 +995,10 @@ PasteImageToFastStone()
 
 #If ;  dev_IsExeActive("navicat.exe")
 
+
+#If dev_IsWintitleRegexActive("FastStone Editor$")
+
+F8:: Send +^{Tab}
+F9:: Send ^{Tab}
+
+#If
