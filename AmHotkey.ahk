@@ -959,12 +959,13 @@ _in_dev_DefineHotkeyFlex(user_keyname, purpose_name, comment, is_passthru, fn_co
 	; If `comment` is "_off_", the hotkey by [keyname-purpose_name] is to be removed.
 	
 	; Note: $ and ~ keyname prefixes are ignored by _in_dev_DefineHotkeyFlex(),
-	; bcz _in_dev_DefineHotkeyFlex() will handle $ and ~ prefix by its own rule.
+	; bcz $ and ~ is incompatible with _in_dev_DefineHotkeyFlex() intrinsic logic.
+	; Workaround: To make a Hotkey do it original work(the work when AHK is not run),
+	;     user should set param is_passthru=true. If user registers multiple fn_act-s
+	;     on the same Hotkey, any is_passthru=true makes it true.
 	;
 	keynamed := _fxhk_KeynameStripPrefix(user_keyname) ; keyname as dict-key
 	hpp_keyname := _fxhk_KeynameAddHppPrefix(keynamed) ; hpp: hook($) or passthru(~) prefix
-	
-;	isComboHotkey := StrIsStartsWith(hpp_keyname, "~") ? true : false
 	
 	dbgHotkeyFlex(Format("user_keyname=〖{}〗, keynamed=〖{}〗, hpp_keyname=〖{}〗", user_keyname, keynamed, hpp_keyname))
 	
@@ -1138,8 +1139,7 @@ _dev_HotkeyFlex_callback()
 			dbgHotkeyFlex(Format("[seq:{}]〖{}〗 NOT-fired: [{}] {}", nowseq, keynamed, purpose_name, actinfo.comment))
 		}
 	}
-	;
-;	Dbgwin_Output(Format("###########meet_passthru={} , has_cond_match={} , isComboHotkey={}", meet_passthru, has_cond_match, isComboHotkey))
+
 	if(meet_passthru || !has_cond_match)
 	{
 		; EXPLAIN: 
