@@ -48,6 +48,8 @@ dev_getCallStack(deepness = 20, is_print_code = true)
 	; Thanks to: https://www.autohotkey.com/board/topic/76062-ahk-l-how-to-get-callstack-solution/
 	
 	lv_first_print := -1
+	stack := ""
+	stack_prev := ""
 	
 	loop % deepness
 	{
@@ -61,9 +63,11 @@ dev_getCallStack(deepness = 20, is_print_code = true)
 		if(lv_first_print==-1) 
 			lv_first_print := A_Index
 		
-		stack .= (stack ? "`n" : "") . Format("#{1}£º ",A_Index-lv_first_print+1) . "File '" oEx.file "', Line " oEx.line (oExPrev.What = lvl-1 ? "" : ", in " oExPrev.What) (is_print_code ? ":`n" line : "") "`n"
+		stack_prev := stack
+		stack .= (stack ? "`n" : "") . Format("[#{1}] ", A_Index-lv_first_print+1) . "File '" oEx.file "', Line " oEx.line (oExPrev.What = lvl-1 ? "" : ", in " oExPrev.What "()") (is_print_code ? ":`n" line : "") "`n"
 	}
-	return stack
+	
+	return stack_prev
 }
 
 
