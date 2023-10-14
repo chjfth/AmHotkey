@@ -10,6 +10,16 @@ dev_nop()
 	; No operation
 }
 
+dev_true()
+{
+	return true
+}
+
+dev_false()
+{
+	return false
+}
+
 dev_assert(success_condition, msg_on_error:="")
 {
 	; msg_on_error is the text message you want to say to user, in case success_condition is not met.
