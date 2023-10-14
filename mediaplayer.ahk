@@ -490,7 +490,7 @@ MPC_ClickToSeek_condition(xpct, uy, proc_condition)
 
 	clickx := x + width * xpct
 	MouseMove, %clickx%, %clicky%
-	Click %clickx%, %clicky%
+	Click, %clickx% %clicky%
 	PlaySoundLeftClick()
 }
 
