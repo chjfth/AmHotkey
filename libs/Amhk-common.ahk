@@ -988,6 +988,16 @@ dev_IsString(s)
 		return false
 }
 
+dev_IsExistingFuncName(s)
+{
+	; Check if a string is an existing(already defined) AHK function name.
+	fnobj := Func(s)
+	if(fnobj)
+		return true
+	else
+		return false
+}
+
 indev_OnMessage(wm_xxx, user_callback, maxthreads)
 {
 	dev_assert(user_callback)

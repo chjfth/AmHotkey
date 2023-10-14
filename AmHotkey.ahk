@@ -916,6 +916,19 @@ _in_dev_DefineHotkeyFlex(user_keyname, purpose_name, comment, is_passthru, fn_co
 	; user_keyname is the "KeyName" param that can be passed to `Hotkey` internal command.
 	; e.g., "F1"
 	
+	; Check input param validity >>>
+	
+	if(StrLen(fn_cond)>0)
+	{
+		errmsg := Format("ERROR on 'fn_cond' param: ""{}"" is not a string representing a function name.", fn_cond)
+		dev_assert(dev_IsExistingFuncName(fn_cond), errmsg)
+	}
+	
+	errmsg := Format("ERROR on 'fn_act' param: ""{}"" is not a string representing a function name.", fn_act)
+	dev_assert(dev_IsExistingFuncName(fn_act), errmsg)
+	
+	; Check input param validity <<<
+	
 	is_add := comment!="_off_" ? true : false
 	
 	dev_assert(user_keyname!="")
