@@ -910,25 +910,6 @@ IsWin5x()
 }
 
 
-dev_IsProcessAlive(pid)
-{
-	access := 0x1000 ; PROCESS_QUERY_LIMITED_INFORMATION
-	if(IsWinXP())
-		access := PROCESS_QUERY_INFORMATION
-
-	hProcess := DllCall( "OpenProcess" 
-	                    , "uint", access
-	                    , "int", false 
-	                    , "uint", pid ) 
-	if(hProcess)
-	{
-		DllCall("CloseHandle", "Ptr",hProcess)
-		return true
-	}
-	else
-		return false
-}
-
 dev_WaitUntilProcessExit(pid, timeout_millisec:=-1)
 {
 	waitmsec_start := A_TickCount
@@ -1377,6 +1358,28 @@ dev_Hex2Num(HX)
 	Dec += "0x" HX
 	return Dec
 }
+
+dev_IsProcessAlive(pid)
+{
+	; Dup with dev_IsExeRunning() ?
+
+	access := 0x1000 ; PROCESS_QUERY_LIMITED_INFORMATION
+	if(IsWinXP())
+		access := PROCESS_QUERY_INFORMATION
+
+	hProcess := DllCall( "OpenProcess" 
+	                    , "uint", access
+	                    , "int", false 
+	                    , "uint", pid ) 
+	if(hProcess)
+	{
+		DllCall("CloseHandle", "Ptr",hProcess)
+		return true
+	}
+	else
+		return false
+}
+
 
 dev_IsExeRunning(exename)
 {
@@ -1902,4 +1905,12 @@ dev_StrReplace_LF_to_CRLF(s)
 {
 	return StrReplace(s, "`n", "`r`n"`)
 }
+
+
+dev_ControlGetText(hwndtop, classnn)
+{
+	ControlGetText, outvar, %classnn%, ahk_id %hwndtop%
+	return outvar
+}
+
 
