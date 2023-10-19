@@ -208,12 +208,35 @@ dev_CheckWindowInfo(hwnd)
 	CoordMode, Mouse, Window
 	MouseGetPos, mxWindow, myWindow, tophwnd_undermouse, classnn
 	if(classnn)
+	{
+		; Get child's relative position(relative to parent window's top-left corner).
+		ControlGetPos, xr_child, yr_child, wr_child, hr_child, %classnn%, ahk_id %tophwnd_undermouse%
+		xrend_child_ := xr_child + wr_child
+		yrend_child_ := yr_child + hr_child
+
+		; Get child's absolute position(screen coordinate).
 		ControlGet, hctrl_undermouse, HWND, , %classnn%, ahk_id %tophwnd_undermouse%
+		WinGetPos, x_child, y_child, w_child, h_child, ahk_id %hctrl_undermouse%
+		xend_child_ := x_child + w_child
+		yend_child_ := y_child + h_child
+		
+		isHCtrlUnicode := DllCall("IsWindowUnicode", "Ptr", hctrl_undermouse)
+		ynHCtrlUnicode := isHCtrlUnicode ? "yes" : "no"
+		
+		info_child =
+		(
+ClassNN under mouse is "%classnn%"
+hwndCtrl under mouse is "%hctrl_undermouse%"
+RelaPos: X ( %xr_child% ~ %xrend_child_% ), Y ( %yr_child% ~ %yrend_child_% ), size ( %wr_child% x %hr_child% )
+AbsPos: X ( %x_child% ~ %xend_child_% ), Y ( %y_child% ~ %yend_child_% ), size ( %w_child% x %h_child% )
+IsWindowUnicode? [%ynHCtrlUnicode%]
+		)
+	}
 	else
+	{
 		classnn := ""
-	
-	isHCtrlUnicode := DllCall("IsWindowUnicode", "Ptr", hctrl_undermouse)
-	ynHCtrlUnicode := isHCtrlUnicode ? "yes" : "no"
+		info_child := "No child-window under mouse cursor."
+	}
 
 	info =
 	(
@@ -231,9 +254,7 @@ Process path: %exepath%
 
 Mouse position: In-window: (%mxWindow%,%myWindow%)  `; In-screen: (%mxScreen%,%myScreen%)
 
-ClassNN under mouse is "%classnn%"
-hwndCtrl under mouse is "%hctrl_undermouse%"
-IsWindowUnicode? [%ynHCtrlUnicode%]
+%info_child%
 
 Answer [Yes] to see more system info.
 	)
