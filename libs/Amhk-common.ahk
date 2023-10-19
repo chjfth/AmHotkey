@@ -1936,11 +1936,13 @@ Dbg_DumpChildWinsInfo(hwndtop)
 		classnn := A_LoopField
 		
 		hctrl := dev_GetHwndFromClassNN(classnn, "ahk_id " hwndtop)
-		
+
+		pos := dev_ControlGetPos(hwndtop, classnn)
+
 		wintext := dev_ControlGetText(hwndtop, classnn)
 		wintext := Substr(wintext, 1, 100)
 		
-		childinfo := Format("#{} [{} , 0x{:08X}] {}", A_Index, classnn, hctrl, wintext)
+		childinfo := Format("#{} [{} , 0x{:08X}] @({},{}) {}", A_Index, classnn, hctrl, pos.x, pos.y, wintext)
 		
 		info .= childinfo . "`n"
 	}
@@ -1962,4 +1964,13 @@ dev_ControlGetText(hwndtop, classnn)
 
 	return outtext
 }
+
+dev_ControlGetPos(hwndtop, classnn)
+{
+	; Get specific child-window's position, relative to its parent.
+	ControlGetPos, rx, ry, rw, rh, %classnn%, ahk_id %hwndtop%
+	pos := { "x":rx, "y":ry, "w":rw, "h":rh, "x_":rx+rw, "y_":ry+rh }
+	return pos
+}
+
 
