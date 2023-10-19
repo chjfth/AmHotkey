@@ -996,9 +996,69 @@ PasteImageToFastStone()
 #If ;  dev_IsExeActive("navicat.exe")
 
 
+;==========================================================================
+; FastStone screen capture
+;==========================================================================
+
 #If dev_IsWintitleRegexActive("FastStone Editor$")
 
 F8:: Send +^{Tab}
 F9:: Send ^{Tab}
+
+#If
+
+
+;==========================================================================
+; Paragon HDM 12 (in WinPE)
+;==========================================================================
+
+in_Paragon12_BeautifyHexView()
+{
+	; This is a UI tweak for Paragon 12 WinPE on a 1024*768 screen.
+	;
+	; After bringing up "Edit/View Sector" dialog-box, call this function to
+	; enlarge the hex-view area to accommodate a whole sector(512 bytes).
+
+	; Make the dialog frame larger, 800*768 .
+	hwnd := dev_GetHwndByWintitle()
+	WinMove, ahk_id %hwnd%, , , , 800, 768
+	WinMove, ahk_id %hwnd%, , % newx, % newy
+	
+	; Hide bottom-right [Close] button.
+	Control, Hide,, % "QWidget3", ahk_id %hwnd%
+	
+	; Enlarge the hex-view area.
+	
+			; ControlGetPos, x4, y4, w4, h4, % "QWidget4", ahk_id %hwnd%
+			; ControlMove, % "QWidget4", % x4, % y4-10, % w4, % h4+50, ahk_id %hwnd% 
+			; -- This is wrong! We should not use relative-to-self method. 
+			;    If user did it multiple times, the relative values will accumulate, GUI bombs!
+	
+	; Use absolute values within my parent.
+	dev_ControlMove(hwnd, "QWidget4", 19, 84, 762, 657)
+}
+
+
+Paragon12_BeautifyHexView()
+{
+	hwnd := dev_GetHwndByWintitle()
+
+	sigtext := dev_ControlGetText(hwnd, "QWidget10")
+	if(sigtext=="HexEditor")
+	{
+		dev_TooltipAutoClear("Paragon12_BeautifyHexView(): Adjusting child layout ...", 2000)
+		in_Paragon12_BeautifyHexView()
+	}
+	else 
+	{
+		dev_TooltipAutoClear("Paragon12_BeautifyHexView(): Cannot find ""HexEditor"" child window at classNN=""QWidget10"". Nothing to do.")
+	}
+}
+
+; :::: Add your OWN hotkey definition below ::::
+
+#If dev_IsExeActive("launcher.exe")
+
+F12:: Paragon12_BeautifyHexView()
 
 #If

@@ -1973,4 +1973,8 @@ dev_ControlGetPos(hwndtop, classnn)
 	return pos
 }
 
+dev_ControlMove(hwndtop, classnn, x, y, w, h)
+{
+	ControlMove, % classnn, % x, % y, % w, % h, ahk_id %hwndtop% 
+}
 
