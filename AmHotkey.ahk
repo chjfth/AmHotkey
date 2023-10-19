@@ -263,6 +263,7 @@ Answer [Yes] to see more system info.
 	if(more)
 	{
 		Dbg_DumpSysInfo(true)
+		Dbg_DumpChildWinsInfo(tophwnd_undermouse)
 	}
 }
 

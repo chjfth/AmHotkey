@@ -1872,6 +1872,12 @@ dev_IsValidGuid(input)
 		return false
 }
 
+dev_IsValidHwnd(hwnd)
+{
+	succ := DllCall("IsWindow", "Ptr", hwnd)
+	return succ
+}
+
 dev_Sleep(millisec)
 {
 	Sleep % millisec
@@ -1906,11 +1912,54 @@ dev_StrReplace_LF_to_CRLF(s)
 	return StrReplace(s, "`n", "`r`n"`)
 }
 
+dev_StringCountLines(multiline_string)
+{
+	lines := StrSplit(multiline_string, "`n")
+	return lines.Length()
+}
+
+
+Dbg_DumpChildWinsInfo(hwndtop)
+{
+	if(!dev_IsValidHwnd(hwndtop))
+	{
+		Dbgwin_Output(Format("Dbg_DumpChildWinsInfo(): 0x{:08X} is not a valid HWND."))
+		return false
+	}
+
+	WinGet, ControlList, ControlList, ahk_id %hwndtop%
+	
+	info := Format("Top-wnd 0x{:08X} has total {} child windows:`n", hwndtop, dev_StringCountLines(ControlList))
+	
+	Loop, parse, ControlList, `n
+	{
+		classnn := A_LoopField
+		
+		hctrl := dev_GetHwndFromClassNN(classnn, "ahk_id " hwndtop)
+		
+		wintext := dev_ControlGetText(hwndtop, classnn)
+		wintext := Substr(wintext, 1, 100)
+		
+		childinfo := Format("#{} [{} , 0x{:08X}] {}", A_Index, classnn, hctrl, wintext)
+		
+		info .= childinfo . "`n"
+	}
+	
+	Dbgwin_Output(info)
+	
+	return true
+}
+
 
 dev_ControlGetText(hwndtop, classnn)
 {
-	ControlGetText, outvar, %classnn%, ahk_id %hwndtop%
-	return outvar
-}
+	try {
+		ControlGetText, outtext, %classnn%, ahk_id %hwndtop%
+	} catch e {
+		; Without this catch, a too large child-control text will assert #MaxMem error.
+		outtext := "(wintext too large?)"
+	}
 
+	return outtext
+}
 
