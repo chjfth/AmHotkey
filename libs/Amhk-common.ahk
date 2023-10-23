@@ -1615,7 +1615,7 @@ dev_IsWin7SaveAsDialog()
 		return false
 }
 
-dev_WinGetClientAreaPos(WinId)
+dev_WinGetClientAreaPos(WinId, isScreenCoord:=false)
 {
 	; https://www.autohotkey.com/boards/viewtopic.php?p=257561&sid=d2327857875a0de35c9281ab43c6a868#p257561
 	
@@ -1624,19 +1624,36 @@ dev_WinGetClientAreaPos(WinId)
 		return null
 	if !DllCall("user32\ClientToScreen", Ptr,WinId, Ptr,&RECT)
 		return null
-	
-	Win_Client_X := NumGet(&RECT, 0, "Int")
-	Win_Client_Y := NumGet(&RECT, 4, "Int")
-	Win_Client_W := NumGet(&RECT, 8, "Int")
-	Win_Client_H := NumGet(&RECT, 12, "Int")
 
-	r := {}
-	r.left := Win_Client_X
-	r.right := Win_Client_X + Win_Client_W
-	r.top := Win_Client_Y
-	r.bottom := Win_Client_Y + Win_Client_H
+	cliAbs := {}	
+	cliAbs.x := NumGet(&RECT, 0, "Int")
+	cliAbs.y := NumGet(&RECT, 4, "Int")
+	cliAbs.w := NumGet(&RECT, 8, "Int")
+	cliAbs.h := NumGet(&RECT, 12, "Int")
+	cliAbs.x_ := cliAbs.x + cliAbs.w
+	cliAbs.y_ := cliAbs.y + cliAbs.h
+
+	if(isScreenCoord)
+	{
+		; Return the client-area's absolute(screen) coordinate.
+		return cliAbs
+	}
+	else
+	{
+		; Return the client-area's relative coordinate, relative to its host-window.
 	
-	return r
+		WinGetPos, hostx, hosty, _, _, ahk_id %winid%
+		
+		cliRel := {}
+		cliRel.x := cliAbs.x - hostx
+		cliRel.y := cliAbs.y - hosty
+		cliRel.w := CliAbs.w
+		cliRel.h := CliAbs.h
+		cliRel.x_ := cliRel.x + cliRel.w
+		cliRel.y_ := cliRel.y + cliRel.h
+		
+		return cliRel
+	}
 }
 
 

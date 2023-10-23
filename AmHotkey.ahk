@@ -192,15 +192,13 @@ dev_CheckWindowInfo(hwnd)
 	x_end_ := x + w
 	y_end_ := y + h
 	
-	caRect := dev_WinGetClientAreaPos(hwnd)
-	; if (caRect==null) ...
-	;	MsgBox, % "caRect==null"
-	caLeft := caRect.Left
-	caTop := caRect.top
-	caRight := caRect.right
-	caBottom := caRect.bottom
-	caWidth := caRight - caLeft
-	caHeight := caBottom - caTop
+	cliRel := dev_WinGetClientAreaPos(hwnd)
+	caLeft := cliRel.x
+	caTop := cliRel.y
+	caRight := cliRel.x_
+	caBottom := cliRel.y_
+	caWidth := cliRel.w
+	caHeight := cliRel.h
 	
 	CoordMode, Mouse, Screen
 	MouseGetPos, mxScreen, myScreen
@@ -244,7 +242,7 @@ The Active window class is "%class%" (Hwnd=%hwnd%)
 Title is "%title%"
 Position  : X ( %x% ~ %x_end_% ), Y ( %y% ~ %y_end_% ), size ( %w% x %h% )
 
-Client area: X ( %caLeft% ~ %caRight% ), Y ( %caTop% ~ %caBottom% ), size ( %caWidth% x %caHeight% )
+Client area: rX ( %caLeft% ~ %caRight% ), rY ( %caTop% ~ %caBottom% ), size ( %caWidth% x %caHeight% )
 
 Current focused classnn: %focusNN%
 Current focused hctrl: ahk_id=%focus_hctrl%

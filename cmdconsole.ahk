@@ -147,6 +147,32 @@ return
 
 #If
 
+cc_IsWin10WSL_Window()
+{
+	if( IsWinClassActive("ConsoleWindowClass") and dev_IsExeActive("wsl.exe") )
+		return true
+	else
+		return false
+}
+
+#If cc_IsWin10WSL_Window()
+
+^v:: cc_PasteIntoWSLCMD()
+cc_PasteIntoWSLCMD()
+{
+	hwnd := dev_GetActiveHwnd()
+	cliRel := dev_WinGetClientAreaPos(hwnd)
+
+	; [2023-10-23] I have to mouse click the left-top-corner sysmenu-icon to bring up the sysmenu,
+	; bcz, for wsl.exe CMD window, Microsoft blocks the Alt+space hotkey for doing that.
+
+	scale := Get_DPIScale()
+	ClickInActiveWindow(cliRel.x + 8*scale, cliRel.y - 8*scale, 2)
+	Send ep
+}
+
+#If ; cc_IsWin10WSL_Window()
+
 
 #IfWinActive ahk_class ConsoleWindowClass
 
@@ -555,3 +581,5 @@ SmarttyPasteText()
 
 
 #If ; smartty_IsActive()
+
+
