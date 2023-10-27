@@ -112,6 +112,7 @@ https://www.evernote.com/shard/s21/nl/2425275/a7f5797b-f464-41e7-9098-93f6d3286d
 https://www.evernote.com/shard/s21/nl/2425275/e6f8bb67-de35-4bf8-829e-945c41415c45 , 机器实例:chji , 用了十年的 i7-4770K
 https://www.evernote.com/shard/s21/nl/2425275/2c903369-2c41-4d7c-b2d6-6ebbb10aaec3 , 机器实例:AcerR7
 https://www.evernote.com/shard/s21/nl/2425275/c4f3cb6f-f9ff-4a29-969e-931cb9679dfb , 机器实例:GBChj-P35W
+https://www.evernote.com/shard/s21/nl/2425275/e514b880-4f2a-4b1b-95ae-889543441ba7 , 机器实例:GAFX8120, AMD970+FX8120 台式机
 
 https://www.evernote.com/shard/s21/nl/2425275/803ad1b0-9e6e-4f1a-9b62-e76ebb7eeecf , 硬件相关:RasPi, Raspberry Pi
 https://www.evernote.com/shard/s21/nl/2425275/6f3a3c9a-c6c8-4c67-abe8-ba5567b4a995 , 硬件相关:hdisk, 硬盘
