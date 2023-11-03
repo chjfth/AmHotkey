@@ -263,9 +263,9 @@ dev_Tooltip(text)
 	tooltip, % text
 }
 
-dev_TooltipAutoClear(text, keep_millisec:=2000)
+dev_TooltipAutoClear(text, keep_millisec:=2000, x:="", y:="", which:="")
 {
-	tooltip, %text%
+	tooltip, % text, % x, % y, % which
 	
 	if(keep_millisec>0) {
 		dev_StartTimerOnce("dev_TooltipClear", keep_millisec)
@@ -1257,8 +1257,15 @@ dev_SendRawToExeMainWindow(keyspec, wintitle:="A")
 
 dev_SendKeyToExeMainWindow_ap(keyspec, wintitle:="A")
 {
-	; [2023-04-30] Weird: If keyspec=="F5", Notepad does not get "F5" into editing area, why?
-	; But if keyspec=="{F5}", it triggers Notepad's F5 hotkey(insert current datetime).
+	; [2023-11-03] Usage Note: 
+	; If keyspec=="{F5}", it triggers Notepad's F5 hotkey(insert current datetime).
+	;
+	; If keyspec=="F5", Notepad does not get "F5" into editing area, that's bcz 
+	; the window messages for "F" and "5" have MSG.hwnd==hMainWindowOfNotepad,
+	; so they will not be dispatched to the "Edit" control, so the editbox in Notepad 
+	; will not get the two characters "F" and "5".
+	;
+	; 
 	ControlSend ahk_parent, % keyspec, % wintitle
 }
 dev_SendRawToExeMainWindow_ap(keyspec, wintitle:="A")
@@ -1868,9 +1875,12 @@ dev_StartTimerOnce(str_callable, millisec)
 	SetTimer, % str_callable, % 0-millisec
 }
 
-dev_StartTimerPeriodic(str_callable, millisec)
+dev_StartTimerPeriodic(str_callable, millisec, is_exec_now:=false)
 {
 	dev_assert(millisec>0, "dev_StartTimerPeriodic() `millisec` must be >0")
+
+	if(is_exec_now)
+		%str_callable%()
 
 	SetTimer, % str_callable, % millisec
 }
