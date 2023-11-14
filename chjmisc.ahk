@@ -117,7 +117,7 @@ chj_DefineQuickSwitchApps() ; as template for actual users
 	;QSA_DefineActivateGroup_Caps("2", "MozillaWindowClass", "Firefox") // would share with Active-state Komodo 7
 	
 	QSA_DefineActivateGroup_Caps("d", "ConsoleWindowClass", "CMD")
-	QSA_DefineActivateGroup_Caps("q", "TXGuiFoundation", "QQ")
+;	QSA_DefineActivateGroup_Caps("q", "TXGuiFoundation", "QQ")
 	QSA_DefineActivateGroup_Caps("h", "HH Parent", "CHM viewer")
 
 ;	QSA_DefineActivateSingle_Caps("m", "ENMainFrame", "Evernote") ;
@@ -126,7 +126,10 @@ chj_DefineQuickSwitchApps() ; as template for actual users
 	QSA_DefineActivateGroup_Caps("v", "VMUIFrame", "VMware Workstation")
 		; Note: On activated, the VM may or may not grabs input immediately, which depends on 
 		; whether you have used Ctrl+Alt to release control from the VM.
-	QSA_DefineActivateGroupFlex_Caps("b", QSA_NO_WNDCLASS, QSA_NO_WNDCLS_REGEX, "VirtualBox Manager$", "VirtualBox Manager") ; virtualbox 6
+		; [2023-11-14] Cranky on Win10: If there are more than one VMUIFrame(15.x+) windows, this hotkey
+		; will be stuck at first activated VMUIFrame. VMware does something special at system-level 
+		; so we have to endure this.
+;	QSA_DefineActivateGroupFlex_Caps("b", QSA_NO_WNDCLASS, QSA_NO_WNDCLS_REGEX, "VirtualBox Manager$", "VirtualBox Manager") ; virtualbox 6
 
 	QSA_DefineActivateGroup_Caps("w", "CabinetWClass", "Windows Explorer")
 	QSA_DefineActivateGroup_Caps("e", "EmEditorMainFrame3", "EmEditor")
@@ -135,9 +138,10 @@ chj_DefineQuickSwitchApps() ; as template for actual users
 	QSA_DefineActivateGroup_Caps("p", "PuTTY", "PuTTY")
 
 	QSA_DefineActivateGroupFlex_Caps("u", "ConsoleWindowClass", QSA_NO_WNDCLS_REGEX, "Ubuntu", "WSL Ubuntu")
-	QSA_DefineActivateGroupFlex_Caps("o", "ConsoleWindowClass", QSA_NO_WNDCLS_REGEX, "^openSUSE", "WSL openSUSE")
+;	QSA_DefineActivateGroupFlex_Caps("o", "ConsoleWindowClass", QSA_NO_WNDCLS_REGEX, "^openSUSE", "WSL openSUSE")
 
 	QSA_DefineActivateGroupFlex_Caps("j", QSA_NO_WNDCLASS, "HyperSnap (7|8) Window Class",  "", "Hypersnap 7 or 8")
+	QSA_DefineActivateGroupFlex_Caps("v", QSA_NO_WNDCLASS, QSA_NO_WNDCLS_REGEX, "FastStone Editor",  "FastStone Editor")
 
 	QSA_DefineActivateGroupFlex_Caps("6", QSA_NO_WNDCLASS, "^Afx", "Microsoft Visual C\+\+", "The Visual C++ 6 IDE")
 		; VC6 winclass is like Afx:400000:8:10009:0:3ab31345

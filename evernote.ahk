@@ -3966,7 +3966,7 @@ Htmldeco_Kbd(puretext)
 	return html
 }
 
-Htmldeco_hexprotocol(puretext)
+Htmldeco_Protohex(puretext)
 {
 	style := Format("border: 1px solid #ccc;"
 		. "padding: 0em 0.2em;"
@@ -4003,8 +4003,8 @@ evernote_InlinePaste_InitMenu()
 	fn := Func("Evernote_PasteSingleLineWithHtmlDeco").Bind("Htmldeco_Kbd")
 	dev_MenuAddItem("evernote_menuInlinePaste", "&Kbd style it", fn)
 	
-	fn := Func("Evernote_PasteSingleLineWithHtmlDeco").Bind("Htmldeco_hexprotocol")
-	dev_MenuAddItem("evernote_menuInlinePaste", "&Hexproto it", fn)
+	fn := Func("Evernote_PasteSingleLineWithHtmlDeco").Bind("Htmldeco_Protohex")
+	dev_MenuAddItem("evernote_menuInlinePaste", "&Protohex it", fn)
 	
 	dev_MenuAddSepLine("evernote_menuInlinePaste")
 	dev_MenuAddItem("evernote_menuInlinePaste", "(Hold down Shift to use mono-font below)", "dev_nop")
