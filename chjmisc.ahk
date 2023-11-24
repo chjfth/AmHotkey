@@ -123,7 +123,7 @@ chj_DefineQuickSwitchApps() ; as template for actual users
 ;	QSA_DefineActivateSingle_Caps("m", "ENMainFrame", "Evernote") ;
 ;	QSA_DefineActivateGroup_Caps("n", "ENSingleNoteView", "Evernote Single-note")
 	
-	QSA_DefineActivateGroup_Caps("v", "VMUIFrame", "VMware Workstation")
+;	QSA_DefineActivateGroup_Caps("v", "VMUIFrame", "VMware Workstation")
 		; Note: On activated, the VM may or may not grabs input immediately, which depends on 
 		; whether you have used Ctrl+Alt to release control from the VM.
 		; [2023-11-14] Cranky on Win10: If there are more than one VMUIFrame(15.x+) windows, this hotkey
