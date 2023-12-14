@@ -522,10 +522,13 @@ AMT_BtnOK()
 	}
 	else
 	{
-		is_yes := dev_MsgBoxYesNo_Warning(Format("Template expansion failed. Do you want to remove target folder?`n`n"
-			. "{}", finalApplyDir))
-		if(is_yes) {
-			dev_rmdir(finalApplyDir)
+		if(dev_IsDiskFolder(finalApplyDir))
+		{
+			is_yes := dev_MsgBoxYesNo_Warning(Format("Template expansion failed. Do you want to remove target folder?`n`n"
+				. "{}", finalApplyDir))
+			if(is_yes) {
+				dev_rmdir(finalApplyDir)
+			}
 		}
 	}
 	
