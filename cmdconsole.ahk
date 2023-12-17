@@ -503,10 +503,21 @@ cmdc_SetNewPrompt(cmd_width)
 
 #If putty_IsActive()
 
-^v:: ; let Ctrl+V in PuTTY do a paste(do right click inside PuTTY window)
-KeyWait, Ctrl ; Wait until Ctrl is released, otherwise PuTTY's Ctrl+Rclick menu will easily pop up.
-ControlClick , , A, , RIGHT
-return
+^v:: putty_RightBtnClickToPaste()
+putty_RightBtnClickToPaste()
+{
+	; let Ctrl+V in PuTTY do a paste(do right click inside PuTTY window)
+	
+	; Wait until Ctrl is released, otherwise PuTTY's Ctrl+Rclick menu will easily pop up,
+	; which is not desired.
+	;
+	KeyWait, Ctrl 
+	
+	ControlClick , , A, , RIGHT
+	
+	dev_TooltipAutoClear("AmHotkey: Simulated Right-clicking into PuTTY window.", 1500)
+	return
+}
 
 ^!-:: ; Ctrl+Alt+-: Clear terminal and clear PuTTY window buffer
 Send !{space}t
