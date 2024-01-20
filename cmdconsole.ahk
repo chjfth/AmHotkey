@@ -160,6 +160,7 @@ cc_IsWin10WSL_Window()
 ^v:: cc_PasteIntoWSLCMD()
 cc_PasteIntoWSLCMD()
 {
+/*  ; [Old method, clumsy]
 	hwnd := dev_GetActiveHwnd()
 	cliRel := dev_WinGetClientAreaPos(hwnd)
 
@@ -169,6 +170,19 @@ cc_PasteIntoWSLCMD()
 	scale := Get_DPIScale()
 	ClickInActiveWindow(cliRel.x + 8*scale, cliRel.y - 8*scale, 2)
 	Send ep
+*/
+	; [New method, graceful] same as that in putty_RightBtnClickToPaste()
+	; let Ctrl+V in do a paste(do right click inside ConsoleWindowClass window)
+	
+	; Wait until Ctrl is released (optional for ConsoleWindowClass)
+	;
+	KeyWait, Ctrl 
+	
+	ControlClick , , A, , RIGHT
+	
+	dev_TooltipAutoClear("AmHotkey: Simulated Right-clicking into WSL window.", 1500)
+	return
+
 }
 
 #If ; cc_IsWin10WSL_Window()
