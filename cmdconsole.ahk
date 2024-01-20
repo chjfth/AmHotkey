@@ -20,6 +20,29 @@ return ; End of auto-execute section.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 
+cmdconsole_RightClickTheMainWindow(wait_ctrl_release:=false)
+{
+	; CMD and PuTTY user may need to call this function to simulate right-clicking into 
+	; current application's main window. For CMD and PuTTY, this will provoke 
+	; "paste text" action.
+	;
+	; Consider that this function is probably called for AHK hotkey Ctrl+V, 
+	; caller may need to pass in wait_ctrl_release:=true, so that we *wait until* 
+	; Ctrl key is released first, then do send a RightClick. 
+	; If not this waiting, some application may act as if user does a Ctrl+RightClick, 
+	; which behaves differently than a pure RightClick.
+	; For example, in PuTTY, Ctrl+RightClick calls up a context menu.
+	
+	if(wait_ctrl_release)
+		KeyWait, Ctrl 
+	
+	ControlClick , , A, , RIGHT
+	
+	dev_TooltipAutoClear("AmHotkey: Simulated Right-clicking into main window.", 1500)
+	return
+}
+
+
 cc_IsCMDorConEmuActive()
 {
 	if IsWinClassActive("ConsoleWindowClass") or IsWinClassActive("VirtualConsoleClass")
@@ -136,18 +159,8 @@ cc_IsPreWin10_CMD_Window()
 		return false
 }
 
-#If cc_IsPreWin10_CMD_Window()
 
-; Reference: http://stackoverflow.com/questions/131955/keyboard-shortcut-to-paste-clipboard-content-into-command-prompt-window-win-xp
-; Redefine only when the active window is a console window 
-
-^v::
-	Send !{Space}ep
-return
-
-#If
-
-cc_IsWin10WSL_Window()
+__notused__cc_IsWin10WSL_Window()
 {
 	if( IsWinClassActive("ConsoleWindowClass") and dev_IsExeActive("wsl.exe") )
 		return true
@@ -155,40 +168,10 @@ cc_IsWin10WSL_Window()
 		return false
 }
 
-#If cc_IsWin10WSL_Window()
+#If IsWinClassActive("ConsoleWindowClass")
+; -- no matter it is Win7 CMD, Win10 CMD, or Win10 WSL.
 
-^v:: cc_PasteIntoWSLCMD()
-cc_PasteIntoWSLCMD()
-{
-/*  ; [Old method, clumsy]
-	hwnd := dev_GetActiveHwnd()
-	cliRel := dev_WinGetClientAreaPos(hwnd)
-
-	; [2023-10-23] I have to mouse click the left-top-corner sysmenu-icon to bring up the sysmenu,
-	; bcz, for wsl.exe CMD window, Microsoft blocks the Alt+space hotkey for doing that.
-
-	scale := Get_DPIScale()
-	ClickInActiveWindow(cliRel.x + 8*scale, cliRel.y - 8*scale, 2)
-	Send ep
-*/
-	; [New method, graceful] same as that in putty_RightBtnClickToPaste()
-	; let Ctrl+V in do a paste(do right click inside ConsoleWindowClass window)
-	
-	; Wait until Ctrl is released (optional for ConsoleWindowClass)
-	;
-	KeyWait, Ctrl 
-	
-	ControlClick , , A, , RIGHT
-	
-	dev_TooltipAutoClear("AmHotkey: Simulated Right-clicking into WSL window.", 1500)
-	return
-
-}
-
-#If ; cc_IsWin10WSL_Window()
-
-
-#IfWinActive ahk_class ConsoleWindowClass
+^v:: cmdconsole_RightClickTheMainWindow() ; to paste clipboard text
 
 cmdwin_ScrollOneLine(is_up)
 {
@@ -206,26 +189,21 @@ cmdwin_ScrollOnePage(is_up)
 ^Up:: cmdwin_ScrollOneLine(true)
 ^Down:: cmdwin_ScrollOneLine(false)
 
-+Up:: cmdwin_ScrollOneLine(true)
-+Down:: cmdwin_ScrollOneLine(false)
-
-; $PgUp:: Send {F8} ; Windows CMD stock hotkey: Iterate command history matching starting string.
-;	[2020-03-10] PgUp=F8 is abandoned, bcz ConsoleWindowClass can be either a cmd.exe window or a Win10 WSL window.
-;	For WSL window, I'll use tmux inside and prefer using F8 as "Go to left-tab".
-
 ;
 ^PGUP:: cmdwin_ScrollOnePage(true)
 ^PGDN:: cmdwin_ScrollOnePage(false)
-;
-+PGUP:: cmdwin_ScrollOnePage(true)
-+PGDN:: cmdwin_ScrollOnePage(false)
 
+
+#If ; IsWinClassActive("ConsoleWindowClass")
+
+
+
+#If cc_IsPreWin10_CMD_Window
 
 ; Win+Alt+F to suggest writing CompletionChar=9 to registry
 #!f:: SuggestCmdCompletionCharInRegistry()
 
-#IfWinActive ; CMD window
-
+#If
 
 
 
@@ -234,19 +212,11 @@ cmdwin_ScrollOnePage(is_up)
 ;==============================================================
 #IfWinActive ahk_class VirtualConsoleClass
 
-
-#!f:: SuggestCmdCompletionCharInRegistry()
-
 ; use F8/F9 to switch to prev/next Tab
 F8:: Send ^{F8} ; ConEmu should set Ctrl+F8 to be "Switch next console".
 F9:: Send ^{F9} ; ConEmu should set Ctrl+F9 to be "Switch previous console".
 
-; Let PgUp execute CMD's original F8 action: browse history with matching starting string 
-; $PgUp:: Send {F8} ; This F8 will not trigger our F8 hotkey, bcz they are defined in the same #InputLevel.
-
 #IfWinActive
-
-
 
 
 
@@ -517,21 +487,7 @@ cmdc_SetNewPrompt(cmd_width)
 
 #If putty_IsActive()
 
-^v:: putty_RightBtnClickToPaste()
-putty_RightBtnClickToPaste()
-{
-	; let Ctrl+V in PuTTY do a paste(do right click inside PuTTY window)
-	
-	; Wait until Ctrl is released, otherwise PuTTY's Ctrl+Rclick menu will easily pop up,
-	; which is not desired.
-	;
-	KeyWait, Ctrl 
-	
-	ControlClick , , A, , RIGHT
-	
-	dev_TooltipAutoClear("AmHotkey: Simulated Right-clicking into PuTTY window.", 1500)
-	return
-}
+^v:: cmdconsole_RightClickTheMainWindow(true)
 
 ^!-:: ; Ctrl+Alt+-: Clear terminal and clear PuTTY window buffer
 Send !{space}t
