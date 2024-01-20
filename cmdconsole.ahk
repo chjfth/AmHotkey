@@ -33,13 +33,34 @@ cmdconsole_RightClickTheMainWindow(wait_ctrl_release:=false)
 	; which behaves differently than a pure RightClick.
 	; For example, in PuTTY, Ctrl+RightClick calls up a context menu.
 	
-	if(wait_ctrl_release)
-		KeyWait, Ctrl 
+	Awinid := dev_GetActiveHwnd()
 	
-	ControlClick , , A, , RIGHT
+	codetext := Trim(Clipboard, "`r`n")
+
+	if(!codetext) {
+		dev_MsgBoxInfo("Clipboard is empty, nothing to paste.")
+		return
+	}
+	
+	lines := dev_StringCountLines(codetext)
+	if(lines>1) {
+		is_yes := dev_MsgBoxYesNo(Format("Clipboard text has {} lines, are you sure to paste all of them?", lines))
+		if(!is_yes)
+			return
+		
+		; Due to interruption of the YesNo dialogbox, we should wait 
+		; until the CMD window becomes foreground again.
+		if(!dev_WinWaitActiveHwnd(Awinid, 1000))
+			return
+	}
+	
+	if(wait_ctrl_release) {
+		KeyWait, Ctrl
+	}
+	
+	ControlClick , , ahk_id %Awinid%, , RIGHT
 	
 	dev_TooltipAutoClear("AmHotkey: Simulated Right-clicking into main window.", 1500)
-	return
 }
 
 
