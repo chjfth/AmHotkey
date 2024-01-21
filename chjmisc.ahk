@@ -43,7 +43,10 @@ return ; End of auto-execute section.
 :*:``1::192.168.
 :*:``2::172.24.0.
 :*:``q::Q:{space}
+
+/* Double semicolon, to make one colon (deprecated)
 :?*:;;::`:{space}
+*/
 
 ; Type ``t to get _T("") , or ``y to get _T(''),, then move the caret back inside the quotes
 :*:````t::_T(""){left}{left}
