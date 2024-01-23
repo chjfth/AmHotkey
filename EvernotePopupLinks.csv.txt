@@ -42,6 +42,8 @@ https://www.evernote.com/shard/s21/nl/2425275/3ca47cd8-735d-43b2-b64a-8e91431468
 https://www.evernote.com/shard/s21/nl/2425275/cf1a1965-9586-4361-bce9-7e28ace3258c , Windows一般话题:Win10Terminal
 
 https://www.evernote.com/shard/s21/nl/2425275/586c101e-dbdb-44d0-b9f5-82ebffb7c8de , Linux:UseLinux , Linux 日常使用
+https://www.evernote.com/shard/s21/nl/2425275/7c4171eb-f893-48c6-8958-ab836d9ea125 , Linux:UseUbuntu , Ubuntu Linux 日常使用
+https://www.evernote.com/shard/s21/nl/2425275/ca444b3b-65bb-4f5f-8ba2-1dc3a6124099 , Linux:UseSuse , SUSE Linux 日常使用
 https://www.evernote.com/shard/s21/nl/2425275/8ab63fea-b812-4f47-b85f-20b9ebf97079 , Linux:LinuxDev , Linux 开发收集帖
 https://www.evernote.com/shard/s21/nl/2425275/f2220220-f115-4353-b53d-a020c9d7f8d8 , Linux:VSLinux , VS2019+ Linux dev
 https://www.evernote.com/shard/s21/nl/2425275/268c580b-6016-4166-8e87-a8ba2773c607 , Linux:GDB , GNU debugger
