@@ -255,7 +255,7 @@ Spc_FolderGoto_AppendBSlash(driveletter)
 	if (A_PriorHotKey=="F12")
 	{
 		; Append :\ after the letter
-		KeyWait, %driveletter%
+		dev_WaitKeyRelease(driveletter)
 		SendInput :\
 	}	
 }

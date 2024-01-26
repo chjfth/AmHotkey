@@ -525,7 +525,7 @@ Enter::
 return
 
 ^Enter:: 
-	KeyWait, Ctrl ; Wait until Ctrl is released
+	dev_WaitKeyRelease("Ctrl") ; Wait until Ctrl is released
 	SendInput {enter}
 return
 

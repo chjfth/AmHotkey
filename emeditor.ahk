@@ -119,7 +119,7 @@ Eme_SelectDoctab_Mode1(hotchar)
 	index := Eme_CharToIndex(hotchar) ; note: hotchar is in lower case
 	Eme_SelectDoctabByBtnIndex(index)
 
-	KeyWait, %hotchar% ; avoid causing double click by user deliberately holding down the hotchar
+	dev_WaitKeyRelease(hotchar) ; avoid causing double click by user deliberately holding down the hotchar
 }
 
 Eme_SelectDoctabByBtnIndex(index)

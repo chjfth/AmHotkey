@@ -514,7 +514,14 @@ NumLock:: foxitHotkey_SelectHandMode()
 ^w:: dev_TooltipDisableCloseWindow("Ctrl+W")
 ^q:: dev_TooltipDisableCloseWindow("Ctrl+Q")
 
-!w:: foxitHotkey_TypeWriterReady()
+
+!w:: foxit_AltW()
+foxit_AltW()
+{
+;	dev_TooltipAutoClear("Alt+W")
+	dev_WaitKeyRelease("Alt")
+	foxitHotkey_TypeWriterReady()
+}
 
 #If ; #If foxit_IsWinActive()
 

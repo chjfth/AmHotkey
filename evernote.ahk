@@ -3387,7 +3387,7 @@ CapsLock & Up:: Evernote_GotoNoteListFirstItem()
 return
 
 ^F1:: 
-	KeyWait, Ctrl ; otherwise, the note will pop-up in a separate window
+	dev_WaitKeyRelease("Ctrl") ; otherwise, the note will pop-up in a separate window
 	ClickInActiveControl("EnShortcutsBar1", 54, -8, true) ; Click on "first"(hopefully) shortcut link.
 return
 
@@ -4065,7 +4065,7 @@ F1:: Evernote_PastePlainText()
 ; +Ins up:: Evernote_PastePlainText_exwait()
 Evernote_PastePlainText_exwait()
 {
-	KeyWait, Shift, T1
+	dev_WaitKeyRelease("Shift", "T1")
 	if (ErrorLevel==0) {
 		; note: If not waiting Shift to be released, Shift+Ins's triggering Evernote_PastePlainText() 
 		; will always paste like Ctrl+V, -- can't explain why yet.

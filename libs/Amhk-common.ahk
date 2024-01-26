@@ -1946,9 +1946,12 @@ dev_Sleep(millisec)
 	Sleep % millisec
 }
 
-dev_WaitKeyRelease(keyname)
+dev_WaitKeyRelease(keyname, options:="")
 {
-	KeyWait % keyname
+	; Example:
+	; dev_WaitKeyRelease("Shift")
+
+	KeyWait % keyname, % options
 }
 
 dev_IsUnicodeInString(s)

@@ -55,7 +55,7 @@ cmdconsole_RightClickTheMainWindow(wait_ctrl_release:=false)
 	}
 	
 	if(wait_ctrl_release) {
-		KeyWait, Ctrl
+		dev_WaitKeyRelease("Ctrl")
 	}
 	
 	ControlClick , , ahk_id %Awinid%, , RIGHT
@@ -76,14 +76,14 @@ cc_IsCMDorConEmuActive()
 cmd_Backspace10()
 {
 	Send {Backspace 10}
-	KeyWait, Backspace 
+	dev_WaitKeyRelease("Backspace")
 		; Do a keywait to avoid deleting too much after user has released the hotkey.
 }
 
 cmd_Del10()
 {
 	Send {Del 10}
-	KeyWait, Del
+	dev_WaitKeyRelease("Del")
 		; Do a keywait to avoid deleting too much after user has released the hotkey.
 }
 
