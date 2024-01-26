@@ -193,7 +193,7 @@ foxit_MakeMainWindowFreeScrolling()
 	; [2023-04-07] Great job! After user press ESC key, user can then
 	; press UP/DOWN key to scroll the page. Tested on Foxit Reader 7.1.5 .
 	;
-	; I have to stimulate SelectTextMode then SelectHandMode, bcz:
+	; I have to simulate SelectTextMode then SelectHandMode, bcz:
 	; If currently I have a comment object(e.g. Squiggly line) selected(=highlight)
 	; UP/DOWN will not take effect. "SelectTextMode then SelectHandMode" unlocks it.
 
@@ -286,6 +286,8 @@ foxit_FocusBookmarkPane()
 ^`:: foxit7_TocSync()
 foxit7_TocSync()
 {
+	; This action is only effective when Foxit Reader 7's "Bookmarks" pane and Status-bar is visible.
+
 	rgbobj := { }
 	fnobj := Func("foxit_GetPixelColorAroundClassnn").Bind("xi,yo", 85, -15, rgbobj)
 	foxit_FindBookmarkPane(fnobj)
@@ -298,13 +300,17 @@ foxit7_TocSync()
 
 	if(dev_IsGreyPixel(rgbobj.rgb))
 	{
-		dev_TooltipAutoClear("Foxit7 TOC sync bug workaround: jump to some TOC entry then jump back...")
+		rx := 75
+		ry := 8
+		dev_TooltipAutoClear(Format("Foxit7 TOC sync bug workaround: jump to some TOC entry then jump back... R({},{})", rx, ry))
 		
 		; [1] Click first top-visible bookmark.
-		fnobj := Func("foxit_ClickAroundClassnn").Bind("xi,yi", 75, 8) 
+		fnobj := Func("foxit_ClickAroundClassnn").Bind("xi,yi", rx, ry)
 		foxit_FindBookmarkPane(fnobj)
 		
-		Sleep, 500
+		; Sigh, we need to pause a second. Without a pause, clicking on a bookmark(e.g. [TLPI] COVER)
+		; may not light up the tocsync-button.
+		Sleep, 900
 
 		; [2] Click the Navigate-back small button on the bottom status bar.
 		foxit7_Click_StatusbarNaviBack()
@@ -331,6 +337,8 @@ foxit_GetPixelColorAroundClassnn(xymode, xspec, yspec, rgbobj, classnn) ; Can be
 
 foxit_ClickAroundClassnn(xymode, xspec, yspec, classnn)
 {
+;	is_click := false ;xxxx true
+;	is_movemouse := true ;xxxx false
 	is_click := true
 	is_movemouse := false
 	dev_ControlFocusViaRegexClassNNXY(classnn, "", xymode, xspec, yspec, is_click, is_movemouse)
