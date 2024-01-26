@@ -2937,8 +2937,23 @@ RegexClassnnFindControls(Cregex:=".+", wintitle:="A")
 		return None
 }
 
-dev_ControlFocusViaRegexClassNNXY(Cregex, Tregex, xyspec, xhint, yhint, is_click=true, is_movemouse=false)
+dev_ControlFocusViaRegexClassNNXY(Cregex, Tregex, xymode, xhint, yhint, is_click=true, is_movemouse=false)
 {
+	; This is wrapper of ControlFocusViaRegexClassNNXY()
+	; xymode param has more friendly representation.
+	; xymode's substring determines innner is_xomode and is_yomode.
+	; If xymode contains "xo", is_xomode=yes, if it contains "yo", is_yomode=yes .
+	
+	if xymode is number
+		dev_assert(0, "dev_ControlFocusViaRegexClassNNXY()'s xymode parameter must NOT be a number.")
+	
+	if(xymode)
+		dev_IsOneWord(xymode)
+	
+	is_xomode := InStr(xymode, "xo") ? true : false ; Suggestion: User pass in "xi" to indicate "x inside"
+	is_yomode := InStr(xymode, "yo") ? true : false ; Suggestion: User pass in "yi" to indicate "y inside"
+	
+	ControlFocusViaRegexClassNNXY(Cregex, Tregex, xhint, yhint, is_click, is_movemouse, is_xomode, is_yomode)
 }
 
 ControlFocusViaRegexClassNNXY(Cregex, Tregex, xhint, yhint, is_click=true, is_movemouse=false

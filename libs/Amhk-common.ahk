@@ -107,6 +107,13 @@ dev_GetActiveHwnd()
 	return Awinid
 }
 
+dev_WinGet_Hwnd(wintitle, wintext:="")
+{
+	WinGet, winid, ID, % wintitle, % wintext
+	return winid
+}
+
+
 
 dev_MsgBoxInfo(text, wintitle:="") ; with a blue (i) icon
 {
@@ -970,7 +977,7 @@ dev_IsOneWord(s)
 	if(not s)
 		return false
 
-	if s is number
+	if s is number       ; [2024-01-26] Note: Cannot add round brackets to `s is number`
 		return false
 	
 	if(InStr(s, " "))
@@ -2034,3 +2041,23 @@ dev_ControlMove(hwndtop, classnn, x, y, w, h)
 	ControlMove, % classnn, % x, % y, % w, % h, ahk_id %hwndtop% 
 }
 
+
+dev_PixelGetColor(x, y, coordmode:="Relative")
+{
+	CoordMode, Pixel, % coordmode
+	
+	PixelGetColor, rgb, % x, % y, RGB
+	return rgb
+}
+
+dev_IsGreyPixel(rgb)
+{
+	; rgb example: 
+	; 	0xFFFFFF
+	; 	0x3399CC
+
+	if(SubStr(rgb,3,2)==SubStr(rgb,5,2) and SubStr(rgb,5,2)==SubStr(rgb,7,2))
+		return true
+	else
+		return false
+}

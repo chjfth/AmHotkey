@@ -277,19 +277,79 @@ foxitHotkey_TypeWriterReady()
 CapsLock & Left:: foxit_FocusBookmarkPane()
 foxit_FocusBookmarkPane()
 {
+	fnobj := Func("foxit_ClickAroundClassnn").Bind("xi,yi", 0.5, 0.5)
+	foxit_FindBookmarkPane(fnobj)
+	
+	dev_TooltipAutoClear("Clicked Foxit Reader 7 Bookmarks pane.")
+}
+
+^`:: foxit7_TocSync()
+foxit7_TocSync()
+{
+	rgbobj := { }
+	fnobj := Func("foxit_GetPixelColorAroundClassnn").Bind("xi,yo", 85, -15, rgbobj)
+	foxit_FindBookmarkPane(fnobj)
+
+	; Workaround a Foxit Reader 7.1.5 bug: On first open of a pdf, the [Expand Current Bookmark](tocsync) button
+	; keeps greyed out, until we click a bookmark. So, to activate the tocsync-button, we have to enforce 
+	; a click into the TOC pane at (75, 8), in hope that we click some bookmark there.
+
+;AmDbg0("foxit7_TocSync() see rgb=" rgbobj.rgb)
+
+	if(dev_IsGreyPixel(rgbobj.rgb))
+	{
+		dev_TooltipAutoClear("Foxit7 TOC sync bug workaround: jump to some TOC entry then jump back...")
+		
+		; [1] Click first top-visible bookmark.
+		fnobj := Func("foxit_ClickAroundClassnn").Bind("xi,yi", 75, 8) 
+		foxit_FindBookmarkPane(fnobj)
+		
+		Sleep, 500
+
+		; [2] Click the Navigate-back small button on the bottom status bar.
+		foxit7_Click_StatusbarNaviBack()
+	}
+
+	; [3] Click [Expand Current Bookmark](tocsync) button, which is at top of the Bookmarks pane.
+	fnobj := Func("foxit_ClickAroundClassnn").Bind("xi,yo", 85, -15)
+	foxit_FindBookmarkPane(fnobj)
+}
+
+foxit_GetPixelColorAroundClassnn(xymode, xspec, yspec, rgbobj, classnn) ; Can be a generic func?
+{
+	Awinid := dev_GetActiveHwnd()
+	r := dev_ControlGetPos(Awinid, classnn)
+
+	is_xomode := InStr(xymode, "xo") ? true : false
+	is_yomode := InStr(xymode, "yo") ? true : false
+	offsetx := NewCoordFromHint(r.x, r.w, xspec, is_xomode)
+	offsety := NewCoordFromHint(r.y, r.h, yspec, is_yomode)
+	
+;AmDbg0(Format("{},{}  {},{}  // offsetx={} , offsety={}", r.x,r.y, r.w,r.h, offsetx, offsety))
+	rgbobj.rgb := dev_PixelGetColor(offsetx, offsety)
+}
+
+foxit_ClickAroundClassnn(xymode, xspec, yspec, classnn)
+{
+	is_click := true
+	is_movemouse := false
+	dev_ControlFocusViaRegexClassNNXY(classnn, "", xymode, xspec, yspec, is_click, is_movemouse)
+}
+
+foxit_FindBookmarkPane(fnobj)
+{
 	bookmark_ok := RegexClassnnFindControl("^ControlBar:", "^Bookmarks$", classnn_bookmark, x,y,w,h)
 	if(bookmark_ok)
 	{
 		treeviews := RegexClassnnFindControls("^SysTreeView32", "")
 ;		tooltip, %x% / %y% / %w% / %h%
-;		ooltip, % "treeviews " . treeviews.MaxIndex()
+;		tooltip, % "treeviews " . treeviews.MaxIndex()
 		for index, ctrl in treeviews
 		{
 ;			MsgBox, % ctrl.x . "/" . ctrl.y . "/" . ctrl.w . "/" . ctrl.h ; debug
 			if(Is_RectA_in_RectB(ctrl.x,ctrl.y,ctrl.w,ctrl.h , x,y,w,h, 2))
 			{
-				ControlFocusViaRegexClassNNXY(ctrl.classnn, "", 0.5, 0.5, true, true) 
-					;Param5: false: Don't click; true: Move mouse to center of the treeview
+				fnobj.call(ctrl.classnn)
 				isok := true
 				break
 			}
@@ -302,6 +362,39 @@ foxit_FocusBookmarkPane()
 			, % "Cannot find Foxit Bookmarks pane."
 	}
 }
+
+^\:: foxit7_Click_StatusbarNaviBack()
+foxit7_Click_StatusbarNaviBack()
+{
+	fnobj := Func("foxit_ClickAroundClassnn").Bind("xo,yi", 84, 14)
+	foxit7_FindStatusbarPagenumEditbox(fnobj)
+}
+
+foxit7_FindStatusbarPagenumEditbox(fnobj)
+{
+	statusbar_ok := RegexClassnnFindControl("^BCGPRibbonStatusBar:", "", classnn_statusbar, x,y,w,h)
+	if(statusbar_ok)
+	{
+		edits := RegexClassnnFindControls("^Edit", "")
+		for index, ctrl in edits
+		{
+			if(Is_RectA_in_RectB(ctrl.x,ctrl.y,ctrl.w,ctrl.h , x,y,w,h, 2))
+			{
+				fnobj.call(ctrl.classnn)
+				isok := true
+				break
+			}
+		}
+	}
+	
+	if(not isok)
+	{
+		MsgBox, % msgboxoption_IconExclamation, 
+			, % "Cannot find Foxit Statusbar -> Pagenumber Editbox."
+	}
+}
+
+
 
 CapsLock & Right:: foxit_FocusReaderPane()
 foxit_FocusReaderPane()
