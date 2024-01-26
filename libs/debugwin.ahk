@@ -614,12 +614,12 @@ AmDbg_MakeLineMsg(modu, msg, lv, byref is_same_modu_as_prev)
 	return linemsg
 }
 
-_Amdbg_CreateDbgModule(modu) ; Create debug-module object is not-exist yet
+_Amdbg_CreateDbgModule(modu) ; Create debug-module object if not-exist yet
 {
 	if(not Amdbg._dictModules.HasKey(modu))
 	{
 		Amdbg._dictModules[modu] := {}
-		Amdbg._dictModules[modu].desc := "Unset yet"
+		Amdbg._dictModules[modu].desc := "(Unset yet)"
 		Amdbg._dictModules[modu].allmsg := ""
 		Amdbg._dictModules[modu].timegapteller := new CTimeGapTeller(1000)
 		

@@ -126,8 +126,8 @@ class AmHotkey ; Store global vars here
 
 AmHotkey_DoInit()
 {
-	AmDbg_SetDesc(AmHotkey.dbgid_HotkeyFlex,   "Debug message for fxhk_DefineHotkey() ...")
-	AmDbg_SetDesc(AmHotkey.dbgid_HotkeyLegacy, "Debug message for dev_DefineHotkey() ...")
+	AmDbg_SetDesc(AmHotkey.dbgid_HotkeyFlex,   "Debug message for fxhk_DefineHotkey() functions.")
+	AmDbg_SetDesc(AmHotkey.dbgid_HotkeyLegacy, "Debug message for dev_DefineHotkey() legacy functions.")
 	
 	dev_MenuAddSepLine("TRAY")
 	dev_MenuAddItem("TRAY", Format("== {} ==", ts14short()), "dev_nop") ; so to distinguish different AmHotkey instance.
@@ -2937,6 +2937,10 @@ RegexClassnnFindControls(Cregex:=".+", wintitle:="A")
 		return None
 }
 
+dev_ControlFocusViaRegexClassNNXY(Cregex, Tregex, xyspec, xhint, yhint, is_click=true, is_movemouse=false)
+{
+}
+
 ControlFocusViaRegexClassNNXY(Cregex, Tregex, xhint, yhint, is_click=true, is_movemouse=false
 	, is_xomode=false, is_yomode=false)
 {
@@ -3152,7 +3156,7 @@ dev_ClipboardSetHTML(html, is_paste_now:=false, wait_hwnd:=0)
 	; `Clipboard` variable will return empty text.
 
 	dbgm := A_ThisFunc
-	AmDbg_SetDesc(dbgm, Format("Debugging {}()", A_ThisFunc))
+	AmDbg_SetDesc(dbgm, Format("Debug message for {}()", A_ThisFunc))
 
 	WinClip.Clear()
 	

@@ -4160,8 +4160,12 @@ evernote_InitEvxLinks()
 
 	s_inited := true
 
-	Evnt.hcmEvxlink := Clipmon_CreateMonitor("evernote_ClipmonPickupEvxlink", "evernote_InitEvxLinks")
+	monitor_fnname := "evernote_ClipmonPickupEvxlink"
+
+	Evnt.hcmEvxlink := Clipmon_CreateMonitor(monitor_fnname, "evernote_InitEvxLinks")
 	dev_assert(Evnt.hcmEvxlink)
+
+	AmDbg_SetDesc(monitor_fnname, Format("Debug message from {}()", monitor_fnname))
 	
 	Loop, Read, % Evnt.filenamEvxlinks
 	{
