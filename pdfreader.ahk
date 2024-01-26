@@ -371,7 +371,7 @@ foxit_FindBookmarkPane(fnobj)
 	}
 }
 
-^\:: foxit7_Click_StatusbarNaviBack()
+; ^\:: foxit7_Click_StatusbarNaviBack() ; just test
 foxit7_Click_StatusbarNaviBack()
 {
 	fnobj := Func("foxit_ClickAroundClassnn").Bind("xo,yi", 84, 14)
@@ -515,7 +515,10 @@ NumLock:: foxitHotkey_SelectHandMode()
 ^q:: dev_TooltipDisableCloseWindow("Ctrl+Q")
 
 
-!w:: foxit_AltW()
+vkE2:: foxit_AltW() ; vkE2 is the Central Europe extra \ key at the left-side of 'Z'.
+!w::   foxit_AltW()
+; -- [2024-01-27] Weird, Alt+W hotkey high-probrability causes FoxitReader 7 to loose 
+;    PYJJ visual bar on FoxitReader App window title, so I trend to use vkE2 today.
 foxit_AltW()
 {
 ;	dev_TooltipAutoClear("Alt+W")

@@ -604,8 +604,9 @@ Everything_SmartUpDown(keyname)
 ; Virtual key-code 226(0xE2) is the Central Europe extra \ key at the left-side of 'Z', which is not used on a US keyboard layout.
 ; I happen to have this key on my B.FriendIt(type1) keyboard, so enjoy this.
 
-vkE2 & 8:: MSDN2008_Activate__Focus_IndexPane()
-vkE2 & F8:: MSDN2008_Activate__Focus_IndexPane()
+; vkE2 & 8:: MSDN2008_Activate__Focus_IndexPane()
+; vkE2 & F8:: MSDN2008_Activate__Focus_IndexPane()
+
 ; B.FriendIt(type2) keyboard does not have the Europe \ key, but instead a Fn, so I have to turn to Fn+F8 for MSDN2008.
 vKB2:: MSDN2008_Activate__Focus_IndexPane()
 
