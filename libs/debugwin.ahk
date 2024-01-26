@@ -23,12 +23,13 @@ AmDbg_SetDesc(modu, desc)
 	; Dbgwin GUI instantly, so the final user knows what the modu name stands for.
 
 Amdbg_output(modu, newmsg, msglv)
+
 Amdbg_Lv1(modu, newmsg)
 Amdbg_Lv2(modu, newmsg)
 Amdbg_Lv3(modu, newmsg)
 	; Output a debug message in the name of modu(debug-module). 
-	; By calling Amdbg_ShowGui(), final user can control which modu's messages appear onto 
-	; Dbgwin GUI instantly.
+	; By calling Amdbg_ShowGui(), final user can control which modu's messages 
+	; appears in Dbgwin GUI instantly.
 
 Amdbg_Lv0(modu, newmsg)
 	; Lv0 message has the benefit over Dbgwin_Output() that it's content is buffered into RAM,
@@ -670,8 +671,8 @@ Amdbg_output(modu, newmsg, msglv:=1)
 	if(!modu)
 		modu := Amdbg._default_modu
 	
-	dev_assert(dev_IsString(modu))
-	dev_assert(dev_IsString(newmsg))
+	dev_assert(dev_IsOneWord(modu))
+	dev_assert(StrLen(newmsg)>0)
 	
 	moduobj := _Amdbg_CreateDbgModule(modu)
 	

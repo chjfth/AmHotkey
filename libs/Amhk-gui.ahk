@@ -332,7 +332,7 @@ GuiControl_SetPos(GuiName, CtrlVarname, x:=-1, y:=-1, w:=-1, h:=-1, force_redraw
 
 GuiControl_ComboboxAddItems(GuiName, CtrlVarname, ar_strings)
 {
-	if(dev_IsString(ar_strings))
+	if(StrLen(ar_strings)>0)
 	{
 		; ar_string should be | separated string
 		value := ar_strings 

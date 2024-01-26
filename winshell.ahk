@@ -1118,11 +1118,6 @@ winshell_AddOneSendTextMenu(menuitem_text, textlines)
 	; * may be a string, each line separated by `n 
 	; * or an array of strings, then after sending each line, a `n will be appended.
 	
-;	if(dev_IsString(textlines))
-;		fnobj := Func("dev_SendRaw").Bind(textlines)
-;	else
-;		fnobj := Func("dev_SendTextLines").Bind(textlines)
-	;
 	fnobj := Func("dev_PasteTextViaClipboard").Bind(textlines)
 	
 	dev_MenuAddItem("submenu_PasteText", menuitem_text, fnobj)
@@ -1133,7 +1128,7 @@ winshell_AddOneSendTextMenu(menuitem_text, textlines)
 
 winshell_AddOneAhkFunctionMenuItem(menuitem_text, funcname)
 {
-	dev_assert(dev_IsString(funcname), "winshell_AddOneAhkFunctionMenuItem() gets an empty funcname.")
+	dev_assert(dev_IsOneWord(funcname), "winshell_AddOneAhkFunctionMenuItem() gets an empty funcname.")
 
 	fnobj := Func(funcname)
 

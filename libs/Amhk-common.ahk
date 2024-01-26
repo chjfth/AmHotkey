@@ -962,12 +962,41 @@ dev_IsToplevelWindow(hwnd)
 	return hwndRoot==hwnd ? true : false
 }
 
-dev_IsString(s)
+dev_IsOneWord(s)
 {
+	; s should be a single word, but can not be pure-digits.
+	; It is used when I check if a word can be used as AHK functionn name.
+	
+	if(not s)
+		return false
+
+	if s is number
+		return false
+	
+	if(InStr(s, " "))
+		return false
+
+	if(InStr(s, "`n"))
+		return false
+	
+	if(IsObject(s))
+		return false
+	
+	return true
+}
+
+dev_IsString(s, least:=2)
+{
+	dev_assert(0, "dev_IsString() is bad function, should not be used.")
+	; -- bcz Autohotkey 1.1 does not distinguish between 0 and "0".
+
 	; Limitation:
 	; `strlen(456)` will report 3, which is wrong result.
+	; `strlen(true)` will report 1, which is wrong again.
 
-	if(strlen(s)>0)
+	slen := strlen(s)
+
+	if(slen>=least)
 		return true
 	else
 		return false
@@ -987,7 +1016,7 @@ indev_OnMessage(wm_xxx, user_callback, maxthreads)
 {
 	dev_assert(user_callback)
 
-	if(dev_IsString(user_callback))
+	if(dev_IsOneWord(user_callback))
 	{
 		; So, user don't have to wrap `Func("function_name")` himself.
 		fnobj := Func(user_callback)
@@ -1195,9 +1224,9 @@ dev_RunWaitOneEx(command, is_hidewindow:=false, working_dir:="")
 
 dev_PasteTextViaClipboard(usertext)
 {
-	if(!dev_IsString(usertext))
+	if(StrLen(usertext)==0)
 	{
-		; usertext is a string array.
+		; Consider usertext as a string *array* .
 		usertext := dev_JoinStrings(usertext, "`r`n") . "`r`n"
 	}
 	
@@ -1288,7 +1317,7 @@ dev_MenuAddItem(menuname, itemtext, target)
 
 	dev_assert(target, "ERROR: dev_MenuAddItem() gets empty 'target' parameter.")
 
-	if(dev_IsString(target) && !StrIsStartsWith(target, ":")) ; ":" means a submenu name
+	if(dev_IsOneWord(target) && !StrIsStartsWith(target, ":")) ; ":" means a submenu name
 	{
 		dev_assert(IsObject(Func(target))
 			, Format("ERROR in dev_MenuAddItem(): ""{}"" is not an existing function name.", target))

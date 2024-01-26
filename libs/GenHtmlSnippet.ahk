@@ -32,7 +32,7 @@ genhtml_code2pre_2022(codetext, lnprefix_start:=0, line_comment:="//", block_com
 {
 ;	Dbgwin_Output("lnprefix_start=" lnprefix_start)
 	
-	lnprefix_start := dev_str2num(lnprefix_start) ; dev_assert(!dev_IsString(lnprefix_start))
+	lnprefix_start := dev_str2num(lnprefix_start)
 
 	return in_genhtml_code2pre_2022(codetext, lnprefix_start, true, line_comment, block_comment
 		, tab_spaces, workaround_evernote_bug)

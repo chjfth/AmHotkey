@@ -288,9 +288,9 @@ Clipmon_CreateMonitor(fnobj, client_name:="default-client-name")
 	if(!fnobj)
 		return 0
 
-	if(dev_IsString(fnobj))
+	if(dev_IsOneWord(fnobj))
 	{
-		; Convert fnobj into a function-object if it is only a function-name.
+		; Convert fnobj(func-name) into a function-object if it is only a function-name.
 		fnobj := Func(fnobj)
 	}
 
