@@ -791,13 +791,8 @@ Close_20230517:
   Return Headers
 }
 
-winshell_GrabControlTextUnderMouse()
+winshell_GrabControlTextUnderMouse(is_silent_return:=false)
 {
-	MaxItems := 99999
-	PromptItems := 999
-	warnmsg := ""
-	otext := ""
-
 	MouseGetPos, x, y, tophwnd, classnn
 	ControlGetPos, x, y, w, h, %classnn%, ahk_id %tophwnd%
 	ctlhwnd := dev_GetHwndFromClassNN(classnn, "ahk_id " tophwnd)
@@ -807,54 +802,10 @@ winshell_GrabControlTextUnderMouse()
 		return
 	}
 	
-	; For ListView, we first check its item-count.
-	; (ListBox does nnot support 'List')
-	if(StrIsStartsWith(classnn, "SysListView32"))
-	{
-		ControlGet, itemcount, List, Count, %classnn%, ahk_id %tophwnd%
+	otext := winshell_GrabControlText(ctlhwnd)
 
-		if(itemcount==0)
-		{
-			; Meet an empty ListView etc.
-			warnmsg := "Listview has zero item."
-		}
-		else if(itemcount>0 and itemcount<=MaxItems)
-		{
-			if(itemcount>PromptItems)
-				dev_TooltipAutoClear(Format("Grabbing {} items...", itemcount), 99000)
-			
-			ControlGet, otext, List, , %classnn%, ahk_id %tophwnd%
-
-			if(itemcount>PromptItems)
-				dev_TooltipAutoClear(Format("Grabbing {} items done.", itemcount))
-			
-			; For ListView, we add Header-text at first line(to otext).
-			arhdrtext := winshell_GetListViewHeaderText(ctlhwnd)
-			if(arhdrtext and arhdrtext.Length()>0)
-			{
-				otext := dev_JoinStrings(arhdrtext, "`t")  "`r`n" otext
-			}
-		}
-		else if(itemcount>MaxItems)
-		{
-			warnmsg := Format("ListView items more than {}, I cannot grab that many.", MaxItems)
-			
-			; -- Partial items grabbing has not been implemented.
-		}
-	}
-	else
-	{
-		; For Listbox, Combobox, DropDownList, call ControlGet directly
-		
-		ControlGet, otext, List, , %classnn%, ahk_id %tophwnd%
-	}
-
-	if(otext=="")
-	{
-		; then consider it simple control types, Buttons, Static, Edit etc
-		;
-		ControlGetText, otext, %classnn%, ahk_id %tophwnd%
-	}
+	if(is_silent_return)
+		return otext
 
 	if(strlen(otext)>0)
 	{
@@ -883,6 +834,68 @@ winshell_GrabControlTextUnderMouse()
 		
 		dev_MsgBoxWarning(warnmsg)
 	}
+}
+
+winshell_GrabControlText(ctlhwnd)
+{
+	; ctlhwnd refers to the UIC that we want to grab its text.
+
+	MaxItems := 99999
+	PromptItems := 999
+	warnmsg := ""
+	otext := ""
+
+	WinGetClass, classnn , % "ahk_id " ctlhwnd
+
+	; For ListView, we first check its item-count.
+	; (ListBox does nnot support 'List')
+	if(StrIsStartsWith(classnn, "SysListView32"))
+	{
+		itemcount := dev_ControlGet_byHwnd(ctlhwnd, "List", "Count")
+		if(itemcount==0)
+		{
+			; Meet an empty ListView etc.
+			warnmsg := "Listview has zero item."
+		}
+		else if(itemcount>0 and itemcount<=MaxItems)
+		{
+			if(itemcount>PromptItems)
+				dev_TooltipAutoClear(Format("Grabbing {} items...", itemcount), 99000)
+			
+			otext := dev_ControlGet_byHwnd(ctlhwnd, "List")
+
+			if(itemcount>PromptItems)
+				dev_TooltipAutoClear(Format("Grabbing {} items done.", itemcount))
+			
+			; For ListView, we add Header-text at first line(to otext).
+			arhdrtext := winshell_GetListViewHeaderText(ctlhwnd)
+			if(arhdrtext and arhdrtext.Length()>0)
+			{
+				otext := dev_JoinStrings(arhdrtext, "`t")  "`r`n" otext
+			}
+		}
+		else if(itemcount>MaxItems)
+		{
+			warnmsg := Format("ListView items more than {}, I cannot grab that many.", MaxItems)
+			
+			; -- Partial items grabbing has not been implemented.
+		}
+	}
+	else
+	{
+		; For Listbox, Combobox, DropDownList, call ControlGet directly
+		
+		otext := dev_ControlGet_byHwnd(ctlhwnd, "List")
+	}
+
+	if(otext=="")
+	{
+		; then consider it simple control types, Buttons, Static, Edit etc
+		
+		otext := dev_ControlGetText(ctlhwnd, "")
+	}
+	
+	return otext
 }
 
 AppsKey & g:: winshell_GrabControlTextUnderMouse()

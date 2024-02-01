@@ -1984,6 +1984,21 @@ dev_StringCountLines(multiline_string)
 	return lines.Length()
 }
 
+dev_ParseLinesToArray(bigstring, sep:="`n")
+{
+	if(sep=="`n")
+		bigstring := dev_StrReplace_CRLF_to_LF(bigstring)
+
+	ar := []
+
+	Loop, PARSE, % bigstring, % sep
+	{
+		ar.Push(A_LoopField)
+	}
+	
+	return ar
+}
+
 
 Dbg_DumpChildWinsInfo(hwndtop)
 {
@@ -2031,6 +2046,7 @@ dev_ControlGetText(hwndtop, classnn)
 	return outtext
 }
 
+
 dev_ControlGetPos(hwndtop, classnn)
 {
 	; Get specific child-window's position, relative to its parent.
@@ -2038,6 +2054,15 @@ dev_ControlGetPos(hwndtop, classnn)
 	pos := { "x":rx, "y":ry, "w":rw, "h":rh, "x_":rx+rw, "y_":ry+rh }
 	return pos
 }
+
+dev_ControlGet_byHwnd(hwnd, SubCommand, Options:="")
+{
+	; hwnd can be top-level hwnd or a UIC's hwnd
+	
+	ControlGet, OutputVar, % SubCommand , % Options, , % "ahk_id " hwnd
+	return OutputVar
+}
+
 
 dev_ControlMove(hwndtop, classnn, x, y, w, h)
 {
