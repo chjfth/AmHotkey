@@ -516,7 +516,7 @@ NumLock:: foxitHotkey_SelectHandMode()
 
 
 vkE2:: foxit_AltW() ; vkE2 is the Central Europe extra \ key at the left-side of 'Z'.
-!w::   foxit_AltW()
+;!w::   foxit_AltW()
 ; -- [2024-01-27] Weird, Alt+W hotkey high-probrability causes FoxitReader 7 to loose 
 ;    PYJJ visual bar on FoxitReader App window title, so I trend to use vkE2 today.
 foxit_AltW()

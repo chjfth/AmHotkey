@@ -3979,6 +3979,20 @@ Htmldeco_Protohex(puretext)
 	return html
 }
 
+Htmldeco_chs_translate(puretext)
+{
+	style := Format("border: 1px solid #eee;"
+		. "padding: 0em 0.2em;"
+		. "border-radius: 3px;"
+		. "box-shadow: 1px 1px 0 rgba(0, 0, 0, 0.4);"
+		. "background: linear-gradient(180deg, #fff, #ccbbee);"
+		. "")
+
+	html := Format("<span style=""{}"">({})</span>&nbsp;", style, puretext)
+	return html
+}
+
+
 evernote_PasteInlineCode_AddMenuItem(bgcolor, desctext, idx)
 {
 	menutext := Format("&{1}. Bgcolor: {2} {3}", idx, bgcolor, desctext)
@@ -4005,6 +4019,9 @@ evernote_InlinePaste_InitMenu()
 	
 	fn := Func("Evernote_PasteSingleLineWithHtmlDeco").Bind("Htmldeco_Protohex")
 	dev_MenuAddItem("evernote_menuInlinePaste", "&Protohex it", fn)
+	
+	fn := Func("Evernote_PasteSingleLineWithHtmlDeco").Bind("Htmldeco_chs_translate")
+	dev_MenuAddItem("evernote_menuInlinePaste", "&Chs Translate style", fn)
 	
 	dev_MenuAddSepLine("evernote_menuInlinePaste")
 	dev_MenuAddItem("evernote_menuInlinePaste", "(Hold down Shift to use mono-font below)", "dev_nop")
