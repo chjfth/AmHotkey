@@ -1476,53 +1476,6 @@ dev_IsWintitleRegexActive(regex)
 		return false
 }
 
-dev_GetHwndByExepath(exepath)
-{
-	WinGet topwnd, List
-	Loop %topwnd%
-	{
-		hwnd := topwnd%A_Index%
-		WinGet, tmppath, ProcessPath, ahk_id %hwnd%
-		if(exepath==tmppath) 
-		{
-			return hwnd
-		}
-	}
-	return None
-}
-
-dev_GetActiveEXE_PathName()
-{
-	WinGet, exepath, ProcessPath, A
-	SplitPath, exepath, filename, dirpath
-	return [dirpath, filename]
-	; retarray[1] is dirpath, retarray[2] is filename .
-}
-
-
-dev_mapping_count(map)
-{
-	; Count how many keys are in a map(dict)
-	; Since AutoHotkey 1.1.29, equals map.Count() .
-	
-	count := 0
-	for key, val in map
-		count++
-	return count
-}
-
-
-
-dev_IsShiftKeyDown()
-{
-	if(GetKeyState("Shift", "P"))
-	    return true
-	else
-	    return false
-
-}
-
-
 IsWinidActive(winid) ; Check against active window
 {
 	IfWinActive, ahk_id %winid%
@@ -1597,6 +1550,52 @@ dev_WinWaitActive_with_timeout(wintitle, wintext:="", timeout_sec:=1)
 		return false
 	}
 }
+
+dev_GetHwndByExepath(exepath)
+{
+	WinGet topwnd, List
+	Loop %topwnd%
+	{
+		hwnd := topwnd%A_Index%
+		WinGet, tmppath, ProcessPath, ahk_id %hwnd%
+		if(exepath==tmppath) 
+		{
+			return hwnd
+		}
+	}
+	return None
+}
+
+dev_GetActiveEXE_PathName()
+{
+	WinGet, exepath, ProcessPath, A
+	SplitPath, exepath, filename, dirpath
+	return [dirpath, filename]
+	; retarray[1] is dirpath, retarray[2] is filename .
+}
+
+
+dev_mapping_count(map)
+{
+	; Count how many keys are in a map(dict)
+	; Since AutoHotkey 1.1.29, equals map.Count() .
+	
+	count := 0
+	for key, val in map
+		count++
+	return count
+}
+
+
+dev_IsShiftKeyDown()
+{
+	if(GetKeyState("Shift", "P"))
+	    return true
+	else
+	    return false
+
+}
+
 
 dev_GetHwndFromClassNN(classnn, wintitle)
 {
