@@ -8,6 +8,12 @@ class AmhkGui ; To store global vars
 }
 
 
+guigo(label_or_funcname)
+{
+	dev_assert(strlen(label_or_funcname)>=2)
+	return "g" label_or_funcname
+}
+
 Gui_New(GuiName)
 {
 	Gui, % (GuiName ? GuiName ":" : "") . "New"
@@ -82,7 +88,7 @@ Gui_Switch_Font(GuiName, sizept:=0, rgbhex:="", fontface:="", weight:=400)
 	Gui, % cmd, % optall, % fontface
 }
 
-GuiControl_ChangeOpt(GuiName, CtrlVarname, opt)
+GuiControl_ChangeOpt(GuiName, CtrlVarname, opt, value:="")
 {
 	; Change a GUI-control's option dynamically.
 	; Example:
@@ -90,7 +96,13 @@ GuiControl_ChangeOpt(GuiName, CtrlVarname, opt)
 	
 	dev_assert(Gui_IsValidVar(CtrlVarname))
 	cmd := (GuiName ? GuiName ":" : "") . opt
-	GuiControl, % cmd, % CtrlVarname, % opt
+	GuiControl, % cmd, % CtrlVarname, % value
+}
+
+GuiControl_SetCallback(GuiName, CtrlVarname, fni)
+{
+	fnobj := dev_make_fnobj(fni)
+	GuiControl_ChangeOpt(GuiName, CtrlVarname, "+g", fnobj)
 }
 
 Gui_Add_TxtLabel(GuiName, CtrlVarname:="", width:=-1, format:="", text:="")

@@ -101,6 +101,53 @@ dev_str2num(str)
 ;}
 ;
 
+dev_make_fnobj(fni)
+{
+	; fni can be either a function-object or just a function-name string.
+	; If fni is a function-name, it will be wrapped into an function-object.
+
+	dev_assert(fni, "Input param `fni` must not be null.")
+	if(!fni)
+		return 0
+
+	if(dev_IsOneWord(fni))
+	{
+		; So fni is a function-name.
+		; Convert it into a function-object.
+		fnobj := Func(fni)
+	}
+	else
+	{
+		; fni is a function-object already.
+		fnobj := fni
+	}
+
+	; Check for bad parameter format:
+	;
+	if(!IsObject(fnobj)) 
+	{
+		; If fni was a string of not-existing function, it gets here.
+	
+		fnname := fni . ""
+		
+		fnname := strlen(fnname)>0 ? fnname : "<some-fnobj>"
+	
+		callstack := dev_getCallStack()
+	
+		errmsg := Format("In {}(), fni parameter invalid! Not a function-name string or a function-object.`r`n`r`n"
+			. "Callstack below:`r`n{}"
+			, A_ThisFunc, callstack)
+		
+		this.dbg0(errmsg)
+		dev_MsgBoxError(errmsg)
+		
+		return ""
+	}
+	
+	return fnobj
+}
+
+
 dev_GetActiveHwnd()
 {
 	WinGet, Awinid, ID, A
@@ -978,7 +1025,16 @@ dev_IsOneWord(s)
 		return false
 
 	if s is number       ; [2024-01-26] Note: Cannot add round brackets to `s is number`
+	{
+		; [2024-03-09] But This check is useless, bcz AHK 1.1 does not distingush 
+		; between 123 and "123". I mean, the following two produce the same result:
+		; 
+		;	if 123 is number
+		;
+		;	if "123" is number
+		
 		return false
+	}
 	
 	if(InStr(s, " "))
 		return false
