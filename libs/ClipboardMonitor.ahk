@@ -280,40 +280,13 @@ Clipmon_WM_DRAWCLIPBOARD(wParam, lParam, msg, hwnd)
 	g_clipmon.Do_WM_DRAWCLIPBOARD(wParam, lParam, msg, hwnd)
 }
 
-Clipmon_CreateMonitor(fnobj, client_name:="default-client-name")
+Clipmon_CreateMonitor(fni, client_name:="default-client-name")
 {
-	; fnobj can be either a function-object or just a function-name string.
-
-	dev_assert(fnobj) ; fnobj must not be null
+	; fni can be either a function-object or just a function-name string.
+	fnobj := dev_make_fnobj(fni)
+	
 	if(!fnobj)
-		return 0
-
-	if(dev_IsOneWord(fnobj))
-	{
-		; Convert fnobj(func-name) into a function-object if it is only a function-name.
-		fnobj := Func(fnobj)
-	}
-
-	; Check for bad parameter format:
-	if(!IsObject(fnobj)) 
-	{
-		; If fnobj is string of not-existing function, it gets here.
-	
-		fnname := fnobj . ""
-		
-		fnname := strlen(fnname)>0 ? fnname : "MyCallbackFunction"
-	
-		callstack := dev_getCallStack()
-	
-		errmsg := Format("In {}(), fnobj parameter invalid! You should pass in a function-object, like this:`r`n`r`n"
-			. "Func(""{}"") `r`n`r`n"
-			. "Callstack below:`r`n{}"
-			, A_ThisFunc, fnname, callstack)
-		this.dbg0(errmsg)
-		dev_MsgBoxError(errmsg)
-		
-		return ""
-	}
+		return
 
 	if(!g_clipmon)
 		new CClipboardMonitor()
