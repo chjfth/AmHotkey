@@ -537,6 +537,16 @@ return
 ;==============================================================
 #IfWinActive ahk_class VMUIFrame
 
+; [2024-03-09] Note:
+; For VMwks 15.5+ and 16.2, the hotkeys defined here does NOT always work.
+; [CASE-R] If current VMUIFrame is projecting a running VM's screen, then, 
+; the hotkeys here will NOT get triggered.
+; My experiment shows that, if a hotkey is defined in KbdHook style('$' prefix),
+; then it will not be triggered in CASE-R.
+; Only if a hotkey is defined in non-KbdHook style(RegisterHotKey), can it 
+; be triggered in CASE-R.
+; No idea yet why VMwks takes such behavior.
+
 ; Ctrl+F9 click into "Library" search box
 ^F9::
 	ClickInActiveControl("Edit1", -2, -2)
@@ -551,7 +561,6 @@ return
 
 ; Alt+p to pause/unpause VM, for VMwks 15+
 !p:: vmwks_PauseVM()
-; -- [2023-04-26] This hotkey cannot be activated for VMwks 16.2.3 on Win10, don't know why.
 vmwks_PauseVM()
 {
 	dev_TooltipAutoClear("Sending Ctrl+Shift+p to pause/unpause the VM ...")
