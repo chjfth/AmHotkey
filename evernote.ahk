@@ -3891,7 +3891,7 @@ evernote_GetClipboardSingleLine()
 	if(dev_CutToOrUseClipboard())
 		codetext := Trim(Clipboard, "`r`n")
 	
-	if(!codetext) {
+	if(StrLen(codetext)==0) {
 		dev_MsgBoxInfo("Clipboard is empty, nothing to paste.")
 		return ""
 	}
@@ -3918,7 +3918,7 @@ Evernote_PasteSingleLineCode(bgcolor:="#e0e0e0", is_monofont:=true, keep_orig_cl
 	dev_WaitKeyRelease("Shift") ; to avoid triggering Ctrl+Shift+X (Encrypt selected text)
 	
 	codetext := evernote_GetClipboardSingleLine()
-	if(!codetext)
+	if(StrLen(codetext)==0)
 		return
 	
 	html := Evtbl_GenHtml_Span(bgcolor, "", codetext, is_monofont ? true : false)
@@ -3943,7 +3943,7 @@ evernote_RestoreClipboardText(text)
 Evernote_PasteSingleLineWithHtmlDeco(str_decofunc)
 {
 	puretext := evernote_GetClipboardSingleLine()
-	if(!puretext)
+	if(StrLen(puretext)==0)
 		return
 	
 	puretext := dev_EscapeHtmlChars(puretext)
