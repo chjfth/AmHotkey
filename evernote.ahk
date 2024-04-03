@@ -4010,7 +4010,8 @@ evernote_InlinePaste_InitMenu()
 	, "#FFE0B0,霞光橙"
 	, "#EE99DD,暗洋红"
 	, "#F49292,故障红" 
-	, "#E0C0F8,修补紫" ]
+	, "#E0C0F8,修补紫" 
+	, "#c0d0c0,实物灰" ]
 	
 	dev_MenuAddItem("evernote_menuInlinePaste", "Paste as plain text (or F1 outside)", "Evernote_PastePlainText")
 	
