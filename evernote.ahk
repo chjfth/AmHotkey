@@ -344,7 +344,7 @@ AppsKey & k:: Evernote_PopLinkShowMenu()
 
 Evp_WinTitle()
 {
-	return "Everpic v2023.01"
+	return "Everpic v2024.03"
 }
 
 evpdbg(msg)
@@ -798,10 +798,8 @@ Evp_LaunchBatchConvert(fpFromImage:="", scale_pct:=0)
 	fpbat := gc_evpBatchConvertExecpath
 	fpbatlog := fpbat ".log"
 	
-	; TODO: this batchcmd is NOT space-char-tolerable in its path.
-	;
-	stdout_to_log := "> " fpbatlog
-	batchcmd := Format("cmd /c ""{} {} {}"""
+	stdout_to_log := Format("1>""{}"" 2>&1", fpbatlog)
+	batchcmd := Format("cmd /c @""{}"" ""{}"" {}"
 		, fpbat
 		, fpimgScaled
 		, g_evpDbgCfg.showbgcmd ? "" : stdout_to_log)
