@@ -1,9 +1,7 @@
-; [2024-04-10] From: https://github.com/jleb/AHKsock
+﻿; [2024-04-10] Original: https://github.com/jleb/AHKsock
 
 #Include %A_LineFile%\..\AHKsock.ahk
 #Include %A_LineFile%\..\debugwin.ahk
-
-AmDbg_SetDesc("HttpServer", "Debug messages from AHKhttp.ahk .")
 
 class Uri
 {
@@ -34,9 +32,36 @@ class HttpServer
 {
 	static servers := {}
 
+	static _FeatureId := "AHKhttp"
+	;
+	dbg(newmsg, msglv){
+		static s_prepared := false
+		if(!s_prepared) {
+			AmDbg_SetDesc(HttpServer._FeatureId, "Debug messages from AHKhttp.ahk, the simple HTTP server .")
+			s_prepared := true
+		}
+		Amdbg_output(HttpServer._FeatureId
+				, Format("[{}] {}", HttpServer._FeatureId, newmsg)
+			, msglv)
+	}
+	dbg0(msg){
+		this.dbg(msg, 0)
+	}
+	dbg1(msg){
+		this.dbg(msg, 1)
+	}
+	dbg2(msg){
+		this.dbg(msg, 2)
+	}
+
 	LoadMimes(file) {
-		if (!FileExist(file))
+		
+		this.dbg2(Format("LoadMimes(""{}"")", file))
+		
+		if (!FileExist(file)) {
+			this.dbg1(Format("LoadMimes(""{}"") error. File not exist.", file))
 			return false
+		}
 
 		FileRead, data, % file
 		types := StrSplit(data, "`n")
@@ -48,6 +73,8 @@ class HttpServer
 			info := StrSplit(LTrim(SubStr(data, StrLen(type) + 1)), " ")
 
 			for i, ext in info {
+				ext := Trim(ext, " `t`r`n")
+				; AmDbg0(Format("Mimetype: {} -> {}", ext, type))
 				this.mimes[ext] := type
 			}
 		}
@@ -56,11 +83,13 @@ class HttpServer
 
 	GetMimeType(file) {
 		default := "text/plain"
-		if (!this.mimes)
+		if (!this.mimes) {
 			return default
+		}
 
 		SplitPath, file,,, ext
 		type := this.mimes[ext]
+		; AmDbg0("GetMimeType(): " ext " -> " type)
 		if (!type)
 			return default
 		return type
@@ -71,35 +100,77 @@ class HttpServer
 		length := f.RawRead(data, f.Length)
 		f.Close()
 
-		response.SetBody(data, length)
-		res.headers["Content-Type"] := this.GetMimeType(file)
-	}
-
-	SetPaths(paths) {
-AmDbg0("SetPaths()")
-		this.paths := paths
-	}
-
-	Handle(ByRef request) {
-		response := new HttpResponse()
-		if (!this.paths[request.path]) {
-AmDbg0(Format("Handle()... {}", request.path ))
-			func := this.paths["404"]
-			response.status := 404
-			if (func)
-				func.(request, response, this)
-			return response
-		} else {
-			this.paths[request.path].(request, response, this)
+		if(length<=0) {
+			this.dbg1("Read-file error: " file)
+			response.status := 400
+			return 0
 		}
+
+		this.dbg2("Serving file: " file)
+
+		response.SetBody(data, length)
+		response.headers["Content-Type"] := this.GetMimeType(file)
+		return length
+	}
+
+	SetPaths(paths_prefix) {
+		
+		this.paths := paths_prefix
+		
+		dbgpaths := ""
+		for key, val in paths_prefix
+		{
+			dbgpaths .= Format("  {} → {}()`n", key, val.name)
+		}
+		this.dbg2("SetPaths():`n" dbgpaths)
+	}
+
+	Handle(ByRef request) 
+	{
+		response := new HttpResponse()
+
+		; [2024-04-10] Chj: Do string prefix-match for `request.path`
+		; So a "/abc/" routine will process "/abc/some.file" request.
+		
+		keylist := dev_objkeys(this.paths)
+		paths_ordered := ahk_SortArrayReturnNew(keylist, "R") ; R: Reverse sort, so "/" goes last.
+			; Will get path from longest to shorted, like: /abcd/ , /abc/ , then /
+		for index, path_prefix in paths_ordered
+		{
+			; AmDbg0("chking path_prefix: " path_prefix)
+			if(StrIsStartsWith(request.path, path_prefix))
+			{
+				this.paths[path_prefix].(request, response, this)
+			
+				this.dbg2(Format("{} - {}", response.status, request.path))
+				
+				return response
+			}
+		}
+
+		this.dbg1(Format("404 - {}", request.path))
+
+		func := this.paths["404"]
+		response.status := 404
+		if (func)
+			func.(request, response, this)
+		
 		return response
 	}
 
 	Serve(port) {
+
 		this.port := port
 		HttpServer.servers[port] := this
 
-		return AHKsock_Listen(port, "HttpHandler")
+		err := AHKsock_Listen(port, "HttpHandler")
+		
+		if(err) {
+			this.dbg1(Format("Error starting HTTP server on port {}, WinError={}", port, ErrorLevel))
+		}
+		else {
+			this.dbg1(Format("Success starting HTTP server on port {}", port))
+		}
 	}
 }
 

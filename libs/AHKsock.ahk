@@ -1,4 +1,4 @@
-; [2024-04-10] From: https://github.com/jleb/AHKsock
+; [2024-04-10] Original: https://github.com/jleb/AHKsock
 
 /*! TheGood
 	AHKsock - A simple AHK implementation of Winsock.

@@ -2166,3 +2166,26 @@ dev_GetFullPathName(sPath)
 	Return sAbs
 }
 
+ahk_Sort(ByRef varname, option:="")
+{
+	Sort, varname, % option
+}
+
+ahk_SortArrayReturnNew(array_varname, option:="")
+{
+	s := dev_JoinStrings(array_varname, "`n")
+	
+	Sort, s, % option
+	
+	return StrSplit(s, "`n")
+}
+
+
+dev_objkeys(obj)
+{
+	keys := []
+	for key,val in obj
+		keys.Push(key)
+	return keys
+}
+
