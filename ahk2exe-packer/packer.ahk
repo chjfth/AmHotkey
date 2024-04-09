@@ -32,7 +32,7 @@ Do_Packer()
 
 	exeout_dirname := get_exeout_dirname(project)
 	exeout_dir := Format("{}\{}", project, exeout_dirname) ; relative to packer.ahk's dir
-	exeout_filepath := Format("{}\{}", exeout_dir, project ".exe")
+	exeout_filepath := dev_GetFullPathName( Format("{}\{}", exeout_dir, project ".exe") )
 
 	; Remove old output dir first.
 	if(FileExist(exeout_dir))
@@ -51,12 +51,27 @@ Do_Packer()
 	;    Amroot dir, with project-specific files of the same names.
 	;    The two files will be restored on exit.
 	
-	ahk2exe_cmd := Format("..\Compiler\Ahk2Exe.exe "
-		. "/in   ..\AmHotkey.ahk "
+	fpAhk2Exe := dev_GetFullPathName("..\Compiler\Ahk2Exe.exe")
+	fpBootBin := dev_GetFullPathName("..\Compiler\Unicode 32-bit.bin")
+	
+	if(not FileExist(fpAhk2Exe)) {
+		dev_MsgBoxError(Format("Missing required file:`n`n{}", fpAhk2Exe))
+		ExitApp 4
+	}
+	if(not FileExist(fpBootBin)) {
+		dev_MsgBoxError(Format("Missing required file:`n`n{}", fpBootBin))
+		ExitApp 4
+	}
+	
+	ahk2exe_cmd := Format("""{1}"" "
+		. "/in ..\AmHotkey.ahk "
 		. "/out  {2} "
-		. "/icon {1}\{1}.ico "
-		. "/base ""..\Compiler\Unicode 32-bit.bin"""
-		, project, exeout_filepath)
+		. "/icon {3}\{3}.ico "
+		. "/base ""{4}"""
+		, fpAhk2Exe
+		, exeout_filepath
+		, project
+		, fpBootBin)
 
 	dbg("Run cmd: " ahk2exe_cmd)
 
@@ -68,12 +83,12 @@ Do_Packer()
 
 	if(not FileExist(exeout_filepath))
 	{
-		dbgfail("Unexpect! ahk2exe reports success, but output file does not exist: " exeout_filepath)
+		dbgfail("Somthing Wrong! ahk2exe reports success, but output file does not exist:`n`n" exeout_filepath)
 	}
 
 	dbg("EXE generated successfully: " exeout_filepath)
 
-	dev_MsgBoxInfo("EXE generated successfully: `r`n`r`n" exeout_filepath)
+	dev_MsgBoxInfo("EXE generated successfully: `n`n" exeout_filepath)
 
 	ExitApp 0
 }

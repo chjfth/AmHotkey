@@ -2144,3 +2144,25 @@ dev_IsGreyPixel(rgb)
 	else
 		return false
 }
+
+dev_GetFullPathName(sPath) 
+{
+	; The input sPath does not have to actually exist on disk.
+	; GetFullPathName() can do pure string operation.
+	
+	n := DllCall("GetFullPathName"
+		, "Ptr", &sPath
+		, "UInt", 0
+		, "UInt", 0
+		, "Int", 0)
+	
+	VarSetCapacity(sAbs, A_IsUnicode ? n * 2 : n)
+	
+	DllCall("GetFullPathName"
+		, "Ptr", &sPath
+		, "UInt", n
+		, "Str", sAbs
+		, "Ptr*", 0)
+	Return sAbs
+}
+
