@@ -304,6 +304,7 @@ return ; End of auto-execute section.
 #Include %A_LineFile%\..\libs\Gdip_All.ahk
 #Include %A_LineFile%\..\libs\GenHtmlSnippet.ahk
 #Include %A_LineFile%\..\libs\ClipboardMonitor.ahk
+#Include %A_LineFile%\..\libs\chjfuncs.ahk
 
 Evernote_InitThisModule()
 {
