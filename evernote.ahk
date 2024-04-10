@@ -285,6 +285,9 @@ class Evnt
 	static _linktext_allow_chinese := false
 	
 	static pastecode_start_numline := 1
+	
+	static everpic_listen_port_base := 2024
+	static everpic_baseurl := "(not-set)" ; http://localhost:2024
 }
 
 
@@ -304,6 +307,7 @@ return ; End of auto-execute section.
 #Include %A_LineFile%\..\libs\Gdip_All.ahk
 #Include %A_LineFile%\..\libs\GenHtmlSnippet.ahk
 #Include %A_LineFile%\..\libs\ClipboardMonitor.ahk
+#Include %A_LineFile%\..\libs\AHKhttp.ahk
 #Include %A_LineFile%\..\libs\chjfuncs.ahk
 
 Evernote_InitThisModule()
@@ -327,8 +331,56 @@ evernote_InitHotkeys()
 	; App+c to callup Everpic UI, we make it global hotkey.
 	; This converts in-clipboard image to your preferred format(png/jpg) and put CF_HTML content into clipboard,
 	; so Ctrl+v pasting it into Evernote saves quite much space (Evernote defaultly gives you very big PNG-32).
-	fxhk_DefineComboHotkey("AppsKey", "c", "Evp_LaunchUI")
+	fxhk_DefineComboHotkey("AppsKey", "c", "Evp_LaunchUI", "*")
 
+}
+
+
+evp_HttpServing(ByRef request, ByRef response, ByRef server) {
+
+	parts := StrSplit(request.path, "/")
+	filenam := parts[parts.length()]
+
+	dir_everpic_save := A_AppData "\Everpic-save"
+	imgpath := Format("{}\{}", dir_everpic_save, filenam)
+;	Amdbg0("Want: " imgpath)
+
+	retlen := server.ServeFile(response, imgpath)
+	if(retlen>0)
+		response.status := 200
+}
+
+evp_LaunchHttpServer(listen_port)
+{
+	paths := {}
+	paths["/Everpic-save"] := Func("evp_HttpServing")
+
+	serv := new HttpServer()
+	serv.LoadMimes("libs\mime.types")
+	serv.SetPaths(paths)
+	
+	; Try 10 listen_port until success.
+	listen_port_end_ := listen_port + 10
+	
+	Loop
+	{
+		; Amdbg0("Trying... " listen_port)
+		err := serv.Serve(listen_port)
+		if(!err)
+			break
+		
+		listen_port++
+		Sleep, 10
+	}
+	
+	if(listen_port==listen_port_end_) {
+		dev_MsgBoxError(Format("In evernote.ahk: Error starting HTTP server, tried port range {} ~ {}, Last WinError={}"
+			, listen_port, listen_port_end_, ErrorLevel))
+		return false
+	}
+	
+	Evnt.everpic_baseurl := Format("http://localhost:{}", listen_port)
+	return true
 }
 
 ;
@@ -344,7 +396,7 @@ AppsKey & k:: Evernote_PopLinkShowMenu()
 
 Evp_WinTitle()
 {
-	return "Everpic v2024.03"
+	return "Everpic v2024.04"
 }
 
 evpdbg(msg)
@@ -353,8 +405,25 @@ evpdbg(msg)
 		Dbgwin_Output(msg)
 }
 
-Evp_LaunchUI()
+Evp_LaunchUI(http_server_baseurl:="")
 {
+	static s_inited := false
+	if(!s_inited)
+	{
+		if(http_server_baseurl=="*")
+		{
+			evp_LaunchHttpServer(Evnt.everpic_listen_port_base)
+		}
+		else if(http_server_baseurl!="")
+		{
+			; User may set-up his own HTTP server for this purpose. For example:
+			; "http://localhost:2017"
+			Evnt.everpic_baseurl := http_server_baseurl
+		}
+
+		s_inited := true ; Even if HTTP server start-up fail.
+	}
+
 	if(!dev_CreateDirIfNotExist(g_evpTempDir))
 	{
 		dev_MsgBoxError("Error. Cannot create folder: " g_evpTempDir)
@@ -1725,7 +1794,7 @@ Evp_BtnOK()
 
 	html_fmt = 
 (
-<div><img src="http://localhost:2017/Everpic-save/{1}" alt="max-width:{2}px" /><br>
+<div><img src="{8}/Everpic-save/{1}" alt="max-width:{2}px" /><br>
 <span style="font-size: 10px; color: rgb(144,144,144)">
 {4}, {2}*{3}, {5}, {6} ({7})
 </span></div>~
@@ -1736,7 +1805,8 @@ Evp_BtnOK()
 		, filelen_desc ; {4} "33 KB" etc
 		, imghint ; {5} 
 		, g_evpImageSig ; {6}
-		, dev_LocalTimeZoneMinutesStr()) ;{7} timezone 
+		, dev_LocalTimeZoneMinutesStr() ; {7} timezone 
+		, Evnt.everpic_baseurl)
 
 	; Save the used picture to a permanent directory, so that we can get it back 
 	; in case Evernote fail to actually store my picture in the note.

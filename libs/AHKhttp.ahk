@@ -171,6 +171,7 @@ class HttpServer
 		else {
 			this.dbg1(Format("Success starting HTTP server on port {}", port))
 		}
+		return err
 	}
 }
 
