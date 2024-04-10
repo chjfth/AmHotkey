@@ -291,10 +291,6 @@ class Evnt
 }
 
 
-QSA_DefineActivateSingle_Caps("m", "ENMainFrame", "Evernote")
-QSA_DefineActivateGroupFlex_Caps("n", "ENSingleNoteView", QSA_NO_WNDCLS_REGEX, "^(?!#ENS).+", "Evernote Single-note")
-	; Match any single note whose title does NOT starts with #ENS
-
 Evernote_InitThisModule()
 
 
@@ -325,6 +321,11 @@ Evernote_InitThisModule()
 
 evernote_InitHotkeys()
 {
+	QSA_DefineActivateSingle_Caps("m", "ENMainFrame", "Evernote")
+	QSA_DefineActivateGroupFlex_Caps("n", "ENSingleNoteView", QSA_NO_WNDCLS_REGEX, "^(?!#ENS).+", "Evernote Single-note")
+		; Match any single note whose title does NOT starts with #ENS
+
+
 	; App+t to callup EverTable UI
 	fxhk_DefineComboHotkeyCond("AppsKey", "t", "Evernote_IsMainFrameOrSingleActive", "EverTable_LaunchUI")
 	

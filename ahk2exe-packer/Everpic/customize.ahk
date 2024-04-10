@@ -68,7 +68,9 @@ Init_ExeEverpicEnv()
 		. "You can configure this hotkey in Everpic.ini ." 
 		, "Everpic Launch tip")
 	
-	Evp_LaunchUI()
+	is_http_serve := EverpicExe_ReadInikey("HttpServer")
+	
+	Evp_LaunchUI(is_http_serve ? "*" : "")
 	
 	GuiControl_SetValue("EVP", "gu_evpCkbKeepWindow", 1)
 	; -- this should be done after Evp_LaunchUI()
