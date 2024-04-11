@@ -32,7 +32,7 @@ Do_Packer()
 
 	exeout_dirname := get_exeout_dirname(project)
 	exeout_dir := Format("{}\{}", project, exeout_dirname) ; relative to packer.ahk's dir
-	exeout_filepath := dev_GetFullPathName( Format("{}\{}", exeout_dir, project ".exe") )
+	exeout_filepath := win32_GetFullPathName( Format("{}\{}", exeout_dir, project ".exe") )
 
 	; Remove old output dir first.
 	if(FileExist(exeout_dir))
@@ -51,8 +51,8 @@ Do_Packer()
 	;    Amroot dir, with project-specific files of the same names.
 	;    The two files will be restored on exit.
 	
-	fpAhk2Exe := dev_GetFullPathName("..\Compiler\Ahk2Exe.exe")
-	fpBootBin := dev_GetFullPathName("..\Compiler\Unicode 32-bit.bin")
+	fpAhk2Exe := win32_GetFullPathName("..\Compiler\Ahk2Exe.exe")
+	fpBootBin := win32_GetFullPathName("..\Compiler\Unicode 32-bit.bin")
 	
 	if(not FileExist(fpAhk2Exe)) {
 		dev_MsgBoxError(Format("Missing required file:`n`n{}", fpAhk2Exe))

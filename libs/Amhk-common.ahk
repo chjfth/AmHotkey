@@ -477,6 +477,25 @@ dev_Copy1File(srcfilepath, dstfilepath, is_overwrite:=false)
 		return true
 }
 
+dev_ReadFileLines(filepath, maxlines:=-1)
+{
+	; Read all lines from filepath, return a string array.
+	lines := []
+	count := 0
+	
+	Loop, read, % filepath
+	{
+		if(maxlines:=-1 or count<maxlines)
+		{
+			lines.Push(A_LoopReadLine)
+		}
+		count++
+	}
+	return Lines
+}
+
+
+
 dev_GetParentDir(path)
 {
 	dev_assert(InStr(path, "\")>0)
@@ -2145,7 +2164,7 @@ dev_IsGreyPixel(rgb)
 		return false
 }
 
-dev_GetFullPathName(sPath) 
+win32_GetFullPathName(sPath) 
 {
 	; The input sPath does not have to actually exist on disk.
 	; GetFullPathName() can do pure string operation.
@@ -2194,6 +2213,5 @@ dev_poke_byte(addr, byte_value)
 	; write a byte_value to own-process's address `addr`
 	NumPut(byte_value, addr+0, 0, "UChar")
 }
-
 
 
