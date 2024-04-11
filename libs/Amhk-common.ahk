@@ -2189,3 +2189,11 @@ dev_objkeys(obj)
 	return keys
 }
 
+dev_poke_byte(addr, byte_value)
+{
+	; write a byte_value to own-process's address `addr`
+	NumPut(byte_value, addr+0, 0, "UChar")
+}
+
+
+

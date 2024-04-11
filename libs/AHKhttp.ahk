@@ -158,12 +158,12 @@ class HttpServer
 		return response
 	}
 
-	Serve(port) {
+	Serve(port, is_listen_all:=false) {
 
 		this.port := port
 		HttpServer.servers[port] := this
 
-		err := AHKsock_Listen(port, "HttpHandler")
+		err := AHKsock_Listen(port, "HttpHandler", is_listen_all)
 		
 		if(err) {
 			this.dbg1(Format("Error starting HTTP server on port {}, WinError={}", port, ErrorLevel))

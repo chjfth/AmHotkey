@@ -417,11 +417,10 @@ across multiple RECEIVED events. This would also demonstrate your application's 
  Main functions  |
 			   */
 
-AHKsock_Listen(sPort, sFunction = False) {
+AHKsock_Listen(sPort, sFunction = False, is_listen_all:=false) {
 	
 	;Check if there is already a socket listening on this port
 	If (sktListen := AHKsock_Sockets("GetSocketFromNamePort", A_Space, sPort)) {
-		
 		;Check if we're stopping the listening
 		If Not sFunction {
 			AHKsock_Close(sktListen) ;Close the socket
@@ -470,7 +469,20 @@ AHKsock_Listen(sPort, sFunction = False) {
 	}
 	
 	;Setup the TCP listening socket
-	iResult := DllCall("Ws2_32\bind", "Ptr", sktListen, "Ptr", NumGet(aiResult+0, 16 + 2 * A_PtrSize), "Int", NumGet(aiResult+0, 16, "Ptr"))
+	p_sockaddr_in := NumGet(aiResult+0, 16 + 2 * A_PtrSize)
+	if(is_listen_all==false)
+	{
+		; [2024-04-11] Chj: User only wants to listen on 127.0.0.1, instead of on 0.0.0.0 .
+		ipv4_offset := 4 ; location of .sin_addr inside sockaddr_in
+		dev_poke_byte(p_sockaddr_in+ipv4_offset+0, 127)
+		dev_poke_byte(p_sockaddr_in+ipv4_offset+1, 0)
+		dev_poke_byte(p_sockaddr_in+ipv4_offset+2, 0)
+		dev_poke_byte(p_sockaddr_in+ipv4_offset+3, 1)
+	}
+	iResult := DllCall("Ws2_32\bind"
+		, "Ptr", sktListen
+		, "Ptr", p_sockaddr_in
+		, "Int", NumGet(aiResult+0, 16, "Ptr"))
 	If (iResult = -1) Or ErrorLevel { ;Check for SOCKET_ERROR
 		sErrorLevel := ErrorLevel ? ErrorLevel : AHKsock_LastError()
 		DllCall("Ws2_32\closesocket",  "Ptr", sktListen)
