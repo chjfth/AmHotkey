@@ -159,21 +159,6 @@ global g_SupsubSubText
 global g_evernotePopLinksFile := "EvernotePopupLinks.csv.txt"
 ; -- In customize.ahk, you can override this global var to point to your own file.
 
-class Evnt
-{
-	static MAX_AutoEvxlinks := 20
-	static arAutoEvxlinks := []
-	; -- each element is a dict, d.word="AmHotkey" d.link="https://www.evernote.com/shard/s21/nl/2425275/..."
-	
-	static hcmEvxlink := 0 ; HANDLE from Clipmon_CreateMonitor()
-	
-	static filenamEvxlinks := "EvernoteAutoEvxLinks.txt"
-	static _linktext_allow_chinese := false
-	
-	static pastecode_start_numline := 1
-}
-
-
 Evernote_InitThisModule()
 
 
@@ -188,6 +173,21 @@ return ; End of auto-execute section.
 #Include %A_LineFile%\..\libs\ClipboardMonitor.ahk
 #Include %A_LineFile%\..\libs\AHKhttp.ahk
 #Include %A_LineFile%\..\libs\chjfuncs.ahk
+
+class Evnt
+{
+	static MAX_AutoEvxlinks := 20
+	static arAutoEvxlinks := []
+	; -- each element is a dict, d.word="AmHotkey" d.link="https://www.evernote.com/shard/s21/nl/2425275/..."
+	
+	static hcmEvxlink := 0 ; HANDLE from Clipmon_CreateMonitor()
+	
+	static filenamEvxlinks := "EvernoteAutoEvxLinks.txt"
+	static _linktext_allow_chinese := false
+	
+	static pastecode_start_numline := 1
+}
+
 
 Evernote_InitThisModule()
 {

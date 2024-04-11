@@ -124,6 +124,9 @@ Everpic_InitHotkeys()
 return ; End of auto-execute section.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+#Include %A_LineFile%\..\evernote.ahk
+
+
 class Everpic
 {
 	static listen_port_base := 2024
