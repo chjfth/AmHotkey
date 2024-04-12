@@ -8,15 +8,47 @@ class AmhkGui ; To store global vars
 }
 
 
-guigo(label_or_funcname)
+gui_g(label_or_funcname)
 {
 	dev_assert(strlen(label_or_funcname)>=2)
 	return "g" label_or_funcname
 }
 
+gui_v(varname)
+{
+	dev_assert(strlen(label_or_funcname)>=2)
+	return "v" varname
+}
+
+
+Gui_IsValidVar(varname)
+{
+	
+	if(StrIsStartsWith(varname, "gu_"))
+		return true
+	else
+		return false
+}
+
+Assert_UicVarname(CtrlVarname)
+{
+	if(StrLen(CtrlVarname)==0)
+	{
+		dev_assert(0, "You pass in an empty GUI-control varname. It must be in string form ""gu_XXX"" .")
+	}
+
+	dev_assert(Gui_IsValidVar(CtrlVarname)
+		, Format("'{}' is not valid GUI-control varname, it must starts with ""gu_"" .", CtrlVarname))
+}
+
 Gui_New(GuiName)
 {
 	Gui, % (GuiName ? GuiName ":" : "") . "New"
+}
+
+Gui_Default(GuiName)
+{
+	Gui, % (GuiName ? GuiName ":" : "") . "Default"
 }
 
 Gui_Hide(GuiName)
@@ -94,7 +126,7 @@ GuiControl_ChangeOpt(GuiName, CtrlVarname, opt, value:="")
 	; Example:
 	;	GuiControl_ChangeOpt("EVP", gu_xxx, "+AltSubmit")
 	
-	dev_assert(Gui_IsValidVar(CtrlVarname))
+	Assert_UicVarname(CtrlVarname)
 	cmd := (GuiName ? GuiName ":" : "") . opt
 	GuiControl, % cmd, % CtrlVarname, % value
 }
@@ -111,7 +143,7 @@ Gui_Add_TxtLabel(GuiName, CtrlVarname:="", width:=-1, format:="", text:="")
 	; +0x8000 (SS_PATHELLIPSIS)
 	; +0xC000 (SS_WORDELLIPSIS)
 
-	dev_assert(Gui_IsValidVar(CtrlVarname))
+	Assert_UicVarname(CtrlVarname)
 	cmdadd := GuiName ? (GuiName ":Add") : "Add"
 	vCtrlVarname := StrLen(CtrlVarname)>0 ? "v" CtrlVarname : ""
 	wWidth := width>0 ? "w" width : "" ; so width==-1 will make it auto-width by text length
@@ -131,7 +163,7 @@ GuiControl_SetColor(GuiName, CtrlVarname, fgcolor:="", bgcolor:="")
 	;
 	; Note: bgcolor is only effective on a small number of controls, such as Progress-bar.
 	
-	dev_assert(Gui_IsValidVar(CtrlVarname))
+	Assert_UicVarname(CtrlVarname)
 	optfg := fgcolor ? ("+c" fgcolor) : ""
 	optbg := bgcolor ? ("+Background" bgcolor) : ""
 	
@@ -143,7 +175,7 @@ GuiControl_SetColor(GuiName, CtrlVarname, fgcolor:="", bgcolor:="")
 
 Gui_Add_Button(GuiName, CtrlVarname, width, format, btntext)
 {
-	dev_assert(Gui_IsValidVar(CtrlVarname))
+	Assert_UicVarname(CtrlVarname)
 	cmdadd := GuiName ? (GuiName ":Add") : "Add"
 	vCtrlVarname := StrLen(CtrlVarname)>0 ? "v" CtrlVarname : ""
 	wWidth := width>0 ? "w" width : "" ; so width==-1 will make it auto-width by text length
@@ -153,7 +185,7 @@ Gui_Add_Button(GuiName, CtrlVarname, width, format, btntext)
 
 Gui_Add_Picture(GuiName, CtrlVarname, width, format, imgfilepath:="")
 {
-	dev_assert(Gui_IsValidVar(CtrlVarname))
+	Assert_UicVarname(CtrlVarname)
 	cmdadd := GuiName ? (GuiName ":Add") : "Add"
 	vCtrlVarname := StrLen(CtrlVarname)>0 ? "v" CtrlVarname : ""
 	wWidth := width>0 ? "w" width : "" ; so width==-1 will make it auto-width by text length
@@ -171,7 +203,7 @@ Gui_Add_Checkbox(GuiName, CtrlVarname, width, format, btntext)
 {
 	; format: "Checked"
 
-	dev_assert(Gui_IsValidVar(CtrlVarname))
+	Assert_UicVarname(CtrlVarname)
 	cmdadd := GuiName ? (GuiName ":Add") : "Add"
 	vCtrlVarname := StrLen(CtrlVarname)>0 ? "v" CtrlVarname : ""
 	wWidth := width>0 ? "w" width : "" ; so width==-1 will make it auto-width by text length
@@ -182,7 +214,7 @@ Gui_Add_Checkbox(GuiName, CtrlVarname, width, format, btntext)
 Gui_Add_Radiobox(GuiName, CtrlVarname, width, format, btntext)
 {
 	; format: "Group Checked"
-	dev_assert(Gui_IsValidVar(CtrlVarname))
+	Assert_UicVarname(CtrlVarname)
 	cmdadd := GuiName ? (GuiName ":Add") : "Add"
 	vCtrlVarname := StrLen(CtrlVarname)>0 ? "v" CtrlVarname : ""
 	wWidth := width>0 ? "w" width : "" ; so width==-1 will make it auto-width by text length
@@ -197,7 +229,7 @@ Gui_Add_Editbox(GuiName, CtrlVarname, width, format, init_text:="")
 	; Readonly
 	; -E0x200 (turn off WS_EX_CLIENTEDGE, remove editbox border thin line)
 
-	dev_assert(Gui_IsValidVar(CtrlVarname))
+	Assert_UicVarname(CtrlVarname)
 	cmdadd := GuiName ? (GuiName ":Add") : "Add"
 	vCtrlVarname := StrLen(CtrlVarname)>0 ? "v" CtrlVarname : ""
 	wWidth := width>0 ? "w" width : "" ; so width==-1 will make it auto-width by text length
@@ -209,7 +241,7 @@ Gui_Add_Listbox(GuiName, CtrlVarname, width, format, itemlist_pipes:="")
 {
 	; format: AltSumbit r12
 
-	dev_assert(Gui_IsValidVar(CtrlVarname))
+	Assert_UicVarname(CtrlVarname)
 	cmdadd := GuiName ? (GuiName ":Add") : "Add"
 	vCtrlVarname := StrLen(CtrlVarname)>0 ? "v" CtrlVarname : ""
 	wWidth := width>0 ? "w" width : "" ; so width==-1 will make it auto-width by text length
@@ -221,7 +253,7 @@ Gui_Add_Combobox(GuiName, CtrlVarname, width, format, itemlist_pipes:="")
 {
 	; format: AltSumbit
 
-	dev_assert(Gui_IsValidVar(CtrlVarname))
+	Assert_UicVarname(CtrlVarname)
 	cmdadd := GuiName ? (GuiName ":Add") : "Add"
 	vCtrlVarname := StrLen(CtrlVarname)>0 ? "v" CtrlVarname : ""
 	wWidth := width>0 ? "w" width : "" ; so width==-1 will make it auto-width by text length
@@ -229,9 +261,20 @@ Gui_Add_Combobox(GuiName, CtrlVarname, width, format, itemlist_pipes:="")
 	Gui, % cmdadd, ComboBox, % Format("{} {} {}", vCtrlVarname, wWidth, format), % itemlist_pipes
 }
 
+Gui_Add_Listview(GuiName, CtrlVarname, width, format, columnlist_pipes)
+{
+	Assert_UicVarname(CtrlVarname)
+	cmdadd := GuiName ? (GuiName ":Add") : "Add"
+	vCtrlVarname := StrLen(CtrlVarname)>0 ? "v" CtrlVarname : ""
+	wWidth := width>0 ? "w" width : "" ; so width==-1 will make it auto-width by text length
+	
+	Gui, % cmdadd, ListView, % Format("{} {} {}", vCtrlVarname, wWidth, format), % columnlist_pipes
+}
+
+
 GuiControl_Enable(GuiName, CtrlVarname, is_enable)
 {
-	dev_assert(Gui_IsValidVar(CtrlVarname))
+	Assert_UicVarname(CtrlVarname)
 	cmd := is_enable ? "Enable" : "Disable"
 	if(GuiName)
 		cmd := Format("{}:{}", GuiName, cmd)
@@ -241,7 +284,7 @@ GuiControl_Enable(GuiName, CtrlVarname, is_enable)
 
 GuiControl_ButtonCheck(GuiName, CtrlVarname, is_check)
 {
-	dev_assert(Gui_IsValidVar(CtrlVarname))
+	Assert_UicVarname(CtrlVarname)
 	cmd := GuiName ? (GuiName ":") : ""
 
 	GuiControl, % cmd, % CtrlVarname, % is_check ? "1" : "0"
@@ -249,7 +292,7 @@ GuiControl_ButtonCheck(GuiName, CtrlVarname, is_check)
 
 GuiControl_Show(GuiName, CtrlVarname, is_show)
 {
-	dev_assert(Gui_IsValidVar(CtrlVarname))
+	Assert_UicVarname(CtrlVarname)
 	cmd := is_show ? "Show" : "Hide"
 	if(GuiName)
 		cmd := Format("{}:{}", GuiName, cmd)
@@ -259,7 +302,7 @@ GuiControl_Show(GuiName, CtrlVarname, is_show)
 
 GuiControl_GetHwnd(GuiName, CtrlVarname)
 {
-	dev_assert(Gui_IsValidVar(CtrlVarname))
+	Assert_UicVarname(CtrlVarname)
 	cmd := "Hwnd"
 	if(GuiName)
 		cmd := Format("{}:{}", GuiName, cmd)
@@ -270,7 +313,7 @@ GuiControl_GetHwnd(GuiName, CtrlVarname)
 
 GuiControl_GetText(GuiName, CtrlVarname)
 {
-	dev_assert(Gui_IsValidVar(CtrlVarname))
+	Assert_UicVarname(CtrlVarname)
 	cmd := GuiName ? GuiName ":" : ""
 	GuiControlGet, outvar, % cmd, % CtrlVarname
 	return outvar
@@ -290,7 +333,7 @@ GuiControl_SetText(GuiName, CtrlVarname, text)
 	;
 	; For Combobox, we should use Combobox_SetText()
 
-	dev_assert(Gui_IsValidVar(CtrlVarname))
+	Assert_UicVarname(CtrlVarname)
 	cmd := GuiName ? GuiName ":" : ""
 	GuiControl, % cmd, % CtrlVarname, % text
 }
@@ -305,7 +348,7 @@ GuiControl_SetValue(GuiName, CtrlVarname, text)
 
 Combobox_SetText(GuiName, CtrlVarname, text)
 {
-	dev_assert(Gui_IsValidVar(CtrlVarname))
+	Assert_UicVarname(CtrlVarname)
 	cmd := (GuiName ? GuiName ":" : "") . "Text"
 	GuiControl, % cmd, % CtrlVarname, % text
 }
@@ -313,7 +356,7 @@ Combobox_SetText(GuiName, CtrlVarname, text)
 
 GuiControl_GetPos(GuiName, CtrlVarname)
 {
-	dev_assert(Gui_IsValidVar(CtrlVarname))
+	Assert_UicVarname(CtrlVarname)
 	cmd := "Pos"
 	if(GuiName)
 		cmd := Format("{}:{}", GuiName, cmd)
@@ -327,7 +370,7 @@ GuiControl_SetPos(GuiName, CtrlVarname, x:=-1, y:=-1, w:=-1, h:=-1, force_redraw
 {
 	; -1 : Don't change current value
 	
-	dev_assert(Gui_IsValidVar(CtrlVarname))
+	Assert_UicVarname(CtrlVarname)
 	cmd := force_redraw ? "MoveDraw" : "Move"
 	if(GuiName)
 		cmd := Format("{}:{}", GuiName, cmd)
@@ -365,7 +408,7 @@ GuiControl_ComboboxGetText(GuiName, CtrlVarname)
 
 GuiControl_SetFocus(GuiName, CtrlVarname)
 {
-	dev_assert(Gui_IsValidVar(CtrlVarname))
+	Assert_UicVarname(CtrlVarname)
 	cmd := "Focus"
 	if(GuiName)
 		cmd := Format("{}:{}", GuiName, cmd)
@@ -375,7 +418,7 @@ GuiControl_SetFocus(GuiName, CtrlVarname)
 
 GuiControl_ChooseN(GuiName, CtrlVarname, item_index)
 {
-	dev_assert(Gui_IsValidVar(CtrlVarname))
+	Assert_UicVarname(CtrlVarname)
 	cmd := (GuiName ? GuiName ":" : "") . "Choose"
 	
 	GuiControl, % cmd, % CtrlVarname, % item_index
@@ -536,4 +579,27 @@ dev_Combobox_Clear(hwndCombobox)
 	dev_SendMessage(hwndCombobox, CB_RESETCONTENT, 0, 0)
 }
 
+
+dev_LV_UnveilColumns(GuiName:="")
+{
+	if(GuiName)
+		Gui_Default(GuiName)
+	
+	LV_ModifyCol()
+}
+
+dev_LV_GetNext(GuiName, StartRow:=0, RowType:="")
+{
+	Gui_Default(GuiName)
+
+	return LV_GetNext(Start, RowType)
+}
+
+dev_LV_GetText(GuiName, iRow, iCol:=1)
+{
+	Gui_Default(GuiName)
+	
+	LV_GetText(ret, iRow, iCol)
+	return ret
+}
 

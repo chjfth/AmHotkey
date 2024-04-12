@@ -483,6 +483,9 @@ dev_ReadFileLines(filepath, maxlines:=-1)
 	lines := []
 	count := 0
 	
+	if(not dev_IsDiskFile(filepath))
+		return ""
+	
 	Loop, read, % filepath
 	{
 		if(maxlines:=-1 or count<maxlines)
@@ -491,7 +494,9 @@ dev_ReadFileLines(filepath, maxlines:=-1)
 		}
 		count++
 	}
-	return Lines
+	
+	; If the file is 0 byte, lines will be an empty array, which is still a true condition.
+	return lines
 }
 
 
@@ -704,34 +709,6 @@ dev_StripSuffixChars(str, sfxchars, is_case_sensitive:=false)
 			break
 	}
 	return str
-}
-
-Gui_IsValidVar(varname)
-{
-	; [2022-12-16] This is a fake function that always succeeds.
-	; Currently, no solution for this semantic yet.
-
-	; Wrong comment >>>
-			; If varname is not defined, return false.
-			; User note: When passed in, your varname should be surround by double-quotes.
-			; Example:
-			;	Gui_IsValidVar("g_count")    ; may get true
-			;	Gui_IsValidVar("NoSuchVar")  ; will get false
-			;
-			; In order for a `global` var to pass this test, please initialize 
-			; your global var with a explicit value, like this:
-			; 	global g_count := 0
-			; 	global g_errmsg := ""
-	; Wrong comment <<<
-
-	if(%varname%)
-		return true
-	else if(%varname%==0)
-		return true
-	else if(%varname%=="") ; [2022-12-16] This will be true even if varname is not defined.
-		return true
-	else
-		return false
 }
 
 dev_EscapeHtmlChars(text)
@@ -2212,6 +2189,11 @@ dev_poke_byte(addr, byte_value)
 {
 	; write a byte_value to own-process's address `addr`
 	NumPut(byte_value, addr+0, 0, "UChar")
+}
+
+dev_VarGetCapacity(byref varname)
+{
+	return VarSetCapacity(varname)
 }
 
 

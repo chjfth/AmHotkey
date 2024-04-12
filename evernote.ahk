@@ -214,16 +214,6 @@ evernote_InitHotkeys()
 }
 
 
-;
-; [2021-12-24] Load EvernotePopupLinks.csv.txt and popup a live menu for user to select a shortcut link,
-; then send the corresponding html snippet to clipboard so to paste into Evernote, the final result is: 
-; we get a real Evernote link in our Evernote clip(n.). I find myself need to frequently insert topic-link 
-; like [WinGUI] [AutoHotkey] [MSBuild] etc in my clip, and this becomes a great time saver.
-;
-#If Evernote_IsMainFrameOrSingleActive()
-AppsKey & k:: Evernote_PopLinkShowMenu()
-#If
-
 
 ; ========================= EverTable(Evtbl) code starts =========================
 
@@ -2096,7 +2086,7 @@ Evernote_PopLinkShowMenu_2x()
 	; until the popup-menu is dismissed.
 	
 	; [PURPOSE] On called first-time, full menu is shown.
-	; If called a second-time in one second, Auto-pickup menu is displaye instead.
+	; If called a second-time in one second, Auto-pickup menu is displayed instead.
 
 	static s_prevmsec := 0
 	

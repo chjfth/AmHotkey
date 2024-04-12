@@ -284,7 +284,7 @@ Evp_ShowGui()
 	Evp_TimerOn()
 }
 
-Evp_CleanupUI()
+Evp_CleanupUI() ; [2024-04-12] Better named (traditional) Evp_HideGui(), so it pairs with Evp_ShowGui()
 {
 	Evp_TimerOff()
 	
