@@ -342,7 +342,14 @@ Evp_CreateGui()
 	;
 	Gui_Add_Listbox( "EVP", "gu_evpLbxImages",   col1w, Format("xs r12 AltSubmit g{}", "Evp_RefreshImgpane"))
 	Gui_Add_Editbox( "EVP", "gu_evpEdrLoadStat",  col1w, "Readonly -E0x200", "")
-	Gui_Add_Button(  "EVP", "gu_evpBtnOK",       col1w, "default g" . "Evp_BtnOK", "&Use This (or press Enter)")
+
+	; FootLine (The output filepath/[Copy] as in Explorer button)
+	Gui_Add_Editbox( "EVP", "gu_evpEdrFootline", fullwidth-gc_evpIconBtnWidth, "xm Readonly", "...")
+	Gui_Add_Button(  "EVP", "gu_evpBtnCopyFile", gc_evpIconBtnWidth, "x+2 g" . "Evp_CopyConvertedImageFileToClipboard", "")
+	GuiButton_SetIconFromDll("EVP", "gu_evpBtnCopyFile", "shell32.dll", 243, 16, true) ; #243 is the [Copy] icon, 16 is icon size
+	
+	; OK button
+	Gui_Add_Button(  "EVP", "gu_evpBtnOK", col1w, "default xm " gui_g("Evp_BtnOK"), "&Use This (or press Enter)")
 	;
 	; Two checkboxes beside BtnOK
 	Gui_Add_Checkbox("EVP", "gu_evpCkbAutoPaste", -1, "x+5 yp+5 Checked", "Auto &paste") ; Auto paste
@@ -359,11 +366,6 @@ Evp_CreateGui()
 		, "&Keep transparent pixels when converting png file.")
 	;
 	Gui_Add_Picture( "EVP", "gu_evpPicPreview",     col2w, "h" g_evpImgpaneHeight) 
-	
-	; FootLine
-	Gui_Add_Editbox( "EVP", "gu_evpEdrFootline", fullwidth-gc_evpIconBtnWidth, "xm Readonly", "Footline")
-	Gui_Add_Button(  "EVP", "gu_evpBtnCopyFile", gc_evpIconBtnWidth, "x+2 g" . "Evp_CopyConvertedImageFileToClipboard", "")
-	GuiButton_SetIconFromDll("EVP", "gu_evpBtnCopyFile", "shell32.dll", 243, 16, true) ; #243 is the [Copy] icon, 16 is icon size
 	
 	; The above GUI control layout will later be updated by Evp_SyncGuiByBaseImage()
 	
