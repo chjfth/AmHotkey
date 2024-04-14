@@ -20,7 +20,7 @@ dev_false()
 	return false
 }
 
-dev_assert(success_condition, msg_on_error:="")
+dev_assert(success_condition, msg_on_error:="", is_attach_code:=false)
 {
 	; msg_on_error is the text message you want to say to user, in case success_condition is not met.
 
@@ -35,7 +35,7 @@ dev_assert(success_condition, msg_on_error:="")
 			. "Stacktrace below: `r`n`r`n"
 	}
 	
-	fullmsg .= dev_getCallStack()
+	fullmsg .= dev_getCallStack(is_attach_code)
 	
 	dev_MsgBoxError(fullmsg, "AHK Assertion Fail!")
 }
@@ -56,7 +56,10 @@ dev_getCallStack(deepness = 20, is_print_code = true)
 		lvl := -1 - deepness + A_Index
 		oEx := Exception("", lvl)
 		oExPrev := Exception("", lvl - 1)
-		FileReadLine, line, % oEx.file, % oEx.line
+		
+		if(is_print_code)
+			FileReadLine, linetext, % oEx.file, % oEx.line
+		
 		if(oEx.What = lvl)
 			continue
 			
@@ -64,7 +67,7 @@ dev_getCallStack(deepness = 20, is_print_code = true)
 			lv_first_print := A_Index
 		
 		stack_prev := stack
-		stack .= (stack ? "`n" : "") . Format("[#{1}] ", A_Index-lv_first_print+1) . "File '" oEx.file "', Line " oEx.line (oExPrev.What = lvl-1 ? "" : ", in " oExPrev.What "()") (is_print_code ? ":`n" line : "") "`n"
+		stack .= (stack ? "`n" : "") . Format("[#{1}] ", A_Index-lv_first_print+1) . "File '" oEx.file "', Line " oEx.line (oExPrev.What = lvl-1 ? "" : ", in " oExPrev.What "()") (is_print_code ? ":`n" linetext : "") "`n"
 	}
 	
 	return stack_prev
@@ -280,7 +283,7 @@ dev_OnMessage_Register(wm_xxx, str_funcname)
 	s := str_funcname
 	dev_assert(s) ; If user pass in function name without double-quotes, this will fail
 	
-	OnMessage(wm_xxx, Func(str_funcname))
+	OnMessage(wm_xxx, Func(str_funcname)) ; todo: better use dev_make_fnobj()
 }
 
 dev_OnMessage_Unregister(wm_xxx, str_funcname)
@@ -393,13 +396,33 @@ dev_WriteFile(filepath, text, is_append)
 {
 	; memo: Use "`n" in text to represent a new line.
 	;
+	; [2024-04-14] Comment on Autohotkey 1.1.32,
+	; FileAppend can throw exception when writing file fail, e.g.,
+	; when filepath is a directory.
+	; But AHK engine has wacky behavior:
+	; - If User has set up try/catch outward, user's code will catch that exception.
+	; - If User has not set up try/catch, then the exception is silently discarded.
+	; So, I need to rethrow exception here. With this rethrow code, even if user 
+	; has not set up try/catch, AHK engine will still pop up an error dialogbox
+	; telling user an exception has occurred -- that's the behavior I want.
+	
 	if(not filepath)
 		return
 	
-	if(not is_append)
-		FileDelete, %filepath%
-	
-	FileAppend, %text%, %filepath%
+	try {
+		if(not is_append)
+			FileDelete, %filepath%
+
+		FileAppend, %text%, %filepath%
+	}
+	catch e {
+		emsg := Format("Error {} file: ""{}"""
+			, e.What=="FileDelete" ? "deleting" : "writing"
+			, filepath)
+		e2 := Exception(emsg)
+		e2.Line := e.Line
+		throw e2
+	}
 }
 
 dev_WriteLogFile(filepath, text, is_append:=true)

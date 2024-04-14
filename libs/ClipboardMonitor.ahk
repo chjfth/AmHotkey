@@ -76,6 +76,9 @@ class CClipboardMonitor
 			; AHK 1.1.32 buggy! If user exits current Autohotkey.exe process, or,
 			; user executes a Reload command, CClipboardMonitor._FeatureId becomes empty
 			; when this __Delete() is executed. So, if it is empty, do not call .dbg() .
+			;
+			; [2024-04-13] To avoid such bug, my later AHK modules will use a global var
+			; for this _FeatureId. Example: Everlink.ahk .
 		
 			AmDbg_output(CClipboardMonitor._FeatureId, msg, lv)
 		}
@@ -288,8 +291,9 @@ Clipmon_CreateMonitor(fni, client_name:="default-client-name")
 	if(!fnobj)
 		return
 
-	if(!g_clipmon)
-		new CClipboardMonitor()
+	if(!g_clipmon) {
+		new CClipboardMonitor() ; will set `g_clipmon` inside.
+	}
 	
 	dev_assert(g_clipmon) ; should have been assigned inside CClipboardMonitor's __New()
 	
