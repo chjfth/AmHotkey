@@ -8,6 +8,9 @@ Everlink_LaunchUI()
 
 ;;;;;;;; Everlink global vars ;;;;;;;;;;
 
+global g_everlink ; The single object responsible for the Everlink GUI
+global Everlink_Id := "Everlink"
+
 global g_HwndEVLGui
 
 global gu_evlHeadLabel
@@ -23,20 +26,28 @@ return ; End of auto-execute section.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 #Include %A_LineFile%\..\evernote.ahk
+#Include %A_LineFile%\..\libs\win32-const.ahk
+#Include %A_LineFile%\..\libs\ClipboardMonitor.ahk
 
 
 class Everlink
 {
-	static isGuiVisible := false
+	; static vars as constant
+	static linktag_allow_unicode := false
+	static linktag_maxlen := 20
+
+	isGuiVisible := false
 	
-	static csvfullpath := ""
-	static dict := {} 
-	; -- key is "URL|tag", value is description string.
+	csvfullpath := ""
+	dict := {} 
+	; -- key is "tag|URL", value is description string.
 	
-	static hwndToPaste := ""
+	hwndToPaste := ""
+	
+	hclipmon := 0 ; HANDLE from Clipmon_CreateMonitor()
 	
 	dbg(msg, lv) {
-		AmDbg_output("Everlink", msg, lv)
+		AmDbg_output(Everlink_Id, msg, lv)
 	}
 	dbg0(msg) {
 		this.dbg(msg, 0)
@@ -47,9 +58,283 @@ class Everlink
 	dbg2(msg) {
 		this.dbg(msg, 2)
 	}
-}
+	ethrow(msg) {
+		this.dbg1(msg)
+		throw Exception(msg, -1)
+	}
 
+	__New(csvfilepath)
+	{
+		this.dbg2("Everlink.__New(), singleton creating...")
+		
+		if(this.LoadData(csvfilepath))
+			this.dbg2(Format("[OK] Everlink loads datafile: ""{}""", csvfilepath))
+		else
+			this.ethrow(Format("Everlink fails to load datafile: ""{}""", csvfilepath))
+		
+		this.hclipmon := Clipmon_CreateMonitor("Everlink_Clipmon", Everlink_Id)
+		if(this.hclipmon)
+			this.dbg2("[OK] Everlink registers clipboard monitor.")
+		else
+			this.ethrow(Format("Everlink fails to register clipboard monitor."))
+	}
+	
+	__Delete()
+	{
+		this.dbg2("Everlink.__Delete(), singleton destroying.")
+	}
+	
+	make_evkey(tag, url) ; static
+	{
+		return tag "|" url
+	}
+	
+	linkurl_guid_tail(url) ; static
+	{
+		return SubStr(url, -35)
+	}
+	
+	LoadData(csvpath)
+	{
+		csvfullpath := win32_GetFullPathName(csvpath)
+		this.csvfullpath := csvfullpath
+		
+		if(not dev_IsDiskFile(csvfullpath))
+		{
+			; Create that empty file
+			this.dbg1(Format("Creating empty file: ""{}""", csvfullpath))
+			dev_WriteFile(csvfullpath, "", true)
+		}
+		
+		this.dbg1(Format("Everlink Loading {}", csvfullpath))
+		
+		lines := dev_ReadFileLines(csvfullpath)
+		if(not lines) 
+		{
+			; Probably a bad/invalid filepath
+			return false
+		}
+		
+		for index,linetext in lines
+		{
+			fields := StrSplit(linetext, ",", " `t", 3)
+			url := fields[1]
+			tag := fields[2]
+			desc := fields[3]
+			
+			if(url=="")
+				continue ; an empty line
+			
+			if(tag=="") {
+				this.dbg1(Format("Missing tag at line #{} of {}", index, csvpath))
+				continue
+			}
+			
+			evkey := Everlink.make_evkey(tag, url)
+			this.dict[evkey] := desc
+			
+			this.dbg2(Format("Everlink [""{}""]", evkey))
+		}
+		
+		return true
+	}
+	
+	CreateGui()
+	{
+		GuiName := "EVL" ; EVL: Short for Everlink
+		
+		Gui_New(GuiName)
+		Gui_AssociateHwndVarname(GuiName, "g_HwndEVLGui")
+		
+		fullwidth := 500
+		Gui_Add_TxtLabel(GuiName, "gu_evlHeadLabel", fullwidth, "", "Search for link: (?/?)")
+		Gui_Add_Editbox( GuiName, "gu_evlSearchWord", fullwidth, gui_g("Evl_OnEditChange"), "")
 
+		Gui_Add_Listview(GuiName, "gu_evlListview", fullwidth
+			, "r12 -Multi"
+			, "Tag|Description|URL")
+		Gui_Add_Button(  GuiName, "gu_evlBtnOK", 80, gui_g("Evl_OnBtnOK") " default", "&Use This")
+
+		this.LoadUIFresh("", true)
+	}
+	
+	ShowGui()
+	{
+		if(this.isGuiVisible)
+			return
+		
+		if(!g_HwndEVLGui) {
+			this.CreateGui()
+		}
+		
+		Gui_Show("EVL", "AutoSize", "Everlink")
+		
+		dev_OnMessageRegister(win32c.WM_KEYDOWN, "Evl_WM_KEYDOWN")
+		
+		this.isGuiVisible := true
+	}
+	
+	HideGui()
+	{
+		Gui_Hide("EVL")
+
+		dev_OnMessageUnRegister(win32c.WM_KEYDOWN, "Evl_WM_KEYDOWN")
+
+		g_everlink.isGuiVisible := false
+	}
+
+	LoadUIFresh_by_editbox()
+	{
+		text := GuiControl_GetText("EVL", "gu_evlSearchWord")
+		this.LoadUIFresh(text)
+	}
+
+	LoadUIFresh(ysift:="", is_adjust_column_width:=false)
+	{
+		; Only those entries containing ysift substring is populated into Listview
+		GuiName := "EVL"
+
+		Gui_Default(GuiName)
+		LV_Delete()
+		
+		total := 0
+		matches := 0
+		for key, val in this.dict
+		{
+			total++
+			
+			fields := StrSplit(key, "|")
+			tag := fields[1]
+			url := fields[2]
+			desc := val
+			
+			if(InStr(tag, ysift) or InStr(desc, ysift))
+			{
+				LV_Add("", tag, desc, url)
+				matches++
+			}
+		}
+		
+		GuiControl_SetText(GuiName, "gu_evlHeadLabel", Format("&Search for link: ({}/{})", matches, total))
+		
+		if(is_adjust_column_width or matches>0)
+			dev_LV_UnveilColumns(GuiName)
+	}
+
+	OnBtnOK()
+	{
+		GuiName := "EVL"
+	;	Gui_Default(GuiName)
+		
+		rowsel := dev_LV_GetNext(GuiName)
+		
+		if(rowsel>0)
+		{
+			tag := dev_LV_GetText(GuiName, rowsel, 1)
+			url := dev_LV_GetText(GuiName, rowsel, 3)
+;			AmDbg0(tag " | " url)
+		}
+		else
+		{
+			dev_MsgBoxInfo("No link is selected yet. Nothing to do.")
+			return
+		}
+		
+		html := Format("<span>[<a href='{1}'>{2}</a>]&nbsp;</span>", url, tag)
+		dev_ClipboardSetHTML(html, true, this.hwndToPaste)
+		
+		this.HideUI()
+	}
+
+	OnEditChange()
+	{
+		if(A_GuiControl=="gu_evlSearchWord")
+		{
+			this.LoadUIFresh_by_editbox()
+		}
+		
+	}
+	
+	On_WM_KEYDOWN(wParam, lParam, msg, hwnd)
+	{
+		; {"vk":wParam, "fDown":true, "cRepeat":LOWORD(0xFFFF), "flags":HIWORD(lParam)}
+		mx := msgx_WM_KEYDOWN(wParam, lParam)
+		
+		if(A_GuiControl=="gu_evlSearchWord")
+		{
+			if(mx.vk==win32c.VK_DOWN)
+			{
+				GuiControl_SetFocus("EVL", "gu_evlListview")
+			}
+		}
+	}
+
+	ClipmonCallback()
+	{
+		; This acts as a Clipmon callback.
+		; It checks if [Clipboard has CF_HTML content and has a piece of short text with 
+		; Evernote internal-link(call it evlink) in it. If it has, then pick up
+		; the evlink and add it to .dict .
+
+		cfhtml := WinClip.GetHtml("UTF-8")
+		if(not cfhtml)
+		{
+			this.dbg2("WinClip.GetHtml() returns empty.")
+			return
+		}
+
+		preview_limit := 400
+		taildots := StrLen(cfhtml)>preview_limit ? "......" : ""
+		this.dbg2("Got CF_HTML: " SubStr(cfhtml, 1, preview_limit) " " taildots)
+		
+		if(not Everlink.linktag_allow_unicode)
+		{
+			if(dev_IsUnicodeInString(cfhtml))
+			{
+				this.dbg2("Sees non-ASCII chars, ignore it. (due to NOT linktag_allow_unicode)")
+				return
+			}
+		}
+		
+		; URL Sample:
+		; https://www.evernote.com/shard/s21/nl/2425275/4586fb5e-4414-4e81-8ea8-75bf28d9d666
+
+		ptn := "<!--StartFragment-->`r`n<span><span>.{0,5}<a href=""(https://www.evernote.com/shard/s../nl/[0-9a-z-/]+)""[^>]*>([^<]+?)</a>"
+		; -- allow only 5 (as in .{0,5}) chars before the link-text.
+		foundpos := RegExMatch(cfhtml, ptn, outfound)
+		if( foundpos==0 )
+		{
+			this.dbg2("Everlink-RegEx not match")
+			return
+		}
+		
+		linkurl := outfound1 ; https://www.evernote.com/shard/s21/nl/2425275/...
+		linktag := outfound2 ; chja20 (for example)
+		
+		linktag := Trim(linktag, "[()]")
+		
+		this.dbg2(Format("Everlink-RegEx match: [{}] {}", linktag, linkurl))
+		
+		if(strlen(linktag)>Everlink.linktag_maxlen)
+		{
+			this.dbg1(Format("Linktag '{}' exceeds {} chars, ignore it.", linktag, Everlink.linktag_maxlen))
+			return
+		}
+		
+		evkey := Everlink.make_evkey(linktag, linkurl)
+		
+		if(not this.dict.HasKey(evkey))
+		{
+			this.dbg1(Format("Got a new evkey: {}|{}", linktag, Everlink.linkurl_guid_tail(linkurl)))
+			; -- use a shorter form
+			
+			this.dict[evkey] := "Desc to fill"
+			
+			this.LoadUIFresh_by_editbox()
+		}
+	}
+	
+} ; class Everlink
 
 
 Everlink_InitHotkeys()
@@ -58,203 +343,76 @@ Everlink_InitHotkeys()
 	fxhk_DefineComboHotkey("AppsKey", "k", "Everlink_LaunchUI")
 }
 
-Everlink_InitData(csvfilepath)
+Everlink_InitData(csvfilepath, is_pop_errmsg:=true) ; todo: rename to Everlink_Init()
 {
-	static s_inited := false
-	if(!s_inited)
-	{
-		if(Everlink_LoadData(csvfilepath)==true)
+	try {
+		
+		g_everlink := new Everlink(csvfilepath)
+		varcap := dev_VarGetCapacity(g_everlink)
+		AmDbg_output(Everlink_Id, Format("[OK] Everlink singleton object created. (addr=0x{} , varcap={})", &g_everlink, varcap))
+		return true
+	
+	} catch e {
+	
+		errmsg := "Everlink_Init() fail. Reason:`n`n" e.message ; Double `n to make MsgBox text friendlier.
+		
+		AmDbg_output(Everlink_Id, errmsg)
+	
+		if(is_pop_errmsg)
 		{
-			s_inited := true
+			dev_MsgBoxWarning(errmsg)
 		}
-		else
-		{
-			dev_MsgBoxError(Format("[ERROR] Everlink.ahk: Cannot read or create file:`n`n{}", csvfilepath))
-			return
-		}
-	}
-	
-}
-
-Evl_ShowGui()
-{
-	if(Everlink.isGuiVisible)
-		return
-	
-	if(!g_HwndEVLGui) {
-		Evl_CreateGui()
-	}
-	
-	
-	Gui_Show("EVL", "AutoSize", "Everlink")
-	
-	Everlink.isGuiVisible := true
-}
-
-Evl_HideUI()
-{
-	Gui_Hide("EVL")
-	Everlink.isGuiVisible := false
-}
-
-EVLGuiClose()
-{
-	Evl_HideUI()
-}
-
-EVLGuiEscape()
-{
-	Evl_HideUI()
-}
-
-Evl_CreateGui()
-{
-	GuiName := "EVL" ; EVL: Short for Everlink
-	
-	Gui_New(GuiName)
-	Gui_AssociateHwndVarname(GuiName, "g_HwndEVLGui")
-	
-	fullwidth := 500
-	Gui_Add_TxtLabel(GuiName, "gu_evlHeadLabel", fullwidth, "", "Search for link: (?/?)")
-	Gui_Add_Editbox( GuiName, "gu_evlSearchWord", fullwidth, gui_g("Evl_EditChange"), "")
-
-	Gui_Add_Listview(GuiName, "gu_evlListview", fullwidth
-		, "r12 -Multi"
-		, "Tag|Description|URL")
-	Gui_Add_Button(  GuiName, "gu_evlBtnOK", 80, gui_g("Evl_BtnOK") " default", "&Use This")
-
-	Everlink_LoadUIFresh("", true)
-	
-}
-
-
-
-Everlink_LoadData(csvpath)
-{
-	csvfullpath := win32_GetFullPathName(csvpath)
-	Everlink.csvfullpath := csvfullpath
-	
-	if(not dev_IsDiskFile(csvfullpath))
-	{
-		; Create that empty file
-		dev_WriteFile(csvfullpath, "", true)
-	}
-	
-	Everlink.dbg1(Format("Everlink Loading {}", csvfullpath))
-	
-	lines := dev_ReadFileLines(csvfullpath)
-	if(not lines) 
-	{
-		; Probably a bad/invalid filepath
+		
+		g_everlink := "" ; delete the object if sth goes wrong after object-construction
 		return false
 	}
-	
-	for index,linetext in lines
-	{
-		fields := StrSplit(linetext, ",", " `t", 3)
-		url := fields[1]
-		tag := fields[2]
-		desc := fields[3]
-		
-		if(url=="")
-			continue ; an empty line
-		
-		if(tag=="") {
-			Everlink.dbg1(Format("Missing tag at line #{} of {}", index, csvpath))
-			continue
-		}
-		
-		key := url "|" tag
-		Everlink.dict[key] := desc
-		
-		Everlink.dbg2(Format("Everlink [""{}""]", key))
-	}
-	
-	return true
-}
-
-Everlink_LoadUIFresh(ysift:="", is_adjust_column_width:=false)
-{
-	; Only those entries with ysift substring is populated into Listview
-	
-	GuiName := "EVL"
-
-	Gui_Default(GuiName)
-	LV_Delete()
-	
-	total := 0
-	matches := 0
-	for key, val in Everlink.dict
-	{
-		total++
-		
-		fields := StrSplit(key, "|")
-		url := fields[1]
-		tag := fields[2]
-		desc := val
-		
-		if(InStr(tag, ysift) or InStr(desc, ysift))
-		{
-			LV_Add("", tag, desc, url)
-			matches++
-		}
-	}
-	
-	AmDbg0("=====" gu_evlHeadLabel)
-;	nn = gu_evlHeadLabel ; OK
-;	AmDbg0(Format("{}'s varcap={}", nn, dev_VarGetCapacity(gu_evlHeadLabel)))
-	
-	
-	GuiControl_SetText(GuiName, "gu_evlHeadLabel", Format("Search for link: ({}/{})", matches, total))
-	
-	if(is_adjust_column_width or matches>0)
-		dev_LV_UnveilColumns(GuiName)
-}
-
-
-Evl_EditChange()
-{
-	if(A_GuiControl=="gu_evlSearchWord")
-	{
-		text := GuiControl_GetText("EVL", "gu_evlSearchWord")
-		Everlink_LoadUIFresh(text)
-	}
-	
 }
 
 Everlink_LaunchUI()
 {
-	Everlink.hwndToPaste := dev_GetActiveHwnd()
-	
-	Evl_ShowGui()
-}
-
-Evl_BtnOK()
-{
-	GuiName := "EVL"
-;	Gui_Default(GuiName)
-	
-	rowsel := dev_LV_GetNext(GuiName)
-	
-	if(rowsel>0)
+	if(!g_everlink)
 	{
-		tag := dev_LV_GetText(GuiName, rowsel, 1)
-		url := dev_LV_GetText(GuiName, rowsel, 3)
-;		AmDbg0(tag " | " url)
-	}
-	else
-	{
-		dev_MsgBoxInfo("No link is selected yet. Nothing to do.")
+		dev_MsgBoxError("Everlink has not been initialized.")
 		return
 	}
+
+	g_everlink.hwndToPaste := dev_GetActiveHwnd()
 	
-	html := Format("<span>[<a href='{1}'>{2}</a>]&nbsp;</span>", url, tag)
-	dev_ClipboardSetHTML(html, true, Everlink.hwndToPaste)
-	
-	Evl_HideUI()
+	g_everlink.ShowGui()
+}
+
+
+EVLGuiClose()
+{
+	g_everlink.HideUI()
+}
+
+EVLGuiEscape()
+{
+	g_everlink.HideUI()
 }
 
 
 
+Evl_OnEditChange()
+{
+	g_everlink.OnEditChange()
+}
+
+Evl_OnBtnOK()
+{
+	g_everlink.OnBtnOK()
+}
+
+
+Evl_WM_KEYDOWN(wParam, lParam, msg, hwnd)
+{
+	g_everlink.On_WM_KEYDOWN(wParam, lParam, msg, hwnd)
+}
+
+Everlink_Clipmon()
+{
+	g_everlink.ClipmonCallback()
+}
 
 

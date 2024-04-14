@@ -619,7 +619,7 @@ dev_StringLower(s)
 	return s
 }
 
-dev_StrIsEqualI(s1, s2) ; case insensitive compare
+dev_StrIsEqualI(s1, s2) ; case insensitive compare (strcmpi)
 {
 	StringUpper, s1u, s1
 	StringUpper, s2u, s2
@@ -627,11 +627,6 @@ dev_StrIsEqualI(s1, s2) ; case insensitive compare
 		return true
 	else
 		return false
-}
-
-dev_IsStrEqualI(s1, s2)
-{
-	return dev_StrIsEqualI(s1, s2)
 }
 
 dev_stricmp(s1, s2)

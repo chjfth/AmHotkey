@@ -36,7 +36,10 @@ Assert_UicVarname(CtrlVarname)
 	{
 		dev_assert(0, "You pass in an empty GUI-control varname. It must be in string form ""gu_XXX"" .")
 	}
-
+	
+	if(CtrlVarname=="-")
+		return ; "-" means user explicitly do NOT want to associate a varname
+	
 	dev_assert(Gui_IsValidVar(CtrlVarname)
 		, Format("'{}' is not valid GUI-control varname, it must starts with ""gu_"" .", CtrlVarname))
 }
@@ -142,10 +145,13 @@ Gui_Add_TxtLabel(GuiName, CtrlVarname:="", width:=-1, format:="", text:="")
 	; format: 
 	; +0x8000 (SS_PATHELLIPSIS)
 	; +0xC000 (SS_WORDELLIPSIS)
+	
+	if(CtrlVarname=="")
+		CtrlVarname := "-"
 
 	Assert_UicVarname(CtrlVarname)
 	cmdadd := GuiName ? (GuiName ":Add") : "Add"
-	vCtrlVarname := StrLen(CtrlVarname)>0 ? "v" CtrlVarname : ""
+	vCtrlVarname := StrLen(CtrlVarname)>1 ? "v" CtrlVarname : ""
 	wWidth := width>0 ? "w" width : "" ; so width==-1 will make it auto-width by text length
 	
 	Gui, % cmdadd, Text, % Format("{} {} {}", vCtrlVarname, wWidth, format), % text
@@ -177,7 +183,7 @@ Gui_Add_Button(GuiName, CtrlVarname, width, format, btntext)
 {
 	Assert_UicVarname(CtrlVarname)
 	cmdadd := GuiName ? (GuiName ":Add") : "Add"
-	vCtrlVarname := StrLen(CtrlVarname)>0 ? "v" CtrlVarname : ""
+	vCtrlVarname := StrLen(CtrlVarname)>1 ? "v" CtrlVarname : ""
 	wWidth := width>0 ? "w" width : "" ; so width==-1 will make it auto-width by text length
 
 	Gui, % cmdadd, Button, % Format("{} {} {}", vCtrlVarname, wWidth, format), % btntext
@@ -187,7 +193,7 @@ Gui_Add_Picture(GuiName, CtrlVarname, width, format, imgfilepath:="")
 {
 	Assert_UicVarname(CtrlVarname)
 	cmdadd := GuiName ? (GuiName ":Add") : "Add"
-	vCtrlVarname := StrLen(CtrlVarname)>0 ? "v" CtrlVarname : ""
+	vCtrlVarname := StrLen(CtrlVarname)>1 ? "v" CtrlVarname : ""
 	wWidth := width>0 ? "w" width : "" ; so width==-1 will make it auto-width by text length
 
 	Gui, % cmdadd, Picture, % Format("{} {} {}", vCtrlVarname, wWidth, format), % imgfilepath
@@ -205,7 +211,7 @@ Gui_Add_Checkbox(GuiName, CtrlVarname, width, format, btntext)
 
 	Assert_UicVarname(CtrlVarname)
 	cmdadd := GuiName ? (GuiName ":Add") : "Add"
-	vCtrlVarname := StrLen(CtrlVarname)>0 ? "v" CtrlVarname : ""
+	vCtrlVarname := StrLen(CtrlVarname)>1 ? "v" CtrlVarname : ""
 	wWidth := width>0 ? "w" width : "" ; so width==-1 will make it auto-width by text length
 	
 	Gui, % cmdadd, Checkbox, % Format("{} {} {}", vCtrlVarname, wWidth, format), % btntext
@@ -216,7 +222,7 @@ Gui_Add_Radiobox(GuiName, CtrlVarname, width, format, btntext)
 	; format: "Group Checked"
 	Assert_UicVarname(CtrlVarname)
 	cmdadd := GuiName ? (GuiName ":Add") : "Add"
-	vCtrlVarname := StrLen(CtrlVarname)>0 ? "v" CtrlVarname : ""
+	vCtrlVarname := StrLen(CtrlVarname)>1 ? "v" CtrlVarname : ""
 	wWidth := width>0 ? "w" width : "" ; so width==-1 will make it auto-width by text length
 	
 	Gui, % cmdadd, Radio, % Format("{} {} {}", vCtrlVarname, wWidth, format), % btntext
@@ -231,7 +237,7 @@ Gui_Add_Editbox(GuiName, CtrlVarname, width, format, init_text:="")
 
 	Assert_UicVarname(CtrlVarname)
 	cmdadd := GuiName ? (GuiName ":Add") : "Add"
-	vCtrlVarname := StrLen(CtrlVarname)>0 ? "v" CtrlVarname : ""
+	vCtrlVarname := StrLen(CtrlVarname)>1 ? "v" CtrlVarname : ""
 	wWidth := width>0 ? "w" width : "" ; so width==-1 will make it auto-width by text length
 
 	Gui, % cmdadd, Edit, % Format("{} {} {}", vCtrlVarname, wWidth, format), % init_text
@@ -243,7 +249,7 @@ Gui_Add_Listbox(GuiName, CtrlVarname, width, format, itemlist_pipes:="")
 
 	Assert_UicVarname(CtrlVarname)
 	cmdadd := GuiName ? (GuiName ":Add") : "Add"
-	vCtrlVarname := StrLen(CtrlVarname)>0 ? "v" CtrlVarname : ""
+	vCtrlVarname := StrLen(CtrlVarname)>1 ? "v" CtrlVarname : ""
 	wWidth := width>0 ? "w" width : "" ; so width==-1 will make it auto-width by text length
 
 	Gui, % cmdadd, ListBox, % Format("{} {} {}", vCtrlVarname, wWidth, format), % itemlist_pipes
@@ -255,7 +261,7 @@ Gui_Add_Combobox(GuiName, CtrlVarname, width, format, itemlist_pipes:="")
 
 	Assert_UicVarname(CtrlVarname)
 	cmdadd := GuiName ? (GuiName ":Add") : "Add"
-	vCtrlVarname := StrLen(CtrlVarname)>0 ? "v" CtrlVarname : ""
+	vCtrlVarname := StrLen(CtrlVarname)>1 ? "v" CtrlVarname : ""
 	wWidth := width>0 ? "w" width : "" ; so width==-1 will make it auto-width by text length
 
 	Gui, % cmdadd, ComboBox, % Format("{} {} {}", vCtrlVarname, wWidth, format), % itemlist_pipes
@@ -265,7 +271,7 @@ Gui_Add_Listview(GuiName, CtrlVarname, width, format, columnlist_pipes)
 {
 	Assert_UicVarname(CtrlVarname)
 	cmdadd := GuiName ? (GuiName ":Add") : "Add"
-	vCtrlVarname := StrLen(CtrlVarname)>0 ? "v" CtrlVarname : ""
+	vCtrlVarname := StrLen(CtrlVarname)>1 ? "v" CtrlVarname : ""
 	wWidth := width>0 ? "w" width : "" ; so width==-1 will make it auto-width by text length
 	
 	Gui, % cmdadd, ListView, % Format("{} {} {}", vCtrlVarname, wWidth, format), % columnlist_pipes

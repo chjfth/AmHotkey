@@ -358,7 +358,7 @@ Amt_CreateGui(inipath)
 	Gui_Add_Radiobox(GuiName, "g_amtRadioLF", -1, "yp x+5", "LF")
 	;
 	newline_style := dev_IniRead(inipath, "global", "TextFileNewLineStyle", "CRLF")
-	if(dev_IsStrEqualI(newline_style, "LF"))
+	if(dev_StrIsEqualI(newline_style, "LF"))
 		GuiControl_ButtonCheck(GuiName, "g_amtRadioLF", true)
 	
 	Gui_Add_TxtLabel(GuiName, "", -1, "y+16 xm", "Apply &to:")
