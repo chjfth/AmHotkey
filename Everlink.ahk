@@ -35,8 +35,8 @@ class Everlink
 {
 	; static vars as constant
 	static linktag_allow_unicode := false
-	static linktag_maxlen := 3
-	static recent_max := 30
+	static linktag_maxlen := 20
+	static recent_max := 3
 
 	isGuiVisible := false
 	
@@ -44,8 +44,11 @@ class Everlink
 	dict := {} 
 	; -- key is evkey(i.e. "tag|URL"), value is description string.
 	
-	
 	recent_evkeys := []  ; recently used evkeys
+	
+	was_show_recent := false
+	irow_alltags := 1
+	irow_recent := 1
 	
 	hwndToPaste := ""
 	
@@ -182,6 +185,8 @@ class Everlink
 		Gui_Add_Button(  GuiName, "gu_evlBtnOK", 80, gui_g("Evl_OnBtnOK") " default", "&Use This")
 
 		this.LoadUI_AllTags("", true)
+		
+		dev_LV_Select1Row(GuiName, 1) ; so that first focusing the Listview can highlight item one immediately
 	}
 	
 	ShowGui()
@@ -214,16 +219,38 @@ class Everlink
 		Guiname := "EVL"
 		is_show_recent := Checkbox_GetCheckState(GuiName, "gu_evlCkbUseRecent")
 
-		if(!is_show_recent)
+		if(not is_show_recent)
 		{
+			; Show all tags
+			
+			; (save idx for the other side)
+			if(this.was_show_recent)
+				this.irow_recent := dev_LV_GetSelectIdx(GuiName)
+			
 			GuiControl_Enable(GuiName, "gu_evlSearchWord", true)
 			text := GuiControl_GetText(GuiName, "gu_evlSearchWord")
 			this.LoadUI_AllTags(text)
+
+			if(this.was_show_recent)
+				dev_LV_Select1Row(GuiName, this.irow_alltags)
+			
+			this.was_show_recent := false
 		}
 		else
 		{
+			; (save idx for the other side)
+			if(not this.was_show_recent)
+			{
+				this.irow_alltags := dev_LV_GetSelectIdx(GuiName)
+			}
+				
 			GuiControl_Enable(GuiName, "gu_evlSearchWord", false)
 			this.LoadUI_RecentTags()
+			
+			if(not this.was_show_recent)
+				dev_LV_Select1Row(GuiName, this.irow_recent)
+			
+			this.was_show_recent := true
 		}
 	}
 
@@ -248,7 +275,7 @@ class Everlink
 				matches++
 			}
 		}
-		
+
 		GuiControl_SetText(GuiName, "gu_evlHeadLabel", Format("&Search for link: ({}/{})", matches, total))
 		
 		if(is_adjust_column_width or matches>0)
@@ -322,7 +349,7 @@ class Everlink
 		
 		if(A_GuiControl=="gu_evlSearchWord")
 		{
-			if(mx.vk==win32c.VK_DOWN)
+			if(mx.vk==win32c.VK_DOWN || mx.vk==win32c.VK_UP)
 			{
 				GuiControl_SetFocus("EVL", "gu_evlListview")
 			}
@@ -405,7 +432,7 @@ class Everlink
 	InsertRecentEvkey(evkey1)
 	{
 		; Insert evkey1 at head of .recent_evkeys[]
-AmDbg0("Innnnnnnnn: " evkey1)
+
 		; first, remove old dup evkey 
 		for index,evkey in this.recent_evkeys
 		{

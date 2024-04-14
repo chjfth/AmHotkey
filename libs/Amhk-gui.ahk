@@ -605,8 +605,15 @@ dev_LV_UnveilColumns(GuiName:="")
 	LV_ModifyCol()
 }
 
+dev_LV_GetSelectIdx(GuiName)
+{
+	return dev_LV_GetNext(GuiName, 0)
+}
+
 dev_LV_GetNext(GuiName, StartRow:=0, RowType:="")
 {
+	; Return which row is selected/highlighted.
+	
 	Gui_Default(GuiName)
 
 	return LV_GetNext(Start, RowType)
@@ -620,3 +627,12 @@ dev_LV_GetText(GuiName, iRow, iCol:=1)
 	return ret
 }
 
+dev_LV_Select1Row(GuiName, iRow, is_on:=true)
+{
+	if(GuiName)
+		Gui_Default(GuiName)
+	
+	neg := is_on ? "" : "-"
+	
+	LV_Modify(iRow, Format("{1}Select {1}Focus", neg))
+}
