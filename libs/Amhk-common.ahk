@@ -392,7 +392,7 @@ dev_FileReadLine(filepath, idxline)
 }
 
 
-dev_WriteFile(filepath, text, is_append)
+dev_WriteFile(filepath, text, is_append, encoding:="")
 {
 	; memo: Use "`n" in text to represent a new line.
 	;
@@ -406,6 +406,13 @@ dev_WriteFile(filepath, text, is_append)
 	; has not set up try/catch, AHK engine will still pop up an error dialogbox
 	; telling user an exception has occurred -- that's the behavior I want.
 	
+	; encoding: "UTF-8", "UTF8-RAW", "UTF-16", "UTF-16-RAW", "CP936" etc
+	
+	if(encoding=="utf8" or encoding="UTF8")
+		encoding := "UTF-8"
+	else if(encoding=="utf8raw" or encoding="UTF8RAW")
+		encoding := "UTF-8-RAW"
+	
 	if(not filepath)
 		return
 	
@@ -413,7 +420,7 @@ dev_WriteFile(filepath, text, is_append)
 		if(not is_append)
 			FileDelete, %filepath%
 
-		FileAppend, %text%, %filepath%
+		FileAppend, %text%, %filepath%, %encoding%
 	}
 	catch e {
 		emsg := Format("Error {} file: ""{}"""
@@ -425,14 +432,14 @@ dev_WriteFile(filepath, text, is_append)
 	}
 }
 
-dev_WriteLogFile(filepath, text, is_append:=true)
+dev_WriteLogFile(filepath, text, is_append:=true, encoding:="")
 {
-	dev_WriteFile(filepath, text, is_append)
+	dev_WriteFile(filepath, text, is_append, encoding)
 }
 
-dev_WriteWholeFile(filepath, text)
+dev_WriteWholeFile(filepath, text, encoding:="")
 {
-	dev_WriteFile(filepath, text, false)
+	dev_WriteFile(filepath, text, false, encoding)
 }
 
 

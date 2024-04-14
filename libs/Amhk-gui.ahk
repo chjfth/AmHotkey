@@ -390,6 +390,17 @@ GuiControl_SetPos(GuiName, CtrlVarname, x:=-1, y:=-1, w:=-1, h:=-1, force_redraw
 		, h==-1 ? r.h : h)
 }
 
+Checkbox_GetCheckState(GuiName, CtrlVarname)
+{
+	Assert_UicVarname(CtrlVarname)
+	cmd := ""
+	if(GuiName)
+		cmd := Format("{}:{}", GuiName, cmd)
+
+	GuiControlGet, outvar, % cmd, % CtrlVarname
+	
+	return outvar ; Can be 1, 0, -1
+}
 
 GuiControl_ComboboxAddItems(GuiName, CtrlVarname, ar_strings)
 {
