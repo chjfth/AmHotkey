@@ -443,8 +443,28 @@ GuiControl_ChooseN(GuiName, CtrlVarname, item_index)
 
 ; =================================
 
+class JUL
+{
+	GuiAutoResize(args*) {
+		return dev_GuiAutoResize(args*)
+	}
+
+	GuiAutoResizeRemove(args*) {
+		return dev_GuiAutoResizeRemove(args*)
+	}
+	
+	; Constants:  "left,top,right,bottom"
+	static PinToLeftTop := "0,0,0,0"
+	static PinToLeftBottom := "0,100,0,100"
+	static PinToRightTop := "100,0,100,0"
+	static LeftTop_DynWidth := "0,0,100,0"
+	static LeftTop_DynWidthHeight := "0,0,100,100"
+}
+
 dev_GuiAutoResize(GuiName, rsdict, gui_nowwidth, gui_nowheight, force_redraw:=false, qmargin:="")
 {
+	; // Idea from JULayout
+	;
 	; gui_nowwidth, gui_nowheight tells the GUI's client area size
 	
 	if(qmargin) ; q implies quad

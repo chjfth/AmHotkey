@@ -411,6 +411,17 @@ class Everlink
 		
 	}
 	
+	OnCkbRecent()
+	{
+		this.RefreshUI()
+		
+		if(this.was_show_recent)
+			GuiControl_SetFocus("EVL", "gu_evlListview")
+		else
+			GuiControl_SetFocus("EVL", "gu_evlSearchWord")
+		
+	}
+	
 	On_WM_KEYDOWN(wParam, lParam, msg, hwnd)
 	{
 		; {"vk":wParam, "fDown":true, "cRepeat":LOWORD(0xFFFF), "flags":HIWORD(lParam)}
@@ -537,12 +548,13 @@ class Everlink
 		this.dbg1(Format("Got a new evkey: {}|{}", linktag, Everlink.linkurl_guid_tail(linkurl)))
 		; -- use a shorter form
 		
-		newdesc := ""
+		desc := ""
 		dev_InputBox_InitText("Everlink - New linktag detected"
-			, Format("Input a description for [{}]", linktag), newdesc) ; output newdesc
+			, Format("Input a description for [{}]", linktag), desc) ; output desc
 
-		this.dict[evkey] := newdesc
+		this.dict[evkey] := desc
 
+		this.InsertRecentEvkey(evkey)
 		this.RefreshUI()
 		this.SaveData()
 	}
@@ -625,11 +637,14 @@ Everlink_LaunchUI()
 EVLGuiSize()
 {
 	rsdict := {}
-	rsdict.gu_evlSearchWord := "0,0,100,0"
-	rsdict.gu_evlCkbUseRecent := "100,0,100,0"
-	rsdict.gu_evlListview := "0,0,100,100"
-	rsdict.gu_evlBtnOK := "0,100,0,100"
-	rsdict.gu_evlBtnCopyTag := "0,100,0,100"
+	rsdict.gu_evlSearchWord := JUL.LeftTop_DynWidth
+	rsdict.gu_evlCkbUseRecent := JUL.PinToRightTop
+	rsdict.gu_evlListview := JUL.LeftTop_DynWidthHeight
+	
+	rsdict.gu_evlBtnOK := JUL.PinToLeftBottom
+	rsdict.gu_evlBtnCopyTag := JUL.PinToLeftBottom
+	rsdict.gu_evlBtnChgDesc := JUL.PinToLeftBottom
+	
 	dev_GuiAutoResize("EVL", rsdict, A_GuiWidth, A_GuiHeight)
 }
 
@@ -663,7 +678,7 @@ Evl_WM_KEYDOWN(wParam, lParam, msg, hwnd)
 
 Evl_OnCkbRecent()
 {
-	g_everlink.RefreshUI()
+	g_everlink.OnCkbRecent()
 }
 
 Evl_OnBtnCopyTag()
