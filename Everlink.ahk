@@ -1,8 +1,9 @@
 ﻿AUTOEXEC_Everlink: ; Workaround for Autohotkey's ugly auto-exec feature. Don't delete.
 
 /* APIs:
-Everlink_LoadData(csvfilepath)
-Everlink_LaunchUI()
+Everlink_Init(csvfilepath) ; User provides csv data to initialize Everlink object (e.g. Everlink.chj.csv)
+
+Everlink_LaunchUI() ; Call this to bring up Everlink UI.
 
 */
 
@@ -184,7 +185,7 @@ class Everlink
 			, "Tag|Description|URL")
 		Gui_Add_Button(  GuiName, "gu_evlBtnOK", 80, gui_g("Evl_OnBtnOK") " default", "&Use This")
 
-		this.LoadUI_AllTags("", true)
+		this.RefreshUI_AllTags("", true)
 		
 		dev_LV_Select1Row(GuiName, 1) ; so that first focusing the Listview can highlight item one immediately
 	}
@@ -229,7 +230,7 @@ class Everlink
 			
 			GuiControl_Enable(GuiName, "gu_evlSearchWord", true)
 			text := GuiControl_GetText(GuiName, "gu_evlSearchWord")
-			this.LoadUI_AllTags(text)
+			this.RefreshUI_AllTags(text)
 
 			if(this.was_show_recent)
 				dev_LV_Select1Row(GuiName, this.irow_alltags)
@@ -245,7 +246,7 @@ class Everlink
 			}
 				
 			GuiControl_Enable(GuiName, "gu_evlSearchWord", false)
-			this.LoadUI_RecentTags()
+			this.RefreshUI_RecentTags()
 			
 			if(not this.was_show_recent)
 				dev_LV_Select1Row(GuiName, this.irow_recent)
@@ -254,7 +255,7 @@ class Everlink
 		}
 	}
 
-	LoadUI_AllTags(ysift:="", is_adjust_column_width:=false)
+	RefreshUI_AllTags(ysift:="", is_adjust_column_width:=false)
 	{
 		; Only those entries containing ysift substring is populated into Listview
 		GuiName := "EVL"
@@ -282,7 +283,7 @@ class Everlink
 			dev_LV_UnveilColumns(GuiName)
 	}
 	
-	LoadUI_RecentTags() ; todo: Rename to RefreshListview_RecentTags
+	RefreshUI_RecentTags()
 	{
 		GuiName := "EVL"
 		Gui_Default(GuiName)
@@ -457,9 +458,12 @@ Everlink_InitHotkeys()
 {
 	; App+k to call up the UI
 	fxhk_DefineComboHotkey("AppsKey", "k", "Everlink_LaunchUI")
+	
+	; Caller code suggestion
+	; dev_DefineHotkeyWithCondition("!k", "Evernote_IsMainFrameOrSingleActive", "Everlink_LaunchUI")
 }
 
-Everlink_InitData(csvfilepath, is_pop_errmsg:=true) ; todo: rename to Everlink_Init()
+Everlink_Init(csvfilepath, is_pop_errmsg:=true)
 {
 	try {
 		
@@ -488,7 +492,8 @@ Everlink_LaunchUI()
 {
 	if(!g_everlink)
 	{
-		dev_MsgBoxError("Everlink has not been initialized.")
+		dev_MsgBoxError("Everlink has not been initialized.`n`n"
+			. "You have to first call Everlink_Init(csvfilepath) .")
 		return
 	}
 
