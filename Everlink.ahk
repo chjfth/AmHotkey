@@ -37,7 +37,7 @@ class Everlink
 	; static vars as constant
 	static linktag_allow_unicode := false
 	static linktag_maxlen := 20
-	static recent_max := 3
+	static recent_max := 30
 
 	isGuiVisible := false
 	
@@ -407,6 +407,7 @@ class Everlink
 			if(mx.vk==win32c.VK_DOWN || mx.vk==win32c.VK_UP)
 			{
 				GuiControl_SetFocus("EVL", "gu_evlListview")
+				dev_LV_Select1Row("EVL")
 			}
 		}
 	}

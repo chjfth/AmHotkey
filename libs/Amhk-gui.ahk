@@ -627,12 +627,27 @@ dev_LV_GetText(GuiName, iRow, iCol:=1)
 	return ret
 }
 
-dev_LV_Select1Row(GuiName, iRow, is_on:=true)
+dev_LV_Select1Row(GuiName, iRow:=0, is_on:=true)
 {
 	if(GuiName)
 		Gui_Default(GuiName)
 	
 	neg := is_on ? "" : "-"
+	
+	if(iRow<=0)
+	{
+		; Focus currently "select" row.
+		; Yes, "select" and "focus" are different things in Listview UI
+		
+		iRow := dev_LV_GetSelectIdx(GuiName)
+		; AmDbg0(Format("iRow -1 => {}", iRow))
+		
+		if(iRow==0)
+		{
+			; None was selected, so we select 1st item.
+			iRow := 1
+		}
+	}
 	
 	LV_Modify(iRow, Format("{1}Select {1}Focus", neg))
 }
