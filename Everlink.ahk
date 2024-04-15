@@ -406,7 +406,6 @@ class Everlink
 		dev_ClipboardSetHTML(html, true, this.hwndToPaste)
 		
 		evkey := Everlink.make_evkey(tag, url)
-		this.InsertRecentEvkey(evkey)
 
 		this.SaveRecentListToDisk()
 
@@ -551,6 +550,8 @@ class Everlink
 		}
 		
 		evkey := Everlink.make_evkey(linktag, linkurl)
+
+		this.InsertRecentEvkey(evkey)
 		
 		if(this.dict.HasKey(evkey))
 			return
@@ -565,7 +566,6 @@ class Everlink
 
 		this.dict[evkey] := desc
 
-		this.InsertRecentEvkey(evkey)
 		this.RefreshUI()
 		this.SaveData()
 	}
@@ -589,6 +589,9 @@ class Everlink
 		
 		; Delete beyond max
 		dev_ArrayTruncateAt_(this.recent_evkeys, Everlink.recent_max)
+		
+		if(this.was_show_recent)
+			this.RefreshUI()
 	}
 	
 } ; class Everlink
