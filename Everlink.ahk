@@ -281,6 +281,17 @@ class Everlink
 		g_everlink.isGuiVisible := false
 	}
 
+	CurRowIdx()
+	{
+		GuiName := "EVL"
+		idx := dev_LV_GetSelectIdx(GuiName)
+		if(idx==0 and LV_GetCount()==1)
+		{	; if there is only one row in the list , just return it.
+			idx := 1
+		}
+		return idx
+	}
+
 	RefreshUI()
 	{
 		Guiname := "EVL"
@@ -292,7 +303,7 @@ class Everlink
 			
 			; (save idx for the other side)
 			if(this.was_show_recent)
-				this.irow_recent := dev_LV_GetSelectIdx(GuiName)
+				this.irow_recent := this.CurRowIdx(GuiName)
 			
 			GuiControl_Enable(GuiName, "gu_evlSearchWord", true)
 			text := GuiControl_GetText(GuiName, "gu_evlSearchWord")
@@ -308,7 +319,7 @@ class Everlink
 			; (save idx for the other side)
 			if(not this.was_show_recent)
 			{
-				this.irow_alltags := dev_LV_GetSelectIdx(GuiName)
+				this.irow_alltags := this.CurRowIdx(GuiName)
 			}
 				
 			GuiControl_Enable(GuiName, "gu_evlSearchWord", false)
@@ -377,7 +388,7 @@ class Everlink
 		GuiName := "EVL"
 	;	Gui_Default(GuiName)
 		
-		rowsel := dev_LV_GetSelectIdx(GuiName)
+		rowsel := this.CurRowIdx(GuiName)
 		
 		if(rowsel>0)
 		{
@@ -440,7 +451,7 @@ class Everlink
 	OnBtnCopyTag()
 	{
 		GuiName := "EVL"
-		rowsel := dev_LV_GetSelectIdx(GuiName)
+		rowsel := this.CurRowIdx(GuiName)
 ;		AmDbg0("OnBtnCopyTag() rowsel=" rowsel)
 		if(rowsel>0)
 		{
@@ -450,7 +461,7 @@ class Everlink
 		}
 		else
 		{
-			dev_MsgBoxInfo("No link is selected yet. Nothing to copy.")
+			dev_MsgBoxInfo("Please select a LinkTag first.")
 			return
 		}
 	}
@@ -458,7 +469,7 @@ class Everlink
 	OnBtnChgDesc()
 	{
 		GuiName := "EVL"
-		rowsel := dev_LV_GetSelectIdx(GuiName)
+		rowsel := this.CurRowIdx(GuiName)
 		if(rowsel>0)
 		{
 			tag := dev_LV_GetText(GuiName, rowsel, 1)
@@ -480,7 +491,7 @@ class Everlink
 		}
 		else
 		{
-			dev_MsgBoxInfo("No link is selected yet. Nothing to rename.")
+			dev_MsgBoxInfo("Please select a LinkTag first.")
 			return
 		}
 	}
