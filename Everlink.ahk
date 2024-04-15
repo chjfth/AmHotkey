@@ -36,7 +36,7 @@ return ; End of auto-execute section.
 class Everlink
 {
 	; static vars as constant
-	static linktag_allow_unicode := false
+	static linktag_allow_unicode := true
 	static linktag_maxlen := 20
 	static recent_max := 30
 
