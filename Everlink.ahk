@@ -559,23 +559,26 @@ class Everlink
 		
 		evkey := Everlink.make_evkey(linktag, linkurl)
 
-		this.InsertRecentEvkey(evkey)
-		
 		if(this.dict.HasKey(evkey))
+		{
+			this.InsertRecentEvkey(evkey)
 			return
-		
+		}
 		
 		this.dbg1(Format("Got a new evkey: {}|{}", linktag, Everlink.linkurl_guid_tail(linkurl)))
 		; -- use a shorter form
 		
 		desc := ""
-		dev_InputBox_InitText("Everlink - New linktag detected"
+		isok := dev_InputBox_InitText("Everlink - New linktag detected"
 			, Format("Input a description for [{}]", linktag), desc) ; output desc
+		if(isok)
+		{
+			this.dict[evkey] := desc
 
-		this.dict[evkey] := desc
-
-		this.RefreshUI()
-		this.SaveData()
+			this.InsertRecentEvkey(evkey)
+			this.RefreshUI()
+			this.SaveData()
+		}
 	}
 	
 	InsertRecentEvkey(evkey1)
