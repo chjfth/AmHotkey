@@ -225,6 +225,7 @@ class Everlink
 		GuiName := "EVL" ; EVL: Short for Everlink
 		
 		Gui_New(GuiName)
+		Gui_ChangeOpt(GuiName, "+Resize +MinSize")
 		Gui_AssociateHwndVarname(GuiName, "g_HwndEVLGui")
 		
 		fullwidth := 500
@@ -234,7 +235,7 @@ class Everlink
 
 		Gui_Add_Listview(GuiName, "gu_evlListview", fullwidth
 			, "xm r12 -Multi"
-			, "Tag|Description|URL")
+			, "LinkTag|Description|URL")
 		Gui_Add_Button(  GuiName, "gu_evlBtnOK", 80, gui_g("Evl_OnBtnOK") " default", "&Use This")
 
 		this.RefreshUI_AllTags("", true)
@@ -557,6 +558,16 @@ Everlink_LaunchUI()
 	g_everlink.ShowGui()
 }
 
+
+EVLGuiSize()
+{
+	rsdict := {}
+	rsdict.gu_evlSearchWord := "0,0,100,0"
+	rsdict.gu_evlCkbUseRecent := "100,0,100,0"
+	rsdict.gu_evlListview := "0,0,100,100"
+	rsdict.gu_evlBtnOK := "0,100,0,100"
+	dev_GuiAutoResize("EVL", rsdict, A_GuiWidth, A_GuiHeight)
+}
 
 EVLGuiClose()
 {
