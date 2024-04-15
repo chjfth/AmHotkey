@@ -59,16 +59,16 @@ class Everlink
 		AmDbg_output(Everlink_Id, msg, lv)
 	}
 	dbg0(msg) {
-		this.dbg(msg, 0)
+		Everlink.dbg(msg, 0)
 	}
 	dbg1(msg) {
-		this.dbg(msg, 1)
+		Everlink.dbg(msg, 1)
 	}
 	dbg2(msg) {
-		this.dbg(msg, 2)
+		Everlink.dbg(msg, 2)
 	}
 	ethrow(msg) {
-		this.dbg1(msg)
+		Everlink.dbg1(msg)
 		throw Exception(msg, -1)
 	}
 
@@ -105,24 +105,42 @@ class Everlink
 	
 	LoadData(csvpath)
 	{
+		this.csvfullpath := win32_GetFullPathName(csvpath)
+
+		evl_array := Everlink.__LoadData_as_array(this.csvfullpath)
+		if(not evl_array)
+			return false
+		
+		for index,e3 in evl_array
+		{
+			evkey := Everlink.make_evkey(e3.tag, e3.url)
+			this.dict[evkey] := e3.desc
+		}
+		
+		this.LoadRecentListFromDisk()
+		
+		return true
+	}
+	
+	__LoadData_as_array(csvpath) ; static
+	{
+		; Read csvpath's content and return it as an array,
+		; each element is a dict of (.tag .url. .desc)
+		; If fail, return "".
+		
 		csvfullpath := win32_GetFullPathName(csvpath)
-		this.csvfullpath := csvfullpath
 		
 		if(not dev_IsDiskFile(csvfullpath))
 		{
-			; Create that empty file
-			this.dbg1(Format("Creating empty file: ""{}""", csvfullpath))
-			dev_WriteWholeFile(csvfullpath, "", "UTF-8")
+			Everlink.dbg1(Format("[Error] Not a disk file: {}", csvfullpath))
+			return ""
 		}
 		
-		this.dbg1(Format("Everlink Loading {}", csvfullpath))
+		Everlink.dbg1(Format("Everlink Loading {}", csvfullpath))
 		
 		lines := dev_ReadFileLines(csvfullpath)
-		if(not lines) 
-		{
-			; Probably a bad/invalid filepath
-			return false
-		}
+		
+		evl_array := []
 		
 		for index,linetext in lines
 		{
@@ -135,18 +153,17 @@ class Everlink
 				continue ; an empty line
 			
 			if(tag=="") {
-				this.dbg1(Format("Missing tag at line #{} of {}", index, csvpath))
+				Everlink.dbg1(Format("Missing tag at line #{} of {}", index, csvpath))
 				continue
 			}
 			
-			evkey := Everlink.make_evkey(tag, url)
-			this.dict[evkey] := desc
-			
-			this.dbg2(Format("Everlink [""{}""]", evkey))
+			evl_array.Push({tag:tag, url:url, desc:desc})
 		}
 		
-		return true
+		return evl_array
 	}
+	
+	
 	
 	split_evkey(evkey, byref tag, byref url)
 	{
@@ -155,17 +172,52 @@ class Everlink
 		url := fields[2]
 	}
 	
+	make_csv_linetext(evkey)
+	{
+		Everlink.split_evkey(evkey, tag, url) ; tag & url is output var
+		desc := this.dict[evkey]
+		return Format("{} , {} , {}", url, tag, desc)
+	}
+	
 	SaveData()
 	{
 		csvcontent := ""
-		for evkey, desc in this.dict
+		for index,evkey in dev_objkeys(this.dict)
 		{
-			Everlink.split_evkey(evkey, tag, url) ; tag & url is output var
-			
-			csvcontent .= Format("{} , {} , {}`r`n", url, tag, desc)
+			csvcontent .= this.make_csv_linetext(evkey) "`r`n"
 		}
-		
 		dev_WriteWholeFile(this.csvfullpath, csvcontent, "UTF-8")
+	}
+	
+	GetRecentListFilepath()
+	{
+		return this.csvfullpath . ".recent"
+	}
+	
+	LoadRecentListFromDisk()
+	{
+		this.dbg2("LoadRecentListFromDisk()...")
+	
+		fp_recent := this.GetRecentListFilepath()
+		evl_array := Everlink.__LoadData_as_array(fp_recent)
+		
+		this.recent_evkeys := []
+		for index,e3 in evl_array
+		{
+			evkey := Everlink.make_evkey(e3.tag, e3.url)
+			this.recent_evkeys.Push(evkey)
+		}
+	}
+	
+	SaveRecentListToDisk()
+	{
+		fp_recent := this.GetRecentListFilepath()
+		csvcontent := ""
+		for index,evkey in this.recent_evkeys
+		{
+			csvcontent .= this.make_csv_linetext(evkey) "`r`n"
+		}
+		dev_WriteWholeFile(fp_recent, csvcontent, "UTF-8")
 	}
 	
 	CreateGui()
@@ -330,6 +382,8 @@ class Everlink
 		
 		evkey := Everlink.make_evkey(tag, url)
 		this.InsertRecentEvkey(evkey)
+
+		this.SaveRecentListToDisk()
 
 		this.HideGui()
 	}

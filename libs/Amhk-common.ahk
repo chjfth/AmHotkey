@@ -417,7 +417,7 @@ dev_WriteFile(filepath, text, is_append, encoding:="")
 		return
 	
 	try {
-		if(not is_append)
+		if((not is_append) and FileExist(filepath))
 			FileDelete, %filepath%
 
 		FileAppend, %text%, %filepath%, %encoding%
