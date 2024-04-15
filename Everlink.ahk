@@ -1,7 +1,7 @@
 ﻿AUTOEXEC_Everlink: ; Workaround for Autohotkey's ugly auto-exec feature. Don't delete.
 
 /* APIs:
-Everlink_Init(csvfilepath) ; User provides csv data to initialize Everlink object (e.g. Everlink.chj.csv)
+Everlink_Init("Everlink.csv.sample") ; User provides csv data to initialize Everlink object (e.g. Everlink.chj.csv)
 
 Everlink_LaunchUI() ; Call this to bring up Everlink UI.
 
@@ -20,6 +20,7 @@ global gu_evlSearchWord
 global gu_evlListview
 global gu_evlBtnOK
 global gu_evlBtnCopyTag
+global gu_evlBtnChgDesc
 
 Everlink_InitHotkeys()
 
@@ -166,12 +167,10 @@ class Everlink
 				else
 				{
 					evkey_dict_output[evkey] := desc
-;AmDbg0("++++++++ " evkey)
 				}
 			}
 			
 		}
-;AmDbg0("-------- " evkey_dict_output.count())		
 		return evl_array
 	}
 	
@@ -250,6 +249,7 @@ class Everlink
 			, "LinkTag|Description|URL")
 		Gui_Add_Button(  GuiName, "gu_evlBtnOK",      80, gui_g("Evl_OnBtnOK") " default", "&Use This")
 		Gui_Add_Button(  GuiName, "gu_evlBtnCopyTag", 80, gui_g("Evl_OnBtnCopyTag") " x+10 yp", "&Copy Tag")
+		Gui_Add_Button(  GuiName, "gu_evlBtnChgDesc", 80, gui_g("Evl_OnBtnChgDesc") " x+10 yp", "Change &Desc")
 
 		this.RefreshUI_AllTags("", true)
 		
@@ -430,11 +430,12 @@ class Everlink
 	{
 		GuiName := "EVL"
 		rowsel := dev_LV_GetSelectIdx(GuiName)
-		AmDbg0("OnBtnCopyTag() rowsel=" rowsel)
+;		AmDbg0("OnBtnCopyTag() rowsel=" rowsel)
 		if(rowsel>0)
 		{
 			tag := dev_LV_GetText(GuiName, rowsel, 1)
 			Clipboard := tag
+			dev_TooltipAutoClear("Copied: " tag)
 		}
 		else
 		{
@@ -443,6 +444,35 @@ class Everlink
 		}
 	}
 	
+	OnBtnChgDesc()
+	{
+		GuiName := "EVL"
+		rowsel := dev_LV_GetSelectIdx(GuiName)
+		if(rowsel>0)
+		{
+			tag := dev_LV_GetText(GuiName, rowsel, 1)
+			url := dev_LV_GetText(GuiName, rowsel, 3)
+			desc := dev_LV_GetText(GuiName, rowsel, 2)
+			evkey := Everlink.make_evkey(tag, url)
+			
+			isok := dev_InputBox_InitText("Everlink - Rename description"
+				, Format("Input new description for [{}]", tag), desc) ; output desc
+			
+			if(isok)
+			{
+				this.dict[evkey] := desc
+				LV_Modify(rowsel, "Col2", desc)
+				dev_LV_UnveilColumns(GuiName)
+			}
+			
+			this.SaveData()
+		}
+		else
+		{
+			dev_MsgBoxInfo("No link is selected yet. Nothing to rename.")
+			return
+		}
+	}
 
 	ClipmonCallback()
 	{
@@ -587,6 +617,8 @@ Everlink_LaunchUI()
 	g_everlink.hwndToPaste := dev_GetActiveHwnd()
 	
 	g_everlink.ShowGui()
+	
+	dev_WinActivateHwnd(g_HwndEVLGui)
 }
 
 
@@ -637,6 +669,11 @@ Evl_OnCkbRecent()
 Evl_OnBtnCopyTag()
 {
 	g_everlink.OnBtnCopyTag()
+}
+
+Evl_OnBtnChgDesc()
+{
+	g_everlink.OnBtnChgDesc()
 }
 
 
