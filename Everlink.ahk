@@ -19,6 +19,7 @@ global gu_evlCkbUseRecent
 global gu_evlSearchWord
 global gu_evlListview
 global gu_evlBtnOK
+global gu_evlBtnCopyTag
 
 Everlink_InitHotkeys()
 
@@ -236,7 +237,8 @@ class Everlink
 		Gui_Add_Listview(GuiName, "gu_evlListview", fullwidth
 			, "xm r12 -Multi"
 			, "LinkTag|Description|URL")
-		Gui_Add_Button(  GuiName, "gu_evlBtnOK", 80, gui_g("Evl_OnBtnOK") " default", "&Use This")
+		Gui_Add_Button(  GuiName, "gu_evlBtnOK",      80, gui_g("Evl_OnBtnOK") " default", "&Use This")
+		Gui_Add_Button(  GuiName, "gu_evlBtnCopyTag", 80, gui_g("Evl_OnBtnCopyTag") " x+10 yp", "&Copy Tag")
 
 		this.RefreshUI_AllTags("", true)
 		
@@ -364,7 +366,7 @@ class Everlink
 		GuiName := "EVL"
 	;	Gui_Default(GuiName)
 		
-		rowsel := dev_LV_GetNext(GuiName)
+		rowsel := dev_LV_GetSelectIdx(GuiName)
 		
 		if(rowsel>0)
 		{
@@ -412,6 +414,24 @@ class Everlink
 			}
 		}
 	}
+
+	OnBtnCopyTag()
+	{
+		GuiName := "EVL"
+		rowsel := dev_LV_GetSelectIdx(GuiName)
+		AmDbg0("OnBtnCopyTag() rowsel=" rowsel)
+		if(rowsel>0)
+		{
+			tag := dev_LV_GetText(GuiName, rowsel, 1)
+			Clipboard := tag
+		}
+		else
+		{
+			dev_MsgBoxInfo("No link is selected yet. Nothing to copy.")
+			return
+		}
+	}
+	
 
 	ClipmonCallback()
 	{
@@ -566,6 +586,7 @@ EVLGuiSize()
 	rsdict.gu_evlCkbUseRecent := "100,0,100,0"
 	rsdict.gu_evlListview := "0,0,100,100"
 	rsdict.gu_evlBtnOK := "0,100,0,100"
+	rsdict.gu_evlBtnCopyTag := "0,100,0,100"
 	dev_GuiAutoResize("EVL", rsdict, A_GuiWidth, A_GuiHeight)
 }
 
@@ -601,6 +622,12 @@ Evl_OnCkbRecent()
 {
 	g_everlink.RefreshUI()
 }
+
+Evl_OnBtnCopyTag()
+{
+	g_everlink.OnBtnCopyTag()
+}
+
 
 Everlink_Clipmon()
 {
