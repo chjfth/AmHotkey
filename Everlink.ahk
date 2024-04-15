@@ -529,6 +529,14 @@ class Everlink
 		
 		ptn := "<!--StartFragment-->`r`n<span><span>.{0,5}\[<a href=""(https://www.evernote.com/shard/s../nl/[0-9a-z-/]+)""[^>]*>([^<]+?)</a>\]"
 		; -- allow only 5 (as in .{0,5}) chars before the link-text.
+		; -- Meaning: For an Evlink like "[VMwks]. VMware Workstation 备忘收集" -- only VMWks in green color, "[" and "]" not in green,
+		;    the "VMwks" here is considered a LinkTag.
+
+		ptn_WRONG := "<!--StartFragment-->`r`n<span><span>.{0,5}<a href=""(https://www.evernote.com/shard/s../nl/[0-9a-z-/]+)""[^>]*>\[([^<]+?)\].*</a>"
+		; -- If we see a Evlink "[VMwks] 制备 Win10 虚拟机, 节省宿主机空间的最佳实践" -- all text in green-color,
+		;    This link is (probably) NOT what [VMwks] refers to, it is another Evclip that is categorized under [VMwks] topic.
+		;    So I don't extract Linktag for this.
+
 		foundpos := RegExMatch(cfhtml, ptn, outfound)
 		if( foundpos==0 )
 		{
