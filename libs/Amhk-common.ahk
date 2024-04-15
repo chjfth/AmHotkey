@@ -2210,6 +2210,25 @@ dev_objkeys(obj)
 	return keys
 }
 
+dev_dictkeys(dict)
+{
+	return dev_objkeys(dict)
+}
+
+dev_dictclear(dict)
+{
+	keys := dev_dictkeys(dict)
+	for index,key in keys
+		dict.Delete(key)
+		
+	; Note: The following code is wrong, the dict cannot be thoroughly cleared.
+	;
+	;for key,val in dict
+	;	dict.Delete(key)
+	
+	
+}
+
 dev_poke_byte(addr, byte_value)
 {
 	; write a byte_value to own-process's address `addr`

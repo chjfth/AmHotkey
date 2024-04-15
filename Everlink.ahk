@@ -108,22 +108,16 @@ class Everlink
 	{
 		this.csvfullpath := win32_GetFullPathName(csvpath)
 
-		evl_array := Everlink.__LoadData_as_array(this.csvfullpath)
+		evl_array := Everlink.__LoadData_as_array(this.csvfullpath, this.dict)
 		if(not evl_array)
 			return false
-		
-		for index,e3 in evl_array
-		{
-			evkey := Everlink.make_evkey(e3.tag, e3.url)
-			this.dict[evkey] := e3.desc
-		}
-		
+
 		this.LoadRecentListFromDisk()
 		
 		return true
 	}
 	
-	__LoadData_as_array(csvpath) ; static
+	__LoadData_as_array(csvpath, evkey_dict_output:="") ; static
 	{
 		; Read csvpath's content and return it as an array,
 		; each element is a dict of (.tag .url. .desc)
@@ -142,6 +136,7 @@ class Everlink
 		lines := dev_ReadFileLines(csvfullpath)
 		
 		evl_array := []
+		dev_dictclear(evkey_dict_output)
 		
 		for index,linetext in lines
 		{
@@ -159,8 +154,24 @@ class Everlink
 			}
 			
 			evl_array.Push({tag:tag, url:url, desc:desc})
+			
+			if(evkey_dict_output)
+			{
+				; Construct the output dict
+				evkey := Everlink.make_evkey(tag, url)
+				if(evkey_dict_output.HasKey(evkey))
+				{
+					Everlink.dbg1(Format("[NOTE] Ignore duplicate evkey(line #{}): [{}]", index, evkey))
+				}
+				else
+				{
+					evkey_dict_output[evkey] := desc
+;AmDbg0("++++++++ " evkey)
+				}
+			}
+			
 		}
-		
+;AmDbg0("-------- " evkey_dict_output.count())		
 		return evl_array
 	}
 	
@@ -545,14 +556,14 @@ Everlink_Init(csvfilepath, is_pop_errmsg:=true)
 		
 		g_everlink := new Everlink(csvfilepath)
 		varcap := dev_VarGetCapacity(g_everlink)
-		AmDbg_output(Everlink_Id, Format("[OK] Everlink singleton object created. (addr=0x{} , varcap={})", &g_everlink, varcap))
+		Everlink.dbg2(Format("[OK] Everlink singleton object created. (addr=0x{} , varcap={})", &g_everlink, varcap))
 		return true
 	
 	} catch e {
 	
 		errmsg := "Everlink_Init() fail. Reason:`n`n" e.message ; Double `n to make MsgBox text friendlier.
 		
-		AmDbg_output(Everlink_Id, errmsg)
+		Everlink.dbg1(errmsg)
 	
 		if(is_pop_errmsg)
 		{
