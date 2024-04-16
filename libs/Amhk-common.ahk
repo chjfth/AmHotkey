@@ -20,7 +20,7 @@ dev_false()
 	return false
 }
 
-dev_assert(success_condition, msg_on_error:="", is_attach_code:=false)
+dev_assert(success_condition, msg_on_error:="", is_attach_code:=true)
 {
 	; msg_on_error is the text message you want to say to user, in case success_condition is not met.
 
@@ -35,12 +35,12 @@ dev_assert(success_condition, msg_on_error:="", is_attach_code:=false)
 			. "Stacktrace below: `r`n`r`n"
 	}
 	
-	fullmsg .= dev_getCallStack(is_attach_code)
+	fullmsg .= dev_getCallStack(20, is_attach_code)
 	
 	dev_MsgBoxError(fullmsg, "AHK Assertion Fail!")
 }
 
-dev_getCallStack(deepness = 20, is_print_code = true)
+dev_getCallStack(deepness:=20, is_print_code:=true)
 {
 	; Call this function to get current callstack.
 	; Usage: If we want to report an error to user(MsgBox etc), showing a full callstack helps greatly.
@@ -1458,11 +1458,34 @@ dev_Send(send_keys)
 	Send % send_keys
 }
 
-dev_YMDHMS_AddSeconds(ymdhms, seconds)
+dev_isValidAhkTimestamp(wt)
 {
+	return (wt ~= "^[0-9]{14}$") ? true : false
+}
+
+dev_YMDHMS_AddSeconds(ymdhms, add_seconds)
+{
+	dev_assert( dev_isValidAhkTimestamp(ymdhms), Format("'{}' is NOT in AHK timestamp format.", ymdhms))
+	dev_assert(!dev_isValidAhkTimestamp(add_seconds), Format("'{}' is in AHK timestamp format, which is wrong.", add_seconds))
+
 	outvar := ymdhms
-	EnvAdd, outvar, seconds, Seconds
+	EnvAdd, outvar, %add_seconds%, Seconds
+	; -- surprise, `%add_seconds%` above can be written as `add_seconds`
+	
 	return outvar
+}
+
+dev_walltime_now()
+{
+	return A_Now
+}
+
+dev_walltime_elapsec(wt_from, wt_to)
+{
+	; Calculate wt_to - wt_from
+	; wt_from and wt_to must be seconds-precision.
+	EnvSub, wt_to, %wt_from%, Seconds
+	return wt_to
 }
 
 
