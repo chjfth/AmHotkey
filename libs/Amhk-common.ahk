@@ -73,6 +73,26 @@ dev_getCallStack(deepness:=20, is_print_code:=true)
 	return stack_prev
 }
 
+dev_FileRead_NthLine(file, line)
+{
+	; Read n-th line of a file
+	FileReadLine, linetext, % file, % line
+	return linetext
+}
+
+dev_rethrow_syse(sys_e, new_msg)
+{
+	new_e := Exception(new_msg)
+	new_e.Line := sys_e.Line
+	
+	supp := Format("[##] File '{}', Line {}: `n{}"
+		, sys_e.File, sys_e.Line, dev_FileRead_NthLine(sys_e.File, sys_e.Line))
+	
+	AmDbg0("Got system exception:`n" dev_getCallStack() "`n" supp)
+	
+	throw new_e
+}
+
 
 dev_EnvGet(varname)
 {
@@ -261,10 +281,39 @@ dev_IniReadVal(inifilepath, section, key:="", default_val:=0)
 
 dev_IniWrite(inifilepath, section, key, val)
 {
-	IniWrite, % val, % inifilepath, % section, % key
-	return ErrorLevel ? false : true
+	try {
+		IniWrite, % val, % inifilepath, % section, % key
+	}
+	catch e {
+		dev_rethrow_syse(e, Format("Error writing file: ""{}""", inifilepath))
+	}
+	return true
 }
 
+dev_IniWriteSection(inifilepath, section, items)
+{
+	; note: would overwrite whole section.
+	try {
+		IniWrite, % items, % inifilepath, % section
+	}
+	catch e {
+		dev_rethrow_syse(e, Format("Error writing file: ""{}""", inifilepath))
+	}
+	return true
+}
+
+dev_IniWriteSectionVA(inifilepath, section, items*)
+{
+	; Usage example:
+	; dev_IniWriteSectionVA("test1.ini", "section1", "key1=val1", "key2=val2")
+	
+	linestext := ""
+	for index,item in items
+	{
+		linestext .= item "`n" ; should not use "`r`n", AHK does it for us.
+	}
+	return dev_IniWriteSection(inifilepath, section, linestext)
+}
 
 dev_CreateDirIfNotExist(dirpath)
 {
@@ -426,9 +475,7 @@ dev_WriteFile(filepath, text, is_append, encoding:="")
 		emsg := Format("Error {} file: ""{}"""
 			, e.What=="FileDelete" ? "deleting" : "writing"
 			, filepath)
-		e2 := Exception(emsg)
-		e2.Line := e.Line
-		throw e2
+		dev_rethrow_syse(e, emsg)
 	}
 }
 
@@ -1475,6 +1522,13 @@ dev_YMDHMS_AddSeconds(ymdhms, add_seconds)
 	return outvar
 }
 
+dev_walltime_friendly(wt, sepchar:=".")
+{
+	; Add a dot between date and time.
+	dev_assert(dev_isValidAhkTimestamp(wt))
+	return SubStr(wt, 1, 8) . sepchar . SubStr(wt, 9, 6)
+}
+
 dev_walltime_now()
 {
 	return A_Now
@@ -1484,6 +1538,10 @@ dev_walltime_elapsec(wt_from, wt_to)
 {
 	; Calculate wt_to - wt_from
 	; wt_from and wt_to must be seconds-precision.
+
+	dev_assert(dev_isValidAhkTimestamp(wt_from), Format("'{}' is NOT in AHK timestamp format.", wt_from))
+	dev_assert(dev_isValidAhkTimestamp(wt_to),   Format("'{}' is NOT in AHK timestamp format.", wt_to))
+
 	EnvSub, wt_to, %wt_from%, Seconds
 	return wt_to
 }
