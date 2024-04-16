@@ -1521,22 +1521,46 @@ dev_Send(send_keys)
 	Send % send_keys
 }
 
-dev_isValidAhkTimestamp(wt)
+dev_YMDHMS_AddSeconds(ymdhms, seconds)
 {
+	outvar := ymdhms
+	EnvAdd, outvar, seconds, Seconds
+	return outvar
+}
+
+
+dev_isValidWalltime(wt)
+{
+	; I just add a underscore between date and time to make the whole timestamp
+	; more readable.
+
 	if(!wt)
 		return true ; consider empty value valid, as in Unix-epoch
 
-	return (wt ~= "^[0-9]{14}$") ? true : false
+	return (wt ~= "^[0-9]{8}_[0-9]{6}$") ? true : false
+}
+
+dev_walltime_strip(wt)
+{
+	if(!wt)
+		return ""
+
+	; Return AHK native timestamp, so to call EnvAdd, EnvSub
+	return StrReplace(wt, "_" , "")
+}
+
+dev_walltime_make(ahkts)
+{
+	if(!ahkts)
+		return ""
+
+	return SubStr(ahkts, 1, 8) "_" SubStr(ahkts, 9, 6)
 }
 
 dev_walltime_origin()
 {
 	east_seconds := 60 * dev_LocalTimeZoneInMinutes()
-	return dev_walltime_AddSeconds("19700101000000", east_seconds) ; count from Unix-epoch
-}
-
-dev_YMDHMS_AddSeconds(args*) {
-	dev_walltime_AddSeconds(args*)
+	return dev_walltime_AddSeconds("19700101_000000", east_seconds) ; count from Unix-epoch
 }
 
 dev_walltime_AddSeconds(wt, add_seconds)
@@ -1544,21 +1568,21 @@ dev_walltime_AddSeconds(wt, add_seconds)
 	if(!wt)
 		wt := dev_walltime_origin()
 
-	dev_assert( dev_isValidAhkTimestamp(wt), Format("'{}' is NOT in AHK timestamp format.", wt))
-	dev_assert(!dev_isValidAhkTimestamp(add_seconds), Format("'{}' is in AHK timestamp format, which is wrong.", add_seconds))
+	dev_assert( dev_isValidWalltime(wt), Format("'{}' is NOT valid walltime format.", wt))
+	dev_assert(!dev_isValidWalltime(add_seconds), Format("'{}' is in walltime format, which is wrong.", add_seconds))
 
-	outvar := wt
+	outvar := dev_walltime_strip(wt)
 	EnvAdd, outvar, %add_seconds%, Seconds
 	; -- surprise, `%add_seconds%` above can be written as `add_seconds`
 	
-	return outvar
+	return dev_walltime_make(outvar)
 }
 
-dev_walltime_friendly(wt, sepchar:="_")
+no_use__dev_walltime_friendly(wt, sepchar:="_")
 {
 	; Add a _ between date and time.
 
-	dev_assert(dev_isValidAhkTimestamp(wt))
+	dev_assert(dev_isValidWalltime(wt))
 	
 	if(!wt or wt==dev_walltime_origin())
 		return "(walltime-nil)"
@@ -1568,7 +1592,7 @@ dev_walltime_friendly(wt, sepchar:="_")
 
 dev_walltime_now()
 {
-	return A_Now
+	return dev_walltime_make(A_Now)
 }
 
 dev_walltime_elapsec(wt_from, wt_to)
@@ -1576,8 +1600,8 @@ dev_walltime_elapsec(wt_from, wt_to)
 	; Calculate wt_to - wt_from
 	; wt_from and wt_to must be seconds-precision.
 
-	dev_assert(dev_isValidAhkTimestamp(wt_from), Format("'{}' is NOT in AHK timestamp format.", wt_from))
-	dev_assert(dev_isValidAhkTimestamp(wt_to),   Format("'{}' is NOT in AHK timestamp format.", wt_to))
+	dev_assert(dev_isValidWalltime(wt_from), Format("'{}' is NOT in AHK timestamp format.", wt_from))
+	dev_assert(dev_isValidWalltime(wt_to),   Format("'{}' is NOT in AHK timestamp format.", wt_to))
 
 	if(!wt_from)
 		wt_from := dev_walltime_origin()
@@ -1585,8 +1609,11 @@ dev_walltime_elapsec(wt_from, wt_to)
 	if(!wt_to)
 		wt_to := dev_walltime_origin()
 
-	outvar := wt_to
-	EnvSub, outvar, %wt_from%, Seconds
+	ahkts_from := dev_walltime_strip(wt_from)
+	ahkts_to   := dev_walltime_strip(wt_to)
+
+	outvar := ahkts_to
+	EnvSub, outvar, %ahkts_from%, Seconds
 	return outvar
 }
 

@@ -138,7 +138,7 @@ class FoxitCoedit
 		this.wtSyncStart := dev_walltime_now()
 
 		this.dbg1(Format("{} Sync start at {}"
-			, this.mineside, dev_walltime_friendly(this.wtSyncStart)))
+			, this.mineside, this.wtSyncStart))
 	
 		dev_IniWriteSectionVA(this.mine_ini, "cfg"
 			, "proseq=0"
@@ -162,8 +162,8 @@ class FoxitCoedit
 			, this.mineside
 			, peer.proseq
 			, peer.passeq
-			, dev_walltime_friendly(peer.SyncStart)
-			, dev_walltime_friendly(peer.SyncSucc)))
+			, peer.SyncStart
+			, peer.SyncSucc))
 		
 		peer_start_diff := dev_walltime_elapsec(this.wtSyncStart, peer.SyncStart)
 		peer_succ_diff  := dev_walltime_elapsec(this.wtSyncStart, peer.SyncSucc)
