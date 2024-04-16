@@ -256,6 +256,22 @@ dev_IniReadSection(inifilepath, section)
 	return lines ; an array of text, each element is one line 
 }
 
+dev_IniReadSectionIntoDict(inifilepath, section)
+{
+	dict := {}
+	arlinetext := dev_IniReadSection(inifilepath, section)
+	
+	for index,itemline in arlinetext
+	{
+		key_value := StrSplit(itemline, "=")
+		key := key_value[1]
+		value := key_value[2]
+		
+		dict[key] := value
+	}
+	return dict
+}
+
 dev_IniRead(inifilepath, section, key:="", default_val:="")
 {
 	; key=="" to return whole section content as a single string(separated by \n)
@@ -1507,25 +1523,46 @@ dev_Send(send_keys)
 
 dev_isValidAhkTimestamp(wt)
 {
+	if(!wt)
+		return true ; consider empty value valid, as in Unix-epoch
+
 	return (wt ~= "^[0-9]{14}$") ? true : false
 }
 
-dev_YMDHMS_AddSeconds(ymdhms, add_seconds)
+dev_walltime_origin()
 {
-	dev_assert( dev_isValidAhkTimestamp(ymdhms), Format("'{}' is NOT in AHK timestamp format.", ymdhms))
+	east_seconds := 60 * dev_LocalTimeZoneInMinutes()
+	return dev_walltime_AddSeconds("19700101000000", east_seconds) ; count from Unix-epoch
+}
+
+dev_YMDHMS_AddSeconds(args*) {
+	dev_walltime_AddSeconds(args*)
+}
+
+dev_walltime_AddSeconds(wt, add_seconds)
+{
+	if(!wt)
+		wt := dev_walltime_origin()
+
+	dev_assert( dev_isValidAhkTimestamp(wt), Format("'{}' is NOT in AHK timestamp format.", wt))
 	dev_assert(!dev_isValidAhkTimestamp(add_seconds), Format("'{}' is in AHK timestamp format, which is wrong.", add_seconds))
 
-	outvar := ymdhms
+	outvar := wt
 	EnvAdd, outvar, %add_seconds%, Seconds
 	; -- surprise, `%add_seconds%` above can be written as `add_seconds`
 	
 	return outvar
 }
 
-dev_walltime_friendly(wt, sepchar:=".")
+dev_walltime_friendly(wt, sepchar:="_")
 {
-	; Add a dot between date and time.
+	; Add a _ between date and time.
+
 	dev_assert(dev_isValidAhkTimestamp(wt))
+	
+	if(!wt or wt==dev_walltime_origin())
+		return "(walltime-nil)"
+	
 	return SubStr(wt, 1, 8) . sepchar . SubStr(wt, 9, 6)
 }
 
@@ -1542,8 +1579,15 @@ dev_walltime_elapsec(wt_from, wt_to)
 	dev_assert(dev_isValidAhkTimestamp(wt_from), Format("'{}' is NOT in AHK timestamp format.", wt_from))
 	dev_assert(dev_isValidAhkTimestamp(wt_to),   Format("'{}' is NOT in AHK timestamp format.", wt_to))
 
-	EnvSub, wt_to, %wt_from%, Seconds
-	return wt_to
+	if(!wt_from)
+		wt_from := dev_walltime_origin()
+
+	if(!wt_to)
+		wt_to := dev_walltime_origin()
+
+	outvar := wt_to
+	EnvSub, outvar, %wt_from%, Seconds
+	return outvar
 }
 
 
