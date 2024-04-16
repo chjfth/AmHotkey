@@ -259,7 +259,7 @@ class Everlink
 	ShowGui()
 	{
 		if(this.isGuiVisible)
-			return
+			return ; already shown
 		
 		if(!g_HwndEVLGui) {
 			this.CreateGui()
@@ -278,7 +278,7 @@ class Everlink
 
 		dev_OnMessageUnRegister(win32c.WM_KEYDOWN, "Evl_WM_KEYDOWN")
 
-		g_everlink.isGuiVisible := false
+		this.isGuiVisible := false
 	}
 
 	CurRowIdx()
