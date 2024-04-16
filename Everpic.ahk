@@ -124,8 +124,6 @@ Everpic_InitHotkeys()
 return ; End of auto-execute section.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
-#Include %A_LineFile%\..\evernote.ahk
-
 
 class Everpic
 {

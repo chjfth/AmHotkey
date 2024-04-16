@@ -23,6 +23,7 @@
 ; #Include mediaplayer.ahk
 ; #Include pdfreader.ahk
 ; #Include evernote.ahk
+; #Include Everpic.ahk
 
 ; #Include devmgmt.ahk
 
