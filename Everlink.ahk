@@ -611,7 +611,7 @@ class Everlink
 Everlink_InitHotkeys()
 {
 	; App+k to call up the UI
-	fxhk_DefineComboHotkey("AppsKey", "k", "Everlink_LaunchUI")
+	fxhk_DefineComboHotkeyCond("AppsKey", "k", "Evernote_IsMainFrameOrSingleActive", "Everlink_LaunchUI")
 	
 	; Caller code suggestion
 	; dev_DefineHotkeyWithCondition("!k", "Evernote_IsMainFrameOrSingleActive", "Everlink_LaunchUI")
