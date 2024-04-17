@@ -82,6 +82,15 @@ dev_FileRead_NthLine(file, line)
 	return linetext
 }
 
+dev_fileline_syse(sys_e)
+{
+	msg := Format("Message: {}`nFile '{}', Line {}: `n{}"
+		, sys_e.Message
+		, sys_e.File, sys_e.Line
+		, dev_FileRead_NthLine(sys_e.File, sys_e.Line))
+	return msg
+}
+
 dev_rethrow_syse(sys_e, new_msg)
 {
 	new_e := Exception(new_msg)
@@ -2213,7 +2222,10 @@ dev_StartTimerPeriodic(str_callable, millisec, is_exec_now:=false)
 
 dev_StopTimer(str_callable:="")
 {
-	SetTimer, % str_callable, Off
+	if(str_callable)
+		SetTimer, % str_callable, Off
+	else
+		SetTimer, , Off
 }
 
 dev_StartTimerPeriodicEx(millisec, is_exec_now, funcware, callback_args*)
@@ -2228,6 +2240,12 @@ dev_StartTimerPeriodicEx(millisec, is_exec_now, funcware, callback_args*)
 		%fn%()
 	
 	SetTimer, % fn, % millisec
+	; -- To stop the timer, you should call dev_StopTimer() from *within* your timer callback.
+	;    instead of calling dev_StopTimer().
+	;
+	;    -- because, most of the time, even if you pass the same funcware object to 
+	;    dev_StartTimerPeriodicEx() and to dev_StopTimer(), the resulting `fn` 
+	;    may NOT be the same, so dev_StopTimer() does not take effect.
 }
 
 dev_StopTimerPeriodicEx(args*)

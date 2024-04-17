@@ -14,6 +14,7 @@ global g_HwndFOCOGui
 
 global gu_focoBtnSavePdf
 global gu_focoBtnSync
+global gu_focoBtnTest
 global gu_focoMleInfo
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -36,9 +37,12 @@ class FoxitCoedit
 	
 	sides_info := [] ; only two elements [0] for sideA , [1] for sideB
 	
-	state := "Syncing"
+	state := "Syncing" ; -> Monitoring -> [A] WaitLocking -> SavingPdf   -> Monitoring
+	;                                     [B] Releasing -> WaitUnlocking -> Monitoring
 	
 	wtSyncStart := "" ; A_Now
+	proseq :=0 ; mineside proactive sequence
+	passeq :=0 ; mineside passive sequence
 	
 	dbg(msg, lv) {
 		AmDbg_output(FoxitCoedit_Id, msg, lv)
@@ -79,8 +83,9 @@ class FoxitCoedit
 		Gui_AssociateHwndVarname(GuiName, "g_HwndFOCOGui")
 		
 		fullwidth := 500
-		Gui_Add_Button(  GuiName, "gu_focoBtnSavePdf",  120, "xm " gui_g("Foco_OnBtnSavePdf"), "&Save pdf")
+		Gui_Add_Button(  GuiName, "gu_focoBtnSavePdf",  120, "xm " gui_g("Foco_OnBtnSavePdf"), "Save &pdf")
 		Gui_Add_Button(  GuiName, "gu_focoBtnSync",  50, "x+10 " gui_g("Foco_OnBtnSync"), "&Sync")
+		Gui_Add_Button(  GuiName, "gu_focoBtnTest",  50, "x+10 " gui_g("Foco_OnBtnTest"), "&Test")
 		Gui_Add_Editbox( GuiName, "gu_focoMleInfo", fullwidth, "xm r10" , "...")
 	}
 
@@ -189,7 +194,7 @@ class FoxitCoedit
 			, "SyncStart=" this.wtSyncStart
 			, "SyncSucc=" )
 		
-		dev_StartTimerPeriodic("foco_SyncTimerCallback", 1000, true) ;zzz
+		dev_StartTimerPeriodic("foco_SyncTimerCallback", 1000, true)
 		
 		GuiControl_Disable(GuiName, "gu_focoBtnSync")
 	}
@@ -232,11 +237,14 @@ class FoxitCoedit
 		if(is_succ)
 		{	; tell the peer we are success.
 			this.IniWriteMine("SyncSucc", dev_walltime_now())
-			dev_StopTimer("foco_SyncTimerCallback")
+			dev_StopTimer()
+		
+			this.state := "Monitoring"
 		
 			GuiControl_Enable(GuiName, "gu_focoBtnSync")
 			
-			;dev_StartTimerPeriodic("foco_MonitorPeerPdf", 1000, true)
+			this.dbg2("Start timer for FoxitCoedit.MonitorPeerPdf().")
+			dev_StartTimerPeriodicEx(1000, true, "FoxitCoedit.MonitorPeerPdf", this)
 		}
 	}
 	
@@ -247,37 +255,136 @@ class FoxitCoedit
 
 		try 
 		{
-			proseq := this.IniReadMine("proseq")
-			this.dbg1(Format("Start saving pdf ... (proseq={})", proseq))
+			this.dbg1(Format("Start saving session ... (proseq={})", this.proseq))
+			
+			nowseq := this.IniReadMine("proseq")
+			dev_assert(this.proseq==nowseq)
 		
-			proseq_plus1 := this.IniIncreaseVal("proseq")
+			this.IniIncreaseVal("proseq")
 			
-			; Wait for peer's closing pdf
-			this.WaitPeerIni("passeq", proseq_plus1)
+			this.dbg2(Format("Waiting peer to close pdf..."))
 			
-			this.dbg2("Simu saving pdf...")
+			is_succ := this.WaitPeerIni("passeq", this.proseq+1)
+			if(not is_succ)
+			{
+				this.dbg1("Fail to WaitPeer() ~~~~!")
+				this.ResetState() 
+				return
+			}
+			
+			this.dbg2("Now writing pdf...")
 			Sleep, 2000
-			this.dbg2("Simu saving pdf Done...")
+			this.dbg2("Done writing pdf.")
 			
-			proseq_plus2 := this.IniIncreaseVal("proseq")
+			this.IniIncreaseVal("proseq")
 			
 			; Wait for peer's re-opening pdf
-			this.WaitPeerIni("passeq", proseq_plus2)
+			is_succ := this.WaitPeerIni("passeq", this.proseq+2)
+			if(not is_succ)
+			{
+				this.dbg1("Fail to WaitPeer() ~~~~!")
+				this.ResetState()
+				return
+			}
 
-			this.dbg1(Format("Saving pdf SUCCESS (proseq={})", proseq_plus2))
+			this.dbg1(Format("Saving pdf SUCCESS (proseq={})", this.proseq+2))
+			
+			this.proseq += 2
+			this.dbg1(Format("Done saving session. (proseq={})", this.proseq))
 		}
 		catch e 
 		{
-			this.dbg1("OnBtnSavePdf got exception:`n" e.Message)
+			this.dbg1("OnBtnSavePdf() got exception:`n" . dev_fileline_syse(e))
 		}
-		
 		
 		GuiControl_Enable(GuiName, "gu_focoBtnSavePdf")
 	}
 	
 	MonitorPeerPdf()
 	{
+		AmDbg0("---- MonitorPeerPdf() ...")
+		
+		try
+		{
+			peer_proseq := this.IniReadPeer("proseq")
+			if(peer_proseq == this.passeq)
+				return ; peer is silent, nothing to do
+			
+			if(peer_proseq != this.passeq+1)
+			{
+				this.dbg1("[ERROR] Peer proseq out of sync ~~~~~~~!")
+				this.ResetState()
+				return
+			}
+			
+			this.dbg1(Format("Passive-side is alerted to relinquish pdf. (passeq={})", this.passeq))
+			
+			dev_assert(peer_proseq == this.passeq+1)
+			
+			this.dbg2("Now closing pdf...")
+			Sleep, 2000
+			this.dbg2("Done closing pdf.")
+			
+			this.IniIncreaseVal("passeq")
+			
+			this.dbg2("Waiting peer's writing pdf...")
+			
+			is_succ := this.WaitPeerIni("proseq", this.passeq+2)
+			if(not is_succ)
+			{
+				this.dbg1("Fail to WaitPeerIni() ~~~~~~!")
+				this.ResetState()
+				return
+			}
+			
+			this.dbg2("Now re-opening pdf...")
+			Sleep, 2000
+			this.dbg2("Done re-opening pdf...")
+			
+			this.IniIncreaseVal("passeq")
+			this.passeq += 2
+			
+			this.dbg1(Format("Passive-side just refreshed the pdf. (passeq={})", this.passeq))
+		}
+		catch e 
+		{
+			this.dbg1("MonitorPeerPdf() got exception:`n" . dev_fileline_syse(e))
+			dev_StopTimer()
+		}
+	}
 	
+	ResetState()
+	{
+		; todo
+		; Restart syncing timer. 
+		;
+		; dev_StopTimer() // not suitable for proactive side
+	}
+	
+	OnBtnTest()
+	{
+		; ------ dev_StopTimer()
+		dev_StartTimerPeriodicEx(1000, true, "FoxitCoedit.TestTimerCallback", this)
+	}
+	
+	TestTimerCallback()
+	{
+		static si := 0
+		
+		now_si := si
+		si++
+		
+		AmDbg0(Format("[#now_si={}] enter <{}>", now_si, p1))
+
+		Sleep, 2000
+
+		AmDbg0(Format("[#now_si={}] leave <{}>", now_si, p1))
+		
+		if(now_si==3)
+		{
+			dev_StopTimer()
+			si := 0
+		}
 	}
 
 } ; class FoxitCoedit
@@ -315,6 +422,11 @@ foco_SyncTimerCallback()
 }
 
 
+Foco_OnBtnTest()
+{
+	g_foco.OnBtnTest()
+}
+
 FOCOGuiSize()
 {
 	rsdict := {}
@@ -334,42 +446,11 @@ FOCOGuiEscape()
 }
 
 
-/*
-FOCO_OnEditChange()
-{
-	g_foco.OnEditChange()
-}
 
+/*
 FOCO_OnBtnOK()
 {
 	g_foco.OnBtnOK()
-}
-
-
-FOCO_WM_KEYDOWN(wParam, lParam, msg, hwnd)
-{
-	g_foco.On_WM_KEYDOWN(wParam, lParam, msg, hwnd)
-}
-
-FOCO_OnCkbRecent()
-{
-	g_foco.OnCkbRecent()
-}
-
-FOCO_OnBtnCopyTag()
-{
-	g_foco.OnBtnCopyTag()
-}
-
-FOCO_OnBtnChgDesc()
-{
-	g_foco.OnBtnChgDesc()
-}
-
-
-Everlink_Clipmon()
-{
-	g_foco.ClipmonCallback()
 }
 
 */
