@@ -278,7 +278,7 @@ Gui_Add_Listview(GuiName, CtrlVarname, width, format, columnlist_pipes)
 }
 
 
-GuiControl_Enable(GuiName, CtrlVarname, is_enable)
+GuiControl_Enable(GuiName, CtrlVarname, is_enable:=true)
 {
 	Assert_UicVarname(CtrlVarname)
 	cmd := is_enable ? "Enable" : "Disable"
@@ -286,6 +286,11 @@ GuiControl_Enable(GuiName, CtrlVarname, is_enable)
 		cmd := Format("{}:{}", GuiName, cmd)
 
 	GuiControl, % cmd, % CtrlVarname
+}
+
+GuiControl_Disable(GuiName, CtrlVarname)
+{
+	GuiControl_Enable(GuiName, CtrlVarname, false)
 }
 
 GuiControl_ButtonCheck(GuiName, CtrlVarname, is_check)

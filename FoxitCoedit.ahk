@@ -78,10 +78,10 @@ class FoxitCoedit
 		Gui_ChangeOpt(GuiName, "+Resize +MinSize")
 		Gui_AssociateHwndVarname(GuiName, "g_HwndFOCOGui")
 		
-		fullwidth := 600
+		fullwidth := 500
 		Gui_Add_Button(  GuiName, "gu_focoBtnSavePdf",  120, "xm " gui_g("Foco_OnBtnSavePdf"), "&Save pdf")
 		Gui_Add_Button(  GuiName, "gu_focoBtnSync",  50, "x+10 " gui_g("Foco_OnBtnSync"), "&Sync")
-		Gui_Add_Editbox( GuiName, "gu_focoMleInfo", fullwidth, "xm r20" , "...")
+		Gui_Add_Editbox( GuiName, "gu_focoMleInfo", fullwidth, "xm r10" , "...")
 	}
 
 	ShowGui()
@@ -135,6 +135,7 @@ class FoxitCoedit
 
 	OnBtnSync()
 	{
+		GuiName := "FOCO"
 		this.wtSyncStart := dev_walltime_now()
 
 		this.dbg1(Format("{} Sync start at {}"
@@ -147,6 +148,8 @@ class FoxitCoedit
 			, "SyncSucc=" )
 		
 		dev_StartTimerPeriodic("foco_SyncTimerCallback", 1000, true)
+		
+		GuiControl_Disable(GuiName, "gu_focoBtnSync")
 	}
 	
 	SyncTimerCallback()
@@ -172,22 +175,24 @@ class FoxitCoedit
 		if(peer_start_diff>=0)
 		{
 			is_succ := true
-			this.dbg1(Format("Sync success. Peer-start is ahead of our-start +{} seconds", peer_start_diff))
+			this.dbg1(Format("Sync SUCCESS. Peer-start is ahead of our-start +{} seconds", peer_start_diff))
 		}
 		else if(peer_succ_diff>=0)
 		{
 			is_succ := true
-			this.dbg1(Format("Sync success. Peer-success is ahead of our-success +{} seconds", peer_succ_diff))
+			this.dbg1(Format("Sync SUCCESS. Peer-success is ahead of our-success +{} seconds", peer_succ_diff))
 		}
 		else
 		{
-			this.dbg2(Format("Still waiting for peer. Peer is behind us {} seconds", peer_start_diff))
+			this.dbg2(Format("Still waiting for peer. Peer is behind our-start {} seconds", peer_start_diff))
 		}
 	
 		if(is_succ)
 		{	; tell the peer we are success.
 			dev_IniWrite(this.mine_ini, "cfg", "SyncSucc", dev_walltime_now())
 			dev_StopTimer("foco_SyncTimerCallback")
+		
+			GuiControl_Enable(GuiName, "gu_focoBtnSync")
 		}
 	}
 	
