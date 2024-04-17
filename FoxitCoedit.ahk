@@ -133,6 +133,48 @@ class FoxitCoedit
 		}
 	}
 
+	IniReadPeer(key, default_val:=0)
+	{
+		return dev_IniRead(this.peer_ini, "cfg", key, default_val)
+	}
+	
+	IniReadMine(key, default_val:=0)
+	{
+		return dev_IniRead(this.mine_ini, "cfg", key, default_val)
+	}
+	
+	IniWriteMine(key, val)
+	{
+		return dev_IniWrite(this.mine_ini, "cfg", key, val)
+	}
+
+	IniIncreaseVal(key, inc:=1)
+	{
+		val0 := this.IniReadMine(key)
+		val1 := val0 + inc
+		this.IniWriteMine(key, val1)
+		return val1
+	}
+	
+	WaitPeerIni(key, val, wait_seconds:=5)
+	{
+		; Repeatedly check peer's ini, until we see `key=val` present.
+		; return true if see desired, false if timeout.
+		
+		end_tick := dev_GetTickCount64() + wait_seconds*1000
+		Loop
+		{
+			peerval := this.IniReadPeer(key)
+			if(val==peerval)
+				return true
+			
+			if(dev_GetTickCount64() > end_tick)
+				return false
+			
+			Sleep, 1000
+		}
+	}
+
 	OnBtnSync()
 	{
 		GuiName := "FOCO"
@@ -147,7 +189,7 @@ class FoxitCoedit
 			, "SyncStart=" this.wtSyncStart
 			, "SyncSucc=" )
 		
-		dev_StartTimerPeriodic("foco_SyncTimerCallback", 1000, true)
+		dev_StartTimerPeriodic("foco_SyncTimerCallback", 1000, true) ;zzz
 		
 		GuiControl_Disable(GuiName, "gu_focoBtnSync")
 	}
@@ -189,18 +231,54 @@ class FoxitCoedit
 	
 		if(is_succ)
 		{	; tell the peer we are success.
-			dev_IniWrite(this.mine_ini, "cfg", "SyncSucc", dev_walltime_now())
+			this.IniWriteMine("SyncSucc", dev_walltime_now())
 			dev_StopTimer("foco_SyncTimerCallback")
 		
 			GuiControl_Enable(GuiName, "gu_focoBtnSync")
+			
+			;dev_StartTimerPeriodic("foco_MonitorPeerPdf", 1000, true)
 		}
 	}
 	
 	OnBtnSavePdf()
 	{
-	
+		GuiName := "FOCO"
+		GuiControl_Disable(GuiName, "gu_focoBtnSavePdf")
+
+		try 
+		{
+			proseq := this.IniReadMine("proseq")
+			this.dbg1(Format("Start saving pdf ... (proseq={})", proseq))
+		
+			proseq_plus1 := this.IniIncreaseVal("proseq")
+			
+			; Wait for peer's closing pdf
+			this.WaitPeerIni("passeq", proseq_plus1)
+			
+			this.dbg2("Simu saving pdf...")
+			Sleep, 2000
+			this.dbg2("Simu saving pdf Done...")
+			
+			proseq_plus2 := this.IniIncreaseVal("proseq")
+			
+			; Wait for peer's re-opening pdf
+			this.WaitPeerIni("passeq", proseq_plus2)
+
+			this.dbg1(Format("Saving pdf SUCCESS (proseq={})", proseq_plus2))
+		}
+		catch e 
+		{
+			this.dbg1("OnBtnSavePdf got exception:`n" e.Message)
+		}
+		
+		
+		GuiControl_Enable(GuiName, "gu_focoBtnSavePdf")
 	}
 	
+	MonitorPeerPdf()
+	{
+	
+	}
 
 } ; class FoxitCoedit
 

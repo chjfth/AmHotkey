@@ -38,6 +38,8 @@ dev_assert(success_condition, msg_on_error:="", is_attach_code:=true)
 	fullmsg .= dev_getCallStack(20, is_attach_code)
 	
 	dev_MsgBoxError(fullmsg, "AHK Assertion Fail!")
+	
+	throw Exception(fullmsg, -1) ; Chj 2024.04.17
 }
 
 dev_getCallStack(deepness:=20, is_print_code:=true)
@@ -124,50 +126,105 @@ dev_str2num(str)
 ;}
 ;
 
-dev_make_fnobj(fni)
+dev_which_functype(funcware)
 {
-	; fni can be either a function-object or just a function-name string.
-	; If fni is a function-name, it will be wrapped into an function-object.
+	; [2024-04-17] A gross triage of three different function(callable) types.
+	; If the input funcware is really a legal callable of one of the three type,
+	; dev_which_functype() should give correct result. 
+	; But if user passes in a casual object, this function may return 
+	; false positive. For example, a dict or array object will produce "fbobj".
+	;
+	; Test this function with test_which_functype()
 
-	dev_assert(fni, "Input param `fni` must not be null.")
-	if(!fni)
-		return 0
-
-	if(dev_IsOneWord(fni))
+	if(dev_IsFuncWord(funcware))
+	{	
+		; funcware can be "myfunc" or "MyClass.myfunc" .
+		; but we cannot tell whether the function by that name really exist
+		return "fnname" 
+	}
+	else if(funcware.name)
 	{
-		; So fni is a function-name.
-		; Convert it into a function-object.
-		fnobj := Func(fni)
+		return "fnobj"
+	}
+	else if(funcware)
+	{
+		; Consider it a BoundFunc object
+		return "fbobj"
+	}
+	else
+		return ""
+}
+/*
+test_which_functype()
+{
+    fnstr := "fnhello"
+    fnobjA := Func("fnhello")
+    fnobjB := fnobjA.bind("0th")
+    fnobjC := fnobjB
+    
+    s := dev_which_functype(fnstr)
+    a := dev_which_functype(fnobjA)
+    b := dev_which_functype(fnobjB)
+    c := dev_which_functype(fnobjC)
+    n := dev_which_functype(Func(fnobjA))
+    nil := ""
+    
+    AmDbg0(Format("{} | {} | {} | {} | [{},{}]", s, a, b, c, n, nil))
+    ; Answer: fnname | fnobj | fbobj | fbobj | [,]
+}
+}
+*/
+
+dev_make_fnobj(fni, args*) ; old name
+{
+	return make_solo_callable(fni, args*)
+}
+
+make_solo_callable(funcware, args*)
+{
+	; funcware can be any of three types of callable in AHK.
+	; This function binds args* into funcware to make(return) a new 
+	; callable object, so that you can use that callable in 
+	; SetTimer, Menu, etc.
+
+	fnout := funcware
+	
+	ft := dev_which_functype(funcware)
+
+	if(ft=="fnname")
+	{
+		fnout := Func(fnout)
+		
+		if(args.Length()>0)
+		{
+			fnout := fnout.Bind(args*) 
+			; -- now fnout becomes a BoundFunc, user cannot apply further .Bind() on it.
+		}
+		else 
+		{
+			; Do not apply .Bind(), so that fnout still has a future chance to .Bind().
+		}
+	}
+	else if(ft=="fnobj")
+	{
+		if(args.Length()>0)
+			fnout := fnout.Bind(args*)
+	}
+	else if(ft=="fbobj")
+	{
+		if(args.Length()>0)
+		{
+			dev_assert(0, "When funcware is already a BoundFunc-object, you MUST NOT pass args* params.")
+			fnout := ""
+		}
 	}
 	else
 	{
-		; fni is a function-object already.
-		fnobj := fni
+		dev_assert(0, "funcware parameter() invalid, not a function or callable. Your funcware's value:`n`n" funcware)
+		fnout := ""
 	}
 
-	; Check for bad parameter format:
-	;
-	if(!IsObject(fnobj)) 
-	{
-		; If fni was a string of not-existing function, it gets here.
-	
-		fnname := fni . ""
-		
-		fnname := strlen(fnname)>0 ? fnname : "<some-fnobj>"
-	
-		callstack := dev_getCallStack()
-	
-		errmsg := Format("In {}(), fni parameter invalid! Not a function-name string or a function-object.`r`n`r`n"
-			. "Callstack below:`r`n{}"
-			, A_ThisFunc, callstack)
-		
-		this.dbg0(errmsg)
-		dev_MsgBoxError(errmsg)
-		
-		return ""
-	}
-	
-	return fnobj
+	return fnout ; User can then write %fnout%(...) to call the function.
 }
 
 
@@ -1100,7 +1157,12 @@ dev_IsToplevelWindow(hwnd)
 	return hwndRoot==hwnd ? true : false
 }
 
-dev_IsOneWord(s)
+dev_IsOneWord(s) ; old name, to deprecate
+{
+	return dev_IsFuncWord(s)
+}
+
+dev_IsFuncWord(s)
 {
 	; s should be a single word, but can not be pure-digits.
 	; It is used when I check if a word can be used as AHK functionn name.
@@ -2149,9 +2211,28 @@ dev_StartTimerPeriodic(str_callable, millisec, is_exec_now:=false)
 	SetTimer, % str_callable, % millisec
 }
 
-dev_StopTimer(str_callable)
+dev_StopTimer(str_callable:="")
 {
 	SetTimer, % str_callable, Off
+}
+
+dev_StartTimerPeriodicEx(millisec, is_exec_now, funcware, callback_args*)
+{
+	if millisec is not number 
+	{
+		dev_assert(0, Format("millisec parameter MUST be a number, not '{}'.", millisec))
+	}
+	
+	fn := make_solo_callable(funcware, callback_args*)
+	if(is_exec_now)
+		%fn%()
+	
+	SetTimer, % fn, % millisec
+}
+
+dev_StopTimerPeriodicEx(args*)
+{
+	dev_assert(0, "You should NOT call dev_StopTimerPeriodicEx(). You HAVE to stop the timer within the timer callback.")
 }
 
 dev_IsValidGuid(input)
