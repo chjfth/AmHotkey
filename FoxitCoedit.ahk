@@ -30,23 +30,21 @@ class FoxitCoedit
 	
 	isGuiVisible := false
 	
-	imine := -1 ; 0 or 1
-	ipeer := -1
-	
 	pdfpath := ""
+	mineside := "" ; "sideA" or "sideB"
 	
-	sides_info := [] ; only two elements [0] for sideA , [1] for sideB
+	state := "" ; "Syncing" -> Monitoring -> [A] ProSaving  -> Monitoring
+	;                                        [B] PasLoading -> Monitoring
 	
-	state := "Syncing" ; -> Monitoring -> [A] ProSaving  -> Monitoring
-	;                                     [B] PasLoading -> Monitoring
+	timer := "" ; a BoundFunc object used to start/stop AHK timer
 	
 	tos_pas_closepdf := 3 ; timeout-seconds saving pdf
 	tos_pas_openpdf := 3
 	tos_pro_savepdf := 5
 	
 	wtSyncStart := "" ; A_Now
-	proseq :=0 ; mineside proactive sequence
-	passeq :=0 ; mineside passive sequence
+	proseq := 0 ; mineside proactive sequence
+	passeq := 0 ; mineside passive sequence
 	
 	dbg(msg, lv) {
 		AmDbg_output(FoxitCoedit_Id, msg, lv)
@@ -61,21 +59,48 @@ class FoxitCoedit
 		FoxitCoedit.dbg(msg, 2)
 	}
 
-	__New(which_side, pdfpath)
+	Activate(which_side, pdfpath)
 	{
-		if(which_side=="A") {
-			this.imine := 0
-			this.ipeer := 1
+		if(which_side=="sideA" or which_side=="A") {
+			this.mineside := "sideA"
 		}
-		else if(which_side=="B") {
-			this.imine := 1
-			this.ipeer := 0
+		else if(which_side=="sideB" or which_side=="B") {
+			this.mineside := "sideB"
 		}
 		else {
-			throw Exception("which_side given wrong value, should be ""A"" or ""B"".")
+			throw Exception("which_side given wrong value, should be ""sideA"" or ""sideB"".")
 		}
-		
+
 		this.pdfpath := pdfpath
+		
+		this.ResetSyncState()
+		
+		this.timer := Func("FoxitCoedit.RootTimerCallback").Bind(this) ; a BoundFunc object
+		dev_StartTimerPeriodic(this.timer, 1000, true)
+	}
+	
+	Deactivate()
+	{
+		dev_StopTimer(this.timer)
+		this.timer := ""
+		
+		this.minside := ""
+		this.pdfpath := ""
+	}
+	
+	ResetSyncState()
+	{
+		this.dbg1(Format("{} Start syncing()... at {}"
+			, this.mineside, this.wtSyncStart))
+	
+		this.wtSyncStart := dev_walltime_now()
+		this.state := "Syncing"
+		dev_IniWriteSectionVA(this.mine_ini, "cfg"
+			, "proseq=0"
+			, "passeq=0"
+			, "SyncStart=" this.wtSyncStart
+			, "SyncSucc=" )
+		
 	}
 
 	CreateGui()
@@ -114,17 +139,10 @@ class FoxitCoedit
 		this.isGuiVisible := false
 	}
 
-	mineside[]
-	{
-		get {
-			return this.imine==0 ? "sideA" : "sideB"
-		}
-	}
-
 	peerside[]
 	{
 		get {
-			return this.imine==0 ? "sideB" : "sideA"
+			return this.mineside=="sideA" ? "sideB" : "sideA"
 		}
 	}
 	
@@ -186,21 +204,24 @@ class FoxitCoedit
 
 	OnBtnSync()
 	{
-		GuiName := "FOCO"
-		this.wtSyncStart := dev_walltime_now()
-
-		this.dbg1(Format("{} Sync start at {}"
-			, this.mineside, this.wtSyncStart))
+		AmDbg0("Force ResetSyncState()")
+		this.ResetSyncState()
+	}
 	
-		dev_IniWriteSectionVA(this.mine_ini, "cfg"
-			, "proseq=0"
-			, "passeq=0"
-			, "SyncStart=" this.wtSyncStart
-			, "SyncSucc=" )
-		
-		dev_StartTimerPeriodic("foco_SyncTimerCallback", 1000, true)
-		
-		GuiControl_Disable(GuiName, "gu_focoBtnSync")
+	RootTimerCallback()
+	{
+;		AmDbg0("RootTimerCallback... " this.mineside)
+		if(this.state=="Syncing")
+		{
+			this.SyncTimerCallback()
+			; todo : If false(INI write fail), then deactivate,
+		}
+		else if(this.state=="Monitoring")
+		{
+			is_succ := this.MonitorTimerCallback()
+			if(not is_succ)
+				this.ResetSyncState()
+		}
 	}
 	
 	SyncTimerCallback()
@@ -226,11 +247,19 @@ class FoxitCoedit
 		if(peer_start_diff>=0)
 		{
 			is_succ := true
+
+			; tell the peer we are success.
+			this.IniWriteMine("SyncSucc", peer.SyncStart)
+
 			this.dbg1(Format("Sync SUCCESS. Peer-start is ahead of our-start +{} seconds", peer_start_diff))
 		}
 		else if(peer_succ_diff>=0)
 		{
 			is_succ := true
+
+			; tell the peer we are success.
+			this.IniWriteMine("SyncSucc", peer.SyncSucc)
+
 			this.dbg1(Format("Sync SUCCESS. Peer-success is ahead of our-success +{} seconds", peer_succ_diff))
 		}
 		else
@@ -239,32 +268,47 @@ class FoxitCoedit
 		}
 	
 		if(is_succ)
-		{	; tell the peer we are success.
-			this.IniWriteMine("SyncSucc", dev_walltime_now())
-			dev_StopTimer()
+		{
+			; tell the peer we are success.
+			; this.IniWriteMine("SyncSucc", dev_walltime_now()) ; moved above
 		
 			this.state := "Monitoring"
 		
-			GuiControl_Enable(GuiName, "gu_focoBtnSync")
+;			GuiControl_Enable(GuiName, "gu_focoBtnSync")
 			
-			this.dbg2("Start timer for FoxitCoedit.MonitorPeerPdf().")
-			dev_StartTimerPeriodicEx(1000, true, "FoxitCoedit.MonitorPeerPdf", this)
+;			this.dbg2("Start timer for FoxitCoedit.MonitorTimerCallback().")
+;			dev_StartTimerPeriodicEx(1000, true, "FoxitCoedit.MonitorTimerCallback", this)
 		}
 	}
 	
 	OnBtnSavePdf()
 	{
+		GuiName := "FOCO"
+;		GuiControl_Disable(GuiName, "gu_focoBtnSavePdf")
+
+		is_succ := this.LaunchSavePdfSession()
+		
+		if(is_succ)
+		{
+			; todo : UI update
+		}
+		else
+		{
+			this.ResetSyncState()
+			dev_MsgBoxWarning("Peer connection lost. Will resync now.")
+			
+		}
+	}
 	
+	LaunchSavePdfSession()
+	{
 		; todo: If it is in Syncing state, refuse to do.
 
 		if(this.state=="PasLoading")
-			return
+			return false
 
 		dev_assert(this.state=="Monitoring")
 	
-		GuiName := "FOCO"
-		GuiControl_Disable(GuiName, "gu_focoBtnSavePdf")
-
 		try 
 		{
 			this.state := "ProSaving"
@@ -307,22 +351,23 @@ class FoxitCoedit
 			this.dbg1(Format("Done saving session. (proseq={})", this.proseq))
 
 			this.state := "Monitoring"
+			
+			return true
 		}
 		catch e 
 		{
 			this.dbg1("OnBtnSavePdf() got exception:`n" . dev_fileline_syse(e))
 			this.ResetState()
+			return false
 		}
-		
-		GuiControl_Enable(GuiName, "gu_focoBtnSavePdf")
 	}
 	
-	MonitorPeerPdf()
+	MonitorTimerCallback()
 	{
-;		AmDbg0("---- MonitorPeerPdf() ...")
+;		AmDbg0("---- MonitorTimerCallback() ...")
 
 		if(this.state=="ProSaving")
-			return
+			return true
 
 		dev_assert(this.state=="Monitoring")
 		
@@ -330,7 +375,7 @@ class FoxitCoedit
 		{
 			peer_proseq := this.IniReadPeer("proseq")
 			if(peer_proseq == this.passeq)
-				return ; peer is silent, nothing to do
+				return true ; peer is silent, nothing to do
 			
 			if(peer_proseq != this.passeq+1)
 			{
@@ -369,18 +414,20 @@ class FoxitCoedit
 			this.dbg1(Format("Mineside just refreshed the pdf. (passeq={})", this.passeq))
 
 			this.state := "Monitoring"
+			
+			return true
 		}
 		catch e 
 		{
-			this.dbg1("MonitorPeerPdf() got exception:`n" . dev_fileline_syse(e))
+			this.dbg1("MonitorTimerCallback() got exception:`n" . dev_fileline_syse(e))
 			this.ResetState()
-			dev_StopTimer()
+			
+			return false
 		}
 	}
 	
-	ResetState()
+	ResetState() ; todo : Deprecate
 	{
-		; todo
 		; Restart syncing timer. 
 		;
 		; dev_StopTimer() // not suitable for proactive side
@@ -417,8 +464,18 @@ class FoxitCoedit
 
 FoxitCoedit_Init(which_side, pdfpath)
 {
-	g_foco := new FoxitCoedit(which_side, pdfpath)
+	g_foco := new FoxitCoedit()
+	g_foco.Activate(which_side, pdfpath)
 }
+
+FoxitCoedit_Deactivate()
+{
+	AmDbg0("FoxitCoedit_Deactivate()")
+	g_foco.Deactivate()
+}
+
+#!y:: FoxitCoedit_Deactivate()
+
 
 FoxitCoedit_LaunchUI()
 {
