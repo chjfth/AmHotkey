@@ -114,7 +114,6 @@ class FoxitCoedit
 		fullwidth := 500
 		Gui_Add_Button(  GuiName, "gu_focoBtnSavePdf",  120, "xm " gui_g("Foco_OnBtnSavePdf"), "Save &pdf")
 		Gui_Add_Button(  GuiName, "gu_focoBtnSync",  50, "x+10 " gui_g("Foco_OnBtnSync"), "&Sync")
-		Gui_Add_Button(  GuiName, "gu_focoBtnTest",  50, "x+10 " gui_g("Foco_OnBtnTest"), "&Test")
 		Gui_Add_Editbox( GuiName, "gu_focoMleInfo", fullwidth, "xm r10" , "...")
 	}
 
@@ -357,7 +356,6 @@ class FoxitCoedit
 		catch e 
 		{
 			this.dbg1("OnBtnSavePdf() got exception:`n" . dev_fileline_syse(e))
-			this.ResetState()
 			return false
 		}
 	}
@@ -420,45 +418,12 @@ class FoxitCoedit
 		catch e 
 		{
 			this.dbg1("MonitorTimerCallback() got exception:`n" . dev_fileline_syse(e))
-			this.ResetState()
 			
 			return false
 		}
 	}
 	
-	ResetState() ; todo : Deprecate
-	{
-		; Restart syncing timer. 
-		;
-		; dev_StopTimer() // not suitable for proactive side
-	}
 	
-	OnBtnTest()
-	{
-		; ------ dev_StopTimer()
-		dev_StartTimerPeriodicEx(1000, true, "FoxitCoedit.TestTimerCallback", this)
-	}
-	
-	TestTimerCallback()
-	{
-		static si := 0
-		
-		now_si := si
-		si++
-		
-		AmDbg0(Format("[#now_si={}] enter <{}>", now_si, p1))
-
-		Sleep, 2000
-
-		AmDbg0(Format("[#now_si={}] leave <{}>", now_si, p1))
-		
-		if(now_si==3)
-		{
-			dev_StopTimer()
-			si := 0
-		}
-	}
-
 } ; class FoxitCoedit
 
 
