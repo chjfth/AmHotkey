@@ -124,16 +124,19 @@ class CTimeGapTeller
 	
 	CheckGap()
 	{
-		; If _gap_millisec time-period has passed since previous CheckGap() call,
-		; return true, otherwise, return false. First-run returns false.
+		; If _gap_millisec time-period has elapsed since previous CheckGap() call,
+		; return positive value, otherwise, return 0. 
+		; If the positive value is N, it means N times of _gap_millisec has elapsed.
+		; First-run returns 0.
 		
-		ret := false ; assume false
+		ret := 0 ; assume false
 		now_msec := dev_GetTickCount64()
 		
 		if(this._msec_prev>0)
 		{
-			if(now_msec - this._msec_prev >= this._gap_millisec)
-				ret := true
+			elapsed_ms := now_msec - this._msec_prev
+			if(elapsed_ms >= this._gap_millisec)
+				ret := elapsed_ms // this._gap_millisec
 		}
 
 		this._msec_prev := now_msec
@@ -157,8 +160,14 @@ Dbgwin_AppendRaw(linemsg, force_fgwin:=false)
 {	
 	static s_tgt := new CTimeGapTeller(1000)
 
-	if(s_tgt.CheckGap())
-		linemsg := ".`r`n" linemsg
+	nsecs := s_tgt.CheckGap()
+	if(nsecs>0)
+	{
+		if(nsecs>10)
+			nsecs := 10
+		
+		linemsg := dev_StrRepeat(".", nsecs) "`r`n" linemsg
+	}
 	
 	Dbgwin_ShowGui(force_fgwin)
 	

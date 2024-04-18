@@ -2081,6 +2081,8 @@ dev_IsExePathMatchRegex(regex)
 
 dev_StrRepeat(string, times)
 {
+	; times<=0 will get empty string
+	output := ""
     loop % times
         output .= string
     return output
