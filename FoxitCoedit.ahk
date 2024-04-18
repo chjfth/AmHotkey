@@ -37,8 +37,12 @@ class FoxitCoedit
 	
 	sides_info := [] ; only two elements [0] for sideA , [1] for sideB
 	
-	state := "Syncing" ; -> Monitoring -> [A] WaitLocking -> SavingPdf   -> Monitoring
-	;                                     [B] Releasing -> WaitUnlocking -> Monitoring
+	state := "Syncing" ; -> Monitoring -> [A] ProSaving  -> Monitoring
+	;                                     [B] PasLoading -> Monitoring
+	
+	tos_pas_closepdf := 3 ; timeout-seconds saving pdf
+	tos_pas_openpdf := 3
+	tos_pro_savepdf := 5
 	
 	wtSyncStart := "" ; A_Now
 	proseq :=0 ; mineside proactive sequence
@@ -250,11 +254,20 @@ class FoxitCoedit
 	
 	OnBtnSavePdf()
 	{
+	
+		; todo: If it is in Syncing state, refuse to do.
+
+		if(this.state=="PasLoading")
+			return
+
+		dev_assert(this.state=="Monitoring")
+	
 		GuiName := "FOCO"
 		GuiControl_Disable(GuiName, "gu_focoBtnSavePdf")
 
 		try 
 		{
+			this.state := "ProSaving"
 			this.dbg1(Format("Start saving session ... (proseq={})", this.proseq))
 			
 			nowseq := this.IniReadMine("proseq")
@@ -262,15 +275,15 @@ class FoxitCoedit
 		
 			this.IniIncreaseVal("proseq")
 			
-			this.dbg2(Format("Waiting peer to close pdf..."))
+			this.dbg2(Format("Waiting peerside to close pdf..."))
 			
 			is_succ := this.WaitPeerIni("passeq", this.proseq+1)
 			if(not is_succ)
 			{
-				this.dbg1("Fail to WaitPeer() ~~~~!")
-				this.ResetState() 
-				return
+				throw Exception(Format("Peerside(close-pdf) no response after {} seconds", this.tos_pas_closepdf))
 			}
+
+			this.dbg2("Waiting peerside to close pdf, success.")
 			
 			this.dbg2("Now writing pdf...")
 			Sleep, 2000
@@ -278,23 +291,27 @@ class FoxitCoedit
 			
 			this.IniIncreaseVal("proseq")
 			
-			; Wait for peer's re-opening pdf
+			this.dbg2("Waiting peerside to reopen pdf...")
+			
 			is_succ := this.WaitPeerIni("passeq", this.proseq+2)
 			if(not is_succ)
 			{
-				this.dbg1("Fail to WaitPeer() ~~~~!")
-				this.ResetState()
-				return
+				throw Exception(Format("Peerside(open-pdf) no response after {} seconds", this.tos_pas_openpdf))
 			}
 
-			this.dbg1(Format("Saving pdf SUCCESS (proseq={})", this.proseq+2))
+			this.dbg2("Waiting peerside to reopen pdf, success.")
+
+			this.dbg1(Format("Saving pdf SUCCESS. (proseq={})", this.proseq+2))
 			
 			this.proseq += 2
 			this.dbg1(Format("Done saving session. (proseq={})", this.proseq))
+
+			this.state := "Monitoring"
 		}
 		catch e 
 		{
 			this.dbg1("OnBtnSavePdf() got exception:`n" . dev_fileline_syse(e))
+			this.ResetState()
 		}
 		
 		GuiControl_Enable(GuiName, "gu_focoBtnSavePdf")
@@ -302,7 +319,12 @@ class FoxitCoedit
 	
 	MonitorPeerPdf()
 	{
-		AmDbg0("---- MonitorPeerPdf() ...")
+;		AmDbg0("---- MonitorPeerPdf() ...")
+
+		if(this.state=="ProSaving")
+			return
+
+		dev_assert(this.state=="Monitoring")
 		
 		try
 		{
@@ -312,12 +334,12 @@ class FoxitCoedit
 			
 			if(peer_proseq != this.passeq+1)
 			{
-				this.dbg1("[ERROR] Peer proseq out of sync ~~~~~~~!")
-				this.ResetState()
-				return
+				throw Exception(Format("Peer proseq out of sync! (Mine:{} , Peer:{})", this.passeq, peer_proseq))
 			}
 			
-			this.dbg1(Format("Passive-side is alerted to relinquish pdf. (passeq={})", this.passeq))
+			this.state := "PasLoading"
+			
+			this.dbg1(Format("Mineside is alerted to relinquish pdf. (passeq={})", this.passeq))
 			
 			dev_assert(peer_proseq == this.passeq+1)
 			
@@ -332,10 +354,10 @@ class FoxitCoedit
 			is_succ := this.WaitPeerIni("proseq", this.passeq+2)
 			if(not is_succ)
 			{
-				this.dbg1("Fail to WaitPeerIni() ~~~~~~!")
-				this.ResetState()
-				return
+				throw Exception(Format("Peerside(save-pdf) no response after {} seconds", this.tos_pro_savepdf))
 			}
+
+			this.dbg2("Waiting peer's writing pdf, success.")
 			
 			this.dbg2("Now re-opening pdf...")
 			Sleep, 2000
@@ -344,11 +366,14 @@ class FoxitCoedit
 			this.IniIncreaseVal("passeq")
 			this.passeq += 2
 			
-			this.dbg1(Format("Passive-side just refreshed the pdf. (passeq={})", this.passeq))
+			this.dbg1(Format("Mineside just refreshed the pdf. (passeq={})", this.passeq))
+
+			this.state := "Monitoring"
 		}
 		catch e 
 		{
 			this.dbg1("MonitorPeerPdf() got exception:`n" . dev_fileline_syse(e))
+			this.ResetState()
 			dev_StopTimer()
 		}
 	}
