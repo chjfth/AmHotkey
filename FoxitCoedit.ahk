@@ -10,13 +10,16 @@
 global g_foco ; The single object responsible for the Foco GUI
 global FoxitCoedit_Id := "FoxitCoedit"
 
-global gu_focoLblDetecting
+global gu_focoLblHeadline
 global g_HwndFOCOGui
 
+;global gu_focoBtnTest
+global gu_focoMleInfo
+global gu_focoLblActivate
+global gu_focoCkbLside
+global gu_focoCkbRside
 global gu_focoBtnSavePdf
 global gu_focoBtnSync
-global gu_focoBtnTest
-global gu_focoMleInfo
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 return ; End of auto-execute section.
@@ -31,9 +34,21 @@ class FoxitCoedit
 	
 	isGuiVisible := false
 	
-	testmember := "testmember"
+	state := "" ; "Detecting" , "EditorDetected", "CoeditActivated", "CoeditSavingDoc"
+	
+	testmember := "testmember" ; temp to-del
 	
 	coedit := "" ; the PeersCoedit class instance
+	
+	timer := ""
+	
+	pedHwnd := "" ; ped: pdf editor
+	pedWinTitle := "" 
+	
+	prev_mletext := ""
+	
+	ischk_Lside := 0   ; 0 or 1, reflecting Coedit-sideA-Activate
+	ischk_Rside := 0  ; 0 or 1, reflecting Coedit-sideB-Activate
 	
 	dbg(msg, lv) {
 		AmDbg_output(FoxitCoedit_Id, msg, lv)
@@ -62,17 +77,20 @@ class FoxitCoedit
 
 	Activate(which_side, pdfpath)
 	{
-		fndoc := { "savedoc" : Func("FoxitCoedit.fndocSavePdf").Bind(this)
+		fndoc := { "syncsucc" : Func("FoxitCoedit.fndocSyncSucc").Bind(this)
+			, "savedoc" : Func("FoxitCoedit.fndocSavePdf").Bind(this)
 			, "closedoc" : Func("FoxitCoedit.fndocClosePdf").Bind(this)
 			, "opendoc" : Func("FoxitCoedit.fndocOpenPdf").Bind(this) }
 		
 		this.coedit.Activate(which_side, pdfpath, fndoc)
+		this.state := "CoeditActivated"
 	}
 	
 	Deactivate()
 	{
 ;		dev_assert(this.coedit)
 		this.coedit.Deactivate()
+		this.state := "Detecting"
 	}
 
 	CreateGui()
@@ -85,11 +103,30 @@ class FoxitCoedit
 		
 		fullwidth := 500
 		
-		Gui_Add_TxtLabel(GuiName, "gu_focoLblDetecting", fullwidth, "", "Detecting Foxit Reader/Editor")
+		Gui_Add_TxtLabel(GuiName, "gu_focoLblHeadline", fullwidth, "", "Detecting Foxit Reader/Editor...")
 		
-		Gui_Add_Button(  GuiName, "gu_focoBtnSavePdf",  120, "xm " gui_g("Foco_OnBtnSavePdf"), "Save &pdf")
-		Gui_Add_Button(  GuiName, "gu_focoBtnSync",  50, "x+10 " gui_g("Foco_OnBtnSync"), "&Sync")
-		Gui_Add_Editbox( GuiName, "gu_focoMleInfo", fullwidth, "xm r10" , "...")
+		Gui_Add_Editbox( GuiName, "gu_focoMleInfo", fullwidth, "xm r10 readonly" , "...")
+		
+		Gui_Add_TxtLabel(GuiName, "gu_focoLblActivate", 0, "xm", "Activate Coedit for above pdf")
+		Gui_Add_Checkbox(GuiName, "gu_focoCkbLside", 0, "x+10 yp " gui_g("Foco_CkbActivateCoedit"), "as &Left-side")
+		Gui_Add_Checkbox(GuiName, "gu_focoCkbRside", 0, "x+10 yp " gui_g("Foco_CkbActivateCoedit"), "as &Right-side")
+
+		Gui_Add_Button(  GuiName, "gu_focoBtnSavePdf",  98, "xm y+30 " gui_g("Foco_OnBtnSavePdf"), "&Save pdf now")
+		sync_btn_width := 60
+		xgap := fullwidth - 98 - sync_btn_width
+		Gui_Add_Button(  GuiName, "gu_focoBtnSync", sync_btn_width, Format("x+{} ", xgap) gui_g("Foco_OnBtnSync"), "R&e-sync")
+
+		;
+		; init base facility
+		;
+		this.state := "Detecting"
+		this.RefreshUic()
+		
+		; The timer must be run all the time, bcz, even if the GUI is hidden, 
+		; it should be able to detect situations like [connection lost], [conflicting modifying doc] etc.
+		this.timer := Func("FoxitCoedit.RootTimerCallback").Bind(this) ; a BoundFunc object
+		dev_StartTimerPeriodic(this.timer, 1000, true)
+		
 	}
 
 	ShowGui()
@@ -102,7 +139,10 @@ class FoxitCoedit
 			this.CreateGui()
 		}
 		
-		Gui_Show(GuiName, "AutoSize", "FOCO")
+		Gui_Show(GuiName, "AutoSize", "FoxitCoedit")
+		
+		Editbox_ClearSelection(GuiName, "gu_focoMleInfo") 
+		; -- to avoid seeing all text in Mle defaultly selected on first sight, effective only after Gui_Show()
 		
 		this.isGuiVisible := true
 	}
@@ -110,9 +150,64 @@ class FoxitCoedit
 	HideGui()
 	{
 		Gui_Hide("FOCO")
+;		dev_StopTimer(this.timer) ; should NOT stop the timer
+		
 		this.isGuiVisible := false
 	}
 
+	RefreshUic()
+	{
+		GuiName := "FOCO"
+		
+		; assume all false(disabled)
+		focoLblActive := focoCkbLside := focoCkbRside := false
+		focoBtnSavePdf := focoBtnSync := false
+
+		if(this.state=="Detecting")
+		{
+			; still all false
+		}
+		else if(this.state=="EditorDetected")
+		{
+			focoLblActive := focoCkbLside := focoCkbRside := true
+		}
+		else
+		{
+;AmDbg0("RefreshUic().......")
+			focoLblActive := true
+
+			dev_assert(not (this.ischk_Lside and this.ischk_Rside))
+			if(this.ischk_Lside)
+				focoCkbLside := true
+			if(this.ischk_Rside)
+				focoCkbRside := true
+			
+			if(this.coedit.state!="Syncing")
+			{
+				focoBtnSavePdf := focoBtnSync := true
+			}
+		}
+		
+		GuiControl_Enable(GuiName, "gu_focoLblActivate", focoLblActive)
+		GuiControl_Enable(GuiName, "gu_focoCkbLside", focoCkbLside)
+		GuiControl_Enable(GuiName, "gu_focoCkbRside", focoCkbRside)
+		GuiControl_Enable(GuiName, "gu_focoBtnSavePdf", focoBtnSavePdf)
+		GuiControl_Enable(GuiName, "gu_focoBtnSync", focoBtnSync)
+	}
+
+	IsPdfModified()
+	{
+		wintitle := dev_WinGetTitle_byHwnd(this.pedHwnd)
+		dev_SplitPath(this.pdfpath, pdfnam)
+		
+		is_nam := StrIsStartsWith(wintitle, pdfnam)
+		is_ast := dev_IsSubStr(wintitle, "*")
+		
+		if(is_nam and is_ast)
+			return true
+		else
+			return false
+	}
 
 	OnBtnSync()
 	{
@@ -122,13 +217,18 @@ class FoxitCoedit
 	OnBtnSavePdf()
 	{
 		GuiName := "FOCO"
-;		GuiControl_Disable(GuiName, "gu_focoBtnSavePdf")
+
+		if(not this.IsPdfModified())
+		{
+			dev_MsgBoxInfo("The PDF file looks unmodified, not action needed.")
+			return
+		}
 
 		is_succ := this.coedit.LaunchSaveDocSession()
 		
 		if(is_succ)
 		{
-			; todo : UI update
+			; nothing to do
 		}
 		else
 		{
@@ -136,21 +236,270 @@ class FoxitCoedit
 			dev_MsgBoxWarning("Peer connection lost. Now resyncing.")
 			
 		}
+		
+		this.RefreshUic()
+	}
+	
+	GetMleDetail()
+	{
+		detail := Format("HWND:`n0x{:08X}`n`n"
+				. "TITLE:`n{}`n`n"
+				, this.pedHwnd
+				, this.pedWinTitle)
+			
+		if(this.pdfpath) 
+			detail .= "FILEPATH:`n" this.pdfpath
+		
+		return detail
+	}
+	
+	RootTimerCallback()
+	{
+		GuiName := "FOCO"
+		
+		if(this.state=="Detecting" or this.state=="EditorDetected")
+		{
+			this.DetectFoxitPresent()
+		}
+		else if(this.state=="CoeditActivated")
+		{
+			GuiControl_SetText(GuiName, "gu_focoLblHeadline", "[ Activated ] " this.coedit.state)
+			
+			; todo: would check editing conflict
+		}
+	}
+	
+	DetectFoxitPresent()
+	{
+		GuiName := "FOCO"
+		hwnd := dev_WinGet_Hwnd("ahk_class classFoxitReader")
+		if(hwnd) {
+		}
+		else {
+			hwnd := dev_WinGet_Hwnd("ahk_class classFoxitPhantom")
+		}
+		
+		this.pedHwnd := hwnd
+		
+		if(hwnd)
+		{
+			this.state := "EditorDetected"
+
+			wintitle := dev_WinGetTitle_byHwnd(hwnd)
+			
+			this.pedWinTitle := FoxitCoedit.StripAsterisk(wintitle)
+			
+			detail := this.GetMleDetail()
+			
+			GuiControl_SetText(GuiName, "gu_focoLblHeadline", "Detected Foxit Reader/Editor:")
+			
+			if(detail != this.prev_mletext) ; to avoid clearing out user text selection.
+				GuiControl_SetText(GuiName, "gu_focoMleInfo", detail)
+
+			this.prev_mletext := detail
+		}
+		else
+		{
+			this.state := "Detecting"
+		}
+		
+		this.RefreshUic()
+	}
+	
+	StripAsterisk(wintitle) ; static
+	{
+		return StrReplace(wintitle, " *", "")
+	}
+	
+	GuessPdfFilenameFromTitle(wintitle)
+	{
+		; Wintite example:
+		;	"The Unix Manual.pdf - Foxit Reader"
+		;	"Learning EBPF - Foxit PDF Editor"
+		;	"Learning EBPF * - Foxit PDF Editor"
+		;
+		; so we take "- Foxit" as signature.
+		
+		foundpos := InStr(wintitle, "- Foxit")
+		if(foundpos>0)
+			return SubStr(wintitle, 1, foundpos-1)
+		else
+			return wintitle
+	}
+	
+	
+	get_ckbstate(which_ctlid)
+	{
+		dev_assert(which_ctlid=="gu_focoCkbLside" or which_ctlid=="gu_focoCkbRside")
+		return which_ctlid=="gu_focoCkbLside" ? this.ischk_Lside : this.ischk_Rside
+	}
+	
+	set_ckbstate(which_ctlid, state)
+	{
+		dev_assert(which_ctlid=="gu_focoCkbLside" or which_ctlid=="gu_focoCkbRside")
+		
+		if(which_ctlid=="gu_focoCkbLside")
+			this.ischk_Lside := state
+		else
+			this.ischk_Rside := state
+		
+		Checkbox_SetCheckState("FOCO", which_ctlid, state)
+	}
+	
+	CkbActivateCoedit()
+	{
+		; We'll distinguish left-side or right-side according to A_GuiControl
+	
+		GuiName := "FOCO"
+		
+		ctlid_ckb := A_GuiControl
+		isLeftside := (ctlid_ckb=="gu_focoCkbLside") ? true : false
+		
+		ischecked := this.get_ckbstate(ctlid_ckb)
+
+		this.set_ckbstate(ctlid_ckb, ischecked)
+		; -- Do it bcz we want it to be a BS_CHECKBOX instead of a BS_AUTOCHECKBOX.
+		;    We must set checkbox's UI state according to our own class member.
+		
+		if(not ischecked)
+		{
+			; Ask user the real location of the PDF file, bcz AHK code here has no way to know it automatically.
+			pdfnam := this.GuessPdfFilenameFromTitle(this.pedWinTitle)
+
+			pdfpath_real := dev_OpenSelectFileDialog(pdfnam
+				, "Please tell me the actual filepath of the PDF file on the disk"
+				, "PDF files (*pdf)")
+			
+			if(not pdfpath_real)
+				return ; user cancels, do nothing
+			
+			if(not FileExist(pdfpath_real))
+			{
+				dev_MsgBoxWarning("The filepath you picked does not exist yet:`n`n" pdfpath_real)
+				return
+			}
+			
+			this.Activate(isLeftside ? "sideA" : "sideB", pdfpath_real)
+			
+			this.set_ckbstate(ctlid_ckb, true)
+			
+			GuiControl_SetText(GuiName, "gu_focoMleInfo", this.GetMleDetail())
+		}
+		else
+		{
+			this.Deactivate()
+		
+			this.set_ckbstate(ctlid_ckb, false)
+		}
+		
+		this.RefreshUic()
+	}
+	
+	fndocSyncSucc()
+	{
+		this.RefreshUic()
 	}
 	
 	fndocSavePdf()
 	{
-		AmDbg0("##### " this.testmember " SavePdf" )
+		this.dbg2("FoxitCoedit.fndocSavePdf() executing...")
+		
+		hwnd := this.pedHwnd
+		wintitle := dev_WinGetTitle_byHwnd(hwnd)
+		if(dev_IsSubStr(wintitle, "*"))
+		{
+			this.Try_SaveCurrentPdf()
+			
+			; And wait until "*" disappears.
+			Loop, 10
+			{
+				dev_Sleep(500)
+				wintitle := dev_WinGetTitle_byHwnd(hwnd)
+
+				if(not dev_IsSubStr(wintitle, "*"))
+				{
+					this.dbg2("FoxitCoedit.fndocSavePdf() success , PDF modified.")
+					return true
+				}
+				
+			}
+			throw Exception("FoxitCoedit.fndocSavePdf() operation fail.")
+		}
+
+		this.dbg2("FoxitCoedit.fndocSavePdf() success , no modify.")
 	}
 	
 	fndocClosePdf()
 	{
-		AmDbg0("##### " this.testmember " ClosePdf" )
+		hwnd := this.pedHwnd
+		this.dbg2(Format("FoxitCoedit.fndocClosePdf() executing..."))
+		
+		close_ok := dev_WinClose("ahk_id " hwnd, 5000) ; todo: make this timeout configurable
+		
+		if(close_ok)
+			this.dbg2("FoxitCoedit.fndocClosePdf() success.")
+		else
+			throw Exception("FoxitCoedit.fndocClosePdf() fail!")
 	}
 
 	fndocOpenPdf()
 	{
-		AmDbg0("##### " this.testmember " OpenPdf" )
+		this.dbg2("FoxitCoedit.fndocOpenPdf() executing...")
+		
+		exepath := ""
+		exepath1 := "D:\PFNoInst\Foxit Reader 7.1.5\FoxitReader.exe"
+		exepath2 := "C:\Program Files\Foxit Software\Foxit PDF Editor\FoxitPDFEditor.exe"
+		; todo: make the path configurable
+		
+		if(FileExist(exepath1))
+			exepath := exepath1
+		else if(FileExist(exepath2))
+			exepath := exepath2
+		else
+			throw Exception("FoxitCoedit.fndocOpenPdf() fail! Bad exepath configured.")
+
+		; First, ensure that no process of exepath is running.
+		if(WinExist("ahk_exe " exepath))
+			throw Exception(Format("Unexpected! fndocOpenPdf() sees ""{}"" still running.", exepath))
+		
+		Run % exepath
+		
+		; Second, check that the new process really runs.
+		
+		Loop, 10
+		{
+			dev_Sleep(500)
+			if(WinExist("ahk_exe " exepath))
+			{
+				this.dbg2("FoxitCoedit.fndocOpenPdf() success.")
+				
+				; Third, grab new-process's HWND
+				this.pedHwnd := dev_WinGet_Hwnd("ahk_exe " exepath)
+				
+				this.dbg2(Format("Foxit HWND updated to be: {}", this.pedHwnd))
+				
+				return true
+			}
+		}
+
+		throw Exception(Format("Bad! Foxit process ""{}"" did not launch.", exepath))
+	}
+	
+	Try_SaveCurrentPdf()
+	{
+		hwnd := this.pedHwnd
+	
+		; For legacy Foxit 7.1.5 UI, We send Ctrl+S to save the doc.
+		dev_SendKeyToExeMainWindow("{Ctrl down}{s}{Ctrl up}", "ahk_id " hwnd)
+		
+		; For Foxit 9+ Ribbon UI, we need to click on window-title's small "Save" button.
+		; and this is not harmful to legacy Foxit 7.1.5 .
+		active_ok := dev_WinActivateHwnd(hwnd, 1000) ; todo: make it configurable
+		if(not active_ok)
+			throw Exception(Format("Foxit HWND {} cannot be activated.", hwnd))
+		
+		dev_Sleep(100) ; to play it safe
+		ClickInActiveWindow(64, 16, false)
 	}
 
 } ; class FoxitCoedit
@@ -168,15 +517,14 @@ FoxitCoedit_Deactivate()
 	g_foco.Deactivate()
 }
 
-#!y:: FoxitCoedit_Deactivate()
+; #!y:: FoxitCoedit_Deactivate()
 
 
 FoxitCoedit_LaunchUI()
 {
 	if(!g_foco)
 	{
-		dev_MsgBoxError("FoxitCoedit_Init() not called yet!")
-		;dev_assert(g_foco, "FoxitCoedit class instance creation fail!")
+		g_foco := new FoxitCoedit()
 	}
 
 	g_foco.ShowGui()
@@ -192,21 +540,16 @@ Foco_OnBtnSync()
 	g_foco.OnBtnSync()
 }
 
-foco_SyncTimerCallback()
-{
-	g_foco.SyncTimerCallback()
-}
-
-
-Foco_OnBtnTest()
-{
-	g_foco.OnBtnTest()
-}
 
 FOCOGuiSize()
 {
 	rsdict := {}
 	rsdict.gu_focoMleInfo := JUL.LeftTop_DynWidthHeight
+	rsdict.gu_focoLblActivate := JUL.PinToLeftBottom
+	rsdict.gu_focoCkbLside := JUL.PinToLeftBottom
+	rsdict.gu_focoCkbRside := JUL.PinToLeftBottom
+	rsdict.gu_focoBtnSavePdf := JUL.PinToLeftBottom
+	rsdict.gu_focoBtnSync := JUL.PinToRightBottom
 	
 	dev_GuiAutoResize("FOCO", rsdict, A_GuiWidth, A_GuiHeight)
 }
@@ -222,11 +565,9 @@ FOCOGuiEscape()
 }
 
 
-
-/*
-FOCO_OnBtnOK()
+Foco_CkbActivateCoedit()
 {
-	g_foco.OnBtnOK()
+	g_foco.CkbActivateCoedit()
 }
 
-*/
+

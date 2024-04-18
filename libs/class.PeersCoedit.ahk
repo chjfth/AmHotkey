@@ -31,7 +31,7 @@ class PeersCoedit
 	docpath := ""
 	
 	fndoc := {} ; Callables for real doc-operation.
-	            ; keys: .savedoc .closedoc .opendoc
+	            ; keys: .syncsucc .savedoc .closedoc .opendoc
 	
 	dbg(msg, lv) {
 		AmDbg_output("PeersCoedit", msg, lv)
@@ -138,6 +138,8 @@ class PeersCoedit
 	; User API:
 	Deactivate()
 	{
+		this.dbg2(Format("{} Deactivate().", this.mineside))
+	
 		dev_StopTimer(this.timer)
 		this.timer := ""
 		
@@ -226,6 +228,7 @@ class PeersCoedit
 		if(is_succ)
 		{
 			this.state := "Monitoring"
+			this.fndoc.syncsucc.() ; user-optional
 		}
 	}
 	
@@ -260,7 +263,7 @@ class PeersCoedit
 			this.dbg2("Waiting peerside to close doc, success.")
 			
 			this.dbg2("Now saving doc...")
-			this.fndoc.savedoc.()
+			this.fndoc.savedoc.() ; throw on error 
 			this.dbg2("Done saving doc.")
 			
 			this.IniIncreaseVal("proseq")
@@ -318,7 +321,7 @@ class PeersCoedit
 			dev_assert(peer_proseq == this.passeq+1)
 			
 			this.dbg2("Now closing doc...")
-			this.fndoc.closedoc.()
+			this.fndoc.closedoc.() ; throw on error 
 			this.dbg2("Done closing doc.")
 			
 			this.IniIncreaseVal("passeq")
@@ -334,7 +337,7 @@ class PeersCoedit
 			this.dbg2("Waiting peer's writing doc, success.")
 			
 			this.dbg2("Now re-opening doc...")
-			this.fndoc.opendoc.()
+			this.fndoc.opendoc.() ; throw on error 
 			this.dbg2("Done re-opening doc...")
 			
 			this.IniIncreaseVal("passeq")

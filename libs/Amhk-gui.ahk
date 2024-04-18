@@ -344,7 +344,9 @@ GuiControl_SetText(GuiName, CtrlVarname, text)
 	;
 	; For Combobox, we should use Combobox_SetText()
 
-	Assert_UicVarname(CtrlVarname)
+	if(GuiName)
+		Assert_UicVarname(CtrlVarname)
+	
 	cmd := GuiName ? GuiName ":" : ""
 	GuiControl, % cmd, % CtrlVarname, % text
 }
@@ -407,6 +409,17 @@ Checkbox_GetCheckState(GuiName, CtrlVarname)
 	return outvar ; Can be 1, 0, -1
 }
 
+Checkbox_SetCheckState(GuiName, CtrlVarname, state)
+{
+	; state can be 1, 0, or -1
+	Assert_UicVarname(CtrlVarname)
+	cmd := ""
+	if(GuiName)
+		cmd := Format("{}:{}", GuiName, cmd)
+
+	GuiControl, % cmd, % CtrlVarname, % state
+}
+
 GuiControl_ComboboxAddItems(GuiName, CtrlVarname, ar_strings)
 {
 	if(StrLen(ar_strings)>0)
@@ -462,6 +475,7 @@ class JUL
 	static PinToLeftTop := "0,0,0,0"
 	static PinToLeftBottom := "0,100,0,100"
 	static PinToRightTop := "100,0,100,0"
+	static PinToRightBottom := "100,100,100,100"
 	static LeftTop_DynWidth := "0,0,100,0"
 	static LeftTop_DynWidthHeight := "0,0,100,100"
 }
@@ -676,3 +690,23 @@ dev_LV_Select1Row(GuiName, iRow:=0, is_on:=true)
 	
 	LV_Modify(iRow, Format("{1}Select {1}Focus", neg))
 }
+
+Editbox_ClearSelection_byHwnd(hwndEdit, is_cursor_at_tail:=false)
+{
+    pos := DllCall("GetWindowTextLength", "Ptr", hwndEdit)
+    
+    EM_SETSEL := 0x00B1
+    EM_REPLACESEL := 0x00C2
+	
+	if(not is_cursor_at_tail)
+		dev_SendMessage(hwndEdit, EM_SETSEL, 0, 0)
+	else
+	    dev_SendMessage(hwndEdit, EM_SETSEL, pos, pos)
+}
+
+Editbox_ClearSelection(GuiName, CtrlVarname, is_cursor_at_tail:=false)
+{
+	hwndEdit := GuiControl_GetHwnd(GuiName, CtrlVarname)
+	Editbox_ClearSelection_byHwnd(hwndEdit, is_cursor_at_tail)
+}
+

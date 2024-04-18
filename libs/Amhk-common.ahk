@@ -249,7 +249,30 @@ dev_WinGet_Hwnd(wintitle, wintext:="")
 	return winid
 }
 
+dev_WinClose(wintitle, timeout_millisec:=0)
+{
+	WinClose, % wintitle
+	
+	if(timeout_millisec==0)
+		return true
+	
+	return dev_WinWaitClose(wintitle, timeout_millisec)
+}
 
+dev_WinWaitClose(wintitle, timeout_millisec:=-1)
+{
+	; wintitle can be "ahk_id 0xC5134C" etc
+	
+	if(timeout_millisec<0)
+		timeout_sec := "" ; to wait indefinitely
+	else if(timeout_millisec==0)
+		return true
+	else
+		timeout_sec := timeout_millisec/1000
+
+	WinWaitClose, % wintitle, , % timeout_sec
+	return ErrorLevel==0 ? true : false
+}
 
 dev_MsgBoxInfo(text, wintitle:="") ; with a blue (i) icon
 {
@@ -775,6 +798,12 @@ dev_stricmp(s1, s2)
 		return -1
 	else
 		return 1
+}
+
+dev_IsSubStr(Haystack, Needle)
+{
+	foundpos := InStr(Haystack, Needle)
+	return foundpos>0 ? true : false
 }
 
 StrIsStartsWith(str, prefix, anycase:=false)
@@ -1490,6 +1519,10 @@ dev_SendKeyToExeMainWindow(keyspec, wintitle:="A")
 	;	"{Ctrl down}{Shift down}n{Shift up}{Ctrl up}"
 	;
 	; -- yes, as for Autohotkey 1.1.32, the keyspec meaning is different from that of `SendRaw` command.
+	;
+	; [2024-04-19] One more note: When defining a hotkey trigger calling of dev_SendKeyToExeMainWindow(),
+	; you should add `Sleep, 500`, bcz your triggering hotkey may probably interfere with target 
+	; application's interpretation of your sending hotkeys.
 
 	WinGet, winid, ID, % wintitle
 	ControlSend , , % keyspec, % "ahk_id " winid
@@ -1766,6 +1799,12 @@ dev_IsExeActive(exefile)
 	}
 }
 
+dev_WinGetTitle_byHwnd(winid)
+{
+	WinGetTitle, title, % "ahk_id " winid
+	return title
+}
+
 dev_IsWintitleRegexActive(regex)
 {
 	WinGetTitle, title, A
@@ -1820,9 +1859,14 @@ dev_GetHwndByWintitle(wintitle:="A")
 	return Awinid
 }
 
-dev_WinActivateHwnd(hwnd)
+dev_WinActivateHwnd(hwnd, timeout_millisec:=0)
 {
 	WinActivate, ahk_id %hwnd%
+	
+	if(timeout_millisec==0)
+		return true
+	
+	return dev_WinWaitActiveHwnd(hwnd, timeout_millisec)
 }
 
 dev_WinWaitActiveHwnd(hwnd, timeout_millisec:=2000)
@@ -2493,4 +2537,11 @@ dev_VarGetCapacity(byref varname)
 	return VarSetCapacity(varname)
 }
 
+
+dev_OpenSelectFileDialog(path_hint, dlg_title:="", filter:="")
+{
+	opt_FilemustExist := 1
+	FileSelectFile, outpath_selected, % opt_FilemustExist, % path_hint, % dlg_title, % filter
+	return outpath_selected
+}
 
