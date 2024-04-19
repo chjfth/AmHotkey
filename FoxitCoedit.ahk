@@ -2,6 +2,7 @@
 ; -- naming: Foxit PDF reader/editor from two machines, co-operatively edit the same PDF file
 
 /* APIs:
+FoxitCoedit_LaunchUI()
 
 */
 
@@ -89,6 +90,10 @@ class FoxitCoedit
 		
 		this.was_doc_modified := this.IsPdfModified()
 		this.coedit.IniWriteMine("is_modified", this.was_doc_modified)
+		
+		; Override Ctrl+S for Foxit Reader/Editor 
+		fxhk_DefineHotkeyCondComment("^s", "FoxitCoedit_SaveDoc_hotkey", "assigned by FoxitCoedit"
+			, false	, "foxit_IsWinActive", "FoxitCoedit_LaunchUI")
 	}
 	
 	Deactivate()
@@ -96,6 +101,8 @@ class FoxitCoedit
 ;		dev_assert(this.coedit)
 		this.coedit.Deactivate()
 		this.state := "Detecting"
+		
+		fxhk_UnDefineHotkey("^s", "FoxitCoedit_SaveDoc_hotkey")
 	}
 
 	CreateGui()
@@ -138,7 +145,10 @@ class FoxitCoedit
 	{
 		GuiName := "FOCO"
 		if(this.isGuiVisible)
+		{
+			dev_WinActivateHwnd(g_HwndFOCOGui) ; bring it to front
 			return ; already shown
+		}
 		
 		if(!g_HwndFOCOGui) {
 			this.CreateGui()
@@ -148,7 +158,7 @@ class FoxitCoedit
 		
 		Editbox_ClearSelection(GuiName, "gu_focoMleInfo") 
 		; -- to avoid seeing all text in Mle defaultly selected on first sight, effective only after Gui_Show()
-		
+
 		this.isGuiVisible := true
 	}
 	
@@ -238,7 +248,7 @@ class FoxitCoedit
 		else
 		{
 			this.coedit.ResetSyncState()
-			dev_MsgBoxWarning("Peer connection lost. Now resyncing.", FoxitCoedit_Id)
+			dev_MsgBoxWarning("Peer connection lost. Now re-syncing.", FoxitCoedit_Id)
 			
 		}
 		

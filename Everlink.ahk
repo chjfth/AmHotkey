@@ -259,7 +259,10 @@ class Everlink
 	ShowGui()
 	{
 		if(this.isGuiVisible)
+		{
+			dev_WinActivateHwnd(g_HwndEVLGui) ; bring it to front
 			return ; already shown
+		}
 		
 		if(!g_HwndEVLGui) {
 			this.CreateGui()
