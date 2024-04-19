@@ -78,33 +78,6 @@ class FoxitCoedit
 		}
 	}
 
-	Activate(which_side, pdfpath)
-	{
-		fndoc := { "syncsucc" : Func("FoxitCoedit.fndocSyncSucc").Bind(this)
-			, "savedoc" : Func("FoxitCoedit.fndocSavePdf").Bind(this)
-			, "closedoc" : Func("FoxitCoedit.fndocClosePdf").Bind(this)
-			, "opendoc" : Func("FoxitCoedit.fndocOpenPdf").Bind(this) }
-		
-		this.coedit.Activate(which_side, pdfpath, fndoc)
-		this.state := "CoeditActivated"
-		
-		this.was_doc_modified := this.IsPdfModified()
-		this.coedit.IniWriteMine("is_modified", this.was_doc_modified)
-		
-		; Override Ctrl+S for Foxit Reader/Editor 
-		fxhk_DefineHotkeyCondComment("^s", "FoxitCoedit_SaveDoc_hotkey", "assigned by FoxitCoedit"
-			, false	, "foxit_IsWinActive", "FoxitCoedit_LaunchUI")
-	}
-	
-	Deactivate()
-	{
-;		dev_assert(this.coedit)
-		this.coedit.Deactivate()
-		this.state := "Detecting"
-		
-		fxhk_UnDefineHotkey("^s", "FoxitCoedit_SaveDoc_hotkey")
-	}
-
 	CreateGui()
 	{
 		GuiName := "FOCO"
@@ -222,6 +195,35 @@ class FoxitCoedit
 		else
 			return false
 	}
+
+
+	ActivateCoedit(which_side, pdfpath)
+	{
+		fndoc := { "syncsucc" : Func("FoxitCoedit.fndocSyncSucc").Bind(this)
+			, "savedoc" : Func("FoxitCoedit.fndocSavePdf").Bind(this)
+			, "closedoc" : Func("FoxitCoedit.fndocClosePdf").Bind(this)
+			, "opendoc" : Func("FoxitCoedit.fndocOpenPdf").Bind(this) }
+		
+		this.coedit.Activate(which_side, pdfpath, fndoc)
+		this.state := "CoeditActivated"
+		
+		this.was_doc_modified := this.IsPdfModified()
+		this.coedit.IniWriteMine("is_modified", this.was_doc_modified)
+		
+		; Override Ctrl+S for Foxit Reader/Editor 
+		fxhk_DefineHotkeyCondComment("^s", "FoxitCoedit_SaveDoc_hotkey", "assigned by FoxitCoedit"
+			, false	, "foxit_IsWinActive", "FoxitCoedit_LaunchUI")
+	}
+	
+	DeactivateCoedit()
+	{
+		dev_assert(this.coedit)
+		this.coedit.Deactivate()
+		this.state := "Detecting"
+		
+		fxhk_UnDefineHotkey("^s", "FoxitCoedit_SaveDoc_hotkey")
+	}
+
 
 	OnBtnSync()
 	{
@@ -412,7 +414,7 @@ class FoxitCoedit
 				return
 			}
 			
-			this.Activate(isLeftside ? "sideA" : "sideB", pdfpath_real)
+			this.ActivateCoedit(isLeftside ? "sideA" : "sideB", pdfpath_real)
 			
 			this.set_ckbstate(ctlid_ckb, true)
 			
@@ -420,7 +422,7 @@ class FoxitCoedit
 		}
 		else
 		{
-			this.Deactivate()
+			this.DeactivateCoedit()
 		
 			this.set_ckbstate(ctlid_ckb, false)
 		}
@@ -532,21 +534,6 @@ class FoxitCoedit
 	}
 
 } ; class FoxitCoedit
-
-
-FoxitCoedit_Init(which_side, docpath)
-{
-	g_foco := new FoxitCoedit()
-	g_foco.Activate(which_side, docpath)
-}
-
-FoxitCoedit_Deactivate()
-{
-	AmDbg0("FoxitCoedit_Deactivate()")
-	g_foco.Deactivate()
-}
-
-; #!y:: FoxitCoedit_Deactivate()
 
 
 FoxitCoedit_LaunchUI()
