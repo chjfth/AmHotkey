@@ -927,7 +927,7 @@ _fxhk_IsComboKeyname(keyname, byref prefix_keyname="", byref suffix_keyname:="")
 ; User parameter fn_cond and fn_act, can be any "callable" variable, which include:
 ; * a string representing a function name, or
 ; * a function object name, or 
-; * a Bind("funcname")-returned object.
+; * a Bind("funcname")-returned object. // to fix: BoundFunc object?
 ;
 ; fn_cond: The condition to run fn_act. If fn_cond=="", then fn_act is always run.
 
@@ -944,8 +944,11 @@ _in_dev_DefineHotkeyFlex(user_keyname, purpose_name, comment, is_passthru, fn_co
 		dev_assert(dev_IsExistingFuncName(fn_cond), errmsg)
 	}
 	
-	errmsg := Format("ERROR on 'fn_act' param: ""{}"" is not a string representing a function name.", fn_act)
-	dev_assert(dev_IsExistingFuncName(fn_act), errmsg)
+	if(comment!="_off_")
+	{
+		errmsg := Format("ERROR on 'fn_act' param: ""{}"" is not a string representing a function name.", fn_act)
+		dev_assert(dev_IsExistingFuncName(fn_act), errmsg)
+	}
 	
 	; Check input param validity <<<
 	
