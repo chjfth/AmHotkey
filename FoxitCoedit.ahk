@@ -224,8 +224,7 @@ class FoxitCoedit
 		fxhk_UnDefineHotkey("^s", "FoxitCoedit_SaveDoc_hotkey")
 	}
 
-
-	OnBtnSync()
+	ResyncCoedit()
 	{
 		this.coedit.ResetSyncState()
 		this.RefreshUic()
@@ -249,7 +248,7 @@ class FoxitCoedit
 		}
 		else
 		{
-			this.coedit.ResetSyncState()
+			this.ResyncCoedit()
 			dev_MsgBoxWarning("Peer connection lost. Now re-syncing.", FoxitCoedit_Id)
 			
 		}
@@ -500,7 +499,21 @@ class FoxitCoedit
 		Loop, 10
 		{
 			dev_Sleep(500)
-			if(WinExist("ahk_exe " exepath))
+			
+			query_title := "ahk_exe " exepath
+			newhwnd := dev_GetHwndByWintitle(query_title)
+			if(not newhwnd)
+				continue
+			
+			newtitle := dev_WinGetTitle_byHwnd(newhwnd)
+			
+			newpdfnam := this.GuessPdfFilenameFromTitle(newtitle)
+			oldpdfnam := this.GuessPdfFilenameFromTitle(this.pedWinTitle)
+			
+			; note: When the Foxit Editor 11 launching involves some bigs PDFs, the first-seen 
+			; newtitle may be the small progress-bar's title, and we need to ignore it.
+			
+			if( newpdfnam==oldpdfnam )
 			{
 				this.dbg1("FoxitCoedit.fndocOpenPdf() success.")
 				
@@ -510,6 +523,30 @@ class FoxitCoedit
 				this.dbg1(Format("Foxit HWND updated to be: {}", this.pedHwnd))
 				
 				return true
+			}
+			else
+			{
+				this.dbg2("[Dbginfo] Skip Foxit new process's title: " newtitle)
+
+;				On an Foxit Editor 11 machine opening two document-tabs, and we are editing 
+;				2nd tab document, I once see this:
+;
+;				2*[20240419_15:50:29.477] (+1.996s) Waiting peer's writing doc, success.
+;				2*[20240419_15:50:29.477] (+0.000s) Now re-opening doc...
+;				1*[20240419_15:50:29.477] (+0.000s) FoxitCoedit.fndocOpenPdf() executing...
+;				2*[20240419_15:50:29.977] (+0.500s) [Dbginfo] Skip Foxit new process's title: Progress
+;				2*[20240419_15:50:30.476] (+0.499s) [Dbginfo] Skip Foxit new process's title: Progress [53%]
+;				2*[20240419_15:50:30.975] (+0.499s) [Dbginfo] Skip Foxit new process's title: Progress [61%]
+;				2*[20240419_15:50:31.474] (+0.499s) [Dbginfo] Skip Foxit new process's title: Progress [71%]
+;				2*[20240419_15:50:31.973] (+0.499s) [Dbginfo] Skip Foxit new process's title: Progress [80%]
+;				2*[20240419_15:50:32.473] (+0.500s) [Dbginfo] Skip Foxit new process's title: Progress [88%]
+;				2*[20240419_15:50:32.972] (+0.499s) [Dbginfo] Skip Foxit new process's title: Progress [96%]
+;				2*[20240419_15:50:33.471] (+0.499s) [Dbginfo] Skip Foxit new process's title: [TLPI] The Linux (...this is first tab doc...) - Foxit PDF Editor
+;				1*[20240419_15:50:33.970] (+0.499s) FoxitCoedit.fndocOpenPdf() success.
+;				1*[20240419_15:50:33.970] (+0.000s) Foxit HWND updated to be: 0xce09d2
+;				2*[20240419_15:50:33.970] (+0.000s) Done re-opening doc...
+;				1*[20240419_15:50:33.970] (+0.000s) Mineside just refreshed the doc. (passeq=2)
+				
 			}
 		}
 
@@ -553,7 +590,7 @@ Foco_OnBtnSavePdf()
 
 Foco_OnBtnSync()
 {
-	g_foco.OnBtnSync()
+	g_foco.ResyncCoedit()
 }
 
 
