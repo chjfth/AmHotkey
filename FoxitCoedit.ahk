@@ -180,21 +180,33 @@ class FoxitCoedit
 		GuiControl_Enable(GuiName, "gu_focoCkbRside", focoCkbRside)
 		GuiControl_Enable(GuiName, "gu_focoBtnSavePdf", focoBtnSavePdf)
 		GuiControl_Enable(GuiName, "gu_focoBtnSync", focoBtnSync)
+
+		this.RefreshMleDetail()
 	}
 
 	RefreshMleDetail()
 	{
-		detail := Format("HWND:`n0x{:08X}", this.pedHwnd)
-		if(this.coedit.peerdict.HWND)
+		detail := ""
+		
+		if(this.state=="Detecting")
 		{
-			detail .= Format("  (peer: 0x{:08X})", this.coedit.peerdict.HWND)
+			detail := "No Foxit Reader/Editor is running yet.`n`n"
+				. "Just run Foxit and open a PDF file, this program will detect it automatically."
 		}
-		detail .= "`n`n"
-	
-		detail .= Format("TITLE:`n{}`n`n", this.pedWinTitle)
-			
-		if(this.pdfpath) 
-			detail .= "FILEPATH:`n" this.pdfpath
+		else
+		{
+			detail .= Format("HWND:`n0x{:08X}", this.pedHwnd)
+			if(this.state=="CoeditActivated" and this.coedit.peerdict.HWND)
+			{
+				detail .= Format("  (peer: 0x{:08X})", this.coedit.peerdict.HWND)
+			}
+			detail .= "`n`n"
+		
+			detail .= Format("TITLE:`n{}`n`n", this.pedWinTitle)
+				
+			if(this.pdfpath) 
+				detail .= "FILEPATH:`n" this.pdfpath
+		}
 		
 		if(this.prev_mletext != detail)
 		{	
@@ -279,7 +291,6 @@ class FoxitCoedit
 		}
 		
 		this.RefreshUic()
-		this.RefreshMleDetail() ; bcz peer's HWND may have changed
 	}
 	
 
