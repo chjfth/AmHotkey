@@ -35,7 +35,7 @@ class FoxitCoedit
 	
 	isGuiVisible := false
 	
-	state := "" ; "Detecting" , "EditorDetected", "CoeditActivated", "CoeditSavingDoc"
+	state := "" ; "Detecting" , "EditorDetected", "CoeditActivated"     // , "CoeditSavingDoc"
 	
 	testmember := "testmember" ; temp to-del
 	
@@ -182,6 +182,28 @@ class FoxitCoedit
 		GuiControl_Enable(GuiName, "gu_focoBtnSync", focoBtnSync)
 	}
 
+	RefreshMleDetail()
+	{
+		detail := Format("HWND:`n0x{:08X}", this.pedHwnd)
+		if(this.coedit.peerdict.HWND)
+		{
+			detail .= Format("  (peer: 0x{:08X})", this.coedit.peerdict.HWND)
+		}
+		detail .= "`n`n"
+	
+		detail .= Format("TITLE:`n{}`n`n", this.pedWinTitle)
+			
+		if(this.pdfpath) 
+			detail .= "FILEPATH:`n" this.pdfpath
+		
+		if(this.prev_mletext != detail)
+		{	
+			; This `if` to avoid clearing out user mouse text selection.
+			this.prev_mletext := detail
+			GuiControl_SetText("FOCO", "gu_focoMleInfo", detail)
+		}
+	}
+
 	IsPdfModified()
 	{
 		wintitle := dev_WinGetTitle_byHwnd(this.pedHwnd)
@@ -209,6 +231,7 @@ class FoxitCoedit
 		
 		this.was_doc_modified := this.IsPdfModified()
 		this.coedit.IniWriteMine("is_modified", this.was_doc_modified)
+		this.coedit.IniWriteMine("HWND", Format("0x{:08X}", this.pedHwnd))
 		
 		; Override Ctrl+S for Foxit Reader/Editor 
 		fxhk_DefineHotkeyCondComment("^s", "FoxitCoedit_SaveDoc_hotkey", "assigned by FoxitCoedit"
@@ -220,6 +243,8 @@ class FoxitCoedit
 		dev_assert(this.coedit)
 		this.coedit.Deactivate()
 		this.state := "Detecting"
+		
+		this.coedit.IniWriteMine("HWND", "")
 		
 		fxhk_UnDefineHotkey("^s", "FoxitCoedit_SaveDoc_hotkey")
 	}
@@ -254,21 +279,10 @@ class FoxitCoedit
 		}
 		
 		this.RefreshUic()
+		this.RefreshMleDetail() ; bcz peer's HWND may have changed
 	}
 	
-	GetMleDetail()
-	{
-		detail := Format("HWND:`n0x{:08X}`n`n"
-				. "TITLE:`n{}`n`n"
-				, this.pedHwnd
-				, this.pedWinTitle)
-			
-		if(this.pdfpath) 
-			detail .= "FILEPATH:`n" this.pdfpath
-		
-		return detail
-	}
-	
+
 	RootTimerCallback()
 	{
 		GuiName := "FOCO"
@@ -322,14 +336,8 @@ class FoxitCoedit
 			
 			this.pedWinTitle := FoxitCoedit.StripAsterisk(wintitle)
 			
-			detail := this.GetMleDetail()
-			
 			GuiControl_SetText(GuiName, "gu_focoLblHeadline", "Detected Foxit Reader/Editor:")
-			
-			if(detail != this.prev_mletext) ; to avoid clearing out user text selection.
-				GuiControl_SetText(GuiName, "gu_focoMleInfo", detail)
-
-			this.prev_mletext := detail
+			this.RefreshMleDetail()
 		}
 		else
 		{
@@ -417,7 +425,7 @@ class FoxitCoedit
 			
 			this.set_ckbstate(ctlid_ckb, true)
 			
-			GuiControl_SetText(GuiName, "gu_focoMleInfo", this.GetMleDetail())
+			this.RefreshMleDetail()
 		}
 		else
 		{
@@ -474,6 +482,7 @@ class FoxitCoedit
 
 	fndocOpenPdf()
 	{
+		GuiName := "FOCO"
 		this.dbg1("FoxitCoedit.fndocOpenPdf() executing...")
 		
 		exepath := ""
@@ -521,6 +530,9 @@ class FoxitCoedit
 				this.pedHwnd := dev_WinGet_Hwnd("ahk_exe " exepath)
 				
 				this.dbg1(Format("Foxit HWND updated to be: {}", this.pedHwnd))
+				this.coedit.IniWriteMine("HWND", Format("0x{:08X}", this.pedHwnd))
+				
+				this.RefreshMleDetail() ; bcz the HWND has changed
 				
 				return true
 			}
