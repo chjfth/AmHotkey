@@ -216,6 +216,7 @@ class FoxitCoedit
 	OnBtnSync()
 	{
 		this.coedit.ResetSyncState()
+		this.RefreshUic()
 	}
 	
 	OnBtnSavePdf()

@@ -15,8 +15,8 @@ class PeersCoedit
 {
 	mineside := "" ; "sideA" or "sideB"
 	
-	state := "" ; "Syncing" -> Monitoring -> [A] ProSaving  -> Monitoring
-	;                                        [B] PasReload -> Monitoring
+	state := "" ; "Syncing" -> Handshaked -> [A] ProSaving  -> Handshaked
+	;                                        [B] PasReload -> Handshaked
 	
 	timer := "" ; a BoundFunc object used to start/stop AHK timer
 	
@@ -182,7 +182,7 @@ class PeersCoedit
 			this.SyncTimerCallback()
 			; todo : If false(INI write fail etc), then deactivate,
 		}
-		else if(this.state=="Monitoring")
+		else if(this.state=="Handshaked")
 		{
 			is_succ := this.MonitorTimerCallback()
 			if(not is_succ)
@@ -233,7 +233,7 @@ class PeersCoedit
 	
 		if(is_succ)
 		{
-			this.state := "Monitoring"
+			this.state := "Handshaked"
 			this.fndoc.syncsucc.() ; user-optional
 		}
 	}
@@ -246,7 +246,7 @@ class PeersCoedit
 		if(this.state=="PasReload")
 			return false
 
-		dev_assert(this.state=="Monitoring")
+		dev_assert(this.state=="Handshaked")
 	
 		try 
 		{
@@ -289,7 +289,7 @@ class PeersCoedit
 			this.proseq += 2
 			this.dbg1(Format("Done saving session. (proseq={})", this.proseq))
 
-			this.state := "Monitoring"
+			this.state := "Handshaked"
 			
 			return true
 		}
@@ -307,7 +307,7 @@ class PeersCoedit
 		if(this.state=="ProSaving")
 			return true
 
-		dev_assert(this.state=="Monitoring")
+		dev_assert(this.state=="Handshaked")
 		
 		try
 		{
@@ -351,7 +351,7 @@ class PeersCoedit
 			
 			this.dbg1(Format("Mineside just refreshed the doc. (passeq={})", this.passeq))
 
-			this.state := "Monitoring"
+			this.state := "Handshaked"
 			
 			return true
 		}
