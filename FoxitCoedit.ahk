@@ -35,7 +35,7 @@ class FoxitCoedit
 	
 	isGuiVisible := false
 	
-	state := "" ; "Detecting" , "EditorDetected", "CoeditActivated"     // , "CoeditSavingDoc"
+	state := "" ; "Detecting" , "EditorDetected", "CoeditActivated", "CoeditHandshaked"
 	
 	testmember := "testmember" ; temp to-del
 	
@@ -52,6 +52,8 @@ class FoxitCoedit
 	ischk_Rside := 0  ; 0 or 1, reflecting Coedit-sideB-Activate
 	
 	was_doc_modified := 0 ; pdf modified and unsaved state(denoted by asterisk symbol)
+	
+	prev_peerHwnd := 0
 	
 	dbg(msg, lv) {
 		AmDbg_output(FoxitCoedit_Id, msg, lv)
@@ -78,6 +80,20 @@ class FoxitCoedit
 		}
 	}
 
+	peerHwnd[]
+	{
+		get {
+			return this.state=="CoeditHandshaked" ? this.coedit.peerdict.HWND : ""
+		}
+	}
+	
+	peerDocModified[]
+	{
+		get {
+			return this.state=="CoeditHandshaked" ? this.coedit.peerdict.is_modified : ""
+		}
+	}
+
 	CreateGui()
 	{
 		GuiName := "FOCO"
@@ -86,7 +102,7 @@ class FoxitCoedit
 		Gui_ChangeOpt(GuiName, "+Resize +MinSize")
 		Gui_AssociateHwndVarname(GuiName, "g_HwndFOCOGui")
 		
-		fullwidth := 500
+		fullwidth := 400
 		
 		Gui_Add_TxtLabel(GuiName, "gu_focoLblHeadline", fullwidth, "", "Detecting Foxit Reader/Editor...")
 		
@@ -108,7 +124,7 @@ class FoxitCoedit
 		this.RefreshUic()
 		
 		; The timer must be run all the time, bcz, even if the GUI is hidden, 
-		; it should be able to detect situations like [connection lost], [conflicting modifying doc] etc.
+		; it should be able to detect situations like [handshake lost], [conflicting modifying doc] etc.
 		this.timer := Func("FoxitCoedit.RootTimerCallback").Bind(this) ; a BoundFunc object
 		dev_StartTimerPeriodic(this.timer, 1000, true)
 		
@@ -196,9 +212,9 @@ class FoxitCoedit
 		else
 		{
 			detail .= Format("HWND:`n0x{:08X}", this.pedHwnd)
-			if(this.state=="CoeditActivated" and this.coedit.peerdict.HWND)
+			if(this.peerHwnd)
 			{
-				detail .= Format("  (peer: 0x{:08X})", this.coedit.peerdict.HWND)
+				detail .= Format("  (peer: 0x{:08X})", this.peerHwnd)
 			}
 			detail .= "`n`n"
 		
@@ -237,6 +253,8 @@ class FoxitCoedit
 			, "savedoc" : Func("FoxitCoedit.fndocSavePdf").Bind(this)
 			, "closedoc" : Func("FoxitCoedit.fndocClosePdf").Bind(this)
 			, "opendoc" : Func("FoxitCoedit.fndocOpenPdf").Bind(this) }
+
+		this.prev_peerHwnd := 0
 		
 		this.coedit.Activate(which_side, pdfpath, fndoc) ; this does not block
 		this.state := "CoeditActivated"
@@ -251,10 +269,11 @@ class FoxitCoedit
 	DeactivateCoedit()
 	{
 		dev_assert(this.coedit)
+
+		this.coedit.IniWriteMine("HWND", "") ; must before .Deactivate()
+		
 		this.coedit.Deactivate()
 		this.state := "Detecting"
-		
-		this.coedit.IniWriteMine("HWND", "")
 		
 		fxhk_UnDefineHotkey("^s", "FoxitCoedit_SaveDoc_hotkey")
 	}
@@ -265,7 +284,8 @@ class FoxitCoedit
 		
 		this.coedit.IniWriteMine("is_modified", is_doc_modified)
 		
-		this.coedit.IniWriteMine("HWND", Format("0x{:08X}", myHwnd))
+		this.coedit.IniWriteMine("HWND"
+			, (myHwnd=="" or myHwnd==0) ? "" : Format("0x{:08X}", myHwnd))
 	}
 
 	OnBtnSavePdf()
@@ -287,8 +307,7 @@ class FoxitCoedit
 		else
 		{
 			this.ResyncCoedit()
-			dev_MsgBoxWarning("Peer connection lost. Now re-syncing.", FoxitCoedit_Id)
-			
+			dev_MsgBoxWarning("Handshake lost! Now re-syncing.", FoxitCoedit_Id)
 		}
 		
 		this.RefreshUic()
@@ -305,9 +324,30 @@ class FoxitCoedit
 		}
 		else if(this.state=="CoeditActivated")
 		{
-			GuiControl_SetText(GuiName, "gu_focoLblHeadline", "[ Activated ] " this.coedit.state)
+			GuiControl_SetText(GuiName, "gu_focoLblHeadline", "[ Activated ] Syncing...")
+		}
+		else if(this.state=="CoeditHandshaked")
+		{
+			GuiControl_SetText(GuiName, "gu_focoLblHeadline", "[ Activated ] Handshaked")
 			
 			this.RefreshUic()
+			
+			;
+			; To detect HWND lost
+			;
+
+			if(this.peerHwnd)
+				this.prev_peerHwnd := this.peerHwnd
+			
+			if(this.prev_peerHwnd and not this.peerHwnd)
+			{
+				; If we once saw prev_peerHwnd valid, but now it becomes null, then the peer is lost.
+
+				dev_MsgBoxWarning("Peer HWND lost. Handshake lost! Click OK to re-sync.", FoxitCoedit_Id)
+				this.ResyncCoedit()
+				return
+			}
+			
 			;
 			; Check editing conflict
 			;
@@ -320,7 +360,7 @@ class FoxitCoedit
 				this.coedit.IniWriteMine("is_modified", is_modified)
 			}
 			
-			if(this.was_doc_modified and this.coedit.peerdict.is_modified)
+			if(this.was_doc_modified and this.peerDocModified)
 			{
 				dev_MsgBoxWarning("Both sides pdf are being modified, you are doing conflict editing!`n`n"
 					. "This warning keeps pop-up until you discard one-side's modification.`n`n"
@@ -453,9 +493,12 @@ class FoxitCoedit
 	
 	ResyncCoedit()
 	{
-		this.coedit.ResetSyncState()
+		this.state := "CoeditActivated"
+		this.prev_peerHwnd := 0
 		
 		this.StoreMinesideIni("", "")
+		
+		this.coedit.ResetSyncState()
 		
 		this.RefreshUic()
 	}
@@ -463,6 +506,8 @@ class FoxitCoedit
 	
 	fndocSyncSucc()
 	{
+		this.state := "CoeditHandshaked"
+		
 		this.was_doc_modified := this.IsPdfModified()
 		
 		this.StoreMinesideIni(this.was_doc_modified, this.pedHwnd)
