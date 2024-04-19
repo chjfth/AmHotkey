@@ -19,12 +19,12 @@ global g_dirsAmTemplates := [ A_ScriptDir "\AmTemplates" ]
 	; g_dirsAmTemplates.Push("D:\test\AmTemplates")
 
 ; global constant use by this module
-global g_amtIniCfgFilename := "AmTemplate.cfg.ini"
-global g_amtIniResultFileName := "AmTemplate.result.ini" ; looks useless
-global g_amtRootMenu := "AmtMenu"
+global gu_amtIniCfgFilename := "AmTemplate.cfg.ini"
+global gu_amtIniResultFileName := "AmTemplate.result.ini" ; looks useless
+global gu_amtRootMenu := "AmtMenu"
 
-global g_amtGuidFormatRegex := "\{CCCCCCCC-0000-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}\}"
-global g_amtGuidFormatFriendly := "{CCCCCCCC-0000-....-....-............}"
+global gu_amtGuidFormatRegex := "\{CCCCCCCC-0000-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}\}"
+global gu_amtGuidFormatFriendly := "{CCCCCCCC-0000-....-....-............}"
 ; -- that is, AmtGuidFormat {CCCCCC-0000-0000-...}
 
 global AMT_FOUND_IMMEDIATE_TEMPLATE := -1
@@ -32,63 +32,63 @@ global AMT_FOUND_IMMEDIATE_TEMPLATE := -1
 ; global variable used by this module
 												;global g_countAmTemplates := 0
 global g_HwndAmt ; HWND for AMT dialog.
-global g_amtTemplateSrcDir ; the Dir with file AmTemplate.cfg.ini
+global gu_amtTemplateSrcDir ; the Dir with file AmTemplate.cfg.ini
 
-global g_amtWordEdtWidth := 220
+global gu_amtWordEdtWidth := 220
 
-global g_OldwordHeader, g_NewwordHeader
+global gu_OldwordHeader, gu_NewwordHeader
 ;
 ; Max 9 words supported.
-global g_amteditOldword1, g_amteditNewword1
-global g_amteditOldword2, g_amteditNewword2
-global g_amteditOldword3, g_amteditNewword3
-global g_amteditOldword4, g_amteditNewword4
-global g_amteditOldword5, g_amteditNewword5
-global g_amteditOldword6, g_amteditNewword6
-global g_amteditOldword7, g_amteditNewword7
-global g_amteditOldword8, g_amteditNewword8
-global g_amteditOldword9, g_amteditNewword9
+global gu_amteditOldword1, gu_amteditNewword1
+global gu_amteditOldword2, gu_amteditNewword2
+global gu_amteditOldword3, gu_amteditNewword3
+global gu_amteditOldword4, gu_amteditNewword4
+global gu_amteditOldword5, gu_amteditNewword5
+global gu_amteditOldword6, gu_amteditNewword6
+global gu_amteditOldword7, gu_amteditNewword7
+global gu_amteditOldword8, gu_amteditNewword8
+global gu_amteditOldword9, gu_amteditNewword9
 ;
-global g_amt_arTemplateWords := [] ; an array of object(.oldword .desc .newword)
+global gu_amt_arTemplateWords := [] ; an array of object(.oldword .desc .newword)
 
-global g_OldguidHeader, g_NewguidHeader
+global gu_OldguidHeader, gu_NewguidHeader
 
-global g_amteditOldguid1, g_amteditNewguid1
-global g_amteditOldguid2, g_amteditNewguid2
-global g_amteditOldguid3, g_amteditNewguid3
-global g_amteditOldguid4, g_amteditNewguid4
-global g_amteditOldguid5, g_amteditNewguid5
-global g_amteditOldguid6, g_amteditNewguid6
-global g_amteditOldguid7, g_amteditNewguid7
-global g_amteditOldguid8, g_amteditNewguid8
-global g_amteditOldguid9, g_amteditNewguid9
+global gu_amteditOldguid1, gu_amteditNewguid1
+global gu_amteditOldguid2, gu_amteditNewguid2
+global gu_amteditOldguid3, gu_amteditNewguid3
+global gu_amteditOldguid4, gu_amteditNewguid4
+global gu_amteditOldguid5, gu_amteditNewguid5
+global gu_amteditOldguid6, gu_amteditNewguid6
+global gu_amteditOldguid7, gu_amteditNewguid7
+global gu_amteditOldguid8, gu_amteditNewguid8
+global gu_amteditOldguid9, gu_amteditNewguid9
 
-global g_amt_arTemplateGuids := [] ; an array of object(.oldword .desc .newword)
+global gu_amt_arTemplateGuids := [] ; an array of object(.oldword .desc .newword)
 
 global CREATE_SUBDIR_WITH_NEW_WORD := "Create a subdir with first new word"
 
-global g_amtIsAutoGuid := true
+global gu_amtIsAutoGuid := true
 
-global g_amtRadioCRLF
-global g_amtRadioLF
+global gu_amtRadioCRLF
+global gu_amtRadioLF
 
-global g_amtEdtOutdirUser
+global gu_amtEdtOutdirUser
 
-global g_amtIsCreateDirForFirstWord := true
-global g_amtTxtApplyDirFinal
-global g_amtIconWarnOverwrite
+global gu_amtIsCreateDirForFirstWord := true
+global gu_amtTxtApplyDirFinal
+global gu_amtIconWarnOverwrite
 
-global g_amtPrevInipath := ""
-global g_amtPrevIniTime := ""
-global g_amtApplyFolderHint := ""
+global gu_amtPrevInipath := ""
+global gu_amtPrevIniTime := ""
+global gu_amtApplyFolderHint := ""
 
-global g_amtDefaultOutdirUser := A_AppData "\" "AmTemplatesApply" 
+global gu_amtDefaultOutdirUser := A_AppData "\" "AmTemplatesApply" 
 	; Example: C:\Users\win7evn\AppData\Roaming\AmTemplatesApply
 	; This can be overridden in customize.ahk
 
-global g_amtApplyBtn := ""
+global gu_amtApplyBtn := ""
 
-global g_amtDefaultOutdirUser0 := g_amtDefaultOutdirUser
+global gu_amtDefaultOutdirUser0 := gu_amtDefaultOutdirUser
 
 ; AmTemplates_InitHotkeys()
 
@@ -101,12 +101,12 @@ return ; End of auto-execute section.
 
 Amt_GetIniFilepath(dirtmpl)
 {
-	return dirtmpl "\" g_amtIniCfgFilename
+	return dirtmpl "\" gu_amtIniCfgFilename
 }
 
 Amt_IsAmtGuidFormat(guid)
 {
-	if(guid ~= "i)" g_amtGuidFormatRegex) ; case-insensitive match
+	if(guid ~= "i)" gu_amtGuidFormatRegex) ; case-insensitive match
 		return true
 	else 
 		return false
@@ -125,14 +125,14 @@ Amt_PrepareDir(basemenu, basedirpath)
 	;
 	; Three cases:
 	;
-	; (1) If there is an immediate g_amtIniCfgFilename found, we'll NOT create 
+	; (1) If there is an immediate gu_amtIniCfgFilename found, we'll NOT create 
 	; this basemenu and return AMT_FOUND_IMMEDIATE_TEMPLATE(-1).
 	;
-	; (2) If there is any g_amtIniCfgFilename found in deeper subdirs, we'll 
+	; (2) If there is any gu_amtIniCfgFilename found in deeper subdirs, we'll 
 	; actually create this basemenu and return a positive number indicating 
 	; templates inside.
 	;
-	; (3) If there is no g_amtIniCfgFilename found, basemenu is NOT created 
+	; (3) If there is no gu_amtIniCfgFilename found, basemenu is NOT created 
 	; and we will return 0.
 	;
 	; Yes, the caller suggests the basemenu name(string) for us to create.
@@ -144,7 +144,7 @@ Amt_PrepareDir(basemenu, basedirpath)
 		return AMT_FOUND_IMMEDIATE_TEMPLATE
 	}
 	
-	; Now recurse into subdirs to find other potential g_amtIniCfgFilename files.
+	; Now recurse into subdirs to find other potential gu_amtIniCfgFilename files.
 	
 	total_found := 0
 	
@@ -188,9 +188,9 @@ Amt_LaunchMenu(scanrootdir:="")
 {
 ;	g_countAmTemplates := 0 
 	
-	dev_Menu_DeleteAll(g_amtRootMenu)
+	dev_Menu_DeleteAll(gu_amtRootMenu)
 	
-	dev_MenuAddItem(g_amtRootMenu, "==== AmTemplates ====", "dev_nop")
+	dev_MenuAddItem(gu_amtRootMenu, "==== AmTemplates ====", "dev_nop")
 	
 	if(StrLen(scanrootdir)>0)
 	{
@@ -198,16 +198,16 @@ Amt_LaunchMenu(scanrootdir:="")
 	}
 	else
 	{
-		if(g_amtPrevInipath)
+		if(gu_amtPrevInipath)
 		{
-			dev_MenuAddItem(g_amtRootMenu, "Show previous dialog", "Amt_ShowPreviousGui")
+			dev_MenuAddItem(gu_amtRootMenu, "Show previous dialog", "Amt_ShowPreviousGui")
 		}
 
 		; Load AmTemplates from g_dirsAmTemplates[]
 
 		Loop, % g_dirsAmTemplates.Length()
 		{
-			submenu_name := g_amtRootMenu "." A_Index
+			submenu_name := gu_amtRootMenu "." A_Index
 
 			scandir := g_dirsAmTemplates[A_Index]
 
@@ -215,9 +215,9 @@ Amt_LaunchMenu(scanrootdir:="")
 		}
 	}
 	
-	dev_MenuAddItem(g_amtRootMenu, "Custom scandir ...", "Amt_InputCustomScandir")
+	dev_MenuAddItem(gu_amtRootMenu, "Custom scandir ...", "Amt_InputCustomScandir")
 
-	dev_MenuShow(g_amtRootMenu)
+	dev_MenuShow(gu_amtRootMenu)
 }
 
 Amt_attach_scandir_to_LaunchMenu(submenu_name, scandir)
@@ -232,7 +232,7 @@ Amt_attach_scandir_to_LaunchMenu(submenu_name, scandir)
 	{
 		; append menuitem to basemenu
 		fn := Func("Amt_ExpandTemplateUI").Bind(scandir)
-		dev_MenuAddItem(g_amtRootMenu, scandir, fn)
+		dev_MenuAddItem(gu_amtRootMenu, scandir, fn)
 	}
 	else
 	{
@@ -240,11 +240,11 @@ Amt_attach_scandir_to_LaunchMenu(submenu_name, scandir)
 		
 		if(amtfound==0)
 		{
-			dev_MenuAddItem(g_amtRootMenu, menutext, "dev_nop")
+			dev_MenuAddItem(gu_amtRootMenu, menutext, "dev_nop")
 		}
 		else
 		{
-			dev_MenuAddItem(g_amtRootMenu, menutext, ":" submenu_name)
+			dev_MenuAddItem(gu_amtRootMenu, menutext, ":" submenu_name)
 		}
 	}
 }
@@ -253,7 +253,7 @@ Amt_InputCustomScandir()
 {
 	static s_scandir := ""
 	isok := dev_InputBox_InitText("AmTemplate"
-		, "Input a directory to scan for " g_amtIniCfgFilename
+		, "Input a directory to scan for " gu_amtIniCfgFilename
 		, s_scandir)
 	
 	if(not isok || not s_scandir)
@@ -271,8 +271,8 @@ Amt_ExpandTemplateUI(dirtmpl)
 Amt_CreateGui(inipath)
 {
 	GuiName := "AMT"
-	g_amt_arTemplateWords := []
-	g_amt_arTemplateGuids := []
+	gu_amt_arTemplateWords := []
+	gu_amt_arTemplateGuids := []
 	;
 	dev_GuiAutoResizeRemove(GuiName)
 
@@ -284,9 +284,9 @@ Amt_CreateGui(inipath)
 
 	Gui_Switch_Font( GuiName, 9, "", "Tahoma")
 	Gui_Add_TxtLabel(GuiName, "", 580, "xm", Format("Template folder found: (with {})", inifilename))
-	Gui_Add_Editbox( GuiName, "g_amtTemplateSrcDir", 580, "xm ReadOnly -E0x200", inidir)
-	Gui_Add_TxtLabel(GuiName, "g_OldwordHeader", g_amtWordEdtWidth, "xm y+16", "Old words from template:")
-	Gui_Add_TxtLabel(GuiName, "g_NewwordHeader", -1, "x+10 yp", "New words to apply:")
+	Gui_Add_Editbox( GuiName, "gu_amtTemplateSrcDir", 580, "xm ReadOnly -E0x200", inidir)
+	Gui_Add_TxtLabel(GuiName, "gu_OldwordHeader", gu_amtWordEdtWidth, "xm y+16", "Old words from template:")
+	Gui_Add_TxtLabel(GuiName, "gu_NewwordHeader", -1, "x+10 yp", "New words to apply:")
 
 	;
 	; Get all items from [WordToReplace]
@@ -306,13 +306,13 @@ Amt_CreateGui(inipath)
 		key := key_value[1]
 		value := key_value[2]
 		
-		varname_oldword := "g_amteditOldword" index
-		varname_newword := "g_amteditNewword" index
+		varname_oldword := "gu_amteditOldword" index
+		varname_newword := "gu_amteditNewword" index
 		
-		Gui_Add_Editbox(GuiName, varname_oldword, g_amtWordEdtWidth, "xm ReadOnly -Tabstop", key)
-		Gui_Add_Editbox(GuiName, varname_newword, g_amtWordEdtWidth, "yp x+10 g" . "Amt_OnNewWordChange", key)
+		Gui_Add_Editbox(GuiName, varname_oldword, gu_amtWordEdtWidth, "xm ReadOnly -Tabstop", key)
+		Gui_Add_Editbox(GuiName, varname_newword, gu_amtWordEdtWidth, "yp x+10 g" . "Amt_OnNewWordChange", key)
 		
-		g_amt_arTemplateWords[index] := {"oldword":key, "newword":key, "desc":value}
+		gu_amt_arTemplateWords[index] := {"oldword":key, "newword":key, "desc":value}
 	}
 	
 	;
@@ -323,9 +323,9 @@ Amt_CreateGui(inipath)
 
 	if(arlinetext.Length()>0)
 	{
-		Gui_Add_TxtLabel(GuiName, "g_OldguidHeader", 280, "xm y+16", "Old GUIDs from template:")
-		Gui_Add_TxtLabel(GuiName, "g_NewguidHeader", -1, "x+10 yp", "New GUIDs to apply:")
-		Gui_Add_Checkbox(GuiName, "g_amtIsAutoGuid", -1, "x+45 yp Checked g" . "Amt_ckbToggledAutoGenGuid", "Auto &generate")
+		Gui_Add_TxtLabel(GuiName, "gu_OldguidHeader", 280, "xm y+16", "Old GUIDs from template:")
+		Gui_Add_TxtLabel(GuiName, "gu_NewguidHeader", -1, "x+10 yp", "New GUIDs to apply:")
+		Gui_Add_Checkbox(GuiName, "gu_amtIsAutoGuid", -1, "x+45 yp Checked g" . "Amt_ckbToggledAutoGenGuid", "Auto &generate")
 	}
 	
 	for index,itemline in arlinetext
@@ -340,77 +340,77 @@ Amt_CreateGui(inipath)
 		key := key_value[1]
 		value := key_value[2]
 		
-		varname_oldword := "g_amteditOldguid" + index
-		varname_newword := "g_amteditNewguid" + index
+		varname_oldword := "gu_amteditOldguid" + index
+		varname_newword := "gu_amteditNewguid" + index
 		
 		guidnew := Amt_GenerateGuidByTime(index)
 		
 		Gui_Add_Editbox(GuiName, varname_oldword, 280, "xm ReadOnly -Tabstop", key)
 		Gui_Add_Editbox(GuiName, varname_newword, 280, "yp x+10 g" . "Amt_OnNewGuidChange", guidnew) 
 		
-		g_amt_arTemplateGuids[index] := {"oldword":key, "newword":guidnew, "desc":value}
+		gu_amt_arTemplateGuids[index] := {"oldword":key, "newword":guidnew, "desc":value}
 	}
 	
 	; CRLF/LF radio boxes
 	
-	Gui_Add_TxtLabel(GuiName, "", -1, "xm y+10", "&New-line style:")
-	Gui_Add_Radiobox(GuiName, "g_amtRadioCRLF", -1, "Group Checked yp x+10", "CRLF")
-	Gui_Add_Radiobox(GuiName, "g_amtRadioLF", -1, "yp x+5", "LF")
+	Gui_Add_TxtLabel(GuiName, "-", -1, "xm y+10", "&New-line style:")
+	Gui_Add_Radiobox(GuiName, "gu_amtRadioCRLF", -1, "Group Checked yp x+10", "CRLF")
+	Gui_Add_Radiobox(GuiName, "gu_amtRadioLF", -1, "yp x+5", "LF")
 	;
 	newline_style := dev_IniRead(inipath, "global", "TextFileNewLineStyle", "CRLF")
 	if(dev_StrIsEqualI(newline_style, "LF"))
-		GuiControl_ButtonCheck(GuiName, "g_amtRadioLF", true)
+		GuiControl_ButtonCheck(GuiName, "gu_amtRadioLF", true)
 	
 	Gui_Add_TxtLabel(GuiName, "", -1, "y+16 xm", "Apply &to:")
-	Gui_Add_Editbox( GuiName, "g_amtEdtOutdirUser", 565, "xm+15 g" . "Amt_ResyncUI") ; text fill later in Amt_ShowGui()
+	Gui_Add_Editbox( GuiName, "gu_amtEdtOutdirUser", 565, "xm+15 g" . "Amt_ResyncUI") ; text fill later in Amt_ShowGui()
 	
-	initcheck := g_amtIsCreateDirForFirstWord ? "Checked" : ""
+	initcheck := gu_amtIsCreateDirForFirstWord ? "Checked" : ""
 	
-	Gui_Add_Checkbox(GuiName, "g_amtIsCreateDirForFirstWord", 500, initcheck " xm g" . "Amt_ResyncUI", CREATE_SUBDIR_WITH_NEW_WORD)
+	Gui_Add_Checkbox(GuiName, "gu_amtIsCreateDirForFirstWord", 500, initcheck " xm g" . "Amt_ResyncUI", CREATE_SUBDIR_WITH_NEW_WORD)
 
 	Gui_Add_TxtLabel(GuiName, "", -1, "xm", "Final apply folder:")
 	
 	; Now, a readonly text line that shows final apply folder, with a prefix icon showing final-folder state.
-	Gui_Add_Picture(GuiName, "g_amtIconWarnOverwrite", 16, "xm h16 +0x100") ; 0x100: SS_NOTIFY, for hovering tooltip
-	Gui_Add_Editbox(GuiName, "g_amtTxtApplyDirFinal", 562, "yp x+3 ReadOnly -E0x200") ; -E0x200: turn off WS_EX_CLIENTEDGE, no so editbox border
-	Gui_Add_Button( GuiName, "", -1, "y+10 xm Default g" . "AMT_BtnOK", " &Apply ")
+	Gui_Add_Picture(GuiName, "gu_amtIconWarnOverwrite", 16, "xm h16 +0x100") ; 0x100: SS_NOTIFY, for hovering tooltip
+	Gui_Add_Editbox(GuiName, "gu_amtTxtApplyDirFinal", 562, "yp x+3 ReadOnly -E0x200") ; -E0x200: turn off WS_EX_CLIENTEDGE, no so editbox border
+	Gui_Add_Button( GuiName, "-", -1, "y+10 xm Default g" . "AMT_BtnOK", " &Apply ")
 }
 
 
 Amt_ShowPreviousGui()
 {
-	if(not g_amtPrevInipath)
+	if(not gu_amtPrevInipath)
 	{
 		dev_MsgBoxWarning("No existing AmTemplates selected yet.")
 		return
 	}
 
-	Amt_ShowGui(g_amtPrevInipath)
+	Amt_ShowGui(gu_amtPrevInipath)
 }
 
 Amt_ShowGui(inipath)
 {
 	FileGetTime, NowIniTime, % inipath
 
-	if(!g_HwndAmt || inipath!=g_amtPrevInipath || NowIniTime!=g_amtPrevIniTime) {
+	if(!g_HwndAmt || inipath!=gu_amtPrevInipath || NowIniTime!=gu_amtPrevIniTime) {
 		
 		; Comes a different ini, so destroy old and create new
 		Amt_CreateGui(inipath) 
 		
-		g_amtPrevInipath := inipath
-		g_amtPrevIniTime := NowIniTime
+		gu_amtPrevInipath := inipath
+		gu_amtPrevIniTime := NowIniTime
 	}
 	
 	OnMessage(0x200, Func("Amt_WM_MOUSEMOVE")) ; add message hook
 	
 	Gui, AMT:Show, , % "Expand your AmTemplate"
 
-	if(g_amtEdtOutdirUser=="")
+	if(gu_amtEdtOutdirUser=="")
 	{
 		; Fill a preset apply path for user
-		g_amtEdtOutdirUser := g_amtDefaultOutdirUser
+		gu_amtEdtOutdirUser := gu_amtDefaultOutdirUser
 	}
-	GuiControl, AMT:, g_amtEdtOutdirUser, % g_amtEdtOutdirUser
+	GuiControl, AMT:, gu_amtEdtOutdirUser, % gu_amtEdtOutdirUser
 	
 ;	applydir := dev_FindVacantFilename(inidir "-Apply{}")
 	
@@ -437,32 +437,32 @@ AMTGuiSize()
 	Gui, AMT:+MaxSizex%A_GuiHeight% ; Effect: only allow changing window width, not height
 
 	rsdict := {}
-	rsdict.g_amtTemplateSrcDir := "0,0,100,0"
+	rsdict.gu_amtTemplateSrcDir := "0,0,100,0"
 	
-	rsdict.g_OldwordHeader := "0,0,44,0"
-	rsdict.g_NewwordHeader := "44,0,88,0"
+	rsdict.gu_OldwordHeader := "0,0,44,0"
+	rsdict.gu_NewwordHeader := "44,0,88,0"
 	;
-	nwords := g_amt_arTemplateWords.Length()
+	nwords := gu_amt_arTemplateWords.Length()
 	Loop, %nwords%
 	{
-		rsdict["g_amteditOldword" A_index] := rsdict.g_OldwordHeader
-		rsdict["g_amteditNewword" A_Index] := rsdict.g_NewwordHeader
+		rsdict["gu_amteditOldword" A_index] := rsdict.gu_OldwordHeader
+		rsdict["gu_amteditNewword" A_Index] := rsdict.gu_NewwordHeader
 	}
 
 ;	// No need to change GUID editbox width.
-;	rsdict.g_OldguidHeader := "0,0,50,0"
-;	rsdict.g_NewguidHeader := "50,0,100,0"
+;	rsdict.gu_OldguidHeader := "0,0,50,0"
+;	rsdict.gu_NewguidHeader := "50,0,100,0"
 ;	;
-;	nguids := g_amt_arTemplateGuids.Length()
+;	nguids := gu_amt_arTemplateGuids.Length()
 ;	Loop, %nguids%
 ;	{
-;		rsdict["g_amteditOldguid" A_Index] := rsdict.g_OldguidHeader
-;		rsdict["g_amteditNewguid" A_Index] := rsdict.g_NewguidHeader
+;		rsdict["gu_amteditOldguid" A_Index] := rsdict.gu_OldguidHeader
+;		rsdict["gu_amteditNewguid" A_Index] := rsdict.gu_NewguidHeader
 ;	}
 	
-	rsdict.g_amtEdtOutdirUser := "0,100,100,100"
-	rsdict.g_amtTxtApplyDirFinal := "0,100,100,100"
-	rsdict.g_amtApplyBtn := "0,100,0,100"
+	rsdict.gu_amtEdtOutdirUser := "0,100,100,100"
+	rsdict.gu_amtTxtApplyDirFinal := "0,100,100,100"
+	rsdict.gu_amtApplyBtn := "0,100,0,100"
 	
 	dev_GuiAutoResize("AMT", rsdict, A_GuiWidth, A_GuiHeight)
 }
@@ -482,7 +482,7 @@ AMT_BtnOK()
 	Gui, AMT:Submit, NoHide
 	Gui, AMT:+OwnDialogs ; So that child dialogboxes are Modal.
 	
-	finalApplyDir := g_amtTxtApplyDirFinal
+	finalApplyDir := gu_amtTxtApplyDirFinal
 	
 	if(FileExist(finalApplyDir))
 	{
@@ -492,7 +492,7 @@ AMT_BtnOK()
 
 	; Check that editbox contents has changed.
 	stales := ""
-	for index,obj in g_amt_arTemplateWords
+	for index,obj in gu_amt_arTemplateWords
 	{
 		if(obj.oldword==obj.newword)
 			stales .= obj.oldword "`n"
@@ -505,17 +505,17 @@ AMT_BtnOK()
 			return
 	}
 
-	isok := Amt_DoExpandTemplate(g_amtTemplateSrcDir, finalApplyDir)
-	; -- implicit input: g_amt_arTemplateGuids[], g_amt_arTemplateWords
+	isok := Amt_DoExpandTemplate(gu_amtTemplateSrcDir, finalApplyDir)
+	; -- implicit input: gu_amt_arTemplateGuids[], gu_amt_arTemplateWords
 
 	if(isok)
 	{
 		msg := "Expand template success.`n`n" finalApplyDir 
 		
-		if(g_amtDefaultOutdirUser==g_amtDefaultOutdirUser0)
+		if(gu_amtDefaultOutdirUser==gu_amtDefaultOutdirUser0)
 		{	
 			; If user is using the raw default, give him a hint about using user default.
-			msg .= "`n`nHint: Default output folder can be set in global var g_amtDefaultOutdirUser."
+			msg .= "`n`nHint: Default output folder can be set in global var gu_amtDefaultOutdirUser."
 		}
 		
 		dev_MsgBoxInfo(msg)
@@ -560,11 +560,11 @@ Amt_GenerateGuidByTime(suffix_num)
 
 Amt_GenerateAllGuidsByTime()
 {
-	for index,obj in g_amt_arTemplateGuids
+	for index,obj in gu_amt_arTemplateGuids
 	{
 		obj.newword := Amt_GenerateGuidByTime(index)
 	
-		GuiControl, AMT:, % Format("g_amteditNewguid{1}", index), % obj.newword
+		GuiControl, AMT:, % Format("gu_amteditNewguid{1}", index), % obj.newword
 	}
 }
 
@@ -573,20 +573,20 @@ Amt_OnNewWordChange()
 {
 	idCtrl := A_GuiControl
 	
-	if(!StrIsStartsWith(idCtrl, "g_amteditNewword"))
+	if(!StrIsStartsWith(idCtrl, "gu_amteditNewword"))
 	{
 		MsgBox, % "Assert Error: Amt_OnNewWordChange()."
 	}
 
-	index := dev_str2num(dev_StripPrefix(idCtrl, "g_amteditNewword"))
+	index := dev_str2num(dev_StripPrefix(idCtrl, "gu_amteditNewword"))
 	
 	GuiControlGet, %idCtrl%, AMT:
 	newtext := %idCtrl%
-	g_amt_arTemplateWords[index].newword := newtext
+	gu_amt_arTemplateWords[index].newword := newtext
 	
 ;	dev_TooltipAutoClear("text changed to: " newtext)
 
-	if(idCtrl=="g_amteditNewword1")
+	if(idCtrl=="gu_amteditNewword1")
 	{
 		Amt_ResyncUI()
 	}
@@ -596,7 +596,7 @@ Amt_OnNewGuidChange()
 {
 	idCtrl := A_GuiControl
 	
-	if(!StrIsStartsWith(idCtrl, "g_amteditNewguid"))
+	if(!StrIsStartsWith(idCtrl, "gu_amteditNewguid"))
 	{
 		MsgBox, % "Assert Error: Amt_OnNewGuidChange()."
 	}
@@ -604,10 +604,10 @@ Amt_OnNewGuidChange()
 	GuiControlGet, %idCtrl%, AMT:
 	newtext := %idCtrl%
 
-	index := dev_str2num(dev_StripPrefix(idCtrl, "g_amteditNewguid"))
-	g_amt_arTemplateGUIDs[index].newword := newtext
+	index := dev_str2num(dev_StripPrefix(idCtrl, "gu_amteditNewguid"))
+	gu_amt_arTemplateGUIDs[index].newword := newtext
 
-;	dev_TooltipAutoClear(Format("g_amt_arTemplateGUIDs[{1}].newword changed to: {2}", index, newtext)) ; debug
+;	dev_TooltipAutoClear(Format("gu_amt_arTemplateGUIDs[{1}].newword changed to: {2}", index, newtext)) ; debug
 }
 
 Amt_WM_MOUSEMOVE()
@@ -617,27 +617,27 @@ Amt_WM_MOUSEMOVE()
 	is_from_tooltiping_uic := true ; assume message is from a GuiControl
 	idCtrl := A_GuiControl
 	
-	if(StrIsStartsWith(idCtrl, "g_amteditOldword"))
+	if(StrIsStartsWith(idCtrl, "gu_amteditOldword"))
 	{
 		; Show desc text of this template word.
 	
-		index := dev_str2num(dev_StripPrefix(idCtrl, "g_amteditOldword"))
+		index := dev_str2num(dev_StripPrefix(idCtrl, "gu_amteditOldword"))
 		
-		dev_TooltipAutoClear( amt_AdjustTooltipText(g_amt_arTemplateWords[index].desc) )
+		dev_TooltipAutoClear( amt_AdjustTooltipText(gu_amt_arTemplateWords[index].desc) )
 		
-;		MsgBox, % Format("Amt_WM_MOUSEMOVE on Oldword #{1} : {2} , {3} , {4}", index, g_amt_arTemplateWords[index].oldword, g_amt_arTemplateWords[index].newword, g_amt_arTemplateWords[index].desc)
+;		MsgBox, % Format("Amt_WM_MOUSEMOVE on Oldword #{1} : {2} , {3} , {4}", index, gu_amt_arTemplateWords[index].oldword, gu_amt_arTemplateWords[index].newword, gu_amt_arTemplateWords[index].desc)
 	}
-	else if(StrIsStartsWith(idCtrl, "g_amteditOldguid"))
+	else if(StrIsStartsWith(idCtrl, "gu_amteditOldguid"))
 	{
 		; show tooltip on old-GUID, that is text description of this GUID's meaning.
 	
-		index := dev_str2num(dev_StripPrefix(idCtrl, "g_amteditOldguid"))
+		index := dev_str2num(dev_StripPrefix(idCtrl, "gu_amteditOldguid"))
 		
-		dev_TooltipAutoClear( amt_AdjustTooltipText(g_amt_arTemplateGuids[index].desc) )
+		dev_TooltipAutoClear( amt_AdjustTooltipText(gu_amt_arTemplateGuids[index].desc) )
 	}
-	else if(idCtrl=="g_amtIconWarnOverwrite")
+	else if(idCtrl=="gu_amtIconWarnOverwrite")
 	{
-		dev_TooltipAutoClear(g_amtApplyFolderHint)
+		dev_TooltipAutoClear(gu_amtApplyFolderHint)
 	}
 	else
 		is_from_tooltiping_uic := false
@@ -669,7 +669,7 @@ Amt_ckbToggledAutoGenGuid()
 
 Amt_RegenGuidsByCheckbox()
 {
-	GuiControlGet, ischecked, AMT:, g_amtIsAutoGuid
+	GuiControlGet, ischecked, AMT:, gu_amtIsAutoGuid
 	
 	if(ischecked)
 	{
@@ -681,13 +681,13 @@ Amt_ResyncUI()
 {
 	; ==== Auto-generate GUID checkbox ====
 
-	GuiControlGet, ischecked, AMT:, g_amtIsAutoGuid
+	GuiControlGet, ischecked, AMT:, gu_amtIsAutoGuid
 
 	cmdEnable := ischecked ? "Disable" : "Enable"
 	
-	for index,obj in g_amt_arTemplateGuids
+	for index,obj in gu_amt_arTemplateGuids
 	{
-		varname := "g_amteditNewguid" . index
+		varname := "gu_amteditNewguid" . index
 	
 		GuiControl, AMT:%cmdEnable%, %varname%
 	}
@@ -696,33 +696,33 @@ Amt_ResyncUI()
 	
 	Gui, AMT:Submit, NoHide
 	
-	if(g_amtIsCreateDirForFirstWord)
+	if(gu_amtIsCreateDirForFirstWord)
 	{
-		ckbText := Format("Create a subdir named ""{1}"" .", g_amteditNewword1)
-		GuiControl, AMT:, g_amtIsCreateDirForFirstWord, % ckbText
+		ckbText := Format("Create a subdir named ""{1}"" .", gu_amteditNewword1)
+		GuiControl, AMT:, gu_amtIsCreateDirForFirstWord, % ckbText
 		
-		finalApplyDir := g_amtEdtOutdirUser "\" g_amteditNewword1
+		finalApplyDir := gu_amtEdtOutdirUser "\" gu_amteditNewword1
 	}
 	else
 	{
-		GuiControl, AMT:, g_amtIsCreateDirForFirstWord, % CREATE_SUBDIR_WITH_NEW_WORD
+		GuiControl, AMT:, gu_amtIsCreateDirForFirstWord, % CREATE_SUBDIR_WITH_NEW_WORD
 		
-		finalApplyDir := g_amtEdtOutdirUser
+		finalApplyDir := gu_amtEdtOutdirUser
 	}
 
-	;  Update text in g_amtTxtApplyDirFinal
-	GuiControl, AMT:, g_amtTxtApplyDirFinal, % finalApplyDir
+	;  Update text in gu_amtTxtApplyDirFinal
+	GuiControl, AMT:, gu_amtTxtApplyDirFinal, % finalApplyDir
 
 	if(FileExist(finalApplyDir)) {
 		icongroup := 2 ; yellow exclamation triangle
-		g_amtApplyFolderHint := "This folder already exists. You need to choose another."
+		gu_amtApplyFolderHint := "This folder already exists. You need to choose another."
 	}
 	else {
 		icongroup := 5 ; blue info circle
-		g_amtApplyFolderHint := "This folder will be created."
+		gu_amtApplyFolderHint := "This folder will be created."
 	}
 	iconparams := Format("*icon{1} USER32.DLL", icongroup)
-	GuiControl, AMT:, g_amtIconWarnOverwrite, % iconparams
+	GuiControl, AMT:, gu_amtIconWarnOverwrite, % iconparams
 }
 
 Amt_DoExpandTemplate(srcdir, dstdir)
@@ -758,7 +758,7 @@ Amt_DoExpandTemplate(srcdir, dstdir)
 		}
 
 		dstRela := srcRela
-		for idx,wordmap in g_amt_arTemplateWords
+		for idx,wordmap in gu_amt_arTemplateWords
 		{
 			dstRela := StrReplace(dstRela, wordmap.oldword, wordmap.newword)
 		}
@@ -772,14 +772,14 @@ Amt_DoExpandTemplate(srcdir, dstdir)
 	
 	; ========== For each GUID, check format correctness
 	
-	for index,obj in g_amt_arTemplateGuids
+	for index,obj in gu_amt_arTemplateGuids
 	{
 		oldguid := obj.oldword
 		newguid := obj.newword
 	
 		; Check that template(old) GUIDs do not duplicate.
 		if(dictGuidReplaceCount.HasKey(oldguid)) {
-			dev_MsgBoxError(Format("[ERROR] {} has duplicate GUID in it: {}", g_amtIniCfgFilename, oldguid))
+			dev_MsgBoxError(Format("[ERROR] {} has duplicate GUID in it: {}", gu_amtIniCfgFilename, oldguid))
 			return false
 		}
 		
@@ -792,7 +792,7 @@ Amt_DoExpandTemplate(srcdir, dstdir)
 			info := Format("[ERROR] The GUID ""{}"" does NOT meet AMT-GUID-format.`n`n"
 				. "With IsStrictGuid=1, the GUID should have this format:"
 				. "`n`n{}"
-				, oldguid, g_amtGuidFormatFriendly)
+				, oldguid, gu_amtGuidFormatFriendly)
 			dev_MsgBoxError(info)
 			return false
 		}
@@ -818,7 +818,7 @@ Amt_DoExpandTemplate(srcdir, dstdir)
 				dev_MsgBoxError(Format("[ERROR] One of your manually typed new GUIDs has AMT-GUID-format:`n`n"
 					. "{}`n`n"
 					. "This is not allowed when {} says IsStrictGuid=1 ."
-					, newguid, g_amtIniCfgFilename))
+					, newguid, gu_amtIniCfgFilename))
 				return false
 			}
 		}
@@ -866,12 +866,12 @@ Amt_DoExpandTemplate(srcdir, dstdir)
 				return false
 			}
 			
-			for index,obj in g_amt_arTemplateWords
+			for index,obj in gu_amt_arTemplateWords
 			{
 				filetext := StrReplace(filetext, obj.oldword, obj.newword)
 			}
 			
-			for index,obj in g_amt_arTemplateGuids
+			for index,obj in gu_amt_arTemplateGuids
 			{
 				filetext := StrReplace(filetext, obj.oldword, obj.newword, outCount)
 				dictGuidReplaceCount[obj.oldword] += outCount
@@ -881,7 +881,7 @@ Amt_DoExpandTemplate(srcdir, dstdir)
 			{
 				; Ensure that all AmtGuidFormat GUIDs are all gone, otherwise, assert error.
 				;
-				badpos := RegExMatch(filetext, "i)" g_amtGuidFormatRegex, matchedstr)
+				badpos := RegExMatch(filetext, "i)" gu_amtGuidFormatRegex, matchedstr)
 				if(badpos>0)
 				{
 					badguid := matchedstr
@@ -890,12 +890,12 @@ Amt_DoExpandTemplate(srcdir, dstdir)
 						. "has un-replaced AMT-GUID-format GUID: `n`n"
 						. "{}`n`n"
 						. "The author of {} probably forgot to refer to this GUID to have it replaced, which is an error."
-						, srcpath, badguid, g_amtIniCfgFilename))
+						, srcpath, badguid, gu_amtIniCfgFilename))
 					return false
 				}
 			}
 			
-			if(g_amtRadioLF)
+			if(gu_amtRadioLF)
 			{
 				; Force LF textfile output(for Unix/Linux)
 				
@@ -923,7 +923,7 @@ Amt_DoExpandTemplate(srcdir, dstdir)
 	; Check that all source GUIDs are "used" at least once.
 	
 	arBadGuids := []
-	for index,obj in g_amt_arTemplateGuids
+	for index,obj in gu_amt_arTemplateGuids
 	{
 		if(dictGuidReplaceCount[obj.oldword] == 0)
 			arBadGuids.Push(obj.oldword)
@@ -932,13 +932,13 @@ Amt_DoExpandTemplate(srcdir, dstdir)
 	{
 		bads := dev_JoinStrings(arBadGuids, "`n")
 		dev_MsgBoxError(Format("[ERROR] Some GUID(s) from {} does not appear even once in source files. Template BUG!`n`n{}"
-			,g_amtIniCfgFilename, bads))
+			,gu_amtIniCfgFilename, bads))
 		return false
 	}
 
 	Amt_GenerateNextLevelCfgIni(srcdir, dstdir)
 
-;	Amt_GenerateResultIni(cfgini, dstdir "\" g_amtIniResultFileName)
+;	Amt_GenerateResultIni(cfgini, dstdir "\" gu_amtIniResultFileName)
 	
 	return true
 }
@@ -951,20 +951,20 @@ Amt_GenerateNextLevelCfgIni(srcdir, dstdir)
 	; The facilitates the work flow of:
 	;   Apply Template -> Customize the new project -> Clone the customized-project with a new project-name.
 	
-	srcinipath := srcdir "\" g_amtIniCfgFilename
-	dstinipath := dstdir "\" g_amtIniCfgFilename
+	srcinipath := srcdir "\" gu_amtIniCfgFilename
+	dstinipath := dstdir "\" gu_amtIniCfgFilename
 	
 	IncludePatterns := dev_IniRead(srcinipath, "global", "IncludePatterns","*")
 	dev_IniWrite(dstinipath, "global", "IncludePatterns", IncludePatterns)
 	
 	isGuidAllAmt := true ; assume true
 	
-	for index,obj in g_amt_arTemplateWords
+	for index,obj in gu_amt_arTemplateWords
 	{
 		dev_IniWrite(dstinipath, "WordToReplace", obj.newword, obj.desc)
 	}
 	
-	for index,obj in g_amt_arTemplateGuids
+	for index,obj in gu_amt_arTemplateGuids
 	{
 		dev_IniWrite(dstinipath, "GUID", obj.newword, obj.desc)
 		
@@ -991,12 +991,12 @@ Amt_GenerateResultIni(srcini, dstini)
 	
 	inisect := "Replaced"
 	
-	for index,obj in g_amt_arTemplateWords
+	for index,obj in gu_amt_arTemplateWords
 	{
 		IniWrite, % obj.newword, % dstini, % inisect, % obj.oldword
 	}
 	
-	for index,obj in g_amt_arTemplateGuids
+	for index,obj in gu_amt_arTemplateGuids
 	{
 		IniWrite, % obj.newword, % dstini, % inisect, % obj.oldword
 	}

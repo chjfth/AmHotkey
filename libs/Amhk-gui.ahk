@@ -32,13 +32,13 @@ Gui_IsValidVar(varname)
 
 Assert_UicVarname(CtrlVarname)
 {
+	if(CtrlVarname=="-")
+		return ; "-" means user explicitly do NOT want to associate a varname
+	
 	if(StrLen(CtrlVarname)==0)
 	{
 		dev_assert(0, "You pass in an empty GUI-control varname. It must be in string form ""gu_XXX"" .")
 	}
-	
-	if(CtrlVarname=="-")
-		return ; "-" means user explicitly do NOT want to associate a varname
 	
 	dev_assert(Gui_IsValidVar(CtrlVarname)
 		, Format("'{}' is not valid GUI-control varname, it must starts with ""gu_"" .", CtrlVarname))
