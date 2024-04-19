@@ -50,6 +50,8 @@ class FoxitCoedit
 	ischk_Lside := 0   ; 0 or 1, reflecting Coedit-sideA-Activate
 	ischk_Rside := 0  ; 0 or 1, reflecting Coedit-sideB-Activate
 	
+	was_doc_modified := 0 ; pdf modified and unsaved state(denoted by asterisk symbol)
+	
 	dbg(msg, lv) {
 		AmDbg_output(FoxitCoedit_Id, msg, lv)
 	}
@@ -84,6 +86,9 @@ class FoxitCoedit
 		
 		this.coedit.Activate(which_side, pdfpath, fndoc)
 		this.state := "CoeditActivated"
+		
+		this.was_doc_modified := this.IsPdfModified()
+		this.coedit.IniWriteMine("is_modified", this.was_doc_modified)
 	}
 	
 	Deactivate()
@@ -173,7 +178,6 @@ class FoxitCoedit
 		}
 		else
 		{
-;AmDbg0("RefreshUic().......")
 			focoLblActive := true
 
 			dev_assert(not (this.ischk_Lside and this.ischk_Rside))
@@ -233,7 +237,7 @@ class FoxitCoedit
 		else
 		{
 			this.coedit.ResetSyncState()
-			dev_MsgBoxWarning("Peer connection lost. Now resyncing.")
+			dev_MsgBoxWarning("Peer connection lost. Now resyncing.", FoxitCoedit_Id)
 			
 		}
 		
@@ -265,7 +269,24 @@ class FoxitCoedit
 		{
 			GuiControl_SetText(GuiName, "gu_focoLblHeadline", "[ Activated ] " this.coedit.state)
 			
-			; todo: would check editing conflict
+			;
+			; Check editing conflict
+			;
+			
+			is_modified := this.IsPdfModified()
+			if(this.was_doc_modified != is_modified)
+			{
+				; Write to INI to indicate to other side
+				this.was_doc_modified := is_modified
+				this.coedit.IniWriteMine("is_modified", is_modified)
+			}
+			
+			if(this.was_doc_modified and this.coedit.peerdict.is_modified)
+			{
+				dev_MsgBoxWarning("Both sides pdf are being modified, you are doing conflict editing!`n`n"
+					. "This warning keeps pop-up until you discard one-side's modification.`n`n"
+					, FoxitCoedit_Id)
+			}
 		}
 	}
 	
@@ -375,7 +396,8 @@ class FoxitCoedit
 			
 			if(not FileExist(pdfpath_real))
 			{
-				dev_MsgBoxWarning("The filepath you picked does not exist yet:`n`n" pdfpath_real)
+				dev_MsgBoxWarning("The filepath you picked does not exist yet:`n`n" pdfpath_real
+					, FoxitCoedit_Id)
 				return
 			}
 			
@@ -402,23 +424,19 @@ class FoxitCoedit
 	
 	fndocSavePdf()
 	{
-		this.dbg2("FoxitCoedit.fndocSavePdf() executing...")
+		this.dbg1("FoxitCoedit.fndocSavePdf() executing...")
 		
-		hwnd := this.pedHwnd
-		wintitle := dev_WinGetTitle_byHwnd(hwnd)
-		if(dev_IsSubStr(wintitle, "*"))
+		if(this.IsPdfModified())
 		{
 			this.Try_SaveCurrentPdf()
 			
-			; And wait until "*" disappears.
+			; And wait until wintitle's "*" disappears.
 			Loop, 10
 			{
 				dev_Sleep(500)
-				wintitle := dev_WinGetTitle_byHwnd(hwnd)
-
-				if(not dev_IsSubStr(wintitle, "*"))
+				if(not this.IsPdfModified())
 				{
-					this.dbg2("FoxitCoedit.fndocSavePdf() success , PDF modified.")
+					this.dbg1("FoxitCoedit.fndocSavePdf() success , PDF modified.")
 					return true
 				}
 				
@@ -426,25 +444,25 @@ class FoxitCoedit
 			throw Exception("FoxitCoedit.fndocSavePdf() operation fail.")
 		}
 
-		this.dbg2("FoxitCoedit.fndocSavePdf() success , no modify.")
+		this.dbg1("FoxitCoedit.fndocSavePdf() success , no modify.")
 	}
 	
 	fndocClosePdf()
 	{
 		hwnd := this.pedHwnd
-		this.dbg2(Format("FoxitCoedit.fndocClosePdf() executing..."))
+		this.dbg1(Format("FoxitCoedit.fndocClosePdf() executing..."))
 		
 		close_ok := dev_WinClose("ahk_id " hwnd, 5000) ; todo: make this timeout configurable
 		
 		if(close_ok)
-			this.dbg2("FoxitCoedit.fndocClosePdf() success.")
+			this.dbg1("FoxitCoedit.fndocClosePdf() success.")
 		else
 			throw Exception("FoxitCoedit.fndocClosePdf() fail!")
 	}
 
 	fndocOpenPdf()
 	{
-		this.dbg2("FoxitCoedit.fndocOpenPdf() executing...")
+		this.dbg1("FoxitCoedit.fndocOpenPdf() executing...")
 		
 		exepath := ""
 		exepath1 := "D:\PFNoInst\Foxit Reader 7.1.5\FoxitReader.exe"
@@ -471,12 +489,12 @@ class FoxitCoedit
 			dev_Sleep(500)
 			if(WinExist("ahk_exe " exepath))
 			{
-				this.dbg2("FoxitCoedit.fndocOpenPdf() success.")
+				this.dbg1("FoxitCoedit.fndocOpenPdf() success.")
 				
 				; Third, grab new-process's HWND
 				this.pedHwnd := dev_WinGet_Hwnd("ahk_exe " exepath)
 				
-				this.dbg2(Format("Foxit HWND updated to be: {}", this.pedHwnd))
+				this.dbg1(Format("Foxit HWND updated to be: {}", this.pedHwnd))
 				
 				return true
 			}

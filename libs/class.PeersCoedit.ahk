@@ -30,6 +30,8 @@ class PeersCoedit
 
 	docpath := ""
 	
+	peerdict := {}
+	
 	fndoc := {} ; Callables for real doc-operation.
 	            ; keys: .syncsucc .savedoc .closedoc .opendoc
 	
@@ -169,7 +171,12 @@ class PeersCoedit
 
 	RootTimerCallback()
 	{
-;		AmDbg0("RootTimerCallback... " this.mineside)
+;		AmDbg0("RootTimerCallback... " this.mineside) ; debug
+
+		this.peerdict := dev_IniReadSectionIntoDict(this.peer_ini, "cfg")
+		; -- This is useful, FoxitCoedit's "editing conflict detection" requires
+		;    us to know peer's state constantly.
+
 		if(this.state=="Syncing")
 		{
 			this.SyncTimerCallback()
@@ -187,27 +194,26 @@ class PeersCoedit
 	{
 		is_succ := false
 		
-		peer := dev_IniReadSectionIntoDict(this.peer_ini, "cfg")
 		this.dbg2(Format("[{}.Syncing] Now peer state:`n"
 			. "    proseq={}"
 			. "    passeq={}"
 			. "    SyncStart={}"
 			. "    SyncSucc={}"
 			, this.mineside
-			, peer.proseq
-			, peer.passeq
-			, peer.SyncStart
-			, peer.SyncSucc))
+			, this.peerdict.proseq
+			, this.peerdict.passeq
+			, this.peerdict.SyncStart
+			, this.peerdict.SyncSucc))
 		
-		peer_start_diff := dev_walltime_elapsec(this.wtSyncStart, peer.SyncStart)
-		peer_succ_diff  := dev_walltime_elapsec(this.wtSyncStart, peer.SyncSucc)
+		peer_start_diff := dev_walltime_elapsec(this.wtSyncStart, this.peerdict.SyncStart)
+		peer_succ_diff  := dev_walltime_elapsec(this.wtSyncStart, this.peerdict.SyncSucc)
 		
 		if(peer_start_diff>=0)
 		{
 			is_succ := true
 
 			; tell the peer we are success.
-			this.IniWriteMine("SyncSucc", peer.SyncStart)
+			this.IniWriteMine("SyncSucc", this.peerdict.SyncStart)
 
 			this.dbg1(Format("Sync SUCCESS. Peer-start is ahead of our-start +{} seconds", peer_start_diff))
 		}
@@ -216,7 +222,7 @@ class PeersCoedit
 			is_succ := true
 
 			; tell the peer we are success.
-			this.IniWriteMine("SyncSucc", peer.SyncSucc)
+			this.IniWriteMine("SyncSucc", this.peerdict.SyncSucc)
 
 			this.dbg1(Format("Sync SUCCESS. Peer-success is ahead of our-success +{} seconds", peer_succ_diff))
 		}
