@@ -234,7 +234,7 @@ class PeersCoedit
 		if(is_succ)
 		{
 			this.state := "Handshaked"
-			this.fndoc.syncsucc.() ; user-optional
+			this.fndoc.syncsucc.()
 		}
 	}
 	

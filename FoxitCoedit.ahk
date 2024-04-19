@@ -238,12 +238,10 @@ class FoxitCoedit
 			, "closedoc" : Func("FoxitCoedit.fndocClosePdf").Bind(this)
 			, "opendoc" : Func("FoxitCoedit.fndocOpenPdf").Bind(this) }
 		
-		this.coedit.Activate(which_side, pdfpath, fndoc)
+		this.coedit.Activate(which_side, pdfpath, fndoc) ; this does not block
 		this.state := "CoeditActivated"
 		
-		this.was_doc_modified := this.IsPdfModified()
-		this.coedit.IniWriteMine("is_modified", this.was_doc_modified)
-		this.coedit.IniWriteMine("HWND", Format("0x{:08X}", this.pedHwnd))
+		this.StoreMinesideIni("", "")
 		
 		; Override Ctrl+S for Foxit Reader/Editor 
 		fxhk_DefineHotkeyCondComment("^s", "FoxitCoedit_SaveDoc_hotkey", "assigned by FoxitCoedit"
@@ -261,12 +259,15 @@ class FoxitCoedit
 		fxhk_UnDefineHotkey("^s", "FoxitCoedit_SaveDoc_hotkey")
 	}
 
-	ResyncCoedit()
+	StoreMinesideIni(is_doc_modified, myHwnd)
 	{
-		this.coedit.ResetSyncState()
-		this.RefreshUic()
+		; The parameters determine what values we'd like the peer to see.
+		
+		this.coedit.IniWriteMine("is_modified", is_doc_modified)
+		
+		this.coedit.IniWriteMine("HWND", Format("0x{:08X}", myHwnd))
 	}
-	
+
 	OnBtnSavePdf()
 	{
 		GuiName := "FOCO"
@@ -306,6 +307,7 @@ class FoxitCoedit
 		{
 			GuiControl_SetText(GuiName, "gu_focoLblHeadline", "[ Activated ] " this.coedit.state)
 			
+			this.RefreshUic()
 			;
 			; Check editing conflict
 			;
@@ -448,8 +450,23 @@ class FoxitCoedit
 		this.RefreshUic()
 	}
 	
+	
+	ResyncCoedit()
+	{
+		this.coedit.ResetSyncState()
+		
+		this.StoreMinesideIni("", "")
+		
+		this.RefreshUic()
+	}
+	
+	
 	fndocSyncSucc()
 	{
+		this.was_doc_modified := this.IsPdfModified()
+		
+		this.StoreMinesideIni(this.was_doc_modified, this.pedHwnd)
+
 		this.RefreshUic()
 	}
 	
