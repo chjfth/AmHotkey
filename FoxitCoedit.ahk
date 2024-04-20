@@ -37,14 +37,13 @@ class FoxitCoedit
 	
 	state := "" ; "Detecting" , "EditorDetected", "CoeditActivated", "CoeditHandshaked", "Freezing"
 	
-	testmember := "testmember" ; temp to-del
-	
 	coedit := "" ; the PeersCoedit class instance
 	
 	timer := ""
 	
 	pedHwnd := "" ; ped: pdf editor
 	pedWinTitle := "" 
+	pedExepath := ""
 	
 	prev_mletext := ""
 	
@@ -445,6 +444,8 @@ class FoxitCoedit
 			
 			this.pedWinTitle := FoxitCoedit.StripAsterisk(wintitle)
 			
+			this.pedExepath := dev_GetExeFilepath("ahk_id " this.pedHwnd)
+			
 			GuiControl_SetText(GuiName, "gu_focoLblHeadline", "Detected Foxit Reader/Editor:")
 			this.RefreshMleDetail()
 		}
@@ -619,18 +620,8 @@ class FoxitCoedit
 		GuiName := "FOCO"
 		this.dbg1("FoxitCoedit.fndocOpenPdf() executing...")
 		
-		exepath := ""
-		exepath1 := "D:\PFNoInst\Foxit Reader 7.1.5\FoxitReader.exe"
-		exepath2 := "C:\Program Files\Foxit Software\Foxit PDF Editor\FoxitPDFEditor.exe"
-		; todo: make the path configurable
+		exepath := this.pedExepath
 		
-		if(FileExist(exepath1))
-			exepath := exepath1
-		else if(FileExist(exepath2))
-			exepath := exepath2
-		else
-			throw Exception("FoxitCoedit.fndocOpenPdf() fail! Bad exepath configured.")
-
 		; First, ensure that no process of exepath is running.
 		if(WinExist("ahk_exe " exepath))
 			throw Exception(Format("Unexpected! fndocOpenPdf() sees ""{}"" still running.", exepath))

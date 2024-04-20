@@ -1910,6 +1910,12 @@ dev_GetHwndByExepath(exepath)
 	return None
 }
 
+dev_GetExeFilepath(wintitle:="A")
+{
+	WinGet, exepath, ProcessPath, % wintitle
+	return exepath
+}
+
 dev_GetActiveEXE_PathName()
 {
 	WinGet, exepath, ProcessPath, A
