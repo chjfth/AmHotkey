@@ -254,6 +254,8 @@ class PeersCoedit
 	
 		try 
 		{
+			msec_start := dev_GetTickCount64()
+			
 			this.state := "ProSaving"
 			this.dbg1(Format("Start saving session ... (proseq={})", this.proseq))
 			
@@ -291,10 +293,12 @@ class PeersCoedit
 			this.dbg1(Format("Saving doc SUCCESS. (proseq={})", this.proseq+2))
 			
 			this.proseq += 2
-			this.dbg1(Format("Done saving session. (proseq={})", this.proseq))
-
 			this.state := "Handshaked"
 			
+			msec_end := dev_GetTickCount64()
+			this.dbg1(Format("Done saving session. (proseq={}) [time cost: {:.1f}s]"
+				, this.proseq, (msec_end-msec_start)/1000))
+
 			return true
 		}
 		catch e 
@@ -319,12 +323,16 @@ class PeersCoedit
 		{
 			peer_proseq := this.IniReadPeer("proseq")
 			if(peer_proseq == this.passeq)
+			{
 				return true ; peer is silent, nothing to do
+			}
 			
 			if(peer_proseq != this.passeq+1)
 			{
 				throw Exception(Format("Peer proseq out of sync! (Mine:{} , Peer:{})", this.passeq, peer_proseq))
 			}
+			
+			msec_start := dev_GetTickCount64()
 			
 			this.state := "PasReload"
 			
@@ -355,9 +363,11 @@ class PeersCoedit
 			this.IniIncreaseVal("passeq")
 			this.passeq += 2
 			
-			this.dbg1(Format("Mineside just refreshed the doc. (passeq={})", this.passeq))
-
 			this.state := "Handshaked"
+			
+			msec_end := dev_GetTickCount64()
+			this.dbg1(Format("Mineside just refreshed the doc. (passeq={}) [time cost: {:.1f}s]"
+				, this.passeq, (msec_end-msec_start)/1000))
 			
 			return true
 		}

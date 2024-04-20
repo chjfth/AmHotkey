@@ -330,7 +330,7 @@ class FoxitCoedit
 		
 		if(is_succ)
 		{
-			GuiControl_SetFocus(GuiName, "gu_focoBtnSavePdf")
+			; nothing to do
 		}
 		else
 		{
@@ -342,8 +342,8 @@ class FoxitCoedit
 		
 			if(ret_is_conn_lost)
 			{
+				dev_MsgBoxWarning("Handshake lost! Click OK to re-sync.", FoxitCoedit_Id)
 				this.ResyncCoedit()
-				dev_MsgBoxWarning("Handshake lost! Now re-syncing.", FoxitCoedit_Id)
 			}
 			else
 			{
@@ -583,11 +583,12 @@ class FoxitCoedit
 		
 		if(this.IsPdfModified())
 		{
-			this.Try_SaveCurrentPdf()
-			
 			; And wait until wintitle's "*" disappears.
+			msec_start := dev_GetTickCount64()
 			Loop, 10
 			{
+				this.Try_SaveCurrentPdf()
+			
 				dev_Sleep(500)
 				if(not this.IsPdfModified())
 				{
@@ -596,7 +597,8 @@ class FoxitCoedit
 				}
 				
 			}
-			throw Exception("FoxitCoedit.fndocSavePdf() operation fail.")
+			msec_used := dev_GetTickCount64() - msec_start
+			throw Exception(Format("FoxitCoedit.fndocSavePdf() operation fail. After {}ms trying, the PDF file is not saved yet.", msec_used))
 		}
 
 		this.dbg1("FoxitCoedit.fndocSavePdf() success , no modify.")
