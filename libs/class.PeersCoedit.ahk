@@ -239,12 +239,15 @@ class PeersCoedit
 	}
 	
 
-	LaunchSaveDocSession()
+	LaunchSaveDocSession(byref is_conn_lost)
 	{
-		; todo: If it is in Syncing state, refuse to do.
-
-		if(this.state=="PasReload")
+		is_conn_lost := false
+	
+		if(this.state!="Handshaked")
+		{
+			this.dbg1(Format("PeersCoedit.LaunchSaveDocSession() called with state={}, ignore it.", this.state))
 			return false
+		}
 
 		dev_assert(this.state=="Handshaked")
 	
@@ -296,6 +299,8 @@ class PeersCoedit
 		catch e 
 		{
 			this.dbg1("LaunchSaveDocSession() got exception:`n" . dev_fileline_syse(e))
+			
+			is_conn_lost := true
 			return false
 		}
 	}

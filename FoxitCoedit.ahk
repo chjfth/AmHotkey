@@ -35,7 +35,7 @@ class FoxitCoedit
 	
 	isGuiVisible := false
 	
-	state := "" ; "Detecting" , "EditorDetected", "CoeditActivated", "CoeditHandshaked"
+	state := "" ; "Detecting" , "EditorDetected", "CoeditActivated", "CoeditHandshaked", "Freezing"
 	
 	testmember := "testmember" ; temp to-del
 	
@@ -112,7 +112,7 @@ class FoxitCoedit
 		Gui_Add_Checkbox(GuiName, "gu_focoCkbLside", 0, "x+10 yp " gui_g("Foco_CkbActivateCoedit"), "as &Left-side")
 		Gui_Add_Checkbox(GuiName, "gu_focoCkbRside", 0, "x+10 yp " gui_g("Foco_CkbActivateCoedit"), "as &Right-side")
 
-		Gui_Add_Button(  GuiName, "gu_focoBtnSavePdf",  98, "xm y+30 " gui_g("Foco_OnBtnSavePdf"), "&Save pdf now")
+		Gui_Add_Button(  GuiName, "gu_focoBtnSavePdf",  98, "xm y+30 default " gui_g("Foco_OnBtnSavePdf"), "&Save pdf now")
 		sync_btn_width := 60
 		xgap := fullwidth - 98 - sync_btn_width
 		Gui_Add_Button(  GuiName, "gu_focoBtnSync", sync_btn_width, Format("x+{} ", xgap) gui_g("Foco_OnBtnSync"), "R&e-sync")
@@ -175,7 +175,7 @@ class FoxitCoedit
 		{
 			focoLblActive := focoCkbLside := focoCkbRside := true
 		}
-		else
+		else if(this.state=="CoeditActivated" or this.state=="CoeditHandshaked")
 		{
 			focoLblActive := true
 
@@ -189,6 +189,11 @@ class FoxitCoedit
 			{
 				focoBtnSavePdf := focoBtnSync := true
 			}
+		}
+		else
+		{
+			dev_assert(this.state=="Freezing")
+			; -- all UIC should be disabled.
 		}
 		
 		GuiControl_Enable(GuiName, "gu_focoLblActivate", focoLblActive)
@@ -291,6 +296,7 @@ class FoxitCoedit
 	OnBtnSavePdf()
 	{
 		GuiName := "FOCO"
+		Gui_ChangeOpt(GuiName, "+OwnDialogs")
 
 		if(not this.IsPdfModified())
 		{
@@ -298,16 +304,30 @@ class FoxitCoedit
 			return
 		}
 
-		is_succ := this.coedit.LaunchSaveDocSession()
+		oldstate := this.state
+		this.state := "Freezing"
+		GuiControl_Enable(GuiName, "gu_focoBtnSavePdf", false)
+		;
+		is_succ := this.coedit.LaunchSaveDocSession(ret_is_conn_lost) ; this will block for some time.
+		;
+		GuiControl_Enable(GuiName, "gu_focoBtnSavePdf", true)
+		this.state := oldstate
 		
 		if(is_succ)
 		{
-			; nothing to do
+			GuiControl_SetFocus(GuiName, "gu_focoBtnSavePdf")
 		}
 		else
 		{
-			this.ResyncCoedit()
-			dev_MsgBoxWarning("Handshake lost! Now re-syncing.", FoxitCoedit_Id)
+			if(ret_is_conn_lost)
+			{
+				this.ResyncCoedit()
+				dev_MsgBoxWarning("Handshake lost! Now re-syncing.", FoxitCoedit_Id)
+			}
+			else
+			{
+				dev_assert(0, "FoxitCoedit bug: Re-entrant calling of OnBtnSavePdf !")
+			}
 		}
 		
 		this.RefreshUic()
@@ -445,6 +465,8 @@ class FoxitCoedit
 		; We'll distinguish left-side or right-side according to A_GuiControl
 	
 		GuiName := "FOCO"
+		
+		Gui_ChangeOpt(GuiName, "+OwnDialogs")
 		
 		ctlid_ckb := A_GuiControl
 		isLeftside := (ctlid_ckb=="gu_focoCkbLside") ? true : false
