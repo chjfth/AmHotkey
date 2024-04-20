@@ -1937,7 +1937,14 @@ dev_IsShiftKeyDown()
 	    return true
 	else
 	    return false
+}
 
+dev_IsCtrlKeyDown()
+{
+	if(GetKeyState("Ctrl", "P"))
+	    return true
+	else
+	    return false
 }
 
 

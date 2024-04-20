@@ -298,6 +298,10 @@ class FoxitCoedit
 		GuiName := "FOCO"
 		Gui_ChangeOpt(GuiName, "+OwnDialogs")
 
+		is_ctrldown := dev_IsCtrlKeyDown()
+		if(is_ctrldown)
+			this.HideGui()
+
 		if(not this.IsPdfModified())
 		{
 			dev_MsgBoxInfo("The PDF file looks unmodified, not action needed.")
@@ -319,6 +323,12 @@ class FoxitCoedit
 		}
 		else
 		{
+			if(is_ctrldown)
+			{
+				; Since fail, we should represent the UI for user to take further action.
+				this.ShowGui()
+			}
+		
 			if(ret_is_conn_lost)
 			{
 				this.ResyncCoedit()
