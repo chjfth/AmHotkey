@@ -106,7 +106,8 @@ class FoxitCoedit
 		
 		Gui_Add_TxtLabel(GuiName, "gu_focoLblHeadline", fullwidth, "", "Detecting Foxit Reader/Editor...")
 		
-		Gui_Add_Editbox( GuiName, "gu_focoMleInfo", fullwidth, "xm r10 readonly" , "...")
+		Gui_Add_Editbox( GuiName, "gu_focoMleInfo", fullwidth, "xm r10 readonly -0x1000" , "...") 
+		; -- 0x1000 ES_WANTRETURN, we don't want this style bcz we want Enter to trigger default btn, even if Editbox has focus.
 		
 		Gui_Add_TxtLabel(GuiName, "gu_focoLblActivate", 0, "xm", "Activate Coedit for above pdf")
 		Gui_Add_Checkbox(GuiName, "gu_focoCkbLside", 0, "x+10 yp " gui_g("Foco_CkbActivateCoedit"), "as &Left-side")
@@ -205,6 +206,17 @@ class FoxitCoedit
 		this.RefreshMleDetail()
 	}
 
+	FormatHwnd(hwnd) ; static
+	{
+		if(hwnd=="" or hwnd==0)
+			val := ""
+		else if(hwnd=="*")
+			val := "*"
+		else
+			val := Format("0x{:0X}", hwnd)
+		return val
+	}
+	
 	RefreshMleDetail()
 	{
 		detail := ""
@@ -216,10 +228,10 @@ class FoxitCoedit
 		}
 		else
 		{
-			detail .= Format("HWND:`n0x{:08X}", this.pedHwnd)
+			detail .= Format("HWND:`n{}", FoxitCoedit.FormatHwnd(this.pedHwnd))
 			if(this.peerHwnd)
 			{
-				detail .= Format("  (peer: 0x{:08X})", this.peerHwnd)
+				detail .= Format("  (peer: {})", FoxitCoedit.FormatHwnd(this.peerHwnd))
 			}
 			detail .= "`n`n"
 		
@@ -350,7 +362,7 @@ class FoxitCoedit
 		
 		if(this.state=="Detecting" or this.state=="EditorDetected")
 		{
-			this.DetectFoxitPresent()
+			this.InitDetectFoxitPresent()
 		}
 		else if(this.state=="CoeditActivated")
 		{
@@ -359,6 +371,8 @@ class FoxitCoedit
 		else if(this.state=="CoeditHandshaked")
 		{
 			GuiControl_SetText(GuiName, "gu_focoLblHeadline", "[ Activated ] Handshaked")
+			
+			this.RefreshMineFoxitHwnd()
 			
 			this.RefreshUic()
 			
@@ -369,9 +383,10 @@ class FoxitCoedit
 			if(this.peerHwnd)
 				this.prev_peerHwnd := this.peerHwnd
 			
-			if(this.prev_peerHwnd and not this.peerHwnd)
+			if(this.prev_peerHwnd and this.peerHwnd=="")
 			{
 				; If we once saw prev_peerHwnd valid, but now it becomes null, then the peer is lost.
+				; HWND=* is not considered lost.
 
 				dev_MsgBoxWarning("Peer HWND lost. Handshake lost! Click OK to re-sync.", FoxitCoedit_Id)
 				this.ResyncCoedit()
@@ -399,23 +414,34 @@ class FoxitCoedit
 		}
 	}
 	
-	DetectFoxitPresent()
+	IsTitleStemMatch(wintitle1, wintitle2) ; static
 	{
-		GuiName := "FOCO"
+		stem1 := FoxitCoedit.TitleStemFromWinTitle(wintitle1)
+		stem2 := FoxitCoedit.TitleStemFromWinTitle(wintitle2)
+		return stem1==stem2 ? true : false
+	}
+	
+	FindFoxitHwnd() ; static
+	{
 		hwnd := dev_WinGet_Hwnd("ahk_class classFoxitReader")
 		if(hwnd) {
 		}
 		else {
 			hwnd := dev_WinGet_Hwnd("ahk_class classFoxitPhantom")
 		}
+		return hwnd ; may return null
+	}
+	
+	InitDetectFoxitPresent() ; only before Activate.
+	{
+		GuiName := "FOCO"
+		this.pedHwnd := FoxitCoedit.FindFoxitHwnd()
 		
-		this.pedHwnd := hwnd
-		
-		if(hwnd)
+		if(this.pedHwnd)
 		{
 			this.state := "EditorDetected"
 
-			wintitle := dev_WinGetTitle_byHwnd(hwnd)
+			wintitle := dev_WinGetTitle_byHwnd(this.pedHwnd)
 			
 			this.pedWinTitle := FoxitCoedit.StripAsterisk(wintitle)
 			
@@ -435,20 +461,23 @@ class FoxitCoedit
 		return StrReplace(wintitle, " *", "")
 	}
 	
-	GuessPdfFilenameFromTitle(wintitle)
+	TitleStemFromWinTitle(wintitle) ; static
 	{
-		; Wintite example:
+		; Wintitle example:
 		;	"The Unix Manual.pdf - Foxit Reader"
 		;	"Learning EBPF - Foxit PDF Editor"
 		;	"Learning EBPF * - Foxit PDF Editor"
 		;
-		; so we take "- Foxit" as signature.
+		; so we strip off "- Foxit" suffix.
 		
 		foundpos := InStr(wintitle, "- Foxit")
 		if(foundpos>0)
-			return SubStr(wintitle, 1, foundpos-1)
+			stem := SubStr(wintitle, 1, foundpos-1)
 		else
-			return wintitle
+			stem := wintitle
+		
+		; Strip of trailing modification asterisk
+		return RTrim(stem, " *")
 	}
 	
 	
@@ -490,7 +519,7 @@ class FoxitCoedit
 		if(not ischecked)
 		{
 			; Ask user the real location of the PDF file, bcz AHK code here has no way to know it automatically.
-			pdfnam := this.GuessPdfFilenameFromTitle(this.pedWinTitle)
+			pdfnam := this.TitleStemFromWinTitle(this.pedWinTitle)
 
 			pdfpath_real := dev_OpenSelectFileDialog(pdfnam
 				, "Please tell me the actual filepath of the PDF file on the disk"
@@ -621,8 +650,8 @@ class FoxitCoedit
 			
 			newtitle := dev_WinGetTitle_byHwnd(newhwnd)
 			
-			newpdfnam := this.GuessPdfFilenameFromTitle(newtitle)
-			oldpdfnam := this.GuessPdfFilenameFromTitle(this.pedWinTitle)
+			newpdfnam := this.TitleStemFromWinTitle(newtitle)
+			oldpdfnam := this.TitleStemFromWinTitle(this.pedWinTitle)
 			
 			; note: When the Foxit Editor 11 launching involves some bigs PDFs, the first-seen 
 			; newtitle may be the small progress-bar's title, and we need to ignore it.
@@ -632,12 +661,20 @@ class FoxitCoedit
 				this.dbg1("FoxitCoedit.fndocOpenPdf() success.")
 				
 				; Third, grab new-process's HWND
+				
 				this.pedHwnd := dev_WinGet_Hwnd("ahk_exe " exepath)
 				
 				this.dbg1(Format("Foxit HWND updated to be: {}", this.pedHwnd))
-				this.coedit.IniWriteMine("HWND", Format("0x{:08X}", this.pedHwnd))
+				this.coedit.IniWriteMine("HWND", Format("0x{:X}", this.pedHwnd))
 				
 				this.RefreshMleDetail() ; bcz the HWND has changed
+				
+				; Make a diagnose
+				dbgHwnd := FoxitCoedit.FindFoxitHwnd()
+				if(dbgHwnd!=this.pedHwnd)
+				{
+					this.dbg1(Format("Strange! Hwnd by ahk_exe({}) != Hwnd by wndclass({})", this.pedHwnd, dbgHwnd))
+				}
 				
 				return true
 			}
@@ -663,7 +700,6 @@ class FoxitCoedit
 ;				1*[20240419_15:50:33.970] (+0.000s) Foxit HWND updated to be: 0xce09d2
 ;				2*[20240419_15:50:33.970] (+0.000s) Done re-opening doc...
 ;				1*[20240419_15:50:33.970] (+0.000s) Mineside just refreshed the doc. (passeq=2)
-				
 			}
 		}
 
@@ -686,7 +722,53 @@ class FoxitCoedit
 		dev_Sleep(100) ; to play it safe
 		ClickInActiveWindow(64, 16, false)
 	}
-
+	
+	RefreshMineFoxitHwnd()
+	{
+		; Imagine, user may close and re-open Foxit Reader/Editor process out of FoxitCoedit's control
+		; (e.g. Foxit crashes and user reopens it). In this case, our recorded this.pedHwnd becomes 
+		; invalid, and, to avoid the hassle of requiring both sides to re-sync, we can make better 
+		; UI experience by auto-detecting new Foxit window and updating our this.pedHwnd automatically.
+		; We'll do this in our Timer proc.
+		
+		old_hwnd := this.pedHwnd
+		
+		if(this.pedHwnd and this.pedHwnd!="*")
+		{
+			nowtitle := dev_WinGetTitle_byHwnd(this.pedHwnd)
+			if(nowtitle)
+			{
+				; Current this.peHwnd still valid. 
+				; Do not care its title content, bcz user may temporarily switch to another doc tab.
+				return 
+			}
+		}
+		
+		hwnd := FoxitCoedit.FindFoxitHwnd()
+		if(!hwnd) 
+		{
+			this.pedHwnd := "*"
+		}
+		else
+		{
+			nowtitle := dev_WinGetTitle_byHwnd(hwnd)
+			
+			if(FoxitCoedit.IsTitleStemMatch(nowtitle, this.pedWinTitle))
+			{
+				this.pedHwnd := hwnd ; OK, update old this.pedHwnd
+			}
+			else
+			{
+				this.pedHwnd := "*"
+			}
+		}
+		
+		if(old_hwnd != this.pedHwnd)
+		{
+			this.coedit.IniWriteMine("HWND", FoxitCoedit.FormatHwnd(this.pedHwnd))
+		}
+	}
+	
 } ; class FoxitCoedit
 
 

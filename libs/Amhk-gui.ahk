@@ -234,6 +234,7 @@ Gui_Add_Editbox(GuiName, CtrlVarname, width, format, init_text:="")
 	; r10
 	; Readonly
 	; -E0x200 (turn off WS_EX_CLIENTEDGE, remove editbox border thin line)
+	; -0x1000 ES_WANTRETURN, turn off return key for readonly-MLE.
 
 	Assert_UicVarname(CtrlVarname)
 	cmdadd := GuiName ? (GuiName ":Add") : "Add"

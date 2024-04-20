@@ -2092,8 +2092,12 @@ EnumToolbarButtons(ctrlhwnd, is_apply_scale:=false)
 
 Am_PlaySound(wavfile)
 {
-	if(!g_AmMute)
-		SoundPlay, %wavfile%
+	try	{
+		if(!g_AmMute)
+			SoundPlay, %wavfile%
+	} catch e {
+		Amdbg0("Am_PlaySound(""{}"") got exception. Message: {}", wavfile, e.Message)
+	}
 }
 
 PlaySoundLeftClick()

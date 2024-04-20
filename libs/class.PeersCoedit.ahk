@@ -154,10 +154,11 @@ class PeersCoedit
 	; User API:
 	ResetSyncState()
 	{
+		this.wtSyncStart := dev_walltime_now()
+
 		this.dbg1(Format("{} Start syncing()... at {}"
 			, this.mineside, this.wtSyncStart))
 	
-		this.wtSyncStart := dev_walltime_now()
 		this.proseq := 0
 		this.passeq := 0
 		this.state := "Syncing"
