@@ -104,6 +104,13 @@ dev_rethrow_syse(sys_e, new_msg)
 	throw new_e
 }
 
+dev_throw(errmsg)
+{
+	; throw with stacktrace info
+	
+	throw Exception(errmsg "`n`n" dev_getCallStack())
+}
+
 
 dev_EnvGet(varname)
 {
@@ -420,18 +427,6 @@ dev_IniWriteSectionVA(inifilepath, section, items*)
 	return dev_IniWriteSection(inifilepath, section, linestext)
 }
 
-dev_CreateDirIfNotExist(dirpath)
-{
-	; If dirpath already exists and is a directory or a junction (not file),
-	; it will return true(=succ).
-	try {
-		FileCreateDir, % dirpath
-	} catch e {
-		return false
-	}
-	return true
-}
-
 dev_OnMessage_Register(wm_xxx, str_funcname)
 {
 	s := str_funcname
@@ -527,6 +522,17 @@ dev_FileRemoveDir(dirpath, is_recurse)
 	else
 		return true
 }
+
+dev_MoveFile(oldpath, newpath, is_overwrite:=false) ; rename
+{
+	FileMove, % oldpath, % newpath, % is_overwrite
+}
+
+dev_CopyFile(oldpath, newpath, is_overwrite:=false)
+{
+	FileCopy, % oldpath, % newpath, % is_overwrite
+}
+
 
 dev_FileRead(filepath)
 {
@@ -709,6 +715,19 @@ dev_IsDiskFolder(dirpath)
 	else
 		return false
 }
+
+dev_CreateDirIfNotExist(dirpath) ; makedir, mkdir
+{
+	; If dirpath already exists and is a directory or a junction (not file),
+	; it will return true(=succ).
+	try {
+		FileCreateDir, % dirpath
+	} catch e {
+		return false
+	}
+	return true
+}
+
 
 dev_rmdir(dirpath)
 {

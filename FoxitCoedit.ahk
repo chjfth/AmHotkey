@@ -309,15 +309,15 @@ class FoxitCoedit
 		GuiName := "FOCO"
 		Gui_ChangeOpt(GuiName, "+OwnDialogs")
 
-		is_ctrldown := dev_IsCtrlKeyDown()
-		if(is_ctrldown)
-			this.HideGui()
-
 		if(not this.IsPdfModified())
 		{
 			dev_MsgBoxInfo("The PDF file looks unmodified, not action needed.")
 			return
 		}
+
+		is_ctrldown := dev_IsCtrlKeyDown()
+		if(is_ctrldown)
+			this.HideGui()
 
 		oldstate := this.state
 		this.state := "Freezing"
@@ -330,7 +330,12 @@ class FoxitCoedit
 		
 		if(is_succ)
 		{
-			; nothing to do
+			; Make a backup of the pdf file
+			pb := new PiledBackup(this.coedit.docpath
+				, this.coedit.docpath (this.ischk_Lside ? ".backupA" : ".backupB")
+				, 5)
+			this.dbg1("Making backup to folder: " pb.dirbackup)
+			pb.SaveOneBackup()
 		}
 		else
 		{
