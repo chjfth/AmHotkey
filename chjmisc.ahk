@@ -32,65 +32,6 @@ return ; End of auto-execute section.
 #Include %A_LineFile%\..\libs\AmTrimPath.ahk
 #Include %A_LineFile%\..\AmTemplates.ahk
 
-;==============================================================================
-; Some hotstring auto-replace
-;==============================================================================
-
-; Auto-replace `1 to be 192.168. -- easy typing those IP addresses.
-; Note: You have to double ` here. ``1 means triggering chars `1 
-; memo: [*] no need to post-type a space to trigger, 
-;       [?] no need to prefix a wordchar to trigger
-:*:``1::192.168.
-:*:``2::172.24.0.
-:*:``q::Q:{space}
-
-/* Double semicolon, to make one colon (deprecated)
-:?*:;;::`:{space}
-*/
-
-; Type ``t to get _T("") , or ``y to get _T(''),, then move the caret back inside the quotes
-:*:````t::_T(""){left}{left}
-:*:````y::_T(''){left}{left}
-
-; Type ``pp to get pprint.pprint (python)
-:*:````pp::from pprint import pprint as pp
-
-; Type:
-;	 ``!
-; Get HTML comment block.
-;	<!-- -->
-:?*:````!::<{!}--  -->{left}{left}{left}{left}
-
-
-; <<>> makes Chinese ShuMingHao
-:?*:<<>>::《》{space}
-:?*:``ss::《》{space}
-
-; Type #! to insert a shebang line in .py script.
-; b0 means no erase already typed #! // [2018-11-25] I forgot this shortcut bcz it is not led by my accustomed ``
-;           :*Rb0:#!::/usr/bin/env python3 #-*- coding: utf-8 -*-
-
-; Type ``# to insert a shebang line in .py script (AHK 1.1.24.05 ok).
-; Thanks to https://superuser.com/a/1378252/74107
-:*:`````#:: ; Yes, function calling should be on a separate line.
-type_python_shebang()
-type_python_shebang()
-{
-	SendInput {Raw}
-	(
-#!/usr/bin/env python3
-#coding: utf-8
-
-	)
-}
-; A more verbose way is:
-;	:*:`````#::`{#`}`{!`}/usr/bin/env python3{enter}`{#`}coding: utf-8{enter}
-;
-
-
-; Type ``u to insert Python utf-8 heading
-; R means raw, no re-interpreting # : etc, otherwise, a # causes Win key to be sent.
-:*R:````u::#-*- coding: utf-8 -*-
 
 !#0:: dev_WinMove_with_backup_with_prompt(0, 0, "", "") ; move window to (0,0) in case you can't see that window
 
@@ -101,8 +42,6 @@ type_python_shebang()
 ^#4:: dev_WinMove_with_backup_with_prompt("","", 1440, 1000)
 ; Ctrl+Win+0 toggle last two window positions
 ^#0:: dev_UndoChangeWindowSize()
-
-
 
 
 
