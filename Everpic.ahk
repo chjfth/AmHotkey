@@ -119,6 +119,8 @@ global g_evpSuppressUicTooltipBfrThis := A_Now ; will store A_Now format string
 
 Everpic_InitHotkeys()
 
+#Include %A_LineFile%\..\libs\Gdip_All.ahk
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 return ; End of auto-execute section.
