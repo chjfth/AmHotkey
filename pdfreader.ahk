@@ -24,10 +24,10 @@ global g_is_phantom := False
 return ; End of auto-execute section.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
+#Include %A_LineFile%\..\libs\chjfuncs.ahk
 
 
-
-; Define hotkeys below::::::::
+; Define hotkeys below
 
 
 ;==============================================================
