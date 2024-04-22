@@ -1,7 +1,10 @@
 ﻿AUTOEXEC_Everpic: ; Workaround for Autohotkey's ugly auto-exec feature. Don't delete.
 
 /* APIs:
-Evp_LaunchUI()
+Evp_LaunchUI(http_server_baseurl:="")
+
+Evp_FixInternalHttpServer() 
+; -- If HTTP server chokes(not respond to client), need to call this to recover. (testing)
 
 */
 
@@ -131,6 +134,8 @@ class Everpic
 {
 	static listen_port_base := 2024
 	static baseurl := "(not-set)" ; http://localhost:2024
+	
+	static httpserver := "" ; points to internal HttpServer() object
 }
 
 
@@ -186,7 +191,31 @@ evp_LaunchHttpServer(listen_port)
 	}
 	
 	Everpic.baseurl := Format("http://localhost:{}", listen_port)
+	
+	Everpic.httpserver := serv
 	return true
+}
+
+evp_StopHttpServer()
+{
+	Everpic.httpserver.StopServe()
+}
+
+Evp_FixInternalHttpServer()
+{
+	if(not Everpic.httpserver)
+	{
+		dev_MsgBoxInfo("You are not using Everpic's internal HTTP server, nothing to fix.")
+		return
+	}
+
+	evp_StopHttpServer()
+	
+	is_ok := evp_LaunchHttpServer(Everpic.listen_port_base)
+	if(is_ok)
+		dev_MsgBoxInfo("Everpic internal HTTP server restart success.")
+	else
+		dev_MsgBoxWarning("Everpic internal HTTP server restart failed. You may try again.")
 }
 
 

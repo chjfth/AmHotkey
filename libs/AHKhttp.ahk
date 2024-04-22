@@ -31,6 +31,7 @@ class Uri
 class HttpServer
 {
 	static servers := {}
+	static port := 0 ; set later
 
 	static _FeatureId := "AHKhttp"
 	;
@@ -160,18 +161,28 @@ class HttpServer
 
 	Serve(port, is_listen_all:=false) {
 
-		this.port := port
 		HttpServer.servers[port] := this
 
 		err := AHKsock_Listen(port, "HttpHandler", is_listen_all)
 		
 		if(err) {
 			this.dbg1(Format("Error starting HTTP server on port {}, WinError={}", port, ErrorLevel))
+			this.port := 0
 		}
 		else {
 			this.dbg1(Format("Success starting HTTP server on port {}", port))
+			this.port := port
 		}
 		return err
+	}
+	
+	StopServe()
+	{
+		if(this.port>0)
+		{
+			AHKsock_Listen(this.port, false)
+			this.port := 0
+		}
 	}
 }
 
