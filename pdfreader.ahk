@@ -321,7 +321,7 @@ foxit7_TocSync()
 foxit_GetPixelColorAroundClassnn(xymode, xspec, yspec, rgbobj, classnn) ; Can be a generic func?
 {
 	Awinid := dev_GetActiveHwnd()
-	r := dev_ControlGetPos(Awinid, classnn)
+	r := dev_ControlGetPos_hc(Awinid, classnn)
 
 	is_xomode := InStr(xymode, "xo") ? true : false
 	is_yomode := InStr(xymode, "yo") ? true : false

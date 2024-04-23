@@ -2439,9 +2439,9 @@ Dbg_DumpChildWinsInfo(hwndtop)
 		
 		hctrl := dev_GetHwndFromClassNN(classnn, "ahk_id " hwndtop)
 
-		pos := dev_ControlGetPos(hwndtop, classnn)
+		pos := dev_ControlGetPos_hc(hwndtop, classnn)
 
-		wintext := dev_ControlGetText(hwndtop, classnn)
+		wintext := dev_ControlGetText_hc(hwndtop, classnn)
 		wintext := Substr(wintext, 1, 100)
 		
 		childinfo := Format("#{} [{} , 0x{:08X}] @({},{}) {}", A_Index, classnn, hctrl, pos.x, pos.y, wintext)
@@ -2455,7 +2455,7 @@ Dbg_DumpChildWinsInfo(hwndtop)
 }
 
 
-dev_ControlGetText(hwndtop, classnn)
+dev_ControlGetText_hc(hwndtop, classnn)
 {
 	try {
 		ControlGetText, outtext, %classnn%, ahk_id %hwndtop%
@@ -2473,7 +2473,7 @@ dev_ControlSetText_hc(hwndtop, classnn, newtext) ; hc: hwnd+classnn
 }
 
 
-dev_ControlGetPos(hwndtop, classnn)
+dev_ControlGetPos_hc(hwndtop, classnn)
 {
 	; Get specific child-window's position, relative to its parent.
 	ControlGetPos, rx, ry, rw, rh, %classnn%, ahk_id %hwndtop%

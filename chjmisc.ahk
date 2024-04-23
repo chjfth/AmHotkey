@@ -963,7 +963,7 @@ Paragon12_BeautifyHexView()
 {
 	hwnd := dev_GetHwndByWintitle()
 
-	sigtext := dev_ControlGetText(hwnd, "QWidget10")
+	sigtext := dev_ControlGetText_hc(hwnd, "QWidget10")
 	if(sigtext=="HexEditor")
 	{
 		dev_TooltipAutoClear("Paragon12_BeautifyHexView(): Adjusting child layout ...", 2000)

@@ -792,7 +792,7 @@ class FoxitCoedit
 		
 		if(oEditboxNN)
 		{
-			PdfPageNum := dev_ControlGetText(this.pedHwnd, oEditboxNN)
+			PdfPageNum := dev_ControlGetText_hc(this.pedHwnd, oEditboxNN)
 			if(PdfPageNum=="")
 			{
 				dev_MsgBoxWarning("Unexpect! Foxit's pagenum editbox is empty.")

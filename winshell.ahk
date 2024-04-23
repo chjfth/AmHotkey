@@ -892,7 +892,7 @@ winshell_GrabControlText(ctlhwnd)
 	{
 		; then consider it simple control types, Buttons, Static, Edit etc
 		
-		otext := dev_ControlGetText(ctlhwnd, "")
+		otext := dev_ControlGetText_hc(ctlhwnd, "")
 	}
 	
 	return otext
