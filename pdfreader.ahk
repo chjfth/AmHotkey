@@ -15,8 +15,6 @@ global FOXIT_TOOL_SelectText := "SelectText"
 
 global g_foxit_last_tool := "none" ; compare it with FOXIT_TOOL_Hand, FOXIT_TOOL_SelectText or FOXIT_TOOL_SelectAnnotation
 
-global g_is_phantom := False 
-
 ; Init_MyCustomizedEnv() ; Function can be defined later.
 
 
@@ -66,12 +64,10 @@ foxit_IsWinActive()
 {
 	if( IsWinClassActive("classFoxitReader") )
 	{
-		g_is_phantom := False
 		return true
 	}
 	else if( IsWinClassActive("classFoxitPhantom") )
 	{
-		g_is_phantom := True
 		return true
 	}
 	else 
@@ -128,25 +124,25 @@ foxit_copynow(is_wait_until_mainwnd_foreground:=false)
 		; for marking underline, Squiggly is not effective. 
 		; So, we wait until the main-window re-gains input-focus is required.
 		;
-		hwnd := foxit_GetMainWindow()
+		hwnd := foxitR_GetMainWindow()
 		dev_WinWaitActiveHwnd(hwnd, 500)
 	}
 }
 
-foxit_GetMainWindow()
+foxitR_GetMainWindow()
 {
 	hwnd := dev_GetHwndByWintitle("ahk_class classFoxitReader")
 	if(!hwnd) {
-		dev_MsgBoxInfo("foxit_ActivateMainWindow() Not found: ""ahk_class classFoxitReader"".")
+		dev_MsgBoxInfo("foxitR_ActivateMainWindow() Not found: ""ahk_class classFoxitReader"".")
 		return false
 	}
 	
 	return hwnd
 }
 
-foxit_ActivateMainWindow()
+foxitR_ActivateMainWindow()
 {
-	hwnd := foxit_GetMainWindow()
+	hwnd := foxitR_GetMainWindow()
 	if(!hwnd)
 		return
 	
@@ -167,8 +163,8 @@ foxit_NoEscClosePropertiesDlgbox()
 	dev_TooltipAutoClear("ESC key no closing Foxit comment Properties Dlgbox")
 	
 	; But activate Foxit Reader main-window.
-	if(not foxit_ActivateMainWindow()) {
-		dev_TooltipAutoClear("foxit_ActivateMainWindow() failed.")
+	if(not foxitR_ActivateMainWindow()) {
+		dev_TooltipAutoClear("foxitR_ActivateMainWindow() failed.")
 		return
 	}
 	
@@ -534,8 +530,8 @@ foxit_AltW()
 NumpadDiv:: foxit_SwitchTo_SelectText_mode()
 foxit_SwitchTo_SelectText_mode()
 {
-	if(not foxit_ActivateMainWindow()) {
-		dev_TooltipAutoClear("foxit_ActivateMainWindow() failed.")
+	if(not foxitR_ActivateMainWindow()) {
+		dev_TooltipAutoClear("foxitR_ActivateMainWindow() failed.")
 		return
 	}
 
@@ -555,8 +551,8 @@ foxit_ClickColorPropertyEx()
 	; (Underline, Squiggly, Strikeout etc), then call this function to popup 
 	; color selection box. Yes, no longer need to manally click on the comment object.
 
-	if(not foxit_ActivateMainWindow()) {
-		dev_TooltipAutoClear("foxit_ActivateMainWindow() failed.")
+	if(not foxitR_ActivateMainWindow()) {
+		dev_TooltipAutoClear("foxitR_ActivateMainWindow() failed.")
 		return
 	}
 	
