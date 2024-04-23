@@ -44,36 +44,37 @@ foxit_ScrollReader(sdir)
 	ControlClick, % reader_classnn, ahk_class classFoxitReader, , Wheel%sdir%, 1
 }
 
+foxit2_GetMainWindow()
+{
+	; `2` implies: both Foxit Reader and Editor.
+	
+	hwnd := dev_GetHwndByClass("classFoxitReader")
+	if(hwnd)
+		return hwnd
+	
+	hwnd := dev_GetHwndByClass("classFoxitPhantom")
+	if(hwnd)
+		return hwnd
+
+	return ""
+}
+
 foxit_IsWinExist()
 {
-	if( IsWinClassExist("classFoxitReader") )
-	{
+	if(foxit2_GetMainWindow())
 		return true
-	}
-	else if( IsWinClassExist("classFoxitPhantom") )
-	{
-		return true
-	}
-	else 
-	{
+	else
 		return false
-	}
 }
 
 foxit_IsWinActive()
 {
-	if( IsWinClassActive("classFoxitReader") )
-	{
+	hwnd := foxit2_GetMainWindow()
+	Awinid := dev_GetActiveHwnd()
+	if(hwnd==Awinid)
 		return true
-	}
-	else if( IsWinClassActive("classFoxitPhantom") )
-	{
-		return true
-	}
-	else 
-	{
+	else
 		return false
-	}
 }
 
 foxit_IsForegroundProcess()

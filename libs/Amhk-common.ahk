@@ -1572,6 +1572,10 @@ dev_SendRawToExeMainWindow_ap(keyspec, wintitle:="A")
 	ControlSendRaw ahk_parent, % keyspec, % wintitle
 }
 
+dev_ControlSend(wintitle, classnn, keys)
+{
+	ControlSend, % classnn, % keys, % wintitle
+}
 
 
 dev_MenuAddSepLine(menuname)
@@ -1878,6 +1882,11 @@ dev_GetHwndByWintitle(wintitle:="A")
 	return Awinid
 }
 
+dev_GetHwndByClass(classname)
+{
+	return dev_GetHwndByWintitle("ahk_class " classname)
+}
+
 dev_WinActivateHwnd(hwnd, timeout_millisec:=0)
 {
 	WinActivate, ahk_id %hwnd%
@@ -1913,6 +1922,12 @@ dev_WinWaitActive_with_timeout(wintitle, wintext:="", timeout_sec:=1)
 		return false
 	}
 }
+
+dev_ControlFocus(wintitle, classnn)
+{
+	ControlFocus, %classnn%, %wintitle%
+}
+
 
 dev_GetHwndByExepath(exepath)
 {
