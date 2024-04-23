@@ -2467,6 +2467,11 @@ dev_ControlGetText(hwndtop, classnn)
 	return outtext
 }
 
+dev_ControlSetText_hc(hwndtop, classnn, newtext) ; hc: hwnd+classnn
+{
+	ControlSetText, %classnn%, %newtext%, ahk_id %hwndtop%
+}
+
 
 dev_ControlGetPos(hwndtop, classnn)
 {

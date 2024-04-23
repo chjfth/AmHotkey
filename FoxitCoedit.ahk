@@ -20,6 +20,7 @@ global gu_focoLblActivate
 global gu_focoCkbLside
 global gu_focoCkbRside
 global gu_focoBtnSavePdf
+global gu_focoCkbFollowPage
 global gu_focoBtnSync
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -113,8 +114,9 @@ class FoxitCoedit
 		Gui_Add_Checkbox(GuiName, "gu_focoCkbRside", 0, "x+10 yp " gui_g("Foco_CkbActivateCoedit"), "as &Right-side")
 
 		Gui_Add_Button(  GuiName, "gu_focoBtnSavePdf",  98, "xm y+30 default " gui_g("Foco_OnBtnSavePdf"), "&Save pdf now")
+		Gui_Add_Checkbox(GuiName, "gu_focoCkbFollowPage", 107, "x+5 yp+5 ", "Peer &follow page")
 		sync_btn_width := 60
-		xgap := fullwidth - 98 - sync_btn_width
+		xgap := fullwidth - 98 - 107 - sync_btn_width
 		Gui_Add_Button(  GuiName, "gu_focoBtnSync", sync_btn_width, Format("x+{} ", xgap) gui_g("Foco_OnBtnSync"), "R&e-sync")
 
 		;
@@ -598,6 +600,7 @@ class FoxitCoedit
 				if(not this.IsPdfModified())
 				{
 					this.dbg1("FoxitCoedit.fndocSavePdf() success , PDF modified.")
+					this.record_pagenum_for_peer()
 					return true
 				}
 				
@@ -673,6 +676,8 @@ class FoxitCoedit
 				{
 					this.dbg1(Format("Strange! Hwnd by ahk_exe({}) != Hwnd by wndclass({})", this.pedHwnd, dbgHwnd))
 				}
+				
+				this.follow_saverz_pagenum()
 				
 				return true
 			}
@@ -767,7 +772,73 @@ class FoxitCoedit
 		}
 	}
 	
+	GetFoxit_PageNum_classnn()
+	{
+		RegexClassnnFindControlEx("ahk_id " this.pedHwnd, "Edit", ".+\([0-9]+ / [0-9]+\)"
+			, oEditboxNN, ox, oy, owidth, oheight)
+		return oEditboxNN
+	}
+	
+	record_pagenum_for_peer()
+	{
+		; Write mineside PDF page number to INI, to tell peer Foxit jump to that very page.
+		; The Foxit pagenum editbox may have text like this: "xi (13 / 179)", we just 
+		; transfer this text-string verbatim to the peer. 
+	
+		is_record_pagenum := Checkbox_GetCheckState(GuiName, "gu_focoCkbFollowPage")
+		PdfPageNum := "" 
+		
+		oEditboxNN := this.GetFoxit_PageNum_classnn()
+		
+		if(oEditboxNN)
+		{
+			PdfPageNum := dev_ControlGetText(this.pedHwnd, oEditboxNN)
+			if(PdfPageNum=="")
+			{
+				dev_MsgBoxWarning("Unexpect! Foxit's pagenum editbox is empty.")
+			}
+		}
+		else
+		{
+			dev_MsgBoxWarning("Unexpect! Cannot locate Foxit's pagenum editbox.")
+		}
+		
+		; Even if PdfPageNum is null, we still record it.
+		
+		this.dbg2(Format("Writing INI: PdfPageNum={}", PdfPageNum))
+		this.coedit.IniWriteMine("PdfPageNum", PdfPageNum)
+		
+		return PdfPageNum ? true : false
+	}
+	
+	follow_saverz_pagenum()
+	{
+		pagenum := this.coedit.IniReadPeer("PdfPageNum", "")
+;		AmDbg0("follow_saverz_pagenum().A : " pagenum)
+		if(not pagenum)
+			return
+		
+		oEditboxNN := this.GetFoxit_PageNum_classnn()
+;		AmDbg0("follow_saverz_pagenum().B : " oEditboxNN)
+		if(oEditboxNN=="")
+			return
+		
+		this.dbg2(Format("Try restoring peer INI's pagenum: '{}'", pagenum))
+		
+		wintitle := "ahk_id " this.pedHwnd
+				;		dev_ControlSend(wintitle, oEditboxNN, "{Ctrl down}a{Ctrl up}{Del}")
+				;		dev_ControlSend(wintitle, oEditboxNN, pagenum) // these two are not as reliable as ControlSetText
+		dev_ControlSetText_hc(this.pedHwnd, oEditboxNN, pagenum)
+		dev_ControlSend(wintitle, oEditboxNN, "{Enter}")
+	}
+	
 } ; class FoxitCoedit
+
+
+Foxit_testFollowPagenum()
+{
+	g_foco.follow_saverz_pagenum()
+}
 
 
 FoxitCoedit_LaunchUI()
