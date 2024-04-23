@@ -27,7 +27,7 @@ class PiledBackup
 		
 		dev_CreateDirIfNotExist(dirbackup)
 		if(not dev_IsDiskFolder(dirbackup))
-			throw Exception(Format("I need to create disk folder ""{}"", but fails. Please check the reason yourself.", dirbackup))
+			dev_throw(Format("I need to create disk folder ""{}"", but fails. Please check the reason yourself.", dirbackup))
 		
 		if(InStr(inputfile, "*") or InStr(inputfile, "?"))
 			dev_throw("Wildcard * or ? not allowed in you input file: " inputfile)
@@ -56,7 +56,7 @@ class PiledBackup
 	
 		dev_CreateDirIfNotExist(this.dirbackup)
 		if(not dev_IsDiskFolder(this.dirbackup))
-			throw Exception(Format("I need to create disk folder ""{}"", but fails. Please check the reason yourself.", this.dirbackup))
+			dev_throw(Format("I need to create disk folder ""{}"", but fails. Please check the reason yourself.", this.dirbackup))
 		
 		nkeep := this.versions_tokeep
 		

@@ -107,6 +107,7 @@ dev_rethrow_syse(sys_e, new_msg)
 dev_throw(errmsg)
 {
 	; throw with stacktrace info
+	; better than `throw Exception(errmsg)`
 	
 	throw Exception(errmsg "`n`n" dev_getCallStack())
 }
