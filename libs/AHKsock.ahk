@@ -8,7 +8,7 @@
 FUNCTION LIST:
 
 ________________________________________
-AHKsock_Listen(sPort, sFunction = False)
+AHKsock_Listen(sPort, sFunction = False, is_listen_all:=false)
 
 Tells AHKsock to listen on the port in sPort, and call the function in sFunction when events occur. If sPort is a port on
 which AHKsock is already listening, the action taken depends on sFunction:

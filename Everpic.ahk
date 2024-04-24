@@ -245,6 +245,11 @@ Evp_LaunchUI(http_server_baseurl:="")
 			; "http://localhost:2017"
 			Everpic.baseurl := http_server_baseurl
 		}
+		else
+		{
+			; Not HTTP server involved. User will not be able to paste CF_HTML into Evclip,
+			; only to copy generated image filepath, or, "List of files" for pasting into Explorer.
+		}
 
 		s_inited := true ; Even if HTTP server start-up fail.
 	}
