@@ -169,7 +169,7 @@ class FoxitCoedit
 		
 		; assume all false(disabled)
 		focoLblActive := focoCkbLside := focoCkbRside := false
-		focoBtnSavePdf := focoBtnSync := false
+		focoBtnSavePdf := focoCkbFollowPage := focoBtnSync := false
 
 		if(this.state=="Detecting")
 		{
@@ -191,7 +191,7 @@ class FoxitCoedit
 			
 			if(this.coedit.state!="Syncing")
 			{
-				focoBtnSavePdf := focoBtnSync := true
+				focoBtnSavePdf := focoCkbFollowPage := focoBtnSync := true
 			}
 		}
 		else
@@ -204,6 +204,7 @@ class FoxitCoedit
 		GuiControl_Enable(GuiName, "gu_focoCkbLside", focoCkbLside)
 		GuiControl_Enable(GuiName, "gu_focoCkbRside", focoCkbRside)
 		GuiControl_Enable(GuiName, "gu_focoBtnSavePdf", focoBtnSavePdf)
+		GuiControl_Enable(GuiName, "gu_focoCkbFollowPage", focoCkbFollowPage)
 		GuiControl_Enable(GuiName, "gu_focoBtnSync", focoBtnSync)
 
 		this.RefreshMleDetail()
