@@ -240,9 +240,10 @@ class PeersCoedit
 	}
 	
 
-	LaunchSaveDocSession(byref is_conn_lost)
+	LaunchSaveDocSession(byref is_conn_lost, byref ret_errmsg)
 	{
 		is_conn_lost := false
+		ret_errmsg := ""
 	
 		if(this.state!="Handshaked")
 		{
@@ -303,6 +304,7 @@ class PeersCoedit
 		}
 		catch e 
 		{
+			ret_errmsg := e.Message
 			this.dbg1("LaunchSaveDocSession() got exception:`n" . dev_fileline_syse(e))
 			
 			is_conn_lost := true

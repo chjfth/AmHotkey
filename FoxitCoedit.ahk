@@ -55,6 +55,8 @@ class FoxitCoedit
 	
 	prev_peerHwnd := 0
 	
+	is_showing_syncerr_msgbox := false ; just for optimized Error popup
+	
 	dbg(msg, lv) {
 		AmDbg_output(FoxitCoedit_Id, msg, lv)
 	}
@@ -325,7 +327,8 @@ class FoxitCoedit
 		this.state := "Freezing"
 		GuiControl_Enable(GuiName, "gu_focoBtnSavePdf", false)
 		;
-		is_succ := this.coedit.LaunchSaveDocSession(ret_is_conn_lost) ; this will block for some time.
+		is_succ := this.coedit.LaunchSaveDocSession(ret_is_conn_lost, ret_errmsg)
+		; -- this will block for some time.
 		;
 		GuiControl_Enable(GuiName, "gu_focoBtnSavePdf", true)
 		this.state := oldstate
@@ -349,7 +352,10 @@ class FoxitCoedit
 		
 			if(ret_is_conn_lost)
 			{
-				dev_MsgBoxWarning("Handshake lost! Click OK to re-sync.", FoxitCoedit_Id)
+				this.is_showing_syncerr_msgbox := true
+				
+				dev_MsgBoxWarning(Format("{}`n`nHandshake lost! Click OK to re-sync.", ret_errmsg, FoxitCoedit_Id)
+					, FoxitCoedit_Id)
 				this.ResyncCoedit()
 			}
 			else
@@ -394,8 +400,13 @@ class FoxitCoedit
 				; If we once saw prev_peerHwnd valid, but now it becomes null, then the peer is lost.
 				; HWND=* is not considered lost.
 
-				dev_MsgBoxWarning("Peer HWND lost. Handshake lost! Click OK to re-sync.", FoxitCoedit_Id)
-				this.ResyncCoedit()
+				if(not this.is_showing_syncerr_msgbox)
+				{
+					; If OnBtnSavePdf() has been showing similar popup, we will not do that repeatedly.
+					
+					dev_MsgBoxWarning("Peer HWND lost. Handshake lost! Click OK to re-sync.", FoxitCoedit_Id)
+					this.ResyncCoedit()
+				}
 				return
 			}
 			
@@ -564,6 +575,7 @@ class FoxitCoedit
 	{
 		this.state := "CoeditActivated"
 		this.prev_peerHwnd := 0
+		this.is_showing_syncerr_msgbox := false
 		
 		this.StoreMinesideIni("", "")
 		
@@ -599,7 +611,7 @@ class FoxitCoedit
 				dev_Sleep(500)
 				if(not this.IsPdfModified())
 				{
-					this.dbg1("FoxitCoedit.fndocSavePdf() success , PDF modified.")
+					this.dbg1("FoxitCoedit.fndocSavePdf() success , PDF saved.")
 					this.record_pagenum_for_peer()
 					return true
 				}
@@ -714,6 +726,7 @@ class FoxitCoedit
 		hwnd := this.pedHwnd
 	
 		; For legacy Foxit 7.1.5 UI, We send Ctrl+S to save the doc.
+		this.dbg2(Format("Sending Ctrl+S to Foxit HWND=0x{:X}", hwnd))
 		dev_SendKeyToExeMainWindow("{Ctrl down}{s}{Ctrl up}", "ahk_id " hwnd)
 		
 		; For Foxit 9+ Ribbon UI, we need to click on window-title's small "Save" button.
@@ -723,7 +736,11 @@ class FoxitCoedit
 			throw Exception(Format("Foxit HWND {} cannot be activated.", hwnd))
 		
 		dev_Sleep(100) ; to play it safe
-		ClickInActiveWindow(64, 16, false)
+		
+		x := 64
+		y := 16
+		this.dbg2(Format("Clicking on Ribbon-UI Foxit window title (x={}, y={})", x, y))
+		ClickInActiveWindow(x, y, false)
 	}
 	
 	RefreshMineFoxitHwnd()
