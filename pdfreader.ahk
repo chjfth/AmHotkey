@@ -287,7 +287,9 @@ foxit7_TocSync()
 
 	rgbobj := { }
 	fnobj := Func("foxit_GetPixelColorAroundClassnn").Bind("xi,yo", 85, -15, rgbobj)
-	foxit_FindBookmarkPane(fnobj)
+	isok := foxit_FindBookmarkPane(fnobj)
+	if(!isok)
+		return
 
 	; Workaround a Foxit Reader 7.1.5 bug: On first open of a pdf, the [Expand Current Bookmark](tocsync) button
 	; keeps greyed out, until we click a bookmark. So, to activate the tocsync-button, we have to enforce 
@@ -344,6 +346,12 @@ foxit_ClickAroundClassnn(xymode, xspec, yspec, classnn)
 foxit_FindBookmarkPane(fnobj)
 {
 	bookmark_ok := RegexClassnnFindControl("^ControlBar:", "^Bookmarks$", classnn_bookmark, x,y,w,h)
+	if(not bookmark_ok)
+	{
+		dev_MsgBoxWarning("Cannot find Foxit Bookmarks pane.")
+		return false
+	}
+	
 	if(bookmark_ok)
 	{
 		treeviews := RegexClassnnFindControls("^SysTreeView32", "")
@@ -355,17 +363,13 @@ foxit_FindBookmarkPane(fnobj)
 			if(Is_RectA_in_RectB(ctrl.x,ctrl.y,ctrl.w,ctrl.h , x,y,w,h, 2))
 			{
 				fnobj.call(ctrl.classnn)
-				isok := true
-				break
+				return true
 			}
 		}
 	}
 	
-	if(not isok)
-	{
-		MsgBox, % msgboxoption_IconExclamation, 
-			, % "Cannot find Foxit Bookmarks pane."
-	}
+	dev_MsgBoxWarning("Cannot find Foxit Bookmarks treeview.")
+	return false
 }
 
 ; ^\:: foxit7_Click_StatusbarNaviBack() ; just test
