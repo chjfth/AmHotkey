@@ -61,7 +61,8 @@ foxit2_GetMainWindow()
 
 foxit_IsWinExist()
 {
-	if(foxit2_GetMainWindow())
+	hwnd := foxit2_GetMainWindow()
+	if(WinExist("ahk_id " hwnd)) ; call WinExist() so to update Last Found Window
 		return true
 	else
 		return false
@@ -70,8 +71,7 @@ foxit_IsWinExist()
 foxit_IsWinActive()
 {
 	hwnd := foxit2_GetMainWindow()
-	Awinid := dev_GetActiveHwnd()
-	if(hwnd==Awinid)
+	if(WinActive("ahk_id " hwnd)) ; call WinActive() so to update Last Found Window
 		return true
 	else
 		return false
