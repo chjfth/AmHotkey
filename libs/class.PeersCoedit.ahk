@@ -13,6 +13,12 @@
 
 class PeersCoedit
 {
+	; static >>>
+	static DEFAULT_TOS_CLOSEDOC := 3
+	static DEFAULT_TOS_OPENDOC := 4
+	static DEFAULT_TOS_SAVEDOC := 5
+	; static <<<
+
 	mineside := "" ; "sideA" or "sideB"
 	
 	state := "" ; "Syncing" -> Handshaked -> [A] ProSaving  -> Handshaked
@@ -20,9 +26,9 @@ class PeersCoedit
 	
 	timer := "" ; a BoundFunc object used to start/stop AHK timer
 	
-	tos_pas_closedoc := 3 ; timeout-seconds saving doc
-	tos_pas_opendoc := 3
-	tos_pro_savedoc := 5
+	tos_pas_closedoc := PeersCoedit.DEFAULT_TOS_CLOSEDOC
+	tos_pas_opendoc := PeersCoedit.DEFAULT_TOS_OPENDOC
+	tos_pro_savedoc := PeersCoedit.DEFAULT_TOS_SAVEDOC
 	
 	wtSyncStart := "" ; init with A_Now
 	proseq := 0 ; mineside proactive sequence
@@ -92,7 +98,7 @@ class PeersCoedit
 		return val1
 	}
 	
-	WaitPeerIni(key, val, wait_seconds:=5)
+	WaitPeerIni(key, val, wait_seconds)
 	{
 		; Repeatedly check peer's ini, until we see `key=val` present.
 		; return true if see desired, false if timeout.
@@ -109,6 +115,15 @@ class PeersCoedit
 			
 			dev_Sleep(1000)
 		}
+	}
+	
+	SetTimeouts(opensecs, savesecs, closesecs:=0)
+	{
+		this.tos_pas_opendoc := opensecs>0 ? opensecs : PeersCoedit.DEFAULT_TOS_OPENDOC
+		
+		this.tos_pro_savedoc := savesecs>0 ? savesecs : PeersCoedit.DEFAULT_TOS_SAVEDOC
+
+		this.tos_pas_closedoc := closesecs>0 ? closesecs : PeersCoedit.DEFAULT_TOS_CLOSEDOC
 	}
 
 	; User API:
@@ -267,7 +282,7 @@ class PeersCoedit
 			
 			this.dbg2(Format("Waiting peerside to close doc..."))
 			
-			is_succ := this.WaitPeerIni("passeq", this.proseq+1)
+			is_succ := this.WaitPeerIni("passeq", this.proseq+1, this.tos_pas_closedoc)
 			if(not is_succ)
 			{
 				throw Exception(Format("Peerside(close-doc) no response after {} seconds", this.tos_pas_closedoc))
@@ -283,7 +298,7 @@ class PeersCoedit
 			
 			this.dbg2("Waiting peerside to reopen doc...")
 			
-			is_succ := this.WaitPeerIni("passeq", this.proseq+2)
+			is_succ := this.WaitPeerIni("passeq", this.proseq+2, this.tos_pas_opendoc)
 			if(not is_succ)
 			{
 				throw Exception(Format("Peerside(open-doc) no response after {} seconds", this.tos_pas_opendoc))
@@ -349,8 +364,12 @@ class PeersCoedit
 			this.IniIncreaseVal("passeq")
 			
 			this.dbg2("Waiting peer's writing doc...")
+			dev_SplitPath(this.docpath, oPdfFilenam)
+			ttmsg := Format("Waiting peer saving: {}`n`nMax wait time: {}s", oPdfFilenam, this.tos_pro_savedoc)
+			dev_TooltipAutoClear(ttmsg, this.tos_pro_savedoc*1000)
 			
-			is_succ := this.WaitPeerIni("proseq", this.passeq+2)
+			is_succ := this.WaitPeerIni("proseq", this.passeq+2, this.tos_pro_savedoc)
+			tooltip
 			if(not is_succ)
 			{
 				throw Exception(Format("Peerside(save-doc) no response after {} seconds", this.tos_pro_savedoc))

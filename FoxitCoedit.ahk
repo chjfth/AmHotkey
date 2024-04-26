@@ -32,7 +32,11 @@ return ; End of auto-execute section.
 
 class FoxitCoedit
 {
-	; static vars as constant
+	; static vars as constant >>>
+	static DEFAULT_OPENSECS := 5
+	static DEFAULT_SAVESECS := 5
+	
+	; static vars as constant <<<
 	
 	isGuiVisible := false
 	
@@ -55,7 +59,10 @@ class FoxitCoedit
 	
 	prev_peerHwnd := 0
 	
+	seconds_to_savepdf := FoxitCoedit.DEFAULT_SAVESECS
+	
 	is_showing_syncerr_msgbox := false ; just for optimized Error popup
+	
 	
 	dbg(msg, lv) {
 		AmDbg_output(FoxitCoedit_Id, msg, lv)
@@ -543,7 +550,7 @@ class FoxitCoedit
 
 			pdfpath_real := dev_OpenSelectFileDialog(pdfnam
 				, "Please tell me the actual filepath of the PDF file on the disk"
-				, "PDF files (*pdf)")
+				, "PDF files (*.pdf)")
 			
 			if(not pdfpath_real)
 				return ; user cancels, do nothing
@@ -555,7 +562,10 @@ class FoxitCoedit
 				return
 			}
 			
+			this.dbg1("Now activate FoxitCoedit for: " pdfpath_real)
 			this.ActivateCoedit(isLeftside ? "sideA" : "sideB", pdfpath_real)
+			
+			this.LoadStaticCfg()
 			
 			this.set_ckbstate(ctlid_ckb, true)
 			
@@ -605,7 +615,9 @@ class FoxitCoedit
 		{
 			; And wait until wintitle's "*" disappears.
 			msec_start := dev_GetTickCount64()
-			Loop, 10
+			dev_assert( this.seconds_to_savepdf > 1 )
+			
+			Loop
 			{
 				this.Try_SaveCurrentPdf()
 			
@@ -617,8 +629,11 @@ class FoxitCoedit
 					return true
 				}
 				
+				msec_used := dev_GetTickCount64() - msec_start
+				if( msec_used > (this.seconds_to_savepdf*1000) )
+					break
 			}
-			msec_used := dev_GetTickCount64() - msec_start
+
 			throw Exception(Format("FoxitCoedit.fndocSavePdf() operation fail. After {}ms trying, the PDF file is not saved yet.", msec_used))
 		}
 
@@ -729,7 +744,7 @@ class FoxitCoedit
 		wParam := 0xE103 ; We know it by using SpyEx on Foxit main-window.
 		
 		this.dbg2(Format("Sending WM_COMMAND to HWND=0x{:X}, wParam=0x{:X} (Save PDF)", hwnd, wParam))
-		dev_SendMessage(hwnd, win32c.WM_COMMAND, wParam, 0)
+		dev_PostMessage(hwnd, win32c.WM_COMMAND, wParam, 0)
 		; -- Using WM_COMMAND is much more reliable than simulating Ctrl+S keypress.
 		;    Effective for both Foxit Reader 7 and Foxit Editor 11
 	}
@@ -834,10 +849,28 @@ class FoxitCoedit
 		this.dbg2(Format("Try restoring peer INI's pagenum: '{}'", pagenum))
 		
 		wintitle := "ahk_id " this.pedHwnd
-				;		dev_ControlSend(wintitle, oEditboxNN, "{Ctrl down}a{Ctrl up}{Del}")
-				;		dev_ControlSend(wintitle, oEditboxNN, pagenum) // these two are not as reliable as ControlSetText
 		dev_ControlSetText_hc(this.pedHwnd, oEditboxNN, pagenum)
 		dev_ControlSend(wintitle, oEditboxNN, "{Enter}")
+	}
+	
+	LoadStaticCfg()
+	{
+		dev_assert(this.coedit.docpath!="")
+		cfgfile := dev_SplitExtname(this.coedit.docpath) . ".FoxitCoEdit.ini"
+		; cfgfile: "somebook.FoxitCoEdit.ini"
+;		[cfg]
+;		OpenSecs=6
+;		SaveSecs=20
+		
+		cfgdict := dev_IniReadSectionIntoDict(cfgfile, "cfg")
+		
+		opensecs := cfgdict.OpenSecs ? cfgdict.OpenSecs : FoxitCoedit.DEFAULT_OPENSECS
+		savesecs := cfgdict.SaveSecs ? cfgdict.SaveSecs : FoxitCoedit.DEFAULT_SAVESECS
+		
+		this.seconds_to_savepdf := savesecs
+		
+		this.dbg1(Format("SetTimeouts for this pdf: OpenSecs={} , SaveSecs={}", opensecs, savesecs))
+		this.coedit.SetTimeouts(opensecs, savesecs)
 	}
 	
 } ; class FoxitCoedit
