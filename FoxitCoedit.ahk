@@ -725,22 +725,12 @@ class FoxitCoedit
 	{
 		hwnd := this.pedHwnd
 	
-		; For legacy Foxit 7.1.5 UI, We send Ctrl+S to save the doc.
-		this.dbg2(Format("Sending Ctrl+S to Foxit HWND=0x{:X}", hwnd))
-		dev_SendKeyToExeMainWindow("{Ctrl down}{s}{Ctrl up}", "ahk_id " hwnd)
+		wParam := 0xE103 ; We know it by using SpyEx on Foxit main-window.
 		
-		; For Foxit 9+ Ribbon UI, we need to click on window-title's small "Save" button.
-		; and this is not harmful to legacy Foxit 7.1.5 .
-		active_ok := dev_WinActivateHwnd(hwnd, 1000) ; todo: make it configurable
-		if(not active_ok)
-			throw Exception(Format("Foxit HWND {} cannot be activated.", hwnd))
-		
-		dev_Sleep(100) ; to play it safe
-		
-		x := 64
-		y := 16
-		this.dbg2(Format("Clicking on Ribbon-UI Foxit window title (x={}, y={})", x, y))
-		ClickInActiveWindow(x, y, false)
+		this.dbg2(Format("Sending WM_COMMAND to HWND=0x{:X}, wParam=0x{:X} (Save PDF)", hwnd, wParam))
+		dev_SendMessage(hwnd, win32c.WM_COMMAND, wParam, 0)
+		; -- Using WM_COMMAND is much more reliable than simulating Ctrl+S keypress.
+		;    Effective for both Foxit Reader 7 and Foxit Editor 11
 	}
 	
 	RefreshMineFoxitHwnd()
@@ -908,4 +898,4 @@ Foco_CkbActivateCoedit()
 	g_foco.CkbActivateCoedit()
 }
 
-
+; !#y:: g_foco.fndocSavePdf()

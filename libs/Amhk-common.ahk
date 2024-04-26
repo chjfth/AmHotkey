@@ -1540,7 +1540,7 @@ dev_SendKeyToExeMainWindow(keyspec, wintitle:="A")
 	;
 	; -- yes, as for Autohotkey 1.1.32, the keyspec meaning is different from that of `SendRaw` command.
 	;
-	; [2024-04-19] One more note: When defining a hotkey trigger calling of dev_SendKeyToExeMainWindow(),
+	; [2024-04-19] One more note: When defining a hotkey action that calls dev_SendKeyToExeMainWindow(),
 	; you should add `Sleep, 500`, bcz your triggering hotkey may probably interfere with target 
 	; application's interpretation of your sending hotkeys.
 
