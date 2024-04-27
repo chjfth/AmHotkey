@@ -40,9 +40,11 @@ return ; End of auto-execute section.
 :?*:````!::<{!}--  -->{left}{left}{left}{left}
 
 
-; <<>> makes Chinese ShuMingHao
-:?*:<<>>::《》{space}
-:?*:``ss::《》{space}
+; <<>> → Chinese ShuMingHao
+:?*:<<>>::《》{Left}
+
+; Four single-quotes → full-width Chinese double-quotes
+:?*:''''::“”{Left}
 
 ; Type #! to insert a shebang line in .py script.
 ; b0 means no erase already typed #! // [2018-11-25] I forgot this shortcut bcz it is not led by my accustomed ``
