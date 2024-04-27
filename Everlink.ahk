@@ -10,7 +10,8 @@ Everlink_LaunchUI() ; Call this to bring up Everlink UI.
 ;;;;;;;; Everlink global vars ;;;;;;;;;;
 
 global g_everlink ; The single object responsible for the Everlink GUI
-global Everlink_Id := "Everlink"
+
+global Everlink_Id := Everlink.Id ; Note: This line is executed AFTER Everlink's static member assignments.
 
 global g_HwndEVLGui
 
@@ -37,9 +38,15 @@ return ; End of auto-execute section.
 class Everlink
 {
 	; static vars as constant
+	static Id := "Everlink"
 	static linktag_allow_unicode := true
 	static linktag_maxlen := 20
 	static recent_max := 30
+	static _tmp_ := AmDbg_SetDesc(Everlink.Id
+		, "Everlink collects links in a form called Linktag, and store them in a .csv file. "
+		. "User can later call up Everlink UI to quickly pick up a Linktag and insert it into current Evclip.`n`n"
+		. "A Linktag looks like [WinAPI], where the ""WinAPI"" part holds a link to another Evclip. "
+		. "When a user copies the whole ""[WinAPI]"", it will be collected by Everlink.")
 
 	isGuiVisible := false
 	

@@ -539,7 +539,7 @@ Amdbg_WM_MOUSEMOVE()
 			. "that message is considered cozy, and will be immediately visible in Dbgwin. `n"
 			. "`n"
 			. "Noisy debug-messages are not lost, they can be retrieved by clicking `n"
-			. "[Copy to clipboard] button."
+			. "[Copy buffer] button."
 			, modu, displaylimitlv))
 	}
 	else
@@ -625,6 +625,8 @@ AmDbg_MakeLineMsg(modu, msg, lv, byref is_same_modu_as_prev)
 
 _Amdbg_CreateDbgModule(modu) ; Create debug-module object if not-exist yet
 {
+	dev_assert(StrLen(modu)>1)
+	
 	if(not Amdbg._dictModules.HasKey(modu))
 	{
 		Amdbg._dictModules[modu] := {}
