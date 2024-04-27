@@ -203,6 +203,8 @@ make_solo_callable(funcware, args*)
 	; This function binds args* into funcware to make(return) a new 
 	; callable object, so that you can use that callable in 
 	; SetTimer, Menu, etc.
+	;
+	; One exception: if funcware is already a BoundFunc-object, `args` cannot be further bounded.
 
 	fnout := funcware
 	

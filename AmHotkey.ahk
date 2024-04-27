@@ -926,8 +926,8 @@ _fxhk_IsComboKeyname(keyname, byref prefix_keyname="", byref suffix_keyname:="")
 ; User can attach multiple actions to the same [hotkey-and-condition pair].
 ; User parameter fn_cond and fn_act, can be any "callable" variable, which include:
 ; * a string representing a function name, or
-; * a function object name, or 
-; * a Bind("funcname")-returned object. // to fix: BoundFunc object?
+; * a function object, ( via Func("somefuncname") ) 
+; * a BoundFunc object. // (to final-confirm)
 ;
 ; fn_cond: The condition to run fn_act. If fn_cond=="", then fn_act is always run.
 
@@ -1426,7 +1426,7 @@ fxhk_DefineComboHotkeyCondComment(prefix_keyname, suffix_keyname, user_purpose, 
 		, fn_cond, fn_act, act_args*)
 	
 	;
-	; Define implicity hotkeys for prefix_keyname's DOWN and UP action.
+	; Define implicit hotkeys for prefix_keyname's DOWN and UP action.
 	;
 	
 	purpose_keydown := _fxhk_getComboKeyDownPurposeName(prefix_keyname)
