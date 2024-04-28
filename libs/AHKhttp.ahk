@@ -30,19 +30,17 @@ class Uri
 
 class HttpServer
 {
+	static Id := "AHKhttp"
+	
+	static _tmp_ := AmDbg_SetDesc(HttpServer.Id, "Debug messages from AHKhttp.ahk, the simple HTTP server .")
+	
 	static servers := {}
 	static port := 0 ; set later
 
-	static _FeatureId := "AHKhttp"
-	;
+	
 	dbg(newmsg, msglv){
-		static s_prepared := false
-		if(!s_prepared) {
-			AmDbg_SetDesc(HttpServer._FeatureId, "Debug messages from AHKhttp.ahk, the simple HTTP server .")
-			s_prepared := true
-		}
-		Amdbg_output(HttpServer._FeatureId
-				, Format("[{}] {}", HttpServer._FeatureId, newmsg)
+		Amdbg_output(HttpServer.Id
+				, Format("[{}] {}", HttpServer.Id, newmsg)
 			, msglv)
 	}
 	dbg0(msg){

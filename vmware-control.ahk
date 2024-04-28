@@ -31,7 +31,8 @@ return ; The first return in this ahk. It marks the End of auto-execute section.
 
 class vmctl
 {
-	static FeatureId := "VmCtl"
+	static Id := "VmCtl"
+	static _tmp_ := AmDbg_SetDesc(vmctl.Id, "Debug messages from vmware-control.ahk")
 
 	; Cfg:
 	static chk_interval_seconds := 60
@@ -50,19 +51,17 @@ class vmctl
 
 vmctl_InitEnv()
 {
-	AmDbg_SetDesc(vmctl.FeatureId, "Debug message for vmware-control.ahk")
-	
 	dev_StartTimerPeriodic("_vmctl_smsec_inc", 1000)
 }
 
 vmctl_dbg(msg)
 {
-	AmDbg_Lv1(vmctl.FeatureId, msg)
+	AmDbg_Lv1(vmctl.Id, msg)
 }
 
 vmctl_dbg2(msg)
 {
-	AmDbg_Lv2(vmctl.FeatureId, msg)
+	AmDbg_Lv2(vmctl.Id, msg)
 }
 
 _vmctl_smsec_inc()

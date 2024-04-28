@@ -18,7 +18,7 @@ global gu_clipmonLblMsgCounts
 
 class CClipboardMonitor
 {
-	static _FeatureId := "Clipmon"
+	static Id := "Clipmon"
 
 	_GuiHwnd := 0
 	_hwndNextClipViewer := 0 ; the Win32 detail from WM_CHANGECBCHAIN
@@ -34,6 +34,8 @@ class CClipboardMonitor
 		. "* Lv0 : Unexpected errors. Will always display on Dbgwin.`n"
 		. "* Lv1 : Mild working state changes, such as new clients arrive/leave.`n"
 		. "* Lv2 : Verbose working diagnostic message."
+	
+	static _tmp_ := AmDbg_SetDesc(CClipboardMonitor.Id, CClipboardMonitor._dbghelp)
 	
 	__New()
 	{
@@ -65,22 +67,16 @@ class CClipboardMonitor
 
 	dbg(msg, lv)
 	{
-		static s_prepared := false
-		if(!s_prepared) {
-			AmDbg_SetDesc(CClipboardMonitor._FeatureId, CClipboardMonitor._dbghelp)
-			s_prepared := true
-		}
-		
-		if(CClipboardMonitor._FeatureId)
+		if(CClipboardMonitor.Id)
 		{
 			; AHK 1.1.32 buggy! If user exits current Autohotkey.exe process, or,
-			; user executes a Reload command, CClipboardMonitor._FeatureId becomes empty
+			; user executes a Reload command, CClipboardMonitor.Id becomes empty
 			; when this __Delete() is executed. So, if it is empty, do not call .dbg() .
 			;
 			; [2024-04-13] To avoid such bug, my later AHK modules will use a global var
 			; for this _FeatureId. Example: Everlink.ahk .
 		
-			AmDbg_output(CClipboardMonitor._FeatureId, msg, lv)
+			AmDbg_output(CClipboardMonitor.Id, msg, lv)
 		}
 	}
 	dbg0(msg)
@@ -98,14 +94,14 @@ class CClipboardMonitor
 
 	DestroyGui()
 	{
-		GuiName := CClipboardMonitor._FeatureId
+		GuiName := CClipboardMonitor.Id
 		
 		Gui_Destroy(GuiName)
 	}
 
 	CreateGui()
 	{
-		GuiName := CClipboardMonitor._FeatureId
+		GuiName := CClipboardMonitor.Id
 		mywintitle := "AmHotkey Clipmon Status"
 		
 		Gui_New(GuiName)
@@ -221,7 +217,7 @@ class CClipboardMonitor
 	
 	UIRefreshClients()
 	{
-		GuiName := CClipboardMonitor._FeatureId
+		GuiName := CClipboardMonitor.Id
 		GuiControl_SetText(GuiName, "gu_clipmonLblClients", "Clients: " dev_mapping_count(this._clients))
 	}
 	
@@ -239,7 +235,7 @@ class CClipboardMonitor
 	
 	Do_WM_DRAWCLIPBOARD(wParam, lParam, msg, hwnd)
 	{
-		GuiName := CClipboardMonitor._FeatureId
+		GuiName := CClipboardMonitor.Id
 	
 		this.dbg1(Format("Do_WM_DRAWCLIPBOARD(), hwnd=0x{:08X}", this._GuiHwnd))
 
@@ -268,7 +264,7 @@ CLIPMONEscape()
 
 CLIPMONClose()
 {
-	Gui_Hide(CClipboardMonitor._FeatureId)
+	Gui_Hide(CClipboardMonitor.Id)
 }
 
 Clipmon_WM_CHANGECBCHAIN(wParam, lParam, msg, hwnd)

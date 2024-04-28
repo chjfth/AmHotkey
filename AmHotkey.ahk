@@ -588,19 +588,6 @@ Launch_AU3Spy()
 }
 
 
-; !#f:: devtest_TryFocusUicBeneathMouse() 
-devtest_TryFocusUicBeneathMouse()
-{
-	; Try to set focus to the control beneath current mouse pointer.
-	MouseGetPos, _mx, _my, hwnd, target_classnn
-	ControlFocus, %target_classnn%, A ; [2015-02-10] Strange, without explicity A param, it will not succeed.
-	if not ErrorLevel {
-		tooltip, % "New focus @ #" . hwnd . " classnn=" . target_classnn
-	} else {
-		MsgBox, % "ControlFocus reports ErrorLevel = " . ErrorLevel
-	}
-}
-
 Get_DPIScale()
 {
 	return A_ScreenDPI/96
