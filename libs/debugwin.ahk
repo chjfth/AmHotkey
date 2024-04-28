@@ -22,6 +22,9 @@ AmDbg_SetDesc(modu, desc)
 	; [Optional] Associate a piece of description text to modu, which can be seen in 
 	; Dbgwin GUI instantly, so the final user knows what the modu name stands for.
 
+AmDbg_GetVerboseLv(modu)
+	; Query modu's current debug-message limitLv
+
 Amdbg_output(modu, newmsg, msglv)
 
 Amdbg_Lv1(modu, newmsg)
@@ -634,14 +637,17 @@ _Amdbg_CreateDbgModule(modu) ; Create debug-module object if not-exist yet
 		Amdbg._dictModules[modu].allmsg := ""
 		Amdbg._dictModules[modu].timegapteller := new CTimeGapTeller(1000)
 		
-		; Check for g_DefaultDbgLv_xxx global var to determine initial dbgLv .
-		; User can set those vars in custom_env.ahk, for example, if 
-		; modu="Clipmon", then put this into custom_env.ahk :
+		; Check for default Debug verbose level for this modu.
+		; User can set those default values in custom_env.ahk.
+		; For example, for modu="Clipmon", put this into custom_env.ahk :
 		;
-		; 	global g_DefaultDbgLv_Clipmon := 1
+		; 	DbgwinInit.VerboseLv["Clipmon"] := 1
 		;
-		gvarname := "g_DefaultDbgLv_" modu 
-		defaultlv := %gvarname%
+		defaultlv := 0
+		if( DbgwinInit )
+		{
+			defaultlv := DbgwinInit.VerboseLv[modu]
+		}
 		
 		if(defaultlv>0)
 			Amdbg._dictModules[modu].displaylimitlv := defaultlv
@@ -672,6 +678,13 @@ _Amdbg_AppendLineMsg(moduobj, linemsg, is_same_modu_as_prev)
 		linemsg := line_prefix "`r`n" linemsg
 	
 	moduobj.allmsg .= linemsg
+}
+
+AmDbg_GetVerboseLv(modu)
+{
+	dev_assert(dev_IsOneWord(modu))
+	
+	return Amdbg._dictModules[modu].displaylimitlv
 }
 
 Amdbg_output(modu, newmsg, msglv:=1)

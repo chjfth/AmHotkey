@@ -1,4 +1,36 @@
 
+class DbgwinInit
+{
+	; This class accompanies debugwin.ahk .
+
+	static VerboseLv := {}
+	static _tmp_ := DbgwinInit.DoInit()
+	; -- Note: We use `class static` here, because `DbgwinInit.DoInit()` is guaranteed
+	;    to be executed on seen.
+	;    We should NOT use AHK's global vars, bcz any global var is initialize *AFTER*
+	;    class static vars, so losing the ability to provide "initial" values.
+	
+	DoInit()
+	{
+		; User can enable/set debug-message verbose level here.
+		; DbgwinInit.VerboseLv[modu] will be checked by debugwin.ahk .
+	
+;		DbgwinInit.VerboseLv["Clipmon"] := 1
+
+;		DbgwinInit.VerboseLv["HotkeyFlex"] := 1
+;		DbgwinInit.VerboseLv["HotkeyLegacy"] := 1
+		
+;		DbgwinInit.VerboseLv["VmCtl"] := 1
+		
+;		DbgwinInit.VerboseLv["AHKhttp"] := 2
+
+;		DbgwinInit.VerboseLv["Everlink"] := 1
+
+;		DbgwinInit.VerboseLv["PeersCoedit"] := 1
+;		DbgwinInit.VerboseLv["FoxitCoedit"] := 1
+	}
+}
+
 ;global g_DefaultDbgLv_HotkeyFlex   := 1
 ;global g_DefaultDbgLv_HotkeyLegacy := 1
 

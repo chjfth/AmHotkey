@@ -123,7 +123,7 @@ class CClipboardMonitor
 		Gui_Add_TxtLabel(GuiName, "gu_clipmonLblClients",   -1, "w210", "Clients: 0")
 		Gui_Add_TxtLabel(GuiName, "gu_clipmonLblMsgCounts", -1, "w210", "WM_DRAWCLIPBOARD received: 0")
 		
-		if(g_DefaultDbgLv_Clipmon>0)
+		if(AmDbg_GetVerboseLv(CClipboardMonitor.Id)>0)
 		{
 			Gui_Show(GuiName, "", mywintitle) ; Show it only for debugging purpose
 		}
