@@ -2478,6 +2478,8 @@ dev_ControlSetText_hc(hwndtop, classnn, newtext) ; hc: hwnd+classnn
 dev_ControlGetPos_hc(hwndtop, classnn)
 {
 	; Get specific child-window's position, relative to its parent.
+	; hc: Hwnd and Classnn
+	
 	ControlGetPos, rx, ry, rw, rh, %classnn%, ahk_id %hwndtop%
 	pos := { "x":rx, "y":ry, "w":rw, "h":rh, "x_":rx+rw, "y_":ry+rh }
 	return pos

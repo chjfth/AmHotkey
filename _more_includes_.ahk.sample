@@ -22,8 +22,6 @@
 
 ; #Include mediaplayer.ahk
 ; #Include pdfreader.ahk
-; #Include evernote.ahk
-; #Include Everpic.ahk
 
 ; #Include devmgmt.ahk
 
@@ -35,6 +33,12 @@
 
 ; #Include AmTemplates.ahk
 ; #Include menus.ahk
+
+; #Include evernote.ahk
+; #Include Everpic.ahk
+; #Include Everlink.ahk
+
+; #Include FoxitCoedit.ahk
 
 ; #Include mstsc.ahk ; Microsoft terminal service client
 ; #Include Teclast_X98.ahk
