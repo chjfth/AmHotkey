@@ -27,14 +27,6 @@ global g_MouseNudgeTitleAM = "Non-existing title"
 global g_AmMute := false
 
 
-global g_RCtrl_WinMoveScale_graceticks = 3000
-
-global gu_TxtLabelDefault := ""
-
-global g_func_IsTypingZhongwen := "IsTypingZhongwen_PinyinJiaJia"
-global g_func_IMEToggleZhonwen := "ToggleZhongwenStatus_PinyinJiaJia"
-	; User can override these two function pointers to suit their own IME(Input MEthod).
-
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;; ^^^ user configurable globals end ^^^ ;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -110,7 +102,8 @@ return
 ;################################################################################################ 
 
 
-#Include %A_LineFile%\..\libs\debugwin.ahk
+#Include %A_LineFile%\..\libs\debugwin.ahk ; debugwin should be included first!
+;
 #Include %A_LineFile%\..\libs\WinClipAPI.ahk
 #Include %A_LineFile%\..\libs\WinClip.ahk
 #include %A_LineFile%\..\libs\Amhk-common.ahk
