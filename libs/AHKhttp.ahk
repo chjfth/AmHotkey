@@ -178,7 +178,17 @@ class HttpServer
 	{
 		if(this.port>0)
 		{
-			AHKsock_Listen(this.port, false)
+			this.dbg1(Format("Stopping HTTP server on port {}", this.port))
+			
+			err_reason := AHKsock_Listen(this.port, false)
+			
+			if(err_reason)
+			{
+				this.dbg1(Format("AHKsock_Listen({}, 0) fail. Error-reason:{} , WinError={}."
+					, this.port, err_reason, ErrorLevel))
+				Sleep, 1000
+			}
+			
 			this.port := 0
 		}
 	}
