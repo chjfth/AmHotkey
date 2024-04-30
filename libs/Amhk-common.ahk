@@ -468,6 +468,28 @@ dev_WinMoveHwnd(hwnd, x:="", y:="", w:="", h="")
 	WinMove, ahk_id %hwnd%, , % x, % y, % w, % h
 }
 
+dev_WinGetPos(wintitle)
+{
+	hwnd := dev_GetHwndByWintitle(wintitle)
+
+	WinGetPos, x,y,w,h, % "ahk_id " hwnd
+
+	pos := {x:x, y:y, w:w, h:h, x_:x+w, y_:y+h} 
+	
+	WinGet, outvar, MinMax, % "ahk_id " hwnd
+
+	if(outvar==1)
+		pos.maximized := true
+	if(outvar==-1)
+		pos.minimized := true
+	
+	visible := DllCall("IsWindowVisible", "UInt", hwnd)
+	if(!visible)
+		pos.hidden := true
+	
+	return pos
+}
+
 dev_Tooltip(text)
 {
 	tooltip, % text
@@ -1927,6 +1949,26 @@ dev_WinWaitActive_with_timeout(wintitle, wintext:="", timeout_sec:=1)
 	}
 }
 
+dev_WinShow_byHwnd(hwnd)
+{
+	dev_WinShow("ahk_id " hwnd)
+}
+
+dev_WinShow(wintitle)
+{
+	WinShow, % wintitle
+}
+
+dev_WinHide_byHwnd(hwnd)
+{
+	dev_WinHide("ahk_id " hwnd)
+}
+
+dev_WinHide(wintitle)
+{
+	WinHide, % wintitle
+}
+
 dev_ControlFocus(wintitle, classnn)
 {
 	ControlFocus, %classnn%, %wintitle%
@@ -2017,6 +2059,24 @@ GetActiveClassnnFromXY(x, y)
 	MouseGetPos,,,, classnn
 	return classnn
 }
+
+dev_GetHwndUnderMouse()
+{
+	rdict := {} ; will return this dict
+
+	MouseGetPos, mxWindow, myWindow, tophwnd_undermouse, classnn
+	
+	rdict.hwndtop := tophwnd_undermouse
+	rdict.classnn := classnn
+
+	if(classnn)
+	{
+		rdict.hwndctl := dev_GetHwndFromClassNN(classnn, "ahk_id " tophwnd_undermouse)
+	}
+	
+	return rdict
+}
+
 
 IsWinClassMatchRegex(regex) ; Check against active window class
 {
@@ -2612,7 +2672,12 @@ WinSet_AlwaysOnTop(on_or_off, wintitle:="")
 	if(on_or_off==1 or on_or_off==true)
 		op := "on"
 
-	WinSet, AlwaysOnTop, % op
+	WinSet, AlwaysOnTop, % op, % wintitle
+}
+
+WinSet_TopNoActivate(wintitle:="")
+{
+	WinSet, Top, , % wintitle
 }
 
 WinSet_Transparent(n0_255, wintitle:="")

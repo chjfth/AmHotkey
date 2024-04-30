@@ -117,6 +117,22 @@ Gui_Switch_Font(GuiName, sizept:=0, rgbhex:="", fontface:="", weight:=400)
 	Gui, % cmd, % optall, % fontface
 }
 
+;Gui_SetFont(args*)
+;{
+;	Gui_Switch_Font(args*)
+;}
+;
+GuiControl_SetFont(GuiName, CtrlVarName, fontface, fontopts)
+{
+	; Will affect all subsequent Uic's font
+	Assert_UicVarname(CtrlVarname)
+
+	cmd := (GuiName ? GuiName ":" : "") "Font"
+	Gui, % cmd, % fontopts, % fontface
+	
+	GuiControl, % cmd, % CtrlVarname
+}
+
 GuiControl_ChangeOpt(GuiName, CtrlVarname, opt, value:="")
 {
 	; Change a GUI-control's option dynamically.
