@@ -69,23 +69,21 @@ Gui_Show(GuiName, options="", title:="AHKGUI")
 	; options:
 	; W400 H300 Center
 
-	cmd := "Show"
-	if(GuiName)
-		cmd := Format("{}:{}", GuiName, cmd)
+	cmd := (GuiName ? GuiName ":" : "") "Show"
 
 	Gui, % cmd, % options, % title
 }
 
 Gui_Submit(GuiName, is_keep_gui:=false)
 {
-	Gui, % (GuiName ? GuiName ":" : "") "Submit", % is_keep_gui ? "NoHide" : ""
+	cmd := (GuiName ? GuiName ":" : "") "Submit"
+
+	Gui, % cmd, % is_keep_gui ? "NoHide" : ""
 }
 
 Gui_AssociateHwndVarname(GuiName, HwndVarname)
 {
-	dev_assert(GuiName)
-
-	Gui, % Format("{}:+Hwnd{}", GuiName, HwndVarname)
+	Gui_ChangeOpt(GuiName, "+Hwnd" HwndVarname)
 }
 
 Gui_ChangeOpt(GuiName, optstr)
@@ -95,9 +93,7 @@ Gui_ChangeOpt(GuiName, optstr)
 
 Gui_SetXYMargin(GuiName, xmargin, ymargin)
 {
-	cmd := "Margin"
-	if(GuiName)
-		cmd := Format("{}:{}", GuiName, cmd)
+	cmd := (GuiName ? GuiName ":" : "") "Margin"
 
 	Gui, % cmd , % xmargin, % ymargin
 }
@@ -109,9 +105,7 @@ Gui_Switch_Font(GuiName, sizept:=0, rgbhex:="", fontface:="", weight:=400)
 
 	; rgbhex: "FF9977" or "Blue" , fontface: "Tahoma"
 	
-	cmd := "Font"
-	if(GuiName)
-		cmd := Format("{}:{}", GuiName, cmd)
+	cmd := (GuiName ? GuiName ":" : "") "Font"
 
 	opt_sizept := sizept ? ("s" sizept) : ""
 	opt_rgbhex := StrLen(rgbhex)!=0 ? ("c" rgbhex) : "" 
@@ -150,11 +144,12 @@ Gui_Add_TxtLabel(GuiName, CtrlVarname:="", width:=-1, format:="", text:="")
 		CtrlVarname := "-"
 
 	Assert_UicVarname(CtrlVarname)
-	cmdadd := GuiName ? (GuiName ":Add") : "Add"
+	cmd := (GuiName ? GuiName ":" : "") "Add"
+
 	vCtrlVarname := StrLen(CtrlVarname)>1 ? "v" CtrlVarname : ""
 	wWidth := width>0 ? "w" width : "" ; so width==-1 will make it auto-width by text length
 	
-	Gui, % cmdadd, Text, % Format("{} {} {}", vCtrlVarname, wWidth, format), % text
+	Gui, % cmd, Text, % Format("{} {} {}", vCtrlVarname, wWidth, format), % text
 }
 
 Gui_Add_StaticLabel(GuiName, text)
@@ -182,21 +177,23 @@ GuiControl_SetColor(GuiName, CtrlVarname, fgcolor:="", bgcolor:="")
 Gui_Add_Button(GuiName, CtrlVarname, width, format, btntext)
 {
 	Assert_UicVarname(CtrlVarname)
-	cmdadd := GuiName ? (GuiName ":Add") : "Add"
+	cmd := (GuiName ? GuiName ":" : "") "Add"
+
 	vCtrlVarname := StrLen(CtrlVarname)>1 ? "v" CtrlVarname : ""
 	wWidth := width>0 ? "w" width : "" ; so width==-1 will make it auto-width by text length
 
-	Gui, % cmdadd, Button, % Format("{} {} {}", vCtrlVarname, wWidth, format), % btntext
+	Gui, % cmd, Button, % Format("{} {} {}", vCtrlVarname, wWidth, format), % btntext
 }
 
 Gui_Add_Picture(GuiName, CtrlVarname, width, format, imgfilepath:="")
 {
 	Assert_UicVarname(CtrlVarname)
-	cmdadd := GuiName ? (GuiName ":Add") : "Add"
+	cmd := (GuiName ? GuiName ":" : "") "Add"
+
 	vCtrlVarname := StrLen(CtrlVarname)>1 ? "v" CtrlVarname : ""
 	wWidth := width>0 ? "w" width : "" ; so width==-1 will make it auto-width by text length
 
-	Gui, % cmdadd, Picture, % Format("{} {} {}", vCtrlVarname, wWidth, format), % imgfilepath
+	Gui, % cmd, Picture, % Format("{} {} {}", vCtrlVarname, wWidth, format), % imgfilepath
 }
 
 Gui_Picture_SetIconFromDll(GuiName, CtrlVarname, dllpath, icon_group_idx)
@@ -210,22 +207,24 @@ Gui_Add_Checkbox(GuiName, CtrlVarname, width, format, btntext)
 	; format: "Checked"
 
 	Assert_UicVarname(CtrlVarname)
-	cmdadd := GuiName ? (GuiName ":Add") : "Add"
+	cmd := (GuiName ? GuiName ":" : "") "Add"
+
 	vCtrlVarname := StrLen(CtrlVarname)>1 ? "v" CtrlVarname : ""
 	wWidth := width>0 ? "w" width : "" ; so width==-1 will make it auto-width by text length
 	
-	Gui, % cmdadd, Checkbox, % Format("{} {} {}", vCtrlVarname, wWidth, format), % btntext
+	Gui, % cmd, Checkbox, % Format("{} {} {}", vCtrlVarname, wWidth, format), % btntext
 }
 
 Gui_Add_Radiobox(GuiName, CtrlVarname, width, format, btntext)
 {
 	; format: "Group Checked"
 	Assert_UicVarname(CtrlVarname)
-	cmdadd := GuiName ? (GuiName ":Add") : "Add"
+	cmd := (GuiName ? GuiName ":" : "") "Add"
+
 	vCtrlVarname := StrLen(CtrlVarname)>1 ? "v" CtrlVarname : ""
 	wWidth := width>0 ? "w" width : "" ; so width==-1 will make it auto-width by text length
 	
-	Gui, % cmdadd, Radio, % Format("{} {} {}", vCtrlVarname, wWidth, format), % btntext
+	Gui, % cmd, Radio, % Format("{} {} {}", vCtrlVarname, wWidth, format), % btntext
 }
 
 Gui_Add_Editbox(GuiName, CtrlVarname, width, format, init_text:="")
@@ -237,11 +236,12 @@ Gui_Add_Editbox(GuiName, CtrlVarname, width, format, init_text:="")
 	; -0x1000 ES_WANTRETURN, turn off return key for readonly-MLE.
 
 	Assert_UicVarname(CtrlVarname)
-	cmdadd := GuiName ? (GuiName ":Add") : "Add"
+	cmd := (GuiName ? GuiName ":" : "") "Add"
+
 	vCtrlVarname := StrLen(CtrlVarname)>1 ? "v" CtrlVarname : ""
 	wWidth := width>0 ? "w" width : "" ; so width==-1 will make it auto-width by text length
 
-	Gui, % cmdadd, Edit, % Format("{} {} {}", vCtrlVarname, wWidth, format), % init_text
+	Gui, % cmd, Edit, % Format("{} {} {}", vCtrlVarname, wWidth, format), % init_text
 }
 
 Gui_Add_Listbox(GuiName, CtrlVarname, width, format, itemlist_pipes:="")
@@ -249,11 +249,12 @@ Gui_Add_Listbox(GuiName, CtrlVarname, width, format, itemlist_pipes:="")
 	; format: AltSumbit r12
 
 	Assert_UicVarname(CtrlVarname)
-	cmdadd := GuiName ? (GuiName ":Add") : "Add"
+	cmd := (GuiName ? GuiName ":" : "") "Add"
+
 	vCtrlVarname := StrLen(CtrlVarname)>1 ? "v" CtrlVarname : ""
 	wWidth := width>0 ? "w" width : "" ; so width==-1 will make it auto-width by text length
 
-	Gui, % cmdadd, ListBox, % Format("{} {} {}", vCtrlVarname, wWidth, format), % itemlist_pipes
+	Gui, % cmd, ListBox, % Format("{} {} {}", vCtrlVarname, wWidth, format), % itemlist_pipes
 }
 
 Gui_Add_Combobox(GuiName, CtrlVarname, width, format, itemlist_pipes:="")
@@ -261,30 +262,30 @@ Gui_Add_Combobox(GuiName, CtrlVarname, width, format, itemlist_pipes:="")
 	; format: AltSumbit
 
 	Assert_UicVarname(CtrlVarname)
-	cmdadd := GuiName ? (GuiName ":Add") : "Add"
+	cmd := (GuiName ? GuiName ":" : "") "Add"
+	
 	vCtrlVarname := StrLen(CtrlVarname)>1 ? "v" CtrlVarname : ""
 	wWidth := width>0 ? "w" width : "" ; so width==-1 will make it auto-width by text length
 
-	Gui, % cmdadd, ComboBox, % Format("{} {} {}", vCtrlVarname, wWidth, format), % itemlist_pipes
+	Gui, % cmd, ComboBox, % Format("{} {} {}", vCtrlVarname, wWidth, format), % itemlist_pipes
 }
 
 Gui_Add_Listview(GuiName, CtrlVarname, width, format, columnlist_pipes)
 {
 	Assert_UicVarname(CtrlVarname)
-	cmdadd := GuiName ? (GuiName ":Add") : "Add"
+	cmd := (GuiName ? GuiName ":" : "") "Add"
+
 	vCtrlVarname := StrLen(CtrlVarname)>1 ? "v" CtrlVarname : ""
 	wWidth := width>0 ? "w" width : "" ; so width==-1 will make it auto-width by text length
 	
-	Gui, % cmdadd, ListView, % Format("{} {} {}", vCtrlVarname, wWidth, format), % columnlist_pipes
+	Gui, % cmd, ListView, % Format("{} {} {}", vCtrlVarname, wWidth, format), % columnlist_pipes
 }
 
 
 GuiControl_Enable(GuiName, CtrlVarname, is_enable:=true)
 {
 	Assert_UicVarname(CtrlVarname)
-	cmd := is_enable ? "Enable" : "Disable"
-	if(GuiName)
-		cmd := Format("{}:{}", GuiName, cmd)
+	cmd := (GuiName ? GuiName ":" : "") . (is_enable ? "Enable" : "Disable")
 
 	GuiControl, % cmd, % CtrlVarname
 }
@@ -305,9 +306,7 @@ GuiControl_ButtonCheck(GuiName, CtrlVarname, is_check)
 GuiControl_Show(GuiName, CtrlVarname, is_show)
 {
 	Assert_UicVarname(CtrlVarname)
-	cmd := is_show ? "Show" : "Hide"
-	if(GuiName)
-		cmd := Format("{}:{}", GuiName, cmd)
+	cmd := (GuiName ? GuiName ":" : "") . (is_show ? "Show" : "Hide")
 
 	GuiControl, % cmd, % CtrlVarname
 }
@@ -315,9 +314,7 @@ GuiControl_Show(GuiName, CtrlVarname, is_show)
 GuiControl_GetHwnd(GuiName, CtrlVarname)
 {
 	Assert_UicVarname(CtrlVarname)
-	cmd := "Hwnd"
-	if(GuiName)
-		cmd := Format("{}:{}", GuiName, cmd)
+	cmd := (GuiName ? GuiName ":" : "") "Hwnd"
 
 	GuiControlGet, outputHwnd, % cmd, % CtrlVarname
 	return outputHwnd
@@ -363,7 +360,7 @@ GuiControl_SetValue(GuiName, CtrlVarname, text)
 Combobox_SetText(GuiName, CtrlVarname, text)
 {
 	Assert_UicVarname(CtrlVarname)
-	cmd := (GuiName ? GuiName ":" : "") . "Text"
+	cmd := (GuiName ? GuiName ":" : "") "Text"
 	GuiControl, % cmd, % CtrlVarname, % text
 }
 
@@ -371,9 +368,7 @@ Combobox_SetText(GuiName, CtrlVarname, text)
 GuiControl_GetPos(GuiName, CtrlVarname)
 {
 	Assert_UicVarname(CtrlVarname)
-	cmd := "Pos"
-	if(GuiName)
-		cmd := Format("{}:{}", GuiName, cmd)
+	cmd := (GuiName ? GuiName ":" : "") "Pos"
 
 	GuiControlGet, outvar, % cmd, % CtrlVarname
 	
@@ -385,9 +380,7 @@ GuiControl_SetPos(GuiName, CtrlVarname, x:=-1, y:=-1, w:=-1, h:=-1, force_redraw
 	; -1 : Don't change current value
 	
 	Assert_UicVarname(CtrlVarname)
-	cmd := force_redraw ? "MoveDraw" : "Move"
-	if(GuiName)
-		cmd := Format("{}:{}", GuiName, cmd)
+	cmd := (GuiName ? GuiName ":" : "") . (force_redraw ? "MoveDraw" : "Move")
 
 	r := GuiControl_GetPos(GuiName, CtrlVarname)
 
@@ -414,9 +407,7 @@ Checkbox_SetCheckState(GuiName, CtrlVarname, state)
 {
 	; state can be 1, 0, or -1
 	Assert_UicVarname(CtrlVarname)
-	cmd := ""
-	if(GuiName)
-		cmd := Format("{}:{}", GuiName, cmd)
+	cmd := (GuiName ? GuiName ":" : "")
 
 	GuiControl, % cmd, % CtrlVarname, % state
 }
@@ -445,9 +436,7 @@ GuiControl_ComboboxGetText(GuiName, CtrlVarname)
 GuiControl_SetFocus(GuiName, CtrlVarname)
 {
 	Assert_UicVarname(CtrlVarname)
-	cmd := "Focus"
-	if(GuiName)
-		cmd := Format("{}:{}", GuiName, cmd)
+	cmd := (GuiName ? GuiName ":" : "") "Focus"
 
 	GuiControl, % cmd, % CtrlVarname
 }
@@ -455,7 +444,7 @@ GuiControl_SetFocus(GuiName, CtrlVarname)
 GuiControl_ChooseN(GuiName, CtrlVarname, item_index)
 {
 	Assert_UicVarname(CtrlVarname)
-	cmd := (GuiName ? GuiName ":" : "") . "Choose"
+	cmd := (GuiName ? GuiName ":" : "") "Choose"
 	
 	GuiControl, % cmd, % CtrlVarname, % item_index
 }
@@ -710,4 +699,5 @@ Editbox_ClearSelection(GuiName, CtrlVarname, is_cursor_at_tail:=false)
 	hwndEdit := GuiControl_GetHwnd(GuiName, CtrlVarname)
 	Editbox_ClearSelection_byHwnd(hwndEdit, is_cursor_at_tail)
 }
+
 
