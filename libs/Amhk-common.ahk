@@ -4,6 +4,7 @@
 ;
 
 #Include %A_LineFile%\..\Amhk-globals.ahk
+#Include %A_LineFile%\..\win32-const.ahk
 
 dev_nop()
 {
@@ -2600,5 +2601,26 @@ dev_OpenSelectFileDialog(path_hint, dlg_title:="", filter:="")
 	opt_FilemustExist := 1
 	FileSelectFile, outpath_selected, % opt_FilemustExist, % path_hint, % dlg_title, % filter
 	return outpath_selected
+}
+
+
+WinSet_AlwaysOnTop(on_or_off, wintitle:="")
+{
+	op := on_or_off
+	if(!on_or_off)
+		op := "off"
+	if(on_or_off==1 or on_or_off==true)
+		op := "on"
+
+	WinSet, AlwaysOnTop, % op
+}
+
+WinSet_Transparent(n0_255, wintitle:="")
+{
+	; n=1   : almost invisible 
+	; n=250 : almost solid 
+	; "Off" : turn off transparency
+	
+	WinSet, Transparent, % n0_255, % wintitle
 }
 

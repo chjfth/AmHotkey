@@ -124,7 +124,7 @@ GuiControl_ChangeOpt(GuiName, CtrlVarname, opt, value:="")
 	;	GuiControl_ChangeOpt("EVP", gu_xxx, "+AltSubmit")
 	
 	Assert_UicVarname(CtrlVarname)
-	cmd := (GuiName ? GuiName ":" : "") . opt
+	cmd := (GuiName ? GuiName ":" : "") opt
 	GuiControl, % cmd, % CtrlVarname, % value
 }
 
@@ -701,3 +701,18 @@ Editbox_ClearSelection(GuiName, CtrlVarname, is_cursor_at_tail:=false)
 }
 
 
+Gui_As_LastFoundWindow(GuiName)
+{
+	Gui_ChangeOpt(GuiName, "+LastFound")
+}
+
+Gui_WindowColor(GuiName, WindowColor, ControlColor:="")
+{
+	; WindowColor example:
+	; "E02000"          (almost red)
+	; "0xE02000"       
+
+	cmd := (GuiName ? GuiName ":" : "") "Color"
+	
+	Gui, % cmd, % WindowColor, % ControlColor
+}
