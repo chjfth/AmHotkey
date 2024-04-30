@@ -21,15 +21,22 @@ class ClockBar
 	
 	isGuiVisible := false
 	timerobj := ""
+
+	dragpoint_offx := 0
+	dragpoint_offy := 0
+	is_dragging := false
 	
 	followingHwnd := "" ; ClockBar is following which HWND?
 	tempsave_hwnd := ""
+	snap_corner := "" ; LT, RT, LB, RB
+	offx_to_corner := 0
+	offy_to_corner := 0
 	
 	ctxmenu := "ClockBar.CtxMenu" ; its only menuname
 	menutarget := "" ; set in __New()
 	
 	dbg(msg, lv) {
-		AmDbg_output(ClockBar.Id, msg, lv)
+		AmDbg_output(ClockBar.Id, Format("[{}] ", ClockBar.Id) msg, lv)
 	}
 	dbg0(msg) {
 		ClockBar.dbg(msg, 0)
@@ -74,7 +81,9 @@ class ClockBar
 		WinSet_Transparent(128)
 		WinSet_AlwaysOnTop(true)
 
-		dev_OnMessageRegister(win32c.WM_LBUTTONDOWN, "Clockbar_WM_LBUTTONDOWN")
+		dev_OnMessageRegister(win32c.WM_LBUTTONDOWN, Func("Clockbar_WM_LBUTTONDOWN"))
+		dev_OnMessageRegister(win32c.WM_MOUSEMOVE, "Clockbar_WM_MOUSEMOVE")
+		dev_OnMessageRegister(win32c.WM_LBUTTONUP, "Clockbar_WM_LBUTTONUP")
 	}
 	
 	ShowGui()
@@ -85,6 +94,8 @@ class ClockBar
 			return ; already shown
 		}
 		
+		this.dbg1("ShowGui(). Start timer.")
+		
 		dev_StartTimerPeriodicEx(1000, true, this.timerobj)
 		
 		; Note: using NoActivate, bcz we do not intend to get user input from the ClockBar.
@@ -94,6 +105,8 @@ class ClockBar
 	
 	HideGui()
 	{
+		this.dbg1("HideGui(). Stop timer.")
+
 		dev_StopTimer(this.timerobj)
 		
 		Gui_Hide(ClockBar.Id)
@@ -116,6 +129,9 @@ class ClockBar
 	TimerUpdateClock()
 	{
 		this.SetClockText(this.NowTimeStr())
+		
+		if(this.is_dragging)
+			return
 		
 		mehwnd := g_hwndClockBar
 		hehwnd := this.followingHwnd
@@ -146,31 +162,53 @@ class ClockBar
 				, hehwnd
 				, hepos.x, hepos.x_, hepos.y, hepos.y_))
 			
-			newpos := ClockBar.AdjustMyRect(mepos, hepos)
-			if(newpos)
+			newpos := this.AdjustMyRect(mepos.w, mepos.h, hepos)
+			if(newpos.x==mepos.x and newpos.y==mepos.y)
 			{
-				this.dbg2(Format("Move ME to ({},{})", newpos.x, newpos.y))
-				dev_WinMoveHwnd(mehwnd, newpos.x, newpos.y)
+				this.dbg2("No move needed.")
 			}
 			else
 			{
-				this.dbg2("No move needed.")
+				this.dbg1(Format("Move ME from ({},{}) to ({},{})", mepos.x, mepos.y, newpos.x, newpos.y))
+				dev_WinMoveHwnd(mehwnd, newpos.x, newpos.y)
 			}
 		}
 	}
 	
-	AdjustMyRect(mepos, hepos) ; static
+	AdjustMyRect(me_width, me_height, hepos)
 	{
-		; Check if mepos is within range of hepos.
-		; If yes, return null; if not, return a new pos(.x .y) telling ME's new position that is within hepos.
+		mepos := {}
+	
+		; Step 1: Adjust according to .snap_corner .
 		
-		movex := ClockBar.Adjust1D(mepos.x, mepos.x_, hepos.x, hepos.x_)
-		movey := ClockBar.Adjust1D(mepos.y, mepos.y_, hepos.y, hepos.y_)
+		dev_assert(strlen(this.snap_corner)==2)
 		
-		if(movex==0 and movey==0)
-			return ""
-		else
-			return { x : mepos.x+movex , y : mepos.y+movey }
+		if(this.snap_corner=="LT") {
+			mepos.x := hepos.x + this.offx_to_corner
+			mepos.y := hepos.y + this.offy_to_corner
+		}
+		else if(this.snap_corner=="RT") {
+			mepos.x := hepos.x_ + this.offx_to_corner
+			mepos.y := hepos.y  + this.offy_to_corner
+		}
+		else if(this.snap_corner=="LB") {
+			mepos.x := hepos.x  + this.offx_to_corner
+			mepos.y := hepos.y_ + this.offy_to_corner
+		}
+		else if(this.snap_corner=="RB") {
+			mepos.x := hepos.x_ + this.offx_to_corner
+			mepos.y := hepos.y_ + this.offy_to_corner
+		}
+	
+		; Step 2: Check if mepos is within the rect-area of hepos.
+		; If not, move mepos to reside in hepos. 
+		
+		movex := ClockBar.Adjust1D(mepos.x, mepos.x+me_width,  hepos.x, hepos.x_)
+		movey := ClockBar.Adjust1D(mepos.y, mepos.y+me_height, hepos.y, hepos.y_)
+		
+		mepos.x += movex
+		mepos.y += movey
+		return mepos
 	}
 	
 	Adjust1D(me1, me2, he1, he2) ;static
@@ -188,9 +226,9 @@ class ClockBar
 	
 	GuiContextMenu(GuiHwnd, CtlHwnd, EventInfo, IsRightClick, X, Y)
 	{
-		this.dbg2(Format("{}: GuiHwnd=0x{:X} , CtlHwnd=0x{:X} , IsRightClick={}"
+		this.dbg1(Format("{}: GuiHwnd=0x{:X} , CtlHwnd=0x{:X} , IsRightClick={}"
 			, this.ctxmenu, GuiHwnd, CtlHwnd, IsRightClick))
-		this.dbg2("EventInfo: " EventInfo) ; seems always 0
+		this.dbg1("EventInfo: " EventInfo) ; seems always 0
 		
 		GuiName := ClockBar.Id
 		
@@ -246,6 +284,8 @@ class ClockBar
 		if(not this.followingHwnd)
 		{
 			this.followingHwnd := this.tempsave_hwnd
+			
+			this.PrepareSnapCornerInfo()
 
 			GuiControl_SetFont(GuiName, "gu_ClockText", "", "Underline")
 		}
@@ -256,18 +296,128 @@ class ClockBar
 			GuiControl_SetFont(GuiName, "gu_ClockText", "", "Normal")
 		}
 	}
+	
+	WM_LBUTTONDOWN()
+	{
+		CoordMode, Mouse, Screen
+		MouseGetPos, mxScreen, myScreen
+		CoordMode, Mouse, Window
+		
+		pos := dev_WinGetPos("ahk_id " g_hwndClockBar)
+		
+		this.dragpoint_offx := mxScreen - pos.x
+		this.dragpoint_offy := myScreen - pos.y
+		this.dbg1(Format("SetCapture. Drag-point offset to self-hwnd: ({},{})", this.dragpoint_offx, this.dragpoint_offy))
+		
+		DllCall("SetCapture", "Ptr", g_hwndClockBar)
+		this.is_dragging := true
+	}
+	
+	WM_MOUSEMOVE()
+	{
+		if(not this.is_dragging)
+			return
+		
+		CoordMode, Mouse, Screen
+		MouseGetPos, mxScreen, myScreen
+		CoordMode, Mouse, Window
+		
+		newx := mxScreen - this.dragpoint_offx
+		newy := myScreen - this.dragpoint_offy
+		
+		this.dbg2(Format("Dragging... new window position: ({},{})", newx, newy))
+		
+		dev_WinMoveHwnd(g_hwndClockBar, newx, newy)
+	}
+	
+	WM_LBUTTONUP()
+	{
+		this.dbg1("ReleaseCapture.")
+		
+		DllCall("ReleaseCapture")
+		this.is_dragging := false
+		
+		this.dragpoint_offx := 0
+		this.dragpoint_offy := 0
+		
+		if(not this.followingHwnd)
+			return
+		
+		this.PrepareSnapCornerInfo()
+	}
+	
+	MyDistanceTo(targx, targy)
+	{
+		mepos := dev_WinGetPos("ahk_id " g_hwndClockBar)
+		
+		; just take ClockBar's center point as my position
+		mex := (mepos.x + mepos.x_)/2
+		mey := (mepos.y + mepos.y_)/2
+		
+		distance := Sqrt( (mex-targx)*(mex-targx) + (mey-targy)*(mey-targy) )
+		return distance
+	}
+	
+	PrepareSnapCornerInfo()
+	{
+		dev_assert(this.followingHwnd)
+	
+		; Now check which corner of followingHwnd is most adjacent to the ClockBar.
+		; We will have the ClockBar snap to that corner.
+		
+		me := dev_WinGetPos("ahk_id " g_hwndClockBar)
+		tg := dev_WinGetPos("ahk_id " this.followingHwnd)
+		
+		toLT := this.MyDistanceTo(tg.x , tg.y) ; LT: left-top
+		toRT := this.MyDistanceTo(tg.x_, tg.y)
+		toLB := this.MyDistanceTo(tg.x , tg.y_)
+		toRB := this.MyDistanceTo(tg.x_, tg.y_)
+		
+		min_dist := Min(toLT, toRT, toLB, toRB)
+		if(min_dist==toLT) {
+			this.snap_corner := "LT"
+			this.offx_to_corner := me.x - tg.x
+			this.offy_to_corner := me.y - tg.y
+		}
+		else if(min_dist==toRT) {
+			this.snap_corner := "RT"
+			this.offx_to_corner := me.x - tg.x_ ; rela to target's right border
+			this.offy_to_corner := me.y - tg.y
+		}
+		else if(min_dist==toLB) {
+			this.snap_corner := "LB"
+			this.offx_to_corner := me.x - tg.x
+			this.offy_to_corner := me.y - tg.y_
+		}
+		else if(min_dist==toRB) {
+			this.snap_corner := "RB"
+			this.offx_to_corner := me.x - tg.x_
+			this.offy_to_corner := me.y - tg.y_
+		}
+	
+	}
 }
 
 
 Clockbar_WM_LBUTTONDOWN()
 {
-	if(A_Gui==ClockBar.Id)
-	{
-		HTCAPTION := 2
-		PostMessage, % win32c.WM_NCLBUTTONDOWN, % HTCAPTION
-	}
+	g_ClockBar.WM_LBUTTONDOWN()
 }
 
+Clockbar_WM_MOUSEMOVE()
+{
+	g_ClockBar.WM_MOUSEMOVE()
+}
+
+Clockbar_WM_LBUTTONUP()
+{
+	g_ClockBar.WM_LBUTTONUP()
+}
+
+Clockbar_WM_NCLBUTTONUP() ; xxx
+{
+	AmDbg0("NC mouse up....")
+}
 
 ClockBar_Show()
 {

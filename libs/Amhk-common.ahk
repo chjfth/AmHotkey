@@ -483,7 +483,7 @@ dev_WinGetPos(wintitle)
 	if(outvar==-1)
 		pos.minimized := true
 	
-	visible := DllCall("IsWindowVisible", "UInt", hwnd)
+	visible := DllCall("IsWindowVisible", "Ptr", hwnd)
 	if(!visible)
 		pos.hidden := true
 	
