@@ -18,7 +18,9 @@ class ClockBar
 {
 	static Id := "ClockBar"
 	static _tmp_ := AmDbg_SetDesc(ClockBar.Id, "Debug messages from ClockBar module.")
-	
+
+	static TimerIntervalMs := 1000 ; 1 second
+		
 	static EXBOUND := 5 ; const adjustable
 	static OFF1 := 1
 	
@@ -101,7 +103,7 @@ class ClockBar
 		
 		this.dbg1("ShowGui(). Start timer.")
 		
-		dev_StartTimerPeriodicEx(1000, true, this.timerobj)
+		dev_StartTimerPeriodicEx(ClockBar.TimerIntervalMs, true, this.timerobj)
 		
 		; Note: using NoActivate, bcz we do not intend to get user input from the ClockBar.
 		Gui_Show(ClockBar.Id, "AutoSize NoActivate", ClockBar.Id " title")
@@ -206,9 +208,14 @@ class ClockBar
 			; Phase [3]
 			
 			if(this.IsWholyCoveredbyOthers(newpos))
-				dev_WinHide_byHwnd(g_hwndClockBar)
+				dev_WinHide_byHwnd(mehwnd)
 			else
-				dev_WinShow_byHwnd(g_hwndClockBar)
+			{
+				dev_WinShow_byHwnd(mehwnd)
+				
+				; Move again, bcz previous WinMove may not have taken effect when mehwnd was hidden.
+				dev_WinMoveHwnd(mehwnd, newpos.x, newpos.y)
+			}
 		}
 	}
 	
@@ -512,4 +519,12 @@ ClockBarGuiContextMenu(args*)
 
 	g_ClockBar.GuiContextMenu(args*)
 }
+
+; === test code:
+;!#y:: clockbar_manual_timer_fire()
+;clockbar_manual_timer_fire()
+;{
+;	g_ClockBar.TimerUpdateClock()
+;}
+;
 
