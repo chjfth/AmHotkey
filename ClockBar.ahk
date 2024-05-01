@@ -158,6 +158,7 @@ class ClockBar
 		mepos := dev_WinGetPos_byHwnd(mehwnd)
 		hepos := dev_WinGetPos_byHwnd(hehwnd)
 		
+		dev_assert(mehwnd)
 		dev_assert(mepos)
 		
 		if(not mepos.hidden)
@@ -167,8 +168,17 @@ class ClockBar
 		}
 
 		;
-		if(this.followingHwnd)
+		if(hehwnd)
 		{
+			if(not hepos)
+			{
+				; Target window may have been destroyed out-of-band, so no need to follow any more.
+				this.dbg1(Format("Target HWND(0x{:X}) has vanished. Turn-off following.", hehwnd))
+				
+				this.TurnOff_Follow()
+				return
+			}
+		
 			; Determine whether we should:
 			; [1] Hide or show ClockBar according to whether the target-hwnd is hidden.
 			; [2] Adjust ClockBar's position to follow the target.
@@ -360,9 +370,23 @@ class ClockBar
 		}
 		else
 		{
-			this.followingHwnd := ""
+			this.TurnOff_Follow()
+		}
+	}
+	
+	TurnOff_Follow(extra_hint:="")
+	{
+		GuiName := ClockBar.Id
+		
+		this.followingHwnd := ""
 
-			GuiControl_SetFont(GuiName, "gu_ClockText", "", "Normal")
+		GuiControl_SetFont(GuiName, "gu_ClockText", "", "Normal")
+		
+		dev_WinShow_byHwnd(g_hwndClockBar)
+		
+		if(extra_hint)
+		{
+			dev_TooltipAutoClear("zzzzzzzzz")
 		}
 	}
 	
