@@ -29,7 +29,7 @@ class ClockBar
 
 	static TimerIntervalMs := 1000 ; 1 second
 		
-	static EXBOUND := 5 ; const adjustable
+	static EXBOUND := 3 ; const adjustable
 	static OFF1 := 1
 	
 	isGuiVisible := false
@@ -87,12 +87,15 @@ class ClockBar
 		Gui_AssociateHwndVarname(GuiName, "g_hwndClockBar")
 
 		Gui_ChangeOpt(GuiName, "-Caption +ToolWindow")
-		Gui_SetXYMargin(GuiName, 3, 3)
+		Gui_SetXYMargin(GuiName, 1, 3)
 		
 		Gui_Switch_Font(GuiName, 16, "0x606060", "Arial")
 		Gui_WindowColor(GuiName, "FEFECC")
 		
-		Gui_Add_TxtLabel(GuiName, "gu_ClockText", 0, "", this.NowTimeStr())
+		Gui_Add_TxtLabel(GuiName, "gu_ClockText", 0, "Center", Format("_{}_", this.NowTimeStr()))
+		; -- Make extra two spaces(_), before & after time-string, bcz sometimes when I turn-off then turn-on ClockBar, 
+		;    the TxtLabel Uic weirdly shrinks its width(200px ¡ú 198px), resulting HHMMSS substring to disappear from sight.
+		;    So, the two spaces makes extra room for that accidental shrink.
 		
 		Gui_As_LastFoundWindow(GuiName)
 		WinSet_Transparent(128)
