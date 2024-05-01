@@ -2077,6 +2077,12 @@ dev_GetHwndUnderMouse()
 	return rdict
 }
 
+dev_MouseMove(x, y, Screen_or_Relative, movespeed:=3)
+{
+	dev_assert(Screen_or_Relative=="S" or Screen_or_Relative=="R")
+	
+	MouseMove, % x, % y, % movespeed, % (Screen_or_Relative=="S" ? "" : "R")
+}
 
 IsWinClassMatchRegex(regex) ; Check against active window class
 {

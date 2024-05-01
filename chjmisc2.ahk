@@ -73,6 +73,28 @@ type_python_shebang()
 :*R:````u::#-*- coding: utf-8 -*-
 
 
+^#/:: devui_ChangeWindowPosition()
+
+;==============================================================================
+; Windows generic
+;==============================================================================
+
+InputBox_MouseGoto()
+{
+	static coordxy := "200,100"
+	
+	isok := dev_InputBox_InitText("AHK", "Where to place the mouse pointer?", coordxy)
+	if(!isok)
+		return
+	
+	arnum := StrSplit(coordxy, ",")
+	mx := arnum[1]
+	my := arnum[2]
+	
+	dev_MouseMove(mx, my, "S")
+}
+
+
 
 ;==============================================================================
 ; Evernote 6.5.4 specific
