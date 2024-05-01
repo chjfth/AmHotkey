@@ -112,7 +112,10 @@ AppsKey & DOWN:: Click WheelDown
 #n:: WinMinimize, A
 +#n:: WinRestore, A
 
-!#Del:: dev_WinHideWithPrompt()
+!#Del:: dev_WinHideWithPrompt("", "You can use Alt+Win+Ins to unhide it.")
+
+!#Ins:: dev_WinHide_Restore()
+
 
 ; Double-press Left Ctrl to move mouse cursor to the center of current active window. (memo: Press Ctrl twice)
 ; I need "up"; otherwise, holding down LCtrl will trigger the double press condition.

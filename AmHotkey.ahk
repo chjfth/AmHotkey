@@ -114,6 +114,8 @@ class AmHotkey ; Store global vars here
 {
 	static dbgid_HotkeyFlex := "HotkeyFlex"
 	static dbgid_HotkeyLegacy := "HotkeyLegacy"
+	
+	static hwnd_just_hidden := ""
 }
 
 
@@ -2105,17 +2107,30 @@ RightClickAndPlaySound(sound:=true)
 }
 
 
-dev_WinHideWithPrompt(Awinid:=0)
+dev_WinHideWithPrompt(Awinid:="", extra_hint:="")
 {
-	if(Awinid==0)
+	if(Awinid=="")
 		Awinid := dev_GetActiveHwnd() ; cache active window unique id
 
 	WinGetTitle, title, ahk_id %Awinid%
 	
-	ans := dev_MsgBoxYesNo("Hide this window?`n`n" . title)
+	ans := dev_MsgBoxYesNo(Format("Hide this window? (0x{:X})`n`n"
+		. "{}`n`n"
+		. "{}"
+		, Awinid, title, extra_hint))
 	if (ans) {
 		WinHide, ahk_id %Awinid%
+		
+		AmHotkey.hwnd_just_hidden := Awinid
 	}
+}
+
+dev_WinHide_Restore()
+{
+	hwnd := AmHotkey.hwnd_just_hidden
+	dev_TooltipAutoClear(Format("Unhide HWND 0x{:X}", hwnd))
+	
+	WinShow, ahk_id %hwnd%
 }
 
 
