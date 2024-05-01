@@ -140,8 +140,23 @@ class ClockBar
 		if(this.is_dragging)
 			return
 		
+		this.DoFollowTarget()
+	}
+	
+	DoFollowTarget()
+	{
 		mehwnd := g_hwndClockBar
 		hehwnd := this.followingHwnd
+
+		mepos := dev_WinGetPos("ahk_id " mehwnd)
+		hepos := dev_WinGetPos("ahk_id " hehwnd)
+		
+		if(not mepos.hidden)
+		{
+			; Make it Always-on-Top again, so that ClockBar can again be shown above other top-most window.
+			WinSet_AlwaysOnTop(true, "ahk_id " mehwnd)
+		}
+
 		;
 		if(this.followingHwnd)
 		{
@@ -152,9 +167,6 @@ class ClockBar
 			
 			
 			; Phase [1]
-			
-			mepos := dev_WinGetPos("ahk_id " mehwnd)
-			hepos := dev_WinGetPos("ahk_id " hehwnd)
 			
 			if(hepos.minimized)
 			{
@@ -334,6 +346,8 @@ class ClockBar
 			this.PrepareSnapCornerInfo()
 
 			GuiControl_SetFont(GuiName, "gu_ClockText", "", "Underline")
+			
+			this.DoFollowTarget()
 		}
 		else
 		{
