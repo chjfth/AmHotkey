@@ -485,7 +485,10 @@ dev_WinGetPos(wintitle)
 	
 	visible := DllCall("IsWindowVisible", "Ptr", hwnd)
 	if(!visible)
+	{
+		; .x .y .w .h are probably empty value
 		pos.hidden := true
+	}
 	
 	return pos
 }
@@ -2103,6 +2106,21 @@ dev_MouseMove(x, y, mode, movespeed:=3)
 	}
 }
 
+dev_GetTopHwndAtScreenXY(screenx, screeny)
+{
+	hwnd := win32_WindowFromPoint(screenx, screeny)
+	
+	tophwnd := dev_GetRootWindow(hwnd)
+	return tophwnd
+}
+
+win32_WindowFromPoint(screenx, screeny)
+{
+	hwnd := DllCall("WindowFromPoint", "Int", screenx, "Int", screeny)
+	return hwnd
+}
+
+
 IsWinClassMatchRegex(regex) ; Check against active window class
 {
 	WinGetClass, class, A
@@ -2675,7 +2693,7 @@ dev_poke_byte(addr, byte_value)
 	NumPut(byte_value, addr+0, 0, "UChar")
 }
 
-dev_VarGetCapacity(byref varname)
+dev_VarGetCapacity(byref varname) ; this is Get()
 {
 	return VarSetCapacity(varname)
 }

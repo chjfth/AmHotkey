@@ -19,6 +19,9 @@ class ClockBar
 	static Id := "ClockBar"
 	static _tmp_ := AmDbg_SetDesc(ClockBar.Id, "Debug messages from ClockBar module.")
 	
+	static EXBOUND := 5 ; const adjustable
+	static OFF1 := 1
+	
 	isGuiVisible := false
 	timerobj := ""
 
@@ -31,6 +34,8 @@ class ClockBar
 	snap_corner := "" ; LT, RT, LB, RB
 	offx_to_corner := 0
 	offy_to_corner := 0
+	
+	pos_cache := {} ; as returned by dev_WinGetPos()
 	
 	ctxmenu := "ClockBar.CtxMenu" ; its only menuname
 	menutarget := "" ; set in __New()
@@ -138,6 +143,13 @@ class ClockBar
 		;
 		if(this.followingHwnd)
 		{
+			; Determine whether we should:
+			; [1] Hide or show ClockBar according to whether the target-hwnd is hidden.
+			; [2] Adjust ClockBar's position to follow the target.
+			; [3] Hide or show ClockBar according to whether the ClockBar is fully "covered" by non-target window.
+			
+			
+			; Phase [1]
 			
 			mepos := dev_WinGetPos("ahk_id " mehwnd)
 			hepos := dev_WinGetPos("ahk_id " hehwnd)
@@ -153,9 +165,24 @@ class ClockBar
 			
 			if(hepos.minimized or hepos.hidden)
 			{
-				; todo: hide myself
+				dev_WinHide_byHwnd(g_hwndClockBar)
 				return
 			}
+			
+			if(mepos.hidden)
+			{
+;				AmDbg0(Format("??? mepos: X[{}~{}] Y[{}~{}] ", mepos.x, mepos.x_, mepos.y, mepos.y_))
+				; mepos.x, mepos.y is probably empty, so load from cache
+				mepos := this.pos_cache
+			}
+			else
+			{
+				this.pos_cache := mepos.clone()
+			}
+
+			dev_assert(mepos.x || mepos.y || mepos.x_ || mepos.y_)
+			
+			; Phase [2]
 			
 			this.dbg2(Format("ME x[{}~{}] y[{}~{}] following 0x{:X}, X[{}~{}] Y[{}~{}]"
 				, mepos.x, mepos.x_, mepos.y, mepos.y_
@@ -163,6 +190,9 @@ class ClockBar
 				, hepos.x, hepos.x_, hepos.y, hepos.y_))
 			
 			newpos := this.AdjustMyRect(mepos.w, mepos.h, hepos)
+			newpos.x_ := newpos.x + mepos.w
+			newpos.y_ := newpos.y + mepos.h
+			
 			if(newpos.x==mepos.x and newpos.y==mepos.y)
 			{
 				this.dbg2("No move needed.")
@@ -172,6 +202,13 @@ class ClockBar
 				this.dbg1(Format("Move ME from ({},{}) to ({},{})", mepos.x, mepos.y, newpos.x, newpos.y))
 				dev_WinMoveHwnd(mehwnd, newpos.x, newpos.y)
 			}
+			
+			; Phase [3]
+			
+			if(this.IsWholyCoveredbyOthers(newpos))
+				dev_WinHide_byHwnd(g_hwndClockBar)
+			else
+				dev_WinShow_byHwnd(g_hwndClockBar)
 		}
 	}
 	
@@ -213,12 +250,14 @@ class ClockBar
 	
 	Adjust1D(me1, me2, he1, he2) ;static
 	{
-		; Try to make [me1,me2] fall into [he1,he2]
-		move2 := me2<=he2 ? 0 : he2-me2
+		; Try to make [me1,me2] fall into [he1,he2], with EXBOUND constraint
+		eb := ClockBar.EXBOUND
+		
+		move2 := (me2+eb)<=he2 ? 0 : he2-(me2+eb)
 		dev_assert(move2<=0)
 		
 		newme1 := me1 + move2
-		move1 := newme1>he1 ? 0 : he1-newme1
+		move1 := newme1>=(he1+eb) ? 0 : (he1+eb)-newme1
 		dev_assert(move1>=0)
 		
 		return move2 + move1
@@ -394,28 +433,61 @@ class ClockBar
 			this.offx_to_corner := me.x - tg.x_
 			this.offy_to_corner := me.y - tg.y_
 		}
+	}
 	
+	IsWholyCoveredbyOthers(mepos)
+	{
+		; Check four corner(outbounded by OFF1) pixels of ClockBar.
+		; If they all "belong" to other top-level window, I consider it wholy covered.
+		; We need to use OFF1, bcz checking OFF0 always get g_hwndClockBar itself.
+		
+		hwndLT := dev_GetTopHwndAtScreenXY(mepos.x-1,  mepos.y-1)
+		hwndRT := dev_GetTopHwndAtScreenXY(mepos.x_+1, mepos.y-1)
+		hwndLB := dev_GetTopHwndAtScreenXY(mepos.x-1,  mepos.y_+1)
+		hwndrB := dev_GetTopHwndAtScreenXY(mepos.x_+1,  mepos.y_+1)
+		
+		dev_assert(this.followingHwnd)
+		tgh := this.followingHwnd
+		if(hwndLT!=tgh and hwndRT!=tgh and hwndLB!=tgh and hwndRB!=tgh)
+		{
+			this.dbg1("ClockBar wholy covered by no-target-window, so hide it now.")
+			return true
+		}
+		else
+			return false
 	}
 }
 
 
 Clockbar_WM_LBUTTONDOWN()
 {
+	if( A_Gui != ClockBar.Id )
+		return
+
 	g_ClockBar.WM_LBUTTONDOWN()
 }
 
 Clockbar_WM_MOUSEMOVE()
 {
+	if( A_Gui != ClockBar.Id )
+		return
+
 	g_ClockBar.WM_MOUSEMOVE()
 }
 
 Clockbar_WM_LBUTTONUP()
 {
+	if( A_Gui != ClockBar.Id )
+		return
+
 	g_ClockBar.WM_LBUTTONUP()
 }
 
 Clockbar_WM_NCLBUTTONUP() ; xxx
 {
+	if( A_Gui != ClockBar.Id )
+		return
+
 	AmDbg0("NC mouse up....")
 }
 

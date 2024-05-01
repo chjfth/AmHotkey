@@ -5,6 +5,8 @@ AUTOEXEC_chjmisc2: ; Workaround for Autohotkey's ugly auto-exec feature. Don't d
 ; This file contains some chj-specific actions that relies on other .ahk-s,
 ; such as evernote.ahk and mediaplayer.ahk
 
+Init_chjmisc2()
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 return ; End of auto-execute section.
@@ -74,6 +76,11 @@ type_python_shebang()
 
 
 ^#/:: devui_ChangeWindowPosition()
+
+Init_chjmisc2()
+{
+	dev_MenuAddItem(winshell.UtilityMenu, "Mouse goto screen x,y", "InputBox_MouseGoto")
+}
 
 ;==============================================================================
 ; Windows generic
