@@ -1,9 +1,9 @@
 AUTOEXEC_ClockBar: ; Workaround for Autohotkey's ugly auto-exec feature. Don't delete.
 
 /* API:
-ClockBar_Enable()
-ClockBar_Disable()
-ClockBar_IsEnabled()
+ClockBar_TurnOn()
+ClockBar_TurnOff()
+ClockBar_IsTurnedOn()
 */
 
 
@@ -11,7 +11,8 @@ global g_ClockBar ; the single instance of ClockBar
 global g_hwndClockBar
 global gu_ClockText
 
-global g_menutext_clockbar := "Enable ClockBar"
+global g_menutext_clockbar_TurnOn := "Turn on ClockBar"
+global g_menutext_clockbar_TurnOff := "Turn off ClockBar"
 
 ClockBar_Init()
 
@@ -71,7 +72,9 @@ class ClockBar
 		this.timerobj := Func("ClockBar.TimerUpdateClock").Bind(this)
 	
 		this.menutarget := Func("ClockBar.MenuExec_ToggleFollow").Bind(this)
-		dev_MenuAddItem(this.ctxmenu, "(menu text to change)", this.menutarget)
+		dev_MenuAddItem(this.ctxmenu, "(menu text to change)", this.menutarget) ; 1&
+		
+		dev_MenuAddItem(this.ctxmenu, g_menutext_clockbar_TurnOff, "ClockBar_TurnOff") ; 2&
 	
 		this.CreateGui()
 	}
@@ -549,20 +552,24 @@ Clockbar_WM_NCLBUTTONUP() ; xxx
 	AmDbg0("NC mouse up....")
 }
 
-ClockBar_Enable()
+ClockBar_TurnOn()
 {
 	if(not g_ClockBar)
 		g_ClockBar := new ClockBar()
 	
+	dev_MenuTickItem("TRAY", g_menutext_clockbar_TurnOn, true)
+	
 	g_ClockBar.ShowGui()
 }
 
-ClockBar_Disable()
+ClockBar_TurnOff()
 {
+	dev_MenuTickItem("TRAY", g_menutext_clockbar_TurnOn, false)
+	
 	g_ClockBar.HideGui()
 }
 
-ClockBar_IsEnabled()
+ClockBar_IsTurnedOn()
 {
 	if(!g_ClockBar)
 		return false
@@ -582,22 +589,18 @@ ClockBarGuiContextMenu(args*)
 
 ClockBar_Init()
 {
-	dev_MenuAddItem("TRAY", g_menutext_clockbar, "ClockBar_Systray_DoMenu")
+	dev_MenuAddItem("TRAY", g_menutext_clockbar_TurnOn, "ClockBar_Systray_DoMenu")
 }
 
 ClockBar_Systray_DoMenu()
 {
-	if(not ClockBar_IsEnabled())
+	if(not ClockBar_IsTurnedOn())
 	{
-		ClockBar_Enable()
-		
-		dev_MenuTickItem("TRAY", g_menutext_clockbar, true)
+		ClockBar_TurnOn()
 	}
 	else
 	{
-		ClockBar_Disable()
-		
-		dev_MenuTickItem("TRAY", g_menutext_clockbar, false)
+		ClockBar_TurnOff()
 	}
 }
 
