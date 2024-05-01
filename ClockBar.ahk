@@ -1,13 +1,20 @@
+AUTOEXEC_ClockBar: ; Workaround for Autohotkey's ugly auto-exec feature. Don't delete.
+
 /* API:
-ClockBar_Show()
-ClockBar_Hide()
+ClockBar_Enable()
+ClockBar_Disable()
+ClockBar_IsEnabled()
 */
 
-AUTOEXEC_FloatingClock: ; Workaround for Autohotkey's ugly auto-exec feature. Don't delete.
 
 global g_ClockBar ; the single instance of ClockBar
 global g_hwndClockBar
 global gu_ClockText
+
+global g_menutext_clockbar := "Enable ClockBar"
+
+ClockBar_Init()
+
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 return ; End of auto-execute section.
@@ -512,7 +519,7 @@ Clockbar_WM_NCLBUTTONUP() ; xxx
 	AmDbg0("NC mouse up....")
 }
 
-ClockBar_Show()
+ClockBar_Enable()
 {
 	if(not g_ClockBar)
 		g_ClockBar := new ClockBar()
@@ -520,9 +527,17 @@ ClockBar_Show()
 	g_ClockBar.ShowGui()
 }
 
-ClockBar_Hide()
+ClockBar_Disable()
 {
 	g_ClockBar.HideGui()
+}
+
+ClockBar_IsEnabled()
+{
+	if(!g_ClockBar)
+		return false
+
+	return g_ClockBar.isGuiVisible
 }
 
 
@@ -534,11 +549,25 @@ ClockBarGuiContextMenu(args*)
 	g_ClockBar.GuiContextMenu(args*)
 }
 
-; === test code:
-;!#y:: clockbar_manual_timer_fire()
-;clockbar_manual_timer_fire()
-;{
-;	g_ClockBar.TimerUpdateClock()
-;}
-;
+
+ClockBar_Init()
+{
+	dev_MenuAddItem("TRAY", g_menutext_clockbar, "ClockBar_Systray_DoMenu")
+}
+
+ClockBar_Systray_DoMenu()
+{
+	if(not ClockBar_IsEnabled())
+	{
+		ClockBar_Enable()
+		
+		dev_MenuTickItem("TRAY", g_menutext_clockbar, true)
+	}
+	else
+	{
+		ClockBar_Disable()
+		
+		dev_MenuTickItem("TRAY", g_menutext_clockbar, false)
+	}
+}
 
