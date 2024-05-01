@@ -2077,11 +2077,30 @@ dev_GetHwndUnderMouse()
 	return rdict
 }
 
-dev_MouseMove(x, y, Screen_or_Relative, movespeed:=3)
+dev_MouseMove(x, y, mode, movespeed:=3)
 {
-	dev_assert(Screen_or_Relative=="S" or Screen_or_Relative=="R")
+	; mode:
+	; "S" screen coordinate
+	; "A" relative to active window
+	; "R" relative to current mouse pointer location
+
+	dev_assert(mode=="S" or mode="A" or mode=="R")
 	
-	MouseMove, % x, % y, % movespeed, % (Screen_or_Relative=="S" ? "" : "R")
+	if(mode=="S" or mode=="A")
+	{
+		if(mode=="S")
+			CoordMode, Mouse, Screen
+		else
+			CoordMode, Mouse, Window
+	
+		MouseMove, % x, % y, % movespeed
+
+		CoordMode, Mouse, Window
+	}
+	else
+	{
+		MouseMove, % x, % y, % movespeed, R
+	}
 }
 
 IsWinClassMatchRegex(regex) ; Check against active window class

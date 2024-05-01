@@ -81,17 +81,38 @@ type_python_shebang()
 
 InputBox_MouseGoto()
 {
-	static coordxy := "200,100"
+	static coordxy := "S200,100"
 	
-	isok := dev_InputBox_InitText("AHK", "Where to place the mouse pointer?", coordxy)
+	hint = 
+	(
+Where to place the mouse pointer?
+
+S200,100
+    At screen coordinate (200,100)
+A200,100
+    The coordinate relative to active window.
+R200,100
+    Relative to current mouse pointer.
+	)
+	
+	isok := dev_InputBox_InitText("AHK move mouse", hint, coordxy)
 	if(!isok)
 		return
 	
 	arnum := StrSplit(coordxy, ",")
-	mx := arnum[1]
+
+	word1 := arnum[1]
+	prefix := SubStr(word1, 1, 1)
+	mx := SubStr(word1, 2)
 	my := arnum[2]
 	
-	dev_MouseMove(mx, my, "S")
+	if(prefix!="S" and prefix!="A" and prefix!="R")
+	{
+		dev_MsgBoxError("Input format error!")
+		return
+	}
+	
+	dev_MouseMove(mx, my, prefix)
 }
 
 
