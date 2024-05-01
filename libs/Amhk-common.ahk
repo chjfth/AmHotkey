@@ -470,7 +470,25 @@ dev_WinMoveHwnd(hwnd, x:="", y:="", w:="", h="")
 
 dev_WinGetPos(wintitle)
 {
-	hwnd := dev_GetHwndByWintitle(wintitle)
+	WinGet, hwnd, ID, % wintitle
+	
+	if(!hwnd)
+		return ""
+	
+	return dev_WinGetPos_byHwnd(hwnd)
+}
+
+dev_WinGetPos_byHwnd(hwnd)
+{
+	; Note the difference to Autohotkey's WinGet command.
+	;
+	; If hwnd does NOT exist, return null.
+	; If hwnd is a hidden window, return a dict of {hidden:true} .
+	; If hwnd is not-hidden, return a dict of {.x .y .x_ .y_ .w .h} .
+
+	isok := DllCall("IsWindow", "Ptr", hwnd)
+	if(!isok)
+		return ""
 
 	WinGetPos, x,y,w,h, % "ahk_id " hwnd
 
@@ -482,6 +500,9 @@ dev_WinGetPos(wintitle)
 		pos.maximized := true
 	if(outvar==-1)
 		pos.minimized := true
+
+	; Check visible at last, so that if the caller turns on DetectHiddenWindows, x/y will be returned.
+	; If `DetectHiddenWindows Off`(the default behavior), AHK engine will not tell us x/y info.
 	
 	visible := DllCall("IsWindowVisible", "Ptr", hwnd)
 	if(!visible)
@@ -1908,7 +1929,7 @@ dev_IsWinclassExist(classname)
 dev_GetHwndByWintitle(wintitle:="A")
 {
 	WinGet, Awinid, ID, % wintitle
-	return Awinid
+	return Awinid ; will return null if no window found
 }
 
 dev_GetHwndByClass(classname)

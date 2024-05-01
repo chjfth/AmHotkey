@@ -44,7 +44,7 @@ class ClockBar
 	offx_to_corner := 0
 	offy_to_corner := 0
 	
-	pos_cache := {} ; as returned by dev_WinGetPos()
+	pos_cache := {} ; as returned by dev_WinGetPos_byHwnd()
 	
 	ctxmenu := "ClockBar.CtxMenu" ; its only menuname
 	menutarget := "" ; set in __New()
@@ -155,8 +155,10 @@ class ClockBar
 		mehwnd := g_hwndClockBar
 		hehwnd := this.followingHwnd
 
-		mepos := dev_WinGetPos("ahk_id " mehwnd)
-		hepos := dev_WinGetPos("ahk_id " hehwnd)
+		mepos := dev_WinGetPos_byHwnd(mehwnd)
+		hepos := dev_WinGetPos_byHwnd(hehwnd)
+		
+		dev_assert(mepos)
 		
 		if(not mepos.hidden)
 		{
@@ -370,7 +372,7 @@ class ClockBar
 		MouseGetPos, mxScreen, myScreen
 		CoordMode, Mouse, Window
 		
-		pos := dev_WinGetPos("ahk_id " g_hwndClockBar)
+		pos := dev_WinGetPos_byHwnd(g_hwndClockBar)
 		
 		this.dragpoint_offx := mxScreen - pos.x
 		this.dragpoint_offy := myScreen - pos.y
@@ -415,7 +417,7 @@ class ClockBar
 	
 	MyDistanceTo(targx, targy)
 	{
-		mepos := dev_WinGetPos("ahk_id " g_hwndClockBar)
+		mepos := dev_WinGetPos_byHwnd(g_hwndClockBar)
 		
 		; just take ClockBar's center point as my position
 		mex := (mepos.x + mepos.x_)/2
@@ -432,8 +434,8 @@ class ClockBar
 		; Now check which corner of followingHwnd is most adjacent to the ClockBar.
 		; We will have the ClockBar snap to that corner.
 		
-		me := dev_WinGetPos("ahk_id " g_hwndClockBar)
-		tg := dev_WinGetPos("ahk_id " this.followingHwnd)
+		me := dev_WinGetPos_byHwnd(g_hwndClockBar)
+		tg := dev_WinGetPos_byHwnd(this.followingHwnd)
 		
 		toLT := this.MyDistanceTo(tg.x , tg.y) ; LT: left-top
 		toRT := this.MyDistanceTo(tg.x_, tg.y)
@@ -485,6 +487,10 @@ class ClockBar
 			return false
 	}
 }
+
+ClockbarGuiClose:
+ClockbarGuiEscape:
+	return ; Do not allow closing ClockBar the normal way.
 
 
 Clockbar_WM_LBUTTONDOWN()
@@ -569,5 +575,17 @@ ClockBar_Systray_DoMenu()
 		
 		dev_MenuTickItem("TRAY", g_menutext_clockbar, false)
 	}
+}
+
+debug_ClockBar_StopTimer()
+{
+	dev_TooltipAutoClear("debug_ClockBar_StopTimer()")
+	dev_StopTimer(g_ClockBar.timerobj)
+}
+
+debug_ClockBar_ManualTimerOnce()
+{
+	dev_TooltipAutoClear("debug_ClockBar_ManualTimerOnce()")
+	g_ClockBar.TimerUpdateClock()
 }
 

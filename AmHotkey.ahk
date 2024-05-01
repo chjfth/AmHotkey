@@ -2125,12 +2125,13 @@ dev_WinHideWithPrompt(Awinid:="", extra_hint:="")
 	}
 }
 
-dev_WinHide_Restore()
+dev_WinHide_Restore(is_activate:=true)
 {
 	hwnd := AmHotkey.hwnd_just_hidden
 	dev_TooltipAutoClear(Format("Unhide HWND 0x{:X}", hwnd))
 	
 	WinShow, ahk_id %hwnd%
+	WinActivate, ahk_id %hwnd%
 }
 
 
