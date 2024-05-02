@@ -4,6 +4,7 @@ AUTOEXEC_ClockBar: ; Workaround for Autohotkey's ugly auto-exec feature. Don't d
 ClockBar_TurnOn()
 ClockBar_TurnOff()
 ClockBar_IsTurnedOn()
+ClockBar_ResetHere()
 */
 
 
@@ -159,6 +160,11 @@ class ClockBar
 	
 	DoFollowTarget()
 	{
+		Critical On 
+		; -- Important! This is to avoid interrupted by Systray command.
+		;    Otherwise, this.followingHwnd may be changed(reset to null) midway 
+		;    by user's executing ClockBar_ResetHere() or g_ClockBar.TurnOff_Follow().
+		
 		mehwnd := g_hwndClockBar
 		hehwnd := this.followingHwnd
 
