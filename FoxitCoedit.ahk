@@ -68,9 +68,9 @@ class FoxitCoedit
 	mine_pagenum_seq := 0
 	;
 	peer_prev_pagenum_seq := 0
+	peer_prev_pagenum := ""
 	;
 	msec_passive_followed := 0 		;msec_freeze_following_before := 0
-	static HOLDOFF_SECONDS := 2
 
 	static PEERFM_ALWAYS := 1
 	static PEERFM_AFTERSAVEPDF := 2
@@ -910,13 +910,10 @@ class FoxitCoedit
 				return false
 			}
 			
-			msec_now := dev_GetTickCount64()
-			if( (msec_now-this.msec_passive_followed) < FoxitCoedit.HOLDOFF_SECONDS*1000 )
+			if(PdfPageNum==this.peer_prev_pagenum)
 			{
-				this.dbg2(Format("Still in HOLDOFF_SECONDS({}) since our passive PdfPageNum follow, so No writing to INI.", FoxitCoedit.HOLDOFF_SECONDS))
-				
-				; but .mine_prev_PdfPageNum still needs to updated
-				this.mine_prev_PdfPageNum := PdfPageNum 
+				this.dbg2(Format("Mine PdfPageNum equals .peer_prev_pagenum '{}', so don't echo back. No writing to INI.", PdfPageNum))
+				this.mine_prev_PdfPageNum := PdfPageNum
 				return false
 			}
 		}
@@ -928,15 +925,17 @@ class FoxitCoedit
 		this.mine_pagenum_seq++
 		pagenum_spec := Format("Seq#{};{}", this.mine_pagenum_seq, PdfPageNum)
 		
-		this.dbg1(Format("Writing to INI new pagenum-spec: ""{}""", pagenum_spec))
-		this.coedit.IniWriteMine("PdfPageNum", pagenum_spec)
+		this.dbg1(Format("Writing to INI new pagenum-spec: '{}'", pagenum_spec))
+		this.coedit.IniWriteMine("PdfPageNumSpec", pagenum_spec)
+		
+		this.peer_prev_pagenum := "" ; eliminate its influence. If kept(e.g. page 24), it block us from suggesting page 24 in the future.
 		
 		return PdfPageNum ? true : false
 	}
 	
 	FollowPeerzPageNum()
 	{
-		pagenum_spec := this.coedit.IniReadPeer("PdfPageNum", "")
+		pagenum_spec := this.coedit.IniReadPeer("PdfPageNumSpec", "")
 		if(not pagenum_spec)
 			return
 
@@ -965,6 +964,7 @@ class FoxitCoedit
 		}
 		
 		this.peer_prev_pagenum_seq := peer_now_pagenum_seq
+		this.peer_prev_pagenum := PdfPageNum
 		
 		this.dbg1(Format("Peer has updated PdfPageNum to 'Seq#{};{}', now follow it.", peer_now_pagenum_seq, PdfPageNum))
 
