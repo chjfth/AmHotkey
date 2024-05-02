@@ -2101,6 +2101,17 @@ dev_GetHwndUnderMouse()
 	return rdict
 }
 
+dev_GetMouseScreenXY()
+{
+	CoordMode, Mouse, Screen
+	
+	MouseGetPos, outx, outy
+	
+	CoordMode, Mouse, Window
+	
+	return {x:outx, y:outy}
+}
+
 dev_MouseMove(x, y, mode, movespeed:=3)
 {
 	; mode:

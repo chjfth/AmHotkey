@@ -39,6 +39,7 @@
 ; #Include Everlink.ahk
 
 ; #Include FoxitCoedit.ahk
+; #Include ClockBar.ahk
 
 ; #Include mstsc.ahk ; Microsoft terminal service client
 ; #Include Teclast_X98.ahk

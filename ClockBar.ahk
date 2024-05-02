@@ -13,6 +13,7 @@ global gu_ClockText
 
 global g_menutext_clockbar_TurnOn := "Turn on ClockBar"
 global g_menutext_clockbar_TurnOff := "Turn off ClockBar"
+global g_menutext_clockbar_ResetHere := "Reset my ClockBar here"
 
 ClockBar_Init()
 
@@ -392,7 +393,7 @@ class ClockBar
 		
 		if(extra_hint)
 		{
-			dev_TooltipAutoClear("zzzzzzzzz")
+			dev_TooltipAutoClear(extra_hint)
 		}
 	}
 	
@@ -592,10 +593,13 @@ ClockBarGuiContextMenu(args*)
 
 ClockBar_Init()
 {
-	dev_MenuAddItem("TRAY", g_menutext_clockbar_TurnOn, "ClockBar_Systray_DoMenu")
+	dev_MenuAddItem("TRAY", g_menutext_clockbar_TurnOn, "ClockBar_Systray_TurnOnOff")
+	
+	dev_MenuAddItem("TRAY", g_menutext_clockbar_ResetHere, "ClockBar_ResetHere")
 }
 
-ClockBar_Systray_DoMenu()
+
+ClockBar_Systray_TurnOnOff()
 {
 	if(not ClockBar_IsTurnedOn())
 	{
@@ -606,6 +610,27 @@ ClockBar_Systray_DoMenu()
 		ClockBar_TurnOff()
 	}
 }
+
+ClockBar_ResetHere()
+{
+	if(not ClockBar_IsTurnedOn())
+	{
+		ClockBar_TurnOn()
+	}
+	
+	g_ClockBar.TurnOff_Follow()
+	
+	mpos := dev_GetMouseScreenXY()
+	
+	bpos := dev_WinGetPos_byHwnd(g_hwndClockBar)
+	
+	; Make ClockBar-center above mouse pointer 
+	newx := mpos.x - bpos.w/2
+	newy := mpos.y - bpos.h - 5
+	
+	dev_WinMoveHwnd(g_hwndClockBar, newx, newy)
+}
+
 
 debug_ClockBar_StopTimer()
 {
