@@ -1,5 +1,5 @@
 
-AUTOEXEC_keymouse: ; Workaround for Autohotkey's ugly auto-exec feature. Don't delete.
+AUTOEXEC_keymouse: ; Workaround for Autohotkey's ugly auto-exec feature. Must be first line.
 
 global km_PinnedMousePos := {} ; .x .y
 

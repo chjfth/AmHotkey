@@ -1,4 +1,4 @@
-﻿AUTOEXEC_Everlink: ; Workaround for Autohotkey's ugly auto-exec feature. Don't delete.
+﻿AUTOEXEC_Everlink: ; Workaround for Autohotkey's ugly auto-exec feature. Must be first line.
 
 /* APIs:
 Everlink_Init("Everlink.csv.sample") ; User provides csv data to initialize Everlink object (e.g. Everlink.chj.csv)

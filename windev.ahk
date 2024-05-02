@@ -1,5 +1,5 @@
 ﻿
-AUTOEXEC_windev: ; Workaround for Autohotkey's ugly auto-exec feature. Don't delete.
+AUTOEXEC_windev: ; Workaround for Autohotkey's ugly auto-exec feature. Must be first line.
 
 global g_VSDlg_sleep_bfr_close := 100
 

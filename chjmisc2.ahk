@@ -1,6 +1,6 @@
 ﻿; Note: This file is saved with UTF8 with BOM, which is the best encoding choice to write Unicode chars here.
 
-AUTOEXEC_chjmisc2: ; Workaround for Autohotkey's ugly auto-exec feature. Don't delete.
+AUTOEXEC_chjmisc2: ; Workaround for Autohotkey's ugly auto-exec feature. Must be first line.
 
 ; This file contains some chj-specific actions that relies on other .ahk-s,
 ; such as evernote.ahk and mediaplayer.ahk

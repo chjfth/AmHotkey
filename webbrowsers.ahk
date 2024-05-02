@@ -1,5 +1,5 @@
 ﻿
-AUTOEXEC_webbrowers: ; Workaround for Autohotkey's ugly auto-exec feature. Don't delete.
+AUTOEXEC_webbrowers: ; Workaround for Autohotkey's ugly auto-exec feature. Must be first line.
 
 global Chrome_kbd_MoveTabLeft := "+^{pgup}"
 global Chrome_kbd_MoveTabRight := "+^{pgdn}" ; This requires extension

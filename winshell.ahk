@@ -1,5 +1,5 @@
 ﻿
-AUTOEXEC_winshell: ; Workaround for Autohotkey's ugly auto-exec feature. Don't delete.
+AUTOEXEC_winshell: ; Workaround for Autohotkey's ugly auto-exec feature. Must be first line.
 
 global g_ctlmove_unit := 10 ; control move unit
 global g_ctlmove_hwndtop

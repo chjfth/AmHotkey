@@ -1,5 +1,5 @@
 
-AUTOEXEC_menus_ahk: ; Workaround for Autohotkey's ugly auto-exec feature. Don't delete.
+AUTOEXEC_menus_ahk: ; Workaround for Autohotkey's ugly auto-exec feature. Must be first line.
 
 ; Create the popup menu by adding some items to it.
 Menu, MyMenu, Add, WinTV Toggle Mute(ctrl+m), WinTVToggleMute

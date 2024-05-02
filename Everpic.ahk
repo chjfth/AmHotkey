@@ -1,4 +1,4 @@
-﻿AUTOEXEC_Everpic: ; Workaround for Autohotkey's ugly auto-exec feature. Don't delete.
+﻿AUTOEXEC_Everpic: ; Workaround for Autohotkey's ugly auto-exec feature. Must be first line.
 
 /* APIs:
 Evp_LaunchUI(http_server_baseurl:="")

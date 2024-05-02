@@ -1,4 +1,4 @@
-AUTOEXEC_numpad_tweak_as_R7: ; Workaround for Autohotkey's ugly auto-exec feature. Don't delete.
+AUTOEXEC_numpad_tweak_as_R7: ; Workaround for Autohotkey's ugly auto-exec feature. Must be first line.
 
 
 

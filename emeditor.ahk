@@ -1,5 +1,5 @@
 
-AUTOEXEC_EmEditor: ; Workaround for Autohotkey's ugly auto-exec feature. Don't delete.
+AUTOEXEC_EmEditor: ; Workaround for Autohotkey's ugly auto-exec feature. Must be first line.
 
 global Eme_isOverlayExist := false 
 global Eme_arbtn := []

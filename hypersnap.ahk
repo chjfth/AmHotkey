@@ -1,5 +1,5 @@
 
-AUTOEXEC_hypersnap: ; Workaround for Autohotkey's ugly auto-exec feature. Don't delete.
+AUTOEXEC_hypersnap: ; Workaround for Autohotkey's ugly auto-exec feature. Must be first line.
 
 global Hs7_colorcell_width = 18 ; Hypersnap 7, color cell width&height
 global Hs7_main_colorpicker_margin_height = 37

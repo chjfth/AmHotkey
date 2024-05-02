@@ -1,4 +1,6 @@
-﻿; This module provides a UI that facilitates expanding(copy files and replace words) 
+﻿AUTOEXEC_AmTemplates: ; Workaround for Autohotkey's ugly auto-exec feature. Must be first line.
+
+; This module provides a UI that facilitates expanding(copy files and replace words) 
 ; a user selected template folder into an actual new folder.
 ; * User assigns template searching folders in g_dirsAmTemplates[].
 ; * A file named "AmTemplate.cfg.ini" marks the existence of a template folder.
@@ -6,8 +8,6 @@
 
 ; All GUIDs in AmTemplate.cfg.ini must conform to AmtGuidFormat, this requirement 
 ; enables me to check for GUID-mismatch situation between AmTemplate.cfg.ini and Template file sources.
-
-AUTOEXEC_AmTemplates: ; Workaround for Autohotkey's ugly auto-exec feature. Don't delete.
 
 /* APIs:
 Amt_LaunchMenu()

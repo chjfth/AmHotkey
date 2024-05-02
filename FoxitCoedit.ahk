@@ -1,4 +1,4 @@
-﻿AUTOEXEC_FoxitCoedit: ; Workaround for Autohotkey's ugly auto-exec feature. Don't delete.
+﻿AUTOEXEC_FoxitCoedit: ; Workaround for Autohotkey's ugly auto-exec feature. Must be first line.
 ; -- naming: Foxit PDF reader/editor from two machines, co-operatively edit the same PDF file
 
 /* APIs:

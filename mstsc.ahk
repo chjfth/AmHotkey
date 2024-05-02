@@ -1,5 +1,5 @@
 
-AUTOEXEC_mstsc: ; Workaround for Autohotkey's ugly auto-exec feature. Don't delete.
+AUTOEXEC_mstsc: ; Workaround for Autohotkey's ugly auto-exec feature. Must be first line.
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 return ; End of auto-execute section.

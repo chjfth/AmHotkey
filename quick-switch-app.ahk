@@ -1,5 +1,5 @@
 
-AUTOEXEC_quick_switch_app: ; Workaround for Autohotkey's ugly auto-exec feature. Don't delete.
+AUTOEXEC_quick_switch_app: ; Workaround for Autohotkey's ugly auto-exec feature. Must be first line.
 
 global gtc_last_letter := 0 ; Last letter GetTickCount()
 global g_last_letter := "" 

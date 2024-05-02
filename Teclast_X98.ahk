@@ -1,5 +1,5 @@
 
-AUTOEXEC_Teclast_X98: ; Workaround for Autohotkey's ugly auto-exec feature. Don't delete.
+AUTOEXEC_Teclast_X98: ; Workaround for Autohotkey's ugly auto-exec feature. Must be first line.
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 return ; End of auto-execute section.

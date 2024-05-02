@@ -2,7 +2,7 @@
 ; in order for the Unicode characters to be recognized by Autohotkey engine.
 ;
 AUTOEXEC_vmware_control: 
-	; Workaround for Autohotkey's ugly auto-exec feature. Don't delete.
+	; Workaround for Autohotkey's ugly auto-exec feature. Must be first line.
 
 /*
 API:

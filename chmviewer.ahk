@@ -1,5 +1,5 @@
 ﻿
-AUTOEXEC_chmviewer: ; Workaround for Autohotkey's ugly auto-exec feature. Don't delete.
+AUTOEXEC_chmviewer: ; Workaround for Autohotkey's ugly auto-exec feature. Must be first line.
 
 global chmedt_ToolbarX0 := 300 ; change this to the same width of UI's left pane
 global chmedt_ToolbarY := 104

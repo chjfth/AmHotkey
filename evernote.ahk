@@ -1,5 +1,5 @@
 ﻿
-AUTOEXEC_Evernote: ; Workaround for Autohotkey's ugly auto-exec feature. Don't delete.
+AUTOEXEC_Evernote: ; Workaround for Autohotkey's ugly auto-exec feature. Must be first line.
 
 /* APIs:
 
