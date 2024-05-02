@@ -273,9 +273,11 @@ Gui_Add_Listbox(GuiName, CtrlVarname, width, format, itemlist_pipes:="")
 	Gui, % cmd, ListBox, % Format("{} {} {}", vCtrlVarname, wWidth, format), % itemlist_pipes
 }
 
-Gui_Add_Combobox(GuiName, CtrlVarname, width, format, itemlist_pipes:="")
+Gui_Add_Combobox_or_Dropdownlist(UicType, GuiName, CtrlVarname, width, format, itemlist_pipes:="")
 {
 	; format: AltSumbit
+	
+	dev_assert(UicType=="ComboBox" || UicType=="DropDownList")
 
 	Assert_UicVarname(CtrlVarname)
 	cmd := (GuiName ? GuiName ":" : "") "Add"
@@ -283,8 +285,19 @@ Gui_Add_Combobox(GuiName, CtrlVarname, width, format, itemlist_pipes:="")
 	vCtrlVarname := StrLen(CtrlVarname)>1 ? "v" CtrlVarname : ""
 	wWidth := width>0 ? "w" width : "" ; so width==-1 will make it auto-width by text length
 
-	Gui, % cmd, ComboBox, % Format("{} {} {}", vCtrlVarname, wWidth, format), % itemlist_pipes
+	Gui, % cmd, % UicType, % Format("{} {} {}", vCtrlVarname, wWidth, format), % itemlist_pipes
 }
+
+Gui_Add_Combobox(args*)
+{
+	Gui_Add_Combobox_or_Dropdownlist("ComboBox", args*)
+}
+
+Gui_Add_DropDownList(args*)
+{
+	Gui_Add_Combobox_or_Dropdownlist("DropDownList", args*)
+}
+
 
 Gui_Add_Listview(GuiName, CtrlVarname, width, format, columnlist_pipes)
 {

@@ -19,8 +19,10 @@ global gu_focoMleInfo
 global gu_focoLblActivate
 global gu_focoCkbLside
 global gu_focoCkbRside
+global gu_focoLblPeerFollow
+global gu_focoDdlPeerFollowMe
 global gu_focoBtnSavePdf
-global gu_focoCkbFollowPage
+; global gu_focoCkbFollowPage
 global gu_focoBtnSync
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -63,6 +65,20 @@ class FoxitCoedit
 	
 	is_showing_syncerr_msgbox := false ; just for optimized Error popup
 	
+	mine_prev_PdfPageNum := ""
+	mine_pagenum_seq := 0
+	;
+	peer_prev_pagenum_seq := 0
+	;
+	msec_passive_followed := 0 		;msec_freeze_following_before := 0
+	static SILENT_SECONDS := 2
+
+	static IDX_PEERFM_ALWAYS := 1
+	static IDX_PEERFM_AFTERSAVEPDF := 2
+	static IDX_PEERFM_NO := 3
+	peerfm_selection := FoxitCoedit.IDX_PEERFM_ALWAYS
+	
+	is_closing_pdf := false
 	
 	dbg(msg, lv) {
 		AmDbg_output(FoxitCoedit_Id, msg, lv)
@@ -122,10 +138,14 @@ class FoxitCoedit
 		Gui_Add_Checkbox(GuiName, "gu_focoCkbLside", 0, "x+10 yp " gui_g("Foco_CkbActivateCoedit"), "as &Left-side")
 		Gui_Add_Checkbox(GuiName, "gu_focoCkbRside", 0, "x+10 yp " gui_g("Foco_CkbActivateCoedit"), "as &Right-side")
 
-		Gui_Add_Button(  GuiName, "gu_focoBtnSavePdf",  98, "xm y+30 default " gui_g("Foco_OnBtnSavePdf"), "&Save pdf now")
-		Gui_Add_Checkbox(GuiName, "gu_focoCkbFollowPage", 107, "x+5 yp+5 ", "Peer &follow page")
+		Gui_Add_TxtLabel(GuiName, "gu_focoLblPeerFollow", 0, "xm y+30", "Peer PDF page &follows me:")
+		Gui_Add_DropDownList(GuiName, "gu_focoDdlPeerFollowMe", 137, "x+5 yp-2 AltSubmit " gui_g("Foco_OnDdlPeerFollowMe")
+			, "Always||Only after saving PDF|No")
+
+		Gui_Add_Button(  GuiName, "gu_focoBtnSavePdf",  98, "xm y+6 default " gui_g("Foco_OnBtnSavePdf"), "&Save pdf now")
+;		Gui_Add_Checkbox(GuiName, "gu_focoCkbFollowPage", 107, "x+5 yp+5 ", "Peer &follow page")
 		sync_btn_width := 60
-		xgap := fullwidth - 98 - 107 - sync_btn_width
+		xgap := fullwidth - 98 - sync_btn_width
 		Gui_Add_Button(  GuiName, "gu_focoBtnSync", sync_btn_width, Format("x+{} ", xgap) gui_g("Foco_OnBtnSync"), "R&e-sync")
 
 		;
@@ -176,7 +196,7 @@ class FoxitCoedit
 		
 		; assume all false(disabled)
 		focoLblActive := focoCkbLside := focoCkbRside := false
-		focoBtnSavePdf := focoCkbFollowPage := focoBtnSync := false
+		focoBtnSavePdf := focoDdlPeerFollowMe := focoBtnSync := false
 
 		if(this.state=="Detecting")
 		{
@@ -198,7 +218,7 @@ class FoxitCoedit
 			
 			if(this.coedit.state!="Syncing")
 			{
-				focoBtnSavePdf := focoCkbFollowPage := focoBtnSync := true
+				focoBtnSavePdf := focoDdlPeerFollowMe := focoBtnSync := true
 			}
 		}
 		else
@@ -210,8 +230,9 @@ class FoxitCoedit
 		GuiControl_Enable(GuiName, "gu_focoLblActivate", focoLblActive)
 		GuiControl_Enable(GuiName, "gu_focoCkbLside", focoCkbLside)
 		GuiControl_Enable(GuiName, "gu_focoCkbRside", focoCkbRside)
+		GuiControl_Enable(GuiName, "gu_focoDdlPeerFollowMe", focoDdlPeerFollowMe)
 		GuiControl_Enable(GuiName, "gu_focoBtnSavePdf", focoBtnSavePdf)
-		GuiControl_Enable(GuiName, "gu_focoCkbFollowPage", focoCkbFollowPage)
+		;GuiControl_Enable(GuiName, "gu_focoCkbFollowPage", focoCkbFollowPage)
 		GuiControl_Enable(GuiName, "gu_focoBtnSync", focoBtnSync)
 
 		this.RefreshMleDetail()
@@ -436,6 +457,22 @@ class FoxitCoedit
 					. "This warning keeps pop-up until you discard one-side's modification.`n`n"
 					, FoxitCoedit_Id)
 			}
+			
+			;
+			; Notify & Respond regarding PDF page number.
+			;
+			
+			Critical On
+			if(not this.is_closing_pdf)
+			{
+				if(this.peerfm_selection==FoxitCoedit.IDX_PEERFM_ALWAYS) 
+				{
+					this.record_pagenum_for_peer()
+				}
+				
+				this.FollowPeerzPageNum()
+			}
+			Critical Off
 		}
 	}
 	
@@ -545,6 +582,8 @@ class FoxitCoedit
 		
 		if(not ischecked)
 		{
+			; Was not checked, and user is now checking/ticking it.
+		
 			; Ask user the real location of the PDF file, bcz AHK code here has no way to know it automatically.
 			pdfnam := this.TitleStemFromWinTitle(this.pedWinTitle)
 
@@ -599,6 +638,11 @@ class FoxitCoedit
 	fndocSyncSucc()
 	{
 		this.state := "CoeditHandshaked"
+	
+		this.mine_prev_PdfPageNum := ""
+		this.mine_pagenum_seq := 0
+		
+		this.is_closing_pdf := false
 		
 		this.was_doc_modified := this.IsPdfModified()
 		
@@ -625,7 +669,13 @@ class FoxitCoedit
 				if(not this.IsPdfModified())
 				{
 					this.dbg1("FoxitCoedit.fndocSavePdf() success , PDF saved.")
-					this.record_pagenum_for_peer()
+					
+					if(this.peerfm_selection==FoxitCoedit.IDX_PEERFM_ALWAYS 
+						or this.peerfm_selection==FoxitCoedit.IDX_PEERFM_AFTERSAVEPDF)
+					{
+						this.record_pagenum_for_peer(true)
+					}
+					
 					return true
 				}
 				
@@ -642,6 +692,10 @@ class FoxitCoedit
 	
 	fndocClosePdf()
 	{
+		Critical On
+		this.is_closing_pdf := true
+		Critical Off
+	
 		hwnd := this.pedHwnd
 		this.dbg1(Format("FoxitCoedit.fndocClosePdf() executing..."))
 		
@@ -657,6 +711,8 @@ class FoxitCoedit
 	{
 		GuiName := "FOCO"
 		this.dbg1("FoxitCoedit.fndocOpenPdf() executing...")
+		
+		is_succ := false
 		
 		exepath := this.pedExepath
 		
@@ -705,9 +761,10 @@ class FoxitCoedit
 					this.dbg1(Format("Strange! Hwnd by ahk_exe({}) != Hwnd by wndclass({})", this.pedHwnd, dbgHwnd))
 				}
 				
-				this.follow_saverz_pagenum()
+				this.FollowPeerzPageNum()  ; this.follow_saverz_pagenum()
 				
-				return true
+				is_succ := true
+				break
 			}
 			else
 			{
@@ -734,7 +791,12 @@ class FoxitCoedit
 			}
 		}
 
-		throw Exception(Format("Bad! Foxit process ""{}"" did not launch.", exepath))
+		this.is_closing_pdf := false
+
+		if(is_succ)
+			return true
+		else
+			throw Exception(Format("Bad! Foxit process ""{}"" did not launch.", exepath))
 	}
 	
 	Try_SaveCurrentPdf()
@@ -802,13 +864,30 @@ class FoxitCoedit
 		return oEditboxNN
 	}
 	
-	record_pagenum_for_peer()
+	record_pagenum_for_peer(is_force:=false)
 	{
 		; Write mineside PDF page number to INI, to tell peer Foxit jump to that very page.
-		; The Foxit pagenum editbox may have text like this: "xi (13 / 179)", we just 
-		; transfer this text-string verbatim to the peer. 
+		; The Foxit pagenum editbox may have text like this: "xi (13 / 179)" .
+		; In INI, we will write item like:
+		;	
+		;	PdfPageNum = Seq1#xi (13 / 179)
+		;	PdfPageNum = Seq2#xi (13 / 179)
+		; etc.
+		; The Seq-ordinal (1,2,3...) is recognized by peer. Only if the ordinal increases does
+		; the peer know that our-side have turned to a new pagenum.
+		;
+		; We increase Seq in two cases.
+		; Case 1: is_force==true. 
+		;         This happens when our behavior is IDX_PEERFM_ALWAYS or IDX_PEERFM_AFTERSAVEPDF,
+		;         and our-side has just saved a piece of new content for the PDF.
+		;         We increase the Seq even if current pagenum remains the same since previous save,
+		;         --this is to force peer to follow to that pagenum.
+		; Case 2: is_force==false, and our behavior is IDX_PEERFM_ALWAYS, and the pagenum now 
+		;         differs to the previous write-to-ini pagenum. 
+		;         This mean, our-side user has really flipped to a new PDF page a moment ago, 
+		;         so, the peer should follow that pagenum.
+		
 	
-		is_record_pagenum := Checkbox_GetCheckState(GuiName, "gu_focoCkbFollowPage")
 		PdfPageNum := "" 
 		
 		oEditboxNN := this.GetFoxit_PageNum_classnn()
@@ -826,32 +905,100 @@ class FoxitCoedit
 			dev_MsgBoxWarning("Unexpect! Cannot locate Foxit's pagenum editbox.")
 		}
 		
-		; Even if PdfPageNum is null, we still record it.
+		if(!is_force)
+		{
+			if(PdfPageNum==this.mine_prev_PdfPageNum)
+			{
+				this.dbg2(Format("Mine PdfPageNum not changed since last check. No writing to INI. '{}'", PdfPageNum))
+				return false
+			}
+			
+			msec_now := dev_GetTickCount64()
+			if( (msec_now-this.msec_passive_followed) < FoxitCoedit.SILENT_SECONDS*1000 )
+			{
+				this.dbg2(Format("Still in SILENT_SECONDS({}) since our passive PdfPageNum follow, so No writing to INI.", FoxitCoedit.SILENT_SECONDS))
+				
+				; but .mine_prev_PdfPageNum still needs to updated
+				this.mine_prev_PdfPageNum := PdfPageNum 
+				return false
+			}
+		}
 		
-		this.dbg2(Format("Writing INI: PdfPageNum={}", PdfPageNum))
-		this.coedit.IniWriteMine("PdfPageNum", PdfPageNum)
+		; Write to INI.
+		
+		this.mine_prev_PdfPageNum := PdfPageNum
+		
+		this.mine_pagenum_seq++
+		pagenum_spec := Format("Seq#{};{}", this.mine_pagenum_seq, PdfPageNum)
+		
+		this.dbg1(Format("Writing to INI new pagenum-spec: ""{}""", pagenum_spec))
+		this.coedit.IniWriteMine("PdfPageNum", pagenum_spec)
+		
+		
+					; Even if PdfPageNum is null, we still record it. xxx
+					;this.dbg2(Format("Writing INI: PdfPageNum={}", PdfPageNum))
+					;this.coedit.IniWriteMine("PdfPageNum", PdfPageNum)
 		
 		return PdfPageNum ? true : false
 	}
 	
-	follow_saverz_pagenum()
+	FollowPeerzPageNum()
 	{
-		pagenum := this.coedit.IniReadPeer("PdfPageNum", "")
-;		AmDbg0("follow_saverz_pagenum().A : " pagenum)
-		if(not pagenum)
+		pagenum_spec := this.coedit.IniReadPeer("PdfPageNum", "")
+		if(not pagenum_spec)
 			return
-		
+
 		oEditboxNN := this.GetFoxit_PageNum_classnn()
-;		AmDbg0("follow_saverz_pagenum().B : " oEditboxNN)
 		if(oEditboxNN=="")
 			return
 		
-		this.dbg2(Format("Try restoring peer INI's pagenum: '{}'", pagenum))
+		parts := StrSplit(pagenum_spec, ";") ; Example: Seq#6;19 (35 / 179)
+		seqpart := parts[1]
+		PdfPageNum := parts[2]
 		
+		if(SubStr(seqpart, 1, 4)=="Seq#")
+		{
+			peer_now_pagenum_seq := SubStr(seqpart, 5)
+			
+			if(peer_now_pagenum_seq == this.peer_prev_pagenum_seq)
+			{
+				this.dbg2(Format("Peer PdfPageNum 'Seq#{}' has not updated, no need to follow.", peer_now_pagenum_seq))
+				return
+			}
+		}
+		else
+		{
+			this.dbg1(Format("Wrong PdfPageNum-spec from INI: '{}'", pagenum_spec))
+			return
+		}
+		
+		this.peer_prev_pagenum_seq := peer_now_pagenum_seq
+		
+		this.dbg1(Format("Peer has updated PdfPageNum to '{}', now follow it.", PdfPageNum))
+
 		wintitle := "ahk_id " this.pedHwnd
-		dev_ControlSetText_hc(this.pedHwnd, oEditboxNN, pagenum)
+		dev_ControlSetText_hc(this.pedHwnd, oEditboxNN, PdfPageNum)
 		dev_ControlSend(wintitle, oEditboxNN, "{Enter}")
+		
+		this.msec_passive_followed := dev_GetTickCount64()
 	}
+	
+;	follow_saverz_pagenum() ; todo: xxx delete it
+;	{
+;		pagenum := this.coedit.IniReadPeer("PdfPageNum", "")
+;		if(not pagenum)
+;			return
+;		
+;		oEditboxNN := this.GetFoxit_PageNum_classnn()
+;		if(oEditboxNN=="")
+;			return
+;		
+;		this.dbg2(Format("Try restoring peer INI's pagenum: '{}'", pagenum))
+;		
+;		wintitle := "ahk_id " this.pedHwnd
+;		dev_ControlSetText_hc(this.pedHwnd, oEditboxNN, pagenum)
+;		dev_ControlSend(wintitle, oEditboxNN, "{Enter}")
+;	}
 	
 	LoadStaticCfg()
 	{
@@ -871,6 +1018,12 @@ class FoxitCoedit
 		
 		this.dbg1(Format("SetTimeouts for this pdf: OpenSecs={} , SaveSecs={}", opensecs, savesecs))
 		this.coedit.SetTimeouts(opensecs, savesecs)
+	}
+	
+	DdlPeerFollowMeSelect()
+	{
+		this.peerfm_selection := GuiControl_GetValue("FOCO", "gu_focoDdlPeerFollowMe")
+		; AmDbg0(".peerfm_selection=" this.peerfm_selection )
 	}
 	
 } ; class FoxitCoedit
@@ -910,6 +1063,8 @@ FOCOGuiSize()
 	rsdict.gu_focoLblActivate := JUL.PinToLeftBottom
 	rsdict.gu_focoCkbLside := JUL.PinToLeftBottom
 	rsdict.gu_focoCkbRside := JUL.PinToLeftBottom
+	rsdict.gu_focoLblPeerFollow := JUL.PinToLeftBottom
+	rsdict.gu_focoDdlPeerFollowMe := JUL.PinToLeftBottom
 	rsdict.gu_focoBtnSavePdf := JUL.PinToLeftBottom
 	rsdict.gu_focoBtnSync := JUL.PinToRightBottom
 	
@@ -930,6 +1085,11 @@ FOCOGuiEscape()
 Foco_CkbActivateCoedit()
 {
 	g_foco.CkbActivateCoedit()
+}
+
+Foco_OnDdlPeerFollowMe()
+{
+	g_foco.DdlPeerFollowMeSelect()
 }
 
 ; !#y:: g_foco.fndocSavePdf()
