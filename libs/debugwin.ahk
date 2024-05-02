@@ -84,13 +84,11 @@ global gu_amdbgBtnOpenDbgwin
 class Amdbg ; as global var container
 {
 	static _default_modu := "_default_"
-	static _default_desc := "Debug-messages without assigning an explicit module-name, belong to the _default_ module. `n"
-		. "Amdbg0(), Amdbg1(), Amdbg2() outputs such messages."
 
 	static _GuiName := "Amdbg"
 	static _GuiWidth := 470 ; px
 	
-	static _dictModules := { Amdbg._default_modu : { "displaylimitlv":0 , "desc":Amdbg._default_desc } }
+	static _dictModules := {}
 	; -- each dict-key represent a debug-module, and the module's content is described in
 	; 	yet another dict which has the following keys:
 	;	.desc     : description text of this debug-module.
@@ -99,9 +97,21 @@ class Amdbg ; as global var container
 	;               debug-message display-limit level, 0,1,2... (sift-level)
 	;               If 1, msg with level equal or less than 1 is is sent to Dbgwin_Output(), 
 	;               msg with larger-levels are buffered to memory.
+	;
+	static _tmp_ := Amdbg.CreateDefaultModu()
 	
 	static _maxbuf := 2048000 ; allmsg buffer size, in bytes
+	
+	CreateDefaultModu()
+	{
+		desc := "Debug-messages without assigning an explicit module-name, belong to the _default_ module. `n"
+			. "Amdbg0(), Amdbg1(), Amdbg2() outputs such messages."
+
+		Amdbg_SetDesc(Amdbg._default_modu, desc)
+	}
 }
+
+
 
 
 class Dbgwin ; as global var container

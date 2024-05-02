@@ -2078,7 +2078,7 @@ Am_PlaySound(wavfile)
 		if(!g_AmMute)
 			SoundPlay, %wavfile%
 	} catch e {
-		Amdbg0(Format("Am_PlaySound(""{}"") got exception. Message: {}", wavfile, e.Message))
+		Amdbg1(Format("Am_PlaySound(""{}"") got exception. Message: {}", wavfile, e.Message))
 	}
 }
 
