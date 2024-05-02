@@ -156,7 +156,7 @@ Dbgwin_Output(msg, force_fgwin:=false)
 {
 	linemsg := AmDbg_MakeLineMsg(Amdbg._default_modu, msg, 1, _unused_output)
 	
-	Dbgwin_AppendRaw(linemsg)
+	Dbgwin_AppendRaw(linemsg, force_fgwin)
 }
 	
 Dbgwin_AppendRaw(linemsg, force_fgwin:=false)
