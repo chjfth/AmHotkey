@@ -465,7 +465,11 @@ dev_WinMoveHwnd(hwnd, x:="", y:="", w:="", h="")
 	if(h=="")
 		h := hold
 	
-	WinMove, ahk_id %hwnd%, , % x, % y, % w, % h
+	if(x!=xold || y!=yold || w!=wold || h!=hold)
+	{
+		; [2024-05-02] A redundant WinMove may cost 100ms or more.
+		WinMove, ahk_id %hwnd%, , % x, % y, % w, % h
+	}
 }
 
 dev_WinGetPos(wintitle)
