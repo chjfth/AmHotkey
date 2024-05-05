@@ -113,6 +113,8 @@ chj_DefineQuickSwitchApps() ; as template for actual users
 	QSA_DefineActivateGroup_Caps("i", "TNavicatMainForm", "Navicat database manager")
 	
 	;QSA_DefineActivateGroupFlex_Caps("-", QSA_NO_WNDCLASS, "^HwndWrapper", "Microsoft Help Viewer", "MS Help Viewer 1.x/2.x") //VS2010 hlpviewer 1.x
+	
+	QSA_DefineActivateGroupFlex_Caps("q", QSA_NO_WNDCLASS, QSA_NO_WNDCLS_REGEX, "Q-Dir", "Q-Dir file Explorer")
 }
 
 
@@ -980,5 +982,32 @@ Paragon12_BeautifyHexView()
 #If dev_IsExeActive("launcher.exe")
 
 F12:: Paragon12_BeautifyHexView()
+
+#If
+
+
+;==========================================================================
+; Q-Dir 11.63 or 10.56
+;==========================================================================
+
+Is_QDir_Active()
+{
+	if(dev_IsExeActive("Q-Dir_x64.exe") or dev_IsExeActive("Q-Dir.exe"))
+		return true
+	else
+		return false
+}
+
+#If Is_QDir_Active()
+
+F5:: 
+QDir_F5_Refresh()
+{
+	Send {Space}{Alt down}{a down}{a up}{Alt up}{Left}
+	Send e
+
+;	Send {Shift down}{F5 down}{F5 up}{Shift up}
+;	Send e
+}
 
 #If
