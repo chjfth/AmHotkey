@@ -495,8 +495,13 @@ class JUL
 	static PinToLeftBottom := "0,100,0,100"
 	static PinToRightTop := "100,0,100,0"
 	static PinToRightBottom := "100,100,100,100"
-	static LeftTop_DynWidth := "0,0,100,0"
-	static LeftTop_DynWidthHeight := "0,0,100,100"
+	
+	; Underscore in name, implies the Uic may stretch width orheight
+	static FillWidth_AtTop := "0,0,100,0" 
+	static FillWidth_AtBottom := "0,100,100,100"
+	static FillArea := "0,0,100,100"
+	
+	static LeftTop_DynWidthHeight :=
 }
 
 dev_GuiAutoResize(GuiName, rsdict, gui_nowwidth, gui_nowheight, force_redraw:=false, qmargin:="")

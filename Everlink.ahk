@@ -22,6 +22,7 @@ global gu_evlListview
 global gu_evlBtnOK
 global gu_evlBtnCopyTag
 global gu_evlBtnChgDesc
+global gu_evlEdrCsvpath ; Edr : editbox readonly
 
 Everlink_InitHotkeys()
 
@@ -257,6 +258,7 @@ class Everlink
 		Gui_Add_Button(  GuiName, "gu_evlBtnOK",      80, gui_g("Evl_OnBtnOK") " default", "&Use This")
 		Gui_Add_Button(  GuiName, "gu_evlBtnCopyTag", 80, gui_g("Evl_OnBtnCopyTag") " x+10 yp", "&Copy Tag")
 		Gui_Add_Button(  GuiName, "gu_evlBtnChgDesc", 80, gui_g("Evl_OnBtnChgDesc") " x+10 yp", "Change &Desc")
+		Gui_Add_Editbox( GuiName, "gu_evlEdrCsvpath", fullwidth, "xm readonly -E0x200 -0x1000", this.csvfullpath)
 
 		this.RefreshUI_AllTags("", true)
 		
@@ -672,13 +674,14 @@ Everlink_LaunchUI()
 EVLGuiSize()
 {
 	rsdict := {}
-	rsdict.gu_evlSearchWord := JUL.LeftTop_DynWidth
+	rsdict.gu_evlSearchWord := JUL.FillWidth_AtTop
 	rsdict.gu_evlCkbUseRecent := JUL.PinToRightTop
-	rsdict.gu_evlListview := JUL.LeftTop_DynWidthHeight
+	rsdict.gu_evlListview := JUL.FillArea
 	
 	rsdict.gu_evlBtnOK := JUL.PinToLeftBottom
 	rsdict.gu_evlBtnCopyTag := JUL.PinToLeftBottom
 	rsdict.gu_evlBtnChgDesc := JUL.PinToLeftBottom
+	rsdict.gu_evlEdrCsvpath := JUL.FillWidth_AtBottom
 	
 	dev_GuiAutoResize("EVL", rsdict, A_GuiWidth, A_GuiHeight)
 }

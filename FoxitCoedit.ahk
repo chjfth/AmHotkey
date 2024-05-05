@@ -1035,7 +1035,7 @@ Foco_OnBtnSync()
 FOCOGuiSize()
 {
 	rsdict := {}
-	rsdict.gu_focoMleInfo := JUL.LeftTop_DynWidthHeight
+	rsdict.gu_focoMleInfo := JUL.FillArea
 	rsdict.gu_focoLblActivate := JUL.PinToLeftBottom
 	rsdict.gu_focoCkbLside := JUL.PinToLeftBottom
 	rsdict.gu_focoCkbRside := JUL.PinToLeftBottom
