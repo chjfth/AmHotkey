@@ -987,6 +987,91 @@ F12:: Paragon12_BeautifyHexView()
 
 
 ;==========================================================================
+; IrfanView 4.x
+;==========================================================================
+
+Is_IrfanviewEXIFDialog_Active()
+{
+	if((dev_IsExeActive("i_view64.exe") or dev_IsExeActive("i_view64.exe")) 
+		and IsWinTitleMatchRegex("EXIF Info$"))
+		return true
+	else
+		return false
+}
+
+IrfanView_EXIF_extract_GPS_position(Eoffset_fix:=0, Noffset_fix:=0)
+{
+	ctlhwnd := dev_GetHwndFromClassNN("SysListView321", "A")
+
+	lines := winshell_GrabControlText(ctlhwnd)
+	
+	if(not lines)
+	{
+		Amdbg0("Null ")
+	}
+	
+	arlines := dev_ParseLinesToArray(lines)
+	
+	for index,line in arlines 
+	{
+		ptn := "\(([0-9]+\.[0-9]+)\)"
+		if(StrIsStartsWith(line, "GPSLongitude`t"))
+		{
+			foundpos := RegExMatch(line, "O)" ptn, subpat)
+			if(foundpos>0)
+			{
+				east := subpat.Value(1)
+				;Amdbg0("m1: " subpat.Value(1))
+			}
+		}
+
+		if(StrIsStartsWith(line, "GPSLatitude`t"))
+		{
+			foundpos := RegExMatch(line, "O)" ptn, subpat)
+			if(foundpos>0)
+			{
+				north := subpat.Value(1)
+				;Amdbg0("m1: " subpat.Value(1))
+			}
+		}
+	}
+	
+	east2 := east + Eoffset_fix
+	north2 := north + Noffset_fix
+	
+	if(east and north)
+	{
+		dev_SetClipboardWithTimeout(Format("{},{}", east2, north2))
+		
+		dev_MsgBoxInfo(Format("Got GPS position E{},N{}`r`n"
+			. "`r`n"
+			. "     apply offset fix {} , {} `r`n"
+			. "`r`n"
+			. "Sent to Clipboard:`r`n"
+			. "`r`n"
+			. "     {},{}"
+			, east, north
+			, Eoffset_fix, Noffset_fix
+			, east2, north2))
+	}
+	else 
+	{
+		dev_MsgBoxWarning("IrfanView_EXIF_extract_GPS_position(): No GPS position found.")
+;		Amdbg0(lines)
+	}
+}
+
+; Usage example:
+;
+;#If Is_IrfanviewEXIFDialog_Active()
+;
+;F1:: IrfanView_EXIF_extract_GPS_position(+0.0114, +0.0032)
+
+;#If 
+
+
+
+;==========================================================================
 ; Q-Dir 11.63 or 10.56
 ;==========================================================================
 
