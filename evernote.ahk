@@ -2190,6 +2190,8 @@ evernote_InlinePaste_InitMenu()
 	
 	dev_MenuAddItem("evernote_menuInlinePaste", "Paste as plain text (or F1 outside)", "Evernote_PastePlainText")
 	
+	dev_MenuAddSepLine("evernote_menuInlinePaste") ; ----
+	
 	fn := Func("Evernote_PasteSingleLineWithHtmlDeco").Bind("Htmldeco_Kbd")
 	dev_MenuAddItem("evernote_menuInlinePaste", "&Kbd style it", fn)
 	
@@ -2199,7 +2201,13 @@ evernote_InlinePaste_InitMenu()
 	fn := Func("Evernote_PasteSingleLineWithHtmlDeco").Bind("Htmldeco_chs_translate")
 	dev_MenuAddItem("evernote_menuInlinePaste", "&Chs Translate style", fn)
 	
-	dev_MenuAddSepLine("evernote_menuInlinePaste")
+	if(IsFunc("Evernote_AddExtraInlineStyles"))
+	{
+		Func("Evernote_AddExtraInlineStyles").()
+	}
+	
+	dev_MenuAddSepLine("evernote_menuInlinePaste") ; ----
+
 	dev_MenuAddItem("evernote_menuInlinePaste", "(Hold down Shift to use mono-font below)", "dev_nop")
 	
 	for idx, colorspec in color_presets
