@@ -521,7 +521,7 @@ class Everlink
 			return
 		}
 
-		preview_limit := 400
+		preview_limit := 2000
 		taildots := StrLen(cfhtml)>preview_limit ? "......" : ""
 		this.dbg2("Got CF_HTML: " SubStr(cfhtml, 1, preview_limit) " " taildots)
 		
