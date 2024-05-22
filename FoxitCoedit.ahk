@@ -72,6 +72,7 @@ class FoxitCoedit
 	;
 	msec_passive_followed := 0 		;msec_freeze_following_before := 0
 
+	; peer-follow-me user preference
 	static PEERFM_ALWAYS := 1
 	static PEERFM_AFTERSAVEPDF := 2
 	static PEERFM_NO := 3
@@ -471,6 +472,25 @@ class FoxitCoedit
 			}
 			Critical Off
 		}
+	}
+
+	IsTargetPdfActive()
+	{
+		; Foxit EXE can open multiple PDFs as individual tabs. 
+		; The target pdf we are following may be switched to background so that it 
+		; becomes "not active". In such case, the Foxit window-title will not reflect 
+		; the target pdf's filename. 
+		
+		if(not this.pedHwnd)
+			return
+		
+		dev_assert(this.pedWinTitle)
+		
+		nowtitle := dev_WinGetTitle_byHwnd(this.pedHwnd)
+		if(FoxitCoedit.IsTitleStemMatch(nowtitle, this.pedWinTitle))
+			return true
+		else
+			return false
 	}
 	
 	IsTitleStemMatch(wintitle1, wintitle2) ; static
@@ -883,6 +903,14 @@ class FoxitCoedit
 		;         differs to the previous write-to-ini pagenum. 
 		;         This mean, our-side user has really flipped to a new PDF page a moment ago, 
 		;         so, the peer should follow that pagenum.
+		
+		if(not this.IsTargetPdfActive())
+		{
+			; If current window-title does not match the observing PDF, 
+			; the PdfPageNum editbox may not exist, or does not reflect that of our target-pdf.
+			; So do nothing.
+			return false
+		} 
 		
 	
 		PdfPageNum := "" 
