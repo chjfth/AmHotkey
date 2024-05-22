@@ -381,8 +381,8 @@ class FoxitCoedit
 			{
 				this.is_showing_syncerr_msgbox := true
 				
-				dev_MsgBoxWarning(Format("{}`n`nHandshake lost! Click OK to re-sync.", ret_errmsg, FoxitCoedit_Id)
-					, FoxitCoedit_Id)
+				this.ModalMsgBox_ShowWarning(Format("{}`n`nHandshake lost! Click OK to re-sync.", ret_errmsg), FoxitCoedit_Id)
+				
 				this.ResyncCoedit()
 			}
 			else
@@ -431,7 +431,7 @@ class FoxitCoedit
 				{
 					; If OnBtnSavePdf() has been showing similar popup, we will not do that repeatedly.
 					
-					dev_MsgBoxWarning("Peer HWND lost. Handshake lost! Click OK to re-sync.", FoxitCoedit_Id)
+					this.ModalMsgBox_ShowWarning("Peer HWND lost. Handshake lost! Click OK to re-sync.", FoxitCoedit_Id)
 					this.ResyncCoedit()
 				}
 				return
@@ -451,7 +451,7 @@ class FoxitCoedit
 			
 			if(this.was_doc_modified and this.peerDocModified)
 			{
-				dev_MsgBoxWarning("Both sides pdf are being modified, you are doing conflict editing!`n`n"
+				this.ModalMsgBox_ShowWarning("Both sides pdf are being modified, you are doing conflict editing!`n`n"
 					. "This warning keeps pop-up until you discard one-side's modification.`n`n"
 					, FoxitCoedit_Id)
 			}
@@ -911,8 +911,7 @@ class FoxitCoedit
 			; So do nothing.
 			return false
 		} 
-		
-	
+
 		PdfPageNum := "" 
 		
 		oEditboxNN := this.GetFoxit_PageNum_classnn()
@@ -1028,6 +1027,17 @@ class FoxitCoedit
 	{
 		this.peerfm_selection := GuiControl_GetValue("FOCO", "gu_focoDdlPeerFollowMe")
 		; AmDbg0(".peerfm_selection=" this.peerfm_selection )
+	}
+	
+	ModalMsgBox_ShowWarning(text, title:="")
+	{
+		if(title=="")
+			title := "FoxitCoedit Warning"
+		
+		GuiName := "FOCO"
+		Gui_Show(GuiName)
+		Gui_ChangeOpt(GuiName, "+OwnDialogs")
+		dev_MsgBoxWarning(text, title)
 	}
 	
 } ; class FoxitCoedit
