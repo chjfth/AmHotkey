@@ -9,7 +9,6 @@ FoxitCoedit_LaunchUI()
 ;;;;;;;; Foco global vars ;;;;;;;;;;
 
 global g_foco ; The single object responsible for the Foco GUI
-global FoxitCoedit_Id := "FoxitCoedit"
 
 global gu_focoLblHeadline
 global g_HwndFOCOGui
@@ -33,6 +32,8 @@ return ; End of auto-execute section.
 
 class FoxitCoedit
 {
+	static Id := "FoxitCoedit"
+
 	; static vars as constant >>>
 	static DEFAULT_OPENSECS := 5
 	static DEFAULT_SAVESECS := 5
@@ -81,7 +82,7 @@ class FoxitCoedit
 	is_closing_pdf := false
 	
 	dbg(msg, lv) {
-		AmDbg_output(FoxitCoedit_Id, msg, lv)
+		AmDbg_output(FoxitCoedit.Id, msg, lv)
 	}
 	dbg0(msg) {
 		FoxitCoedit.dbg(msg, 0)
@@ -121,7 +122,7 @@ class FoxitCoedit
 
 	CreateGui()
 	{
-		GuiName := "FOCO"
+		GuiName := FoxitCoedit.Id
 		
 		Gui_New(GuiName)
 		Gui_ChangeOpt(GuiName, "+Resize +MinSize")
@@ -162,7 +163,7 @@ class FoxitCoedit
 
 	ShowGui()
 	{
-		GuiName := "FOCO"
+		GuiName := FoxitCoedit.Id
 		if(this.isGuiVisible)
 		{
 			dev_WinActivateHwnd(g_HwndFOCOGui) ; bring it to front
@@ -183,7 +184,7 @@ class FoxitCoedit
 	
 	HideGui()
 	{
-		Gui_Hide("FOCO")
+		Gui_Hide(FoxitCoedit.Id)
 ;		dev_StopTimer(this.timer) ; should NOT stop the timer
 		
 		this.isGuiVisible := false
@@ -191,7 +192,7 @@ class FoxitCoedit
 
 	RefreshUic()
 	{
-		GuiName := "FOCO"
+		GuiName := FoxitCoedit.Id
 		
 		; assume all false(disabled)
 		focoLblActive := focoCkbLside := focoCkbRside := false
@@ -275,7 +276,7 @@ class FoxitCoedit
 		{	
 			; This `if` to avoid clearing out user mouse text selection.
 			this.prev_mletext := detail
-			GuiControl_SetText("FOCO", "gu_focoMleInfo", detail)
+			GuiControl_SetText(FoxitCoedit.Id, "gu_focoMleInfo", detail)
 		}
 	}
 
@@ -337,7 +338,7 @@ class FoxitCoedit
 
 	OnBtnSavePdf()
 	{
-		GuiName := "FOCO"
+		GuiName := FoxitCoedit.Id
 		Gui_ChangeOpt(GuiName, "+OwnDialogs")
 
 		if(not this.IsPdfModified())
@@ -353,10 +354,12 @@ class FoxitCoedit
 		oldstate := this.state
 		this.state := "Freezing"
 		GuiControl_Enable(GuiName, "gu_focoBtnSavePdf", false)
+		GuiControl_SetText(GuiName, "gu_focoBtnSavePdf", "Saving...")
 		;
 		is_succ := this.coedit.LaunchSaveDocSession(ret_is_conn_lost, ret_errmsg)
 		; -- this will block for some time.
 		;
+		GuiControl_SetText(GuiName, "gu_focoBtnSavePdf", "&Save pdf now")
 		GuiControl_Enable(GuiName, "gu_focoBtnSavePdf", true)
 		this.state := oldstate
 		
@@ -381,7 +384,7 @@ class FoxitCoedit
 			{
 				this.is_showing_syncerr_msgbox := true
 				
-				this.ModalMsgBox_ShowWarning(Format("{}`n`nHandshake lost! Click OK to re-sync.", ret_errmsg), FoxitCoedit_Id)
+				this.ModalMsgBox_ShowWarning(Format("{}`n`nHandshake lost! Click OK to re-sync.", ret_errmsg), FoxitCoedit.Id)
 				
 				this.ResyncCoedit()
 			}
@@ -397,7 +400,7 @@ class FoxitCoedit
 
 	RootTimerCallback()
 	{
-		GuiName := "FOCO"
+		GuiName := FoxitCoedit.Id
 		
 		if(this.state=="Detecting" or this.state=="EditorDetected")
 		{
@@ -431,7 +434,7 @@ class FoxitCoedit
 				{
 					; If OnBtnSavePdf() has been showing similar popup, we will not do that repeatedly.
 					
-					this.ModalMsgBox_ShowWarning("Peer HWND lost. Handshake lost! Click OK to re-sync.", FoxitCoedit_Id)
+					this.ModalMsgBox_ShowWarning("Peer HWND lost. Handshake lost! Click OK to re-sync.", FoxitCoedit.Id)
 					this.ResyncCoedit()
 				}
 				return
@@ -442,6 +445,8 @@ class FoxitCoedit
 			;
 			
 			is_modified := this.IsPdfModified()
+			this.dbg2(Format("this.was_doc_modified={} , (now) is_modified={}", this.was_doc_modified, is_modified))
+
 			if(this.was_doc_modified != is_modified)
 			{
 				; Write to INI to indicate to other side
@@ -453,11 +458,13 @@ class FoxitCoedit
 			{
 				this.ModalMsgBox_ShowWarning("Both sides pdf are being modified, you are doing conflict editing!`n`n"
 					. "This warning keeps pop-up until you discard one-side's modification.`n`n"
-					, FoxitCoedit_Id)
+					. "Suggestion: If you decide to discard this-side's modification, go to Foxit, close the pdf without saving it, then reopen that pdf.`n`n"
+					, FoxitCoedit.Id)
+				return
 			}
 			
 			;
-			; Notify & Respond regarding PDF page number.
+			; Notify my PDF page number to peer, and/or, follow peer's PDF page number.
 			;
 			
 			Critical On
@@ -513,7 +520,7 @@ class FoxitCoedit
 	
 	InitDetectFoxitPresent() ; only before Activate.
 	{
-		GuiName := "FOCO"
+		GuiName := FoxitCoedit.Id
 		this.pedHwnd := FoxitCoedit.FindFoxitHwnd()
 		
 		if(this.pedHwnd)
@@ -577,14 +584,14 @@ class FoxitCoedit
 		else
 			this.ischk_Rside := state
 		
-		Checkbox_SetCheckState("FOCO", which_ctlid, state)
+		Checkbox_SetCheckState(FoxitCoedit.Id, which_ctlid, state)
 	}
 	
 	CkbActivateCoedit()
 	{
 		; We'll distinguish left-side or right-side according to A_GuiControl
 	
-		GuiName := "FOCO"
+		GuiName := FoxitCoedit.Id
 		
 		Gui_ChangeOpt(GuiName, "+OwnDialogs")
 		
@@ -614,7 +621,7 @@ class FoxitCoedit
 			if(not FileExist(pdfpath_real))
 			{
 				dev_MsgBoxWarning("The filepath you picked does not exist yet:`n`n" pdfpath_real
-					, FoxitCoedit_Id)
+					, FoxitCoedit.Id)
 				return
 			}
 			
@@ -726,7 +733,7 @@ class FoxitCoedit
 
 	fndocOpenPdf()
 	{
-		GuiName := "FOCO"
+		GuiName := FoxitCoedit.Id
 		this.dbg1("FoxitCoedit.fndocOpenPdf() executing...")
 		
 		is_succ := false
@@ -1025,7 +1032,7 @@ class FoxitCoedit
 	
 	DdlPeerFollowMeSelect()
 	{
-		this.peerfm_selection := GuiControl_GetValue("FOCO", "gu_focoDdlPeerFollowMe")
+		this.peerfm_selection := GuiControl_GetValue(FoxitCoedit.Id, "gu_focoDdlPeerFollowMe")
 		; AmDbg0(".peerfm_selection=" this.peerfm_selection )
 	}
 	
@@ -1034,7 +1041,7 @@ class FoxitCoedit
 		if(title=="")
 			title := "FoxitCoedit Warning"
 		
-		GuiName := "FOCO"
+		GuiName := FoxitCoedit.Id
 		Gui_Show(GuiName)
 		Gui_ChangeOpt(GuiName, "+OwnDialogs")
 		dev_MsgBoxWarning(text, title)
@@ -1070,7 +1077,7 @@ Foco_OnBtnSync()
 }
 
 
-FOCOGuiSize()
+FoxitCoeditGuiSize()
 {
 	rsdict := {}
 	rsdict.gu_focoMleInfo := JUL.FillArea
@@ -1082,15 +1089,15 @@ FOCOGuiSize()
 	rsdict.gu_focoBtnSavePdf := JUL.PinToLeftBottom
 	rsdict.gu_focoBtnSync := JUL.PinToRightBottom
 	
-	dev_GuiAutoResize("FOCO", rsdict, A_GuiWidth, A_GuiHeight)
+	dev_GuiAutoResize(FoxitCoedit.Id, rsdict, A_GuiWidth, A_GuiHeight)
 }
 
-FOCOGuiClose()
+FoxitCoeditGuiClose()
 {
 	g_foco.HideGui()
 }
 
-FOCOGuiEscape()
+FoxitCoeditGuiEscape()
 {
 	g_foco.HideGui()
 }
