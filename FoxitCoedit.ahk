@@ -881,11 +881,53 @@ class FoxitCoedit
 		}
 	}
 	
-	GetFoxit_PageNum_classnn()
+	GetFoxit_PageNum_Editbox() ; return its hwnd
 	{
-		RegexClassnnFindControlEx("ahk_id " this.pedHwnd, "Edit", ".+\([0-9]+ / [0-9]+\)"
-			, oEditboxNN, ox, oy, owidth, oheight)
-		return oEditboxNN
+		; The PageNum editbox is a child-window of a HWND with class name like "BCGPRibbonStatusBar:1230000:8:10007:10"
+		; So we go through all "Edit" window-classes, checking their parent class of that "BCGPRibbonStatusBar"
+		
+		wintitle := "ahk_id " this.pedHwnd ; the foxit top-level window
+		arClassnn := dev_WinGet_ControlList(wintitle)
+		
+		arEditHwnds := []
+		
+		for index,classnn in arClassnn
+		{
+			if(not StrIsStartsWith(classnn, "Edit"))
+				continue
+		
+			hEdit := dev_GetHwndFromClassNN(classnn, wintitle)
+			
+			hctlp := dev_GetParentHwnd(hEdit)
+			
+			classp := dev_GetClassNameFromHwnd(hctlp)
+;			AmDbg0("classp=" classp) 
+
+			if(not StrIsStartsWith(classp, "BCGPRibbonStatusBar"))
+				continue
+			
+			arEditHwnds.Push(hEdit)
+		}
+		
+		; Now consider arEditHwnds[]
+		; [CASE 1] For Foxit Reader 7.1.5, len(arEditHwnds) should be one, and that is the PageNum editbox.
+		; [CASE 2] For Foxit Editor 11, len(arEditHwnds) should be two, one is the PageNum, the other is the PageZoom.
+		;          The PageZoom text is like "100%", "66.67%" etc.
+		
+		count := arEditHwnds.Length()
+		if(count==0)
+			return 0
+		
+		if(count==1)
+			return arEditHwnds[1]
+		
+		; Now for count==2
+		text1 := dev_ControlGetText_hwnd(arEditHwnds[1])
+		text2 := dev_ControlGetText_hwnd(arEditHwnds[2])
+		if(not InStr(text1, "%"))
+			return arEditHwnds[1]
+		if(not InStr(text2, "%"))
+			return arEditHwnds[2]
 	}
 	
 	record_pagenum_for_peer(is_force:=false)
@@ -920,20 +962,25 @@ class FoxitCoedit
 		} 
 
 		PdfPageNum := "" 
+		hwndEdit := this.GetFoxit_PageNum_Editbox()
 		
-		oEditboxNN := this.GetFoxit_PageNum_classnn()
-		
-		if(oEditboxNN)
+		if(hwndEdit)
 		{
-			PdfPageNum := dev_ControlGetText_hc(this.pedHwnd, oEditboxNN)
+			PdfPageNum := dev_ControlGetText_hwnd(hwndEdit)
+			
+			; We may get PdfPageNum = "73 (89 / 179)" or "4 / 25", 
+			; and we do not try to extract the number "73" or "4", we just transfer it to the peer verbatim.
+			
 			if(PdfPageNum=="")
 			{
-				dev_MsgBoxWarning("Unexpect! Foxit's pagenum editbox is empty.")
+				; May be user is editing that text, just give a tooltip and ignore it.
+				dev_TooltipAutoClear("Debug-info: Foxit's pagenum editbox is empty.")
+				return false
 			}
 		}
 		else
 		{
-			dev_MsgBoxWarning("Unexpect! Cannot locate Foxit's pagenum editbox.")
+			this.ModalMsgBox_ShowWarning("Unexpect! Cannot locate Foxit's PageNum editbox.")
 		}
 		
 		if(!is_force)
@@ -973,8 +1020,8 @@ class FoxitCoedit
 		if(not pagenum_spec)
 			return
 
-		oEditboxNN := this.GetFoxit_PageNum_classnn()
-		if(oEditboxNN=="")
+		hwndEditbox := this.GetFoxit_PageNum_Editbox()
+		if(not hwndEditbox)
 			return
 		
 		parts := StrSplit(pagenum_spec, ";") ; Example: Seq#6;19 (35 / 179)
@@ -1002,9 +1049,8 @@ class FoxitCoedit
 		
 		this.dbg1(Format("Peer has updated PdfPageNum to 'Seq#{};{}', now follow it.", peer_now_pagenum_seq, PdfPageNum))
 
-		wintitle := "ahk_id " this.pedHwnd
-		dev_ControlSetText_hc(this.pedHwnd, oEditboxNN, PdfPageNum)
-		dev_ControlSend(wintitle, oEditboxNN, "{Enter}")
+		dev_ControlSetText_hwnd(hwndEditbox, PdfPageNum)
+		dev_ControlSend_hwnd(hwndEditbox, "{Enter}")
 		
 		this.msec_passive_followed := dev_GetTickCount64()
 	}

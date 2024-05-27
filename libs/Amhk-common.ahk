@@ -1181,7 +1181,7 @@ dev_max(args*)
 	return ret.val
 }
 
-dev_JoinStrings(ar_strings, join_with:=",")
+dev_JoinStrings(ar_strings, join_with:="`n")
 {
 	; ar_strings is an array containing strings
 	if(!IsObject(ar_strings))
@@ -1197,6 +1197,27 @@ dev_JoinStrings(ar_strings, join_with:=",")
 	}
 	return ret
 }
+
+dev_SplitStrings(bigstring, sep:="`n")
+{
+	if(sep=="`n")
+		bigstring := dev_StrReplace_CRLF_to_LF(bigstring)
+
+	ar_strings := []
+
+	Loop, PARSE, % bigstring, % sep
+	{
+		ar_strings.Push(A_LoopField)
+	}
+	
+	return ar_strings
+}
+
+dev_ParseLinesToArray(bigstring, sep:="`n") ; old name
+{
+	dev_SplitStrings(bigstring, sep)
+}
+
 
 IsWinXP()
 {
@@ -1253,6 +1274,12 @@ dev_KillProcessByPid(pid, byref winerr:=0)
 	DllCall("CloseHandle", "Ptr", hProcess)
 	
 	return is_succ
+}
+
+dev_GetParentHwnd(hwnd)
+{
+	hwndparent := DllCall("GetParent", "Ptr",hwnd)
+	return hwndparent
 }
 
 dev_GetRootWindow(hwnd)
@@ -1624,6 +1651,11 @@ dev_SendKeyToExeMainWindow_ap(keyspec, wintitle:="A")
 dev_SendRawToExeMainWindow_ap(keyspec, wintitle:="A")
 {
 	ControlSendRaw ahk_parent, % keyspec, % wintitle
+}
+
+dev_ControlSend_hwnd(hwnd, keys)
+{
+	ControlSend, , % keys, ahk_id %hwnd%
 }
 
 dev_ControlSend(wintitle, classnn, keys)
@@ -2066,6 +2098,20 @@ dev_GetHwndFromClassNN(classnn, wintitle)
 {
 	ControlGet, hctrl, HWND, , %classnn%, %wintitle%
 	return hctrl
+}
+
+dev_GetClassNameFromHwnd(hwnd)
+{
+	nbuf := 100
+	VarSetCapacity(classname, A_IsUnicode ? nbuf * 2 : nbuf)
+	nret := DllCall("GetClassName"
+		, "Ptr", hwnd
+		, "Str", classname
+		, "Int", nbuf)
+	if(nret==0)
+		return ""
+	else
+		return classname
 }
 
 GetActiveClassnnFromXY(x, y)
@@ -2547,21 +2593,6 @@ dev_StringCountLines(multiline_string)
 	return lines.Length()
 }
 
-dev_ParseLinesToArray(bigstring, sep:="`n")
-{
-	if(sep=="`n")
-		bigstring := dev_StrReplace_CRLF_to_LF(bigstring)
-
-	ar := []
-
-	Loop, PARSE, % bigstring, % sep
-	{
-		ar.Push(A_LoopField)
-	}
-	
-	return ar
-}
-
 
 Dbg_DumpChildWinsInfo(hwndtop)
 {
@@ -2596,17 +2627,34 @@ Dbg_DumpChildWinsInfo(hwndtop)
 	return true
 }
 
+dev_WinGet_ControlList(wintitle)
+{
+	; Return an array of classnn-s
+	
+	WinGet, xClassnn, ControlList, %wintitle%
+	return dev_SplitStrings(xClassnn, "`n")
+}
 
-dev_ControlGetText_hc(hwndtop, classnn)
+dev_ControlGetText_hwnd(hwnd)
 {
 	try {
-		ControlGetText, outtext, %classnn%, ahk_id %hwndtop%
+		ControlGetText, outtext, , ahk_id %hwnd%
 	} catch e {
 		; Without this catch, a too large child-control text will assert #MaxMem error.
 		outtext := "(wintext too large?)"
 	}
-
 	return outtext
+}
+
+dev_ControlGetText_hc(hwndtop, classnn) ; hc: hwnd+classnn
+{
+	hctl := dev_GetHwndFromClassNN(classnn,  hwndtop)
+	return dev_ControlGetText_hwnd(hctl)
+}
+
+dev_ControlSetText_hwnd(hwnd, newtext)
+{
+	ControlSetText, , %newtext%, ahk_id %hwnd%
 }
 
 dev_ControlSetText_hc(hwndtop, classnn, newtext) ; hc: hwnd+classnn
