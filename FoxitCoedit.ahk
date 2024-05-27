@@ -282,16 +282,27 @@ class FoxitCoedit
 
 	IsPdfModified()
 	{
-		wintitle := dev_WinGetTitle_byHwnd(this.pedHwnd)
-		dev_SplitPath(this.pdfpath, pdfnam)
+		wndtitle := dev_WinGetTitle_byHwnd(this.pedHwnd)
 		
-		is_nam := StrIsStartsWith(wintitle, pdfnam)
-		is_ast := dev_IsSubStr(wintitle, "*")
+		; Note: the Foxit's wndtitle text MAY diverge from the PDF filename,
+		; -- this can happen if the PDF has explicit Title property.
+		; For example, "[LLEBPF2023] OReilly - Learning eBPF by Liz Rice.pdf" 
+		; has Foxit wndtitle text "Learning EBPF - Foxit Reader".
+		; When the PDF is modified, the wndtitle becomes:
+		;     "Learning EBPF * - Foxit Reader"
+		;
+		; So we need to compare this.pedWinTitle instead of this.pdfpath .
 		
-		if(is_nam and is_ast)
-			return true
-		else
-			return false
+		is_ast := dev_IsSubStr(wndtitle, "*")
+		if(is_ast)
+		{
+			wndtitle_noast := FoxitCoedit.StripAsterisk(wndtitle)
+
+			if(wndtitle_noast==this.pedWinTitle)
+				return true
+		}
+		
+		return false
 	}
 
 
@@ -544,9 +555,9 @@ class FoxitCoedit
 		this.RefreshUic()
 	}
 	
-	StripAsterisk(wintitle) ; static
+	StripAsterisk(wndtitle) ; static
 	{
-		return StrReplace(wintitle, " *", "")
+		return StrReplace(wndtitle, " *", "")
 	}
 	
 	TitleStemFromWinTitle(wintitle) ; static
@@ -565,7 +576,7 @@ class FoxitCoedit
 			stem := wintitle
 		
 		; Strip of trailing modification asterisk
-		return RTrim(stem, " *")
+		return FoxitCoedit.StripAsterisk(" *")
 	}
 	
 	
@@ -759,13 +770,13 @@ class FoxitCoedit
 			
 			newtitle := dev_WinGetTitle_byHwnd(newhwnd)
 			
-			newpdfnam := this.TitleStemFromWinTitle(newtitle)
-			oldpdfnam := this.TitleStemFromWinTitle(this.pedWinTitle)
+			newpdf_title := FoxitCoedit.TitleStemFromWinTitle(newtitle)
+			oldpdf_title := FoxitCoedit.TitleStemFromWinTitle(this.pedWinTitle)
 			
 			; note: When the Foxit Editor 11 launching involves some bigs PDFs, the first-seen 
 			; newtitle may be the small progress-bar's title, and we need to ignore it.
 			
-			if( newpdfnam==oldpdfnam )
+			if( newpdf_title==oldpdf_title )
 			{
 				this.dbg1("FoxitCoedit.fndocOpenPdf() success.")
 				
