@@ -21,7 +21,7 @@ class PeersCoedit
 
 	mineside := "" ; "sideA" or "sideB"
 	
-	state := "" ; "Syncing" -> Handshaked -> [A] ProSaving  -> Handshaked
+	state := "" ; "Syncing" -> Handshaked -> [A] ProSaving -> Handshaked
 	;                                        [B] PasReload -> Handshaked
 	
 	timer := "" ; a BoundFunc object used to start/stop AHK timer

@@ -708,7 +708,10 @@ class FoxitCoedit
 					if(this.peerfm_selection==FoxitCoedit.PEERFM_ALWAYS 
 						or this.peerfm_selection==FoxitCoedit.PEERFM_AFTERSAVEPDF)
 					{
-						this.record_pagenum_for_peer(true)
+						if(not this.is_closing_pdf)
+						{
+							this.record_pagenum_for_peer(true)
+						}
 					}
 					
 					return true
@@ -796,8 +799,6 @@ class FoxitCoedit
 					this.dbg1(Format("Strange! Hwnd by ahk_exe({}) != Hwnd by wndclass({})", this.pedHwnd, dbgHwnd))
 				}
 				
-				this.FollowPeerzPageNum()  ; this.follow_saverz_pagenum()
-				
 				is_succ := true
 				break
 			}
@@ -829,9 +830,14 @@ class FoxitCoedit
 		this.is_closing_pdf := false
 
 		if(is_succ)
+		{
+			this.FollowPeerzPageNum()
 			return true
+		}
 		else
+		{
 			throw Exception(Format("Bad! Foxit process ""{}"" did not launch.", exepath))
+		}
 	}
 	
 	Try_SaveCurrentPdf()
@@ -900,8 +906,16 @@ class FoxitCoedit
 		wintitle := "ahk_id " this.pedHwnd ; the foxit top-level window
 		arClassnn := dev_WinGet_ControlList(wintitle)
 		
+		childwnds := arClassnn.Length()
+		if(childwnds<10)
+		{
+			; [2024-05-28] This can happen when Foxit process has just started 
+			; (Seen on Foxit 11, array length just 3), so the Editbox has not been created.
+			this.dbg1(Format("Info: GetFoxit_PageNum_Editbox() sees childwins only {}, maybe Foxit is just starting up.", childwnds))
+		}
+
 		arEditHwnds := []
-		
+
 		for index,classnn in arClassnn
 		{
 			if(not StrIsStartsWith(classnn, "Edit"))
@@ -912,7 +926,8 @@ class FoxitCoedit
 			hctlp := dev_GetParentHwnd(hEdit)
 			
 			classp := dev_GetClassNameFromHwnd(hctlp)
-;			AmDbg0("classp=" classp) 
+
+;			AmDbg0(Format("{} : class={} , classp={}", index, classnn, classp))
 
 			if(not StrIsStartsWith(classp, "BCGPRibbonStatusBar"))
 				continue
@@ -991,6 +1006,7 @@ class FoxitCoedit
 		}
 		else
 		{
+			; AmDbg0( "PdfPageNum-null:`n" dev_getCallStack() )
 			this.ModalMsgBox_ShowWarning("Unexpect! Cannot locate Foxit's PageNum editbox.")
 		}
 		
@@ -1109,7 +1125,7 @@ class FoxitCoedit
 
 Foxit_testFollowPagenum()
 {
-	g_foco.follow_saverz_pagenum()
+	g_foco.FollowPeerzPageNum()
 }
 
 
