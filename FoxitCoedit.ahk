@@ -83,6 +83,7 @@ class FoxitCoedit
 	peerfm_selection := FoxitCoedit.PEERFM_ALWAYS
 	
 	is_closing_pdf := false
+	was_activepdf := -1 ; -1 as an invalid value
 	
 	dbg(msg, lv) {
 		AmDbg_output(FoxitCoedit.Id, msg, lv)
@@ -765,7 +766,10 @@ class FoxitCoedit
 	fndocClosePdf()
 	{
 		Critical On
+		
 		this.is_closing_pdf := true
+		this.was_activepdf := this.IsTargetPdfActive()
+		
 		Critical Off
 	
 		hwnd := this.pedHwnd
@@ -858,10 +862,20 @@ class FoxitCoedit
 ;				1*[20240419_15:50:33.970] (+0.000s) Foxit HWND updated to be: 0xce09d2
 ;				2*[20240419_15:50:33.970] (+0.000s) Done re-opening doc...
 ;				1*[20240419_15:50:33.970] (+0.000s) Mineside just refreshed the doc. (passeq=2)
+
+				; [2024-05-29]
+				if(not this.was_activepdf)
+				{
+					; There is no hope that Foxit UI title can match our target pdf.
+					; Just assume success.
+					is_succ := true
+					break
+				}
 			}
 		}
 
 		this.is_closing_pdf := false
+		this.was_activepdf := -1
 
 		if(is_succ)
 		{
