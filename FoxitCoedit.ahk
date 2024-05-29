@@ -4,6 +4,9 @@
 /* APIs:
 FoxitCoedit_LaunchUI()
 
+Example:
+	fxhk_DefineComboHotkey("AppsKey", "s", "FoxitCoedit_LaunchUI")
+
 */
 
 ;;;;;;;; Foco global vars ;;;;;;;;;;
@@ -304,7 +307,15 @@ class FoxitCoedit
 		
 		return false
 	}
-
+	
+	IsPdfModified_msgbox()
+	{
+		if(this.IsPdfModified())
+			return true
+		
+		dev_MsgBoxInfo("The PDF file looks unmodified, not action needed.")
+		return false
+	}
 
 	ActivateCoedit(which_side, pdfpath)
 	{
@@ -322,7 +333,7 @@ class FoxitCoedit
 		
 		; Override Ctrl+S for Foxit Reader/Editor 
 		fxhk_DefineHotkeyCondComment("^s", "FoxitCoedit_SaveDoc_hotkey", "assigned by FoxitCoedit"
-			, false	, "foxit_IsWinActive", "FoxitCoedit_LaunchUI")
+			, false	, "foxit_IsWinActive", "FoxitCoedit_CtrlS")
 	}
 	
 	DeactivateCoedit()
@@ -347,21 +358,30 @@ class FoxitCoedit
 			, (myHwnd=="" or myHwnd==0) ? "" : Format("0x{:08X}", myHwnd))
 	}
 
-	OnBtnSavePdf()
+	CtrlS()
 	{
-		if(not this.IsTargetPdfActive())
+		if(this.IsTargetPdfActive())
 		{
-;AmDbg0("native ^s.....")
+			if(not this.IsPdfModified_msgbox())
+				return
+			
+			; PDF has modification asterisk:
+			this.ShowGui()
+		}
+		else
+		{
 			Send ^s
 			return
 		}
-	
+	}
+
+	OnBtnSavePdf()
+	{
 		GuiName := FoxitCoedit.Id
 		Gui_ChangeOpt(GuiName, "+OwnDialogs")
 
-		if(not this.IsPdfModified())
+		if(not this.IsPdfModified_msgbox())
 		{
-			dev_MsgBoxInfo("The PDF file looks unmodified, not action needed.")
 			return
 		}
 
@@ -993,7 +1013,7 @@ class FoxitCoedit
 		;         This mean, our-side user has really flipped to a new PDF page a moment ago, 
 		;         so, the peer should follow that pagenum.
 
-;		dev_assert(this.IsTargetPdfActive())
+;		dev_assert(this.IsTargetPdfActive()) ; sometimes we fails on it? pending.
 		if(not this.IsTargetPdfActive())
 		{
 			; If current window-title does not match the observing PDF, 
@@ -1143,7 +1163,7 @@ Foxit_testFollowPagenum()
 	g_foco.FollowPeerzPageNum()
 }
 
-
+ 
 FoxitCoedit_LaunchUI()
 {
 	if(!g_foco)
@@ -1152,6 +1172,16 @@ FoxitCoedit_LaunchUI()
 	}
 
 	g_foco.ShowGui()
+}
+
+FoxitCoedit_CtrlS()
+{
+	if(!g_foco)
+	{
+		g_foco := new FoxitCoedit()
+	}
+
+	g_foco.CtrlS()
 }
 
 Foco_OnBtnSavePdf()
