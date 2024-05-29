@@ -349,6 +349,13 @@ class FoxitCoedit
 
 	OnBtnSavePdf()
 	{
+		if(not this.IsTargetPdfActive())
+		{
+;AmDbg0("native ^s.....")
+			Send ^s
+			return
+		}
+	
 		GuiName := FoxitCoedit.Id
 		Gui_ChangeOpt(GuiName, "+OwnDialogs")
 
@@ -451,6 +458,11 @@ class FoxitCoedit
 				return
 			}
 			
+			if(not this.IsTargetPdfActive())
+			{
+				; Foxit user is now viewing another pdf, so nothing more to do.
+				return 
+			}
 			;
 			; Check editing conflict
 			;
@@ -500,11 +512,12 @@ class FoxitCoedit
 		; the target pdf's filename. 
 		
 		if(not this.pedHwnd)
-			return
+			return false
 		
 		dev_assert(this.pedWinTitle)
 		
 		nowtitle := dev_WinGetTitle_byHwnd(this.pedHwnd)
+
 		if(FoxitCoedit.IsTitleStemMatch(nowtitle, this.pedWinTitle))
 			return true
 		else
@@ -515,6 +528,7 @@ class FoxitCoedit
 	{
 		stem1 := FoxitCoedit.TitleStemFromWinTitle(wintitle1)
 		stem2 := FoxitCoedit.TitleStemFromWinTitle(wintitle2)
+
 		return stem1==stem2 ? true : false
 	}
 	
@@ -576,7 +590,7 @@ class FoxitCoedit
 			stem := wintitle
 		
 		; Strip of trailing modification asterisk
-		return FoxitCoedit.StripAsterisk(" *")
+		return FoxitCoedit.StripAsterisk(stem)
 	}
 	
 	
@@ -978,7 +992,8 @@ class FoxitCoedit
 		;         differs to the previous write-to-ini pagenum. 
 		;         This mean, our-side user has really flipped to a new PDF page a moment ago, 
 		;         so, the peer should follow that pagenum.
-		
+
+;		dev_assert(this.IsTargetPdfActive())
 		if(not this.IsTargetPdfActive())
 		{
 			; If current window-title does not match the observing PDF, 
