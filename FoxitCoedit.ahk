@@ -987,6 +987,7 @@ class FoxitCoedit
 		; [CASE 1] For Foxit Reader 7.1.5, len(arEditHwnds) should be one, and that is the PageNum editbox.
 		; [CASE 2] For Foxit Editor 11, len(arEditHwnds) should be two, one is the PageNum, the other is the PageZoom.
 		;          The PageZoom text is like "100%", "66.67%" etc.
+		;          Note: PageZoom text may be blank string when Foxit Editor 11 exe is just starting up.
 		
 		count := arEditHwnds.Length()
 		if(count==0)
@@ -998,10 +999,34 @@ class FoxitCoedit
 		; Now for count==2
 		text1 := dev_ControlGetText_hwnd(arEditHwnds[1])
 		text2 := dev_ControlGetText_hwnd(arEditHwnds[2])
-		if(not InStr(text1, "%"))
+
+		hasSlash1 := InStr(text1, "/") ; example: "xi (13 / 179)"
+		hasSlash2 := InStr(text2, "/") 
+
+		hasPct1 := InStr(text1, "%")
+		hasPct2 := InStr(text2, "%")
+		
+		if(!hasPct1 and !hasPct2)
+		{
+			this.dbg1(Format("PdfPageNum: Two editbox both lack '%': '{}' | '{}'", text1, text2))
+			; Sometimes, I saw in Foxit Editor 11:
+			/*
+0*[20240531_11:36:59.044] (+0.016s) PdfPageNum: Two editbox both lack '%': '' | '64 (82 / 237)'
+0*[20240531_11:36:59.621] (+0.000s) PdfPageNum: Two editbox both lack '%': '63.00' | '64 (82 / 237)'
+			*/
+		}
+		
+		if(hasSlash1)
 			return arEditHwnds[1]
-		if(not InStr(text2, "%"))
+		else if(hasSlash2)
 			return arEditHwnds[2]
+
+		if(!hasPct1)
+			return arEditHwnds[1]
+		else if(!hasPct2)
+			return arEditHwnds[2]
+		else
+			return 0 ; unlikely
 	}
 	
 	record_pagenum_for_peer(is_force:=false)
@@ -1027,7 +1052,7 @@ class FoxitCoedit
 		;         This mean, our-side user has really flipped to a new PDF page a moment ago, 
 		;         so, the peer should follow that pagenum.
 
-;		dev_assert(this.IsTargetPdfActive()) ; sometimes we fails on it? pending.
+		dev_assert(this.IsTargetPdfActive()) ; sometimes we fails on it? pending.
 		if(not this.IsTargetPdfActive())
 		{
 			; If current window-title does not match the observing PDF, 
