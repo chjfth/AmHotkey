@@ -3,9 +3,31 @@
 /* APIs:
 Evp_LaunchUI(http_server_baseurl:="")
 
+Everpic_InitHotkeys(http_server_baseurl:="") ; optional
+
 Evp_FixInternalHttpServer() 
 ; -- If HTTP server chokes(not respond to client), need to call this to recover. (testing)
 
+[Scenario 1] If user feels OK with the default hotkey of App+C, then, non of the above API is needed.
+When user press App+C, Evp_LaunchUI() is triggered and the Everpic UI pops up converting the clipboard image.
+
+[Scenario 2a] If user feels OK with the default hotkey of App+C and want to have HTTP server activated
+(so that the image-carrying CF_HTML can be pasted into Evclip), user should call
+
+	Everpic_InitHotkeys("*") 
+
+once in customize.ahk .
+
+[Scenario 2b] If user wants to work with customized HTTP server, then in customize.ahk, he calls once:
+
+	Everpic_InitHotkeys("http://localhost:2017") 
+
+[Scenario 3] If user wants to have another hotkey(^#c for example) to activate Everpic UI, then
+he should call one of below once in customize.ahk :
+
+	fxhk_DefineHotkey("^#c", false, "Evp_LaunchUI")
+	fxhk_DefineHotkey("^#c", false, "Evp_LaunchUI", "*")
+	fxhk_DefineHotkey("^#c", false, "Evp_LaunchUI", "http://localhost:2017")
 */
 
 ;;;;;;;; Everpic global vars ;;;;;;;;;;
@@ -139,12 +161,28 @@ class Everpic
 }
 
 
-Everpic_InitHotkeys()
+Everpic_InitHotkeys(http_server_baseurl:="")
 {
 	; App+c to callup Everpic UI, we make it global hotkey.
 	; This converts in-clipboard image to your preferred format(png/jpg) and put CF_HTML content into clipboard,
 	; so Ctrl+v pasting it into Evernote saves quite much space (Evernote defaultly gives you very big PNG-32).
-	fxhk_DefineComboHotkey("AppsKey", "c", "Evp_LaunchUI", "*")
+	;
+	; Note: Before Evp_LaunchUI() is actually called, user can call Everpic_InitHotkeys() a second time
+	; with another http_server_baseurl value to overide the to-be-used BaseURL.
+	; After Evp_LaunchUI() is called the first time, the BaseURL is solidified and can not be changed any more.
+	;
+	; Example:
+	;	Everpic_InitHotkeys("http://localhost:2017")
+	
+	hotkey_purpose := "Purpose-Evp_LaunchUI"
+	
+	ret_purpose := fxhk_DefineComboHotkeyCondComment("AppsKey", "c"
+		, hotkey_purpose ; must be explicit, so that a second call can override it.
+		, "" ; user_comment
+		, "" ; fn_cond
+		, "Evp_LaunchUI", http_server_baseurl)
+	
+	dev_assert(hotkey_purpose==ret_purpose)
 }
 
 evp_HttpServing(ByRef request, ByRef response, ByRef server) {
@@ -235,8 +273,14 @@ Evp_LaunchUI(http_server_baseurl:="")
 	static s_inited := false
 	if(!s_inited)
 	{
+		if(http_server_baseurl=="")
+		{
+			; No HTTP server involved. User will not be able to paste CF_HTML into Evclip,
+			; only to copy generated image filepath, or, "List of files" for pasting into Explorer.
+		}
 		if(http_server_baseurl=="*")
 		{
+			; Use AHKHttp as (internal) HTTP server
 			evp_LaunchHttpServer(Everpic.listen_port_base)
 		}
 		else if(http_server_baseurl!="")
@@ -244,11 +288,6 @@ Evp_LaunchUI(http_server_baseurl:="")
 			; User may set-up his own HTTP server for this purpose. For example:
 			; "http://localhost:2017"
 			Everpic.baseurl := http_server_baseurl
-		}
-		else
-		{
-			; Not HTTP server involved. User will not be able to paste CF_HTML into Evclip,
-			; only to copy generated image filepath, or, "List of files" for pasting into Explorer.
 		}
 
 		s_inited := true ; Even if HTTP server start-up fail.
