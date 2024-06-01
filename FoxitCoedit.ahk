@@ -447,7 +447,7 @@ class FoxitCoedit
 		}
 		else if(this.state=="CoeditActivated")
 		{
-			GuiControl_SetText(GuiName, "gu_focoLblHeadline", "[ Activated ] Syncing...")
+			GuiControl_SetText(GuiName, "gu_focoLblHeadline", "[ Activated ] Waiting for peer...")
 		}
 		else if(this.state=="CoeditHandshaked")
 		{
