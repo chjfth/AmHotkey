@@ -656,8 +656,11 @@ class FoxitCoedit
 		
 			; Ask user the real location of the PDF file, bcz AHK code here has no way to know it automatically.
 			pdfnam := this.TitleStemFromWinTitle(this.pedWinTitle)
+			
+			pdfnam_safe := dev_ReplaceBadChars(pdfnam, "/<:>", "_")
+			; -- If pdfnam is sth like "Caution: Danger", that will cause dev_OpenSelectFileDialog() error.
 
-			pdfpath_real := dev_OpenSelectFileDialog(pdfnam
+			pdfpath_real := dev_OpenSelectFileDialog(pdfnam_safe
 				, "Please tell me the actual filepath of the PDF file on the disk"
 				, "PDF files (*.pdf)")
 			

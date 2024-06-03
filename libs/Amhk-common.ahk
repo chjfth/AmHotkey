@@ -2786,10 +2786,31 @@ dev_VarGetCapacity(byref varname) ; this is Get()
 dev_OpenSelectFileDialog(path_hint, dlg_title:="", filter:="")
 {
 	opt_FilemustExist := 1
-	FileSelectFile, outpath_selected, % opt_FilemustExist, % path_hint, % dlg_title, % filter
+	
+	try {
+		FileSelectFile, outpath_selected, % opt_FilemustExist, % path_hint , % dlg_title, % filter
+	}
+	catch e {
+		; If path_hint is "Caution: danger", we get this. (due to the bad colon char)
+		; More bad chars like: <|>/
+		dev_MsgBoxError("Unexpected! FileSelectFile execution fail!`n`n" dev_getCallStack())
+	}
 	return outpath_selected
 }
 
+dev_ReplaceBadChars(inputstr, badchars, safestr:="")
+{
+	; Each char in badchars[] will be replaced with safestr
+	
+	outputstr := inputstr
+	
+	badlen := StrLen(badchars)
+	Loop, % badlen
+	{
+		outputstr := StrReplace(outputstr, SubStr(badchars, A_Index, 1), safestr)
+	}
+	return outputstr
+}
 
 WinSet_AlwaysOnTop(on_or_off, wintitle:="")
 {
