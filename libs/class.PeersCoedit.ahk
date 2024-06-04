@@ -51,6 +51,7 @@ class PeersCoedit
 		this.dbg(msg, 1)
 	}
 	dbg2(msg) {
+		; Dbg messages occurring in periodic timer use this level.
 		this.dbg(msg, 2)
 	}
 
@@ -280,7 +281,7 @@ class PeersCoedit
 		
 			this.IniIncreaseVal("proseq")
 			
-			this.dbg2(Format("Waiting peerside to close doc..."))
+			this.dbg1(Format("Waiting peerside to close doc..."))
 			
 			is_succ := this.WaitPeerIni("passeq", this.proseq+1, this.tos_pas_closedoc)
 			if(not is_succ)
@@ -288,15 +289,15 @@ class PeersCoedit
 				throw Exception(Format("Peerside(close-doc) no response after {} seconds", this.tos_pas_closedoc))
 			}
 
-			this.dbg2("Waiting peerside to close doc, success.")
+			this.dbg1("Waiting peerside to close doc, success.")
 			
-			this.dbg2("Now saving doc...")
+			this.dbg1("Now saving mineside doc...")
 			this.fndoc.savedoc.() ; throw on error 
-			this.dbg2("Done saving doc.")
+			this.dbg1("Done saving mineside doc.")
 			
 			this.IniIncreaseVal("proseq")
 			
-			this.dbg2("Waiting peerside to reopen doc...")
+			this.dbg1("Waiting peerside to reopen doc...")
 			
 			is_succ := this.WaitPeerIni("passeq", this.proseq+2, this.tos_pas_opendoc)
 			if(not is_succ)
@@ -304,9 +305,9 @@ class PeersCoedit
 				throw Exception(Format("Peerside(open-doc) no response after {} seconds", this.tos_pas_opendoc))
 			}
 
-			this.dbg2("Waiting peerside to reopen doc, success.")
+			this.dbg1("Waiting peerside to reopen doc, success.")
 
-			this.dbg1(Format("Saving doc SUCCESS. (proseq={})", this.proseq+2))
+			this.dbg1(Format("Done saving session. (proseq={})", this.proseq+2))
 			
 			this.proseq += 2
 			this.state := "Handshaked"
@@ -357,13 +358,13 @@ class PeersCoedit
 			
 			dev_assert(peer_proseq == this.passeq+1)
 			
-			this.dbg2("Now closing doc...")
+			this.dbg1("Now closing doc...")
 			this.fndoc.closedoc.() ; throw on error 
-			this.dbg2("Done closing doc.")
+			this.dbg1("Done closing doc.")
 			
 			this.IniIncreaseVal("passeq")
 			
-			this.dbg2("Waiting peer's writing doc...")
+			this.dbg1("Waiting peer's writing doc...")
 			dev_SplitPath(this.docpath, oPdfFilenam)
 			ttmsg := Format("Waiting peer saving: {}`n`nMax wait time: {}s", oPdfFilenam, this.tos_pro_savedoc)
 			dev_TooltipAutoClear(ttmsg, this.tos_pro_savedoc*1000)
@@ -375,11 +376,11 @@ class PeersCoedit
 				throw Exception(Format("Peerside(save-doc) no response after {} seconds", this.tos_pro_savedoc))
 			}
 
-			this.dbg2("Waiting peer's writing doc, success.")
+			this.dbg1("Waiting peer's writing doc, success.")
 			
-			this.dbg2("Now re-opening doc...")
+			this.dbg1("Now re-opening doc...")
 			this.fndoc.opendoc.() ; throw on error 
-			this.dbg2("Done re-opening doc...")
+			this.dbg1("Done re-opening doc...")
 			
 			this.IniIncreaseVal("passeq")
 			this.passeq += 2
