@@ -39,11 +39,7 @@ class FoxitCoedit
 	static Id := "FoxitCoedit"
 
 	; static vars as constant >>>
-	static DEFAULT_OPENSECS := 5
-	static DEFAULT_SAVESECS := 5
-	
 	static BtnTextResync := "R&e-sync"
-	
 	static is_simulate_reopen_pdf_fail := false ; debugging purpose
 	; static vars as constant <<<
 	
@@ -73,8 +69,6 @@ class FoxitCoedit
 	was_doc_modified := 0 ; pdf modified and unsaved state(denoted by asterisk symbol)
 	
 	prev_peerHwnd := 0
-	
-	seconds_to_savepdf := FoxitCoedit.DEFAULT_SAVESECS ; todo: Delete this
 	
 	is_showing_syncerr_msgbox := false ; just for optimized Error popup
 	
@@ -773,7 +767,6 @@ class FoxitCoedit
 		{
 			; And wait until wintitle's "*" disappears.
 			msec_start := dev_GetTickCount64()
-			dev_assert( this.seconds_to_savepdf > 1 )
 			
 			Loop
 			{
@@ -800,7 +793,7 @@ class FoxitCoedit
 				info := Format("Mineside PDF saving (+{} seconds)...", msec_used//1000)
 				GuiControl_SetText(GuiName, "gu_focoSSState", info)
 
-				; todo: detect cancel flag, then break
+				; todo? (ProSaving side) detect cancel flag, then break.
 			}
 
 			throw Exception(Format("FoxitCoedit.fndocSavePdf() operation fail. After {}ms trying, the PDF file is not saved yet.", msec_used))
@@ -1239,19 +1232,13 @@ class FoxitCoedit
 		dev_assert(this.coedit.docpath!="")
 		cfgfile := dev_SplitExtname(this.coedit.docpath) . ".FoxitCoEdit.ini"
 		; cfgfile: "somebook.FoxitCoEdit.ini"
+
 ;		[cfg]
 ;		OpenSecs=6
 ;		SaveSecs=20
 		
 		cfgdict := dev_IniReadSectionIntoDict(cfgfile, "cfg")
-		
-		opensecs := cfgdict.OpenSecs ? cfgdict.OpenSecs : FoxitCoedit.DEFAULT_OPENSECS
-		savesecs := cfgdict.SaveSecs ? cfgdict.SaveSecs : FoxitCoedit.DEFAULT_SAVESECS
-		
-		this.seconds_to_savepdf := savesecs
-		
-		this.dbg1(Format("SetTimeouts for this pdf: OpenSecs={} , SaveSecs={}", opensecs, savesecs))
-		this.coedit.SetTimeouts(opensecs, savesecs)
+		; -- [2024-06-05] currently no cfg-item is defined.
 	}
 	
 	DdlPeerFollowMeSelect()

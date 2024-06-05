@@ -34,9 +34,6 @@
 class PeersCoedit
 {
 	; static >>>
-	static DEFAULT_TOS_CLOSEDOC := 3
-	static DEFAULT_TOS_OPENDOC := 4
-	static DEFAULT_TOS_SAVEDOC := 5
 	; static <<<
 
 	mineside := "" ; "sideA" or "sideB"
@@ -45,10 +42,6 @@ class PeersCoedit
 	;                                        [B] PasReload -> Handshaked
 	
 	timer := "" ; a BoundFunc object used to start/stop AHK timer
-	
-	tos_pas_closedoc := PeersCoedit.DEFAULT_TOS_CLOSEDOC
-	tos_pas_opendoc := PeersCoedit.DEFAULT_TOS_OPENDOC
-	tos_pro_savedoc := PeersCoedit.DEFAULT_TOS_SAVEDOC
 	
 	wtSyncStart := "" ; init with A_Now
 	proseq := 0 ; mineside proactive sequence
@@ -145,7 +138,6 @@ class PeersCoedit
 			this.DoNotifySSState(dstate, msec_start, msec_sub_start)
 
 			peerval := this.IniReadPeer(key)
-;AmDbg0("In WaitPeerIni(), peerval=" peerval)
 			if(peerval==val)
 			{
 				return true
@@ -164,15 +156,6 @@ class PeersCoedit
 		}
 	}
 	
-	SetTimeouts(opensecs, savesecs, closesecs:=0)
-	{
-		this.tos_pas_opendoc := opensecs>0 ? opensecs : PeersCoedit.DEFAULT_TOS_OPENDOC
-		
-		this.tos_pro_savedoc := savesecs>0 ? savesecs : PeersCoedit.DEFAULT_TOS_SAVEDOC
-
-		this.tos_pas_closedoc := closesecs>0 ? closesecs : PeersCoedit.DEFAULT_TOS_CLOSEDOC
-	}
-
 	; User API:
 	Activate(which_side, docpath, dict_fndoc)
 	{
@@ -398,7 +381,6 @@ class PeersCoedit
 			
 			if(this.passeq==0)
 			{
-;AmDbg0("MonitorTimerCallback(): this.passeq==0")
 				return false
 			}
 			
@@ -407,7 +389,6 @@ class PeersCoedit
 			
 			if(peer_passeq==0)
 			{
-;AmDbg0("MonitorTimerCallback(): peer_passeq==0")
 				return false ; peer has gone wrong, nothing to do
 			}
 			
