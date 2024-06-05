@@ -85,6 +85,22 @@ dev_FileRead_NthLine(file, line)
 
 dev_fileline_syse(sys_e)
 {
+	; sys_e should be a AHK engine generated Exception object.
+	; For example:
+	;
+;	try {
+;		GuiControl, , % "ahk_id0123456", "user-text"
+;	}
+;	catch e {
+;		dev_MsgBoxWarning( dev_fileline_syse(e) )
+;	}
+	
+	; produces message box test:
+	
+;	Message: 1
+;	File 'D:\gitw\AmHotkey\customize.ahk', Line 766: 
+;			GuiControl, , % "ahk_id0123456", "user-text"
+
 	msg := Format("Message: {}`nFile '{}', Line {}: `n{}"
 		, sys_e.Message
 		, sys_e.File, sys_e.Line
@@ -1404,10 +1420,20 @@ dev_GetCurrentDatetime(format)
 	return outvar
 }
 
-dev_GetDateTimeStrNow()
+dev_GetDateTimeStr(sep:="_", ts14:="now")
 {
-	FormatTime, dt, , % "yyyy-MM-dd.HH:mm:ss"
+	if(ts14=="now")
+		ts14 := A_Now
+	
+	FormatTime, dt, % ts14 , % "yyyy-MM-dd" sep "HH:mm:ss"
 	return dt
+}
+
+dev_GetDateTimeStrNow(sep:="_")
+{
+;	FormatTime, dt, , % "yyyy-MM-dd.HH:mm:ss"
+;	return dt
+	return dev_GetDateTimeStr(sep, A_Now)
 }
 
 ts14short(ts14:="now", sep:=".")
@@ -1418,8 +1444,8 @@ ts14short(ts14:="now", sep:=".")
 dev_GetDateTimeStrCompact(sep:="_", ts14:="now")
 {
 	; I use "now" as default 2nd-param(instead of using empty-string), because:
-	; If user wants to pass-in an explicit ts14 but accidentally the passed argument
-	; is an empty string, I want it to error out loudly, instead of returning 
+	; If user wants to pass-in an explicit ts14 but accidentally pass-in
+	; an empty string, I want it to error out loudly, instead of returning 
 	; a false "now" timestamp.
 
 	if(ts14=="now")

@@ -24,7 +24,8 @@ global gu_focoCkbRside
 global gu_focoLblPeerFollow
 global gu_focoDdlPeerFollowMe
 global gu_focoBtnSavePdf
-global gu_focoBtnSync
+global gu_focoBtnResync
+global gu_focoSSState
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 return ; End of auto-execute section.
@@ -41,11 +42,17 @@ class FoxitCoedit
 	static DEFAULT_OPENSECS := 5
 	static DEFAULT_SAVESECS := 5
 	
+	static BtnTextResync := "R&e-sync"
+	
+	static is_simulate_reopen_pdf_fail := false ; debugging purpose
 	; static vars as constant <<<
 	
 	isGuiVisible := false
 	
 	state := "" ; "Detecting" , "EditorDetected", "CoeditActivated", "CoeditHandshaked", "Freezing"
+	; --[2024-06-05] Freezing unused yet.
+	
+	tsSyncSuccss := "" ; A_Now
 	
 	coedit := "" ; the PeersCoedit class instance
 	
@@ -57,6 +64,9 @@ class FoxitCoedit
 	
 	prev_mletext := ""
 	
+	txtHeadline := ""
+	txtBottomline := ""
+	
 	ischk_Lside := 0   ; 0 or 1, reflecting Coedit-sideA-Activate
 	ischk_Rside := 0  ; 0 or 1, reflecting Coedit-sideB-Activate
 	
@@ -64,7 +74,7 @@ class FoxitCoedit
 	
 	prev_peerHwnd := 0
 	
-	seconds_to_savepdf := FoxitCoedit.DEFAULT_SAVESECS
+	seconds_to_savepdf := FoxitCoedit.DEFAULT_SAVESECS ; todo: Delete this
 	
 	is_showing_syncerr_msgbox := false ; just for optimized Error popup
 	
@@ -134,10 +144,10 @@ class FoxitCoedit
 		
 		fullwidth := 400
 		
-		Gui_Add_TxtLabel(GuiName, "gu_focoLblHeadline", fullwidth, "", "Detecting Foxit Reader/Editor...")
+		Gui_Add_TxtLabel(GuiName, "gu_focoLblHeadline", fullwidth, "", "...")
 		
 		Gui_Add_Editbox( GuiName, "gu_focoMleInfo", fullwidth, "xm r10 readonly -0x1000" , "...") 
-		; -- 0x1000 ES_WANTRETURN, we don't want this style bcz we want Enter to trigger default btn, even if Editbox has focus.
+		; -- 0x1000 ES_WANTRETURN: we don't want this style bcz we want Enter to trigger default btn, even if Editbox has focus.
 		
 		Gui_Add_TxtLabel(GuiName, "gu_focoLblActivate", 0, "xm", "Activate Coedit for above pdf")
 		Gui_Add_Checkbox(GuiName, "gu_focoCkbLside", 0, "x+10 yp " gui_g("Foco_CkbActivateCoedit"), "as &Left-side")
@@ -147,10 +157,14 @@ class FoxitCoedit
 		Gui_Add_DropDownList(GuiName, "gu_focoDdlPeerFollowMe", 137, "x+5 yp-2 AltSubmit " gui_g("Foco_OnDdlPeerFollowMe")
 			, "Always||Only after saving PDF|No")
 
-		Gui_Add_Button(  GuiName, "gu_focoBtnSavePdf",  98, "xm y+6 default " gui_g("Foco_OnBtnSavePdf"), "&Save pdf now")
-		sync_btn_width := 60
-		xgap := fullwidth - 98 - sync_btn_width
-		Gui_Add_Button(  GuiName, "gu_focoBtnSync", sync_btn_width, Format("x+{} ", xgap) gui_g("Foco_OnBtnSync"), "R&e-sync")
+		save_btn_width := 98
+		sync_btn_width := 98
+		Gui_Add_Button(  GuiName, "gu_focoBtnSavePdf",  save_btn_width, "xm y+6 default " gui_g("Foco_OnBtnSavePdf"), "&Save pdf now")
+		xgap := fullwidth - save_btn_width - sync_btn_width
+		Gui_Add_Button(  GuiName, "gu_focoBtnResync", sync_btn_width, Format("x+{} ", xgap) gui_g("Foco_OnBtnResync"), FoxitCoedit.BtnTextResync)
+		
+		Gui_Add_Editbox( GuiName, "gu_focoSSState", fullwidth, "xm readonly -E0x200", "...") ; -E0x200: turn off WS_EX_CLIENTEDG
+		GuiControl_SetColor(GuiName, "gu_focoSSState", "8464B4") ; set grey text
 
 		;
 		; init base facility
@@ -204,10 +218,14 @@ class FoxitCoedit
 
 		if(this.state=="Detecting")
 		{
-			; still all false
+			this.txtHeadline := "Detecting Foxit Reader/Editor..."
+			this.txtBottomline := "..."
 		}
 		else if(this.state=="EditorDetected")
 		{
+		 	this.txtHeadline := "Detected Foxit Reader/Editor:"
+			this.txtBottomline := "Hint: Click ""as Left-side"" or ""as Right-side"" to coedit that PDF."
+
 			focoLblActive := focoCkbLside := focoCkbRside := true
 		}
 		else if(this.state=="CoeditActivated" or this.state=="CoeditHandshaked")
@@ -236,7 +254,10 @@ class FoxitCoedit
 		GuiControl_Enable(GuiName, "gu_focoCkbRside", focoCkbRside)
 		GuiControl_Enable(GuiName, "gu_focoDdlPeerFollowMe", focoDdlPeerFollowMe)
 		GuiControl_Enable(GuiName, "gu_focoBtnSavePdf", focoBtnSavePdf)
-		GuiControl_Enable(GuiName, "gu_focoBtnSync", focoBtnSync)
+		GuiControl_Enable(GuiName, "gu_focoBtnResync", focoBtnSync)
+
+		GuiControl_SetText(GuiName, "gu_focoLblHeadline", this.txtHeadline)
+		GuiControl_SetText(GuiName, "gu_focoSSState", this.txtBottomline)
 
 		this.RefreshMleDetail()
 	}
@@ -254,6 +275,7 @@ class FoxitCoedit
 	
 	RefreshMleDetail()
 	{
+		GuiName := FoxitCoedit.Id
 		detail := ""
 		
 		if(this.state=="Detecting")
@@ -280,7 +302,7 @@ class FoxitCoedit
 		{	
 			; This `if` to avoid clearing out user mouse text selection.
 			this.prev_mletext := detail
-			GuiControl_SetText(FoxitCoedit.Id, "gu_focoMleInfo", detail)
+			GuiControl_SetText(GuiName, "gu_focoMleInfo", detail)
 		}
 	}
 
@@ -323,7 +345,8 @@ class FoxitCoedit
 		fndoc := { "syncsucc" : Func("FoxitCoedit.fndocSyncSucc").Bind(this)
 			, "savedoc" : Func("FoxitCoedit.fndocSavePdf").Bind(this)
 			, "closedoc" : Func("FoxitCoedit.fndocClosePdf").Bind(this)
-			, "opendoc" : Func("FoxitCoedit.fndocOpenPdf").Bind(this) }
+			, "opendoc" : Func("FoxitCoedit.fndocOpenPdf").Bind(this)
+			, "notify_ssstate" : Func("FoxitCoedit.fndocNotifySSState").Bind(this) }
 
 		this.prev_peerHwnd := 0
 		
@@ -394,12 +417,15 @@ class FoxitCoedit
 		this.state := "Freezing"
 		GuiControl_Enable(GuiName, "gu_focoBtnSavePdf", false)
 		GuiControl_SetText(GuiName, "gu_focoBtnSavePdf", "Saving...")
+		GuiControl_SetText(GuiName, "gu_focoBtnResync", "Cancel Saving")
 		;
 		is_succ := this.coedit.LaunchSaveDocSession(ret_is_conn_lost, ret_errmsg)
-		; -- this will block for some time.
+		; -- this will block for some time, but can be canceled by calling this.coedit.>CancelSavingSession() .
 		;
 		GuiControl_SetText(GuiName, "gu_focoBtnSavePdf", "&Save pdf now")
 		GuiControl_Enable(GuiName, "gu_focoBtnSavePdf", true)
+		GuiControl_SetText(GuiName, "gu_focoBtnResync", FoxitCoedit.BtnTextResync)
+		GuiControl_Enable(GuiName, "gu_focoBtnResync") ; may have been disabled in OnBtnResync()
 		this.state := oldstate
 		
 		if(is_succ)
@@ -421,9 +447,7 @@ class FoxitCoedit
 		
 			if(ret_is_conn_lost)
 			{
-				this.is_showing_syncerr_msgbox := true
-				
-				this.ModalMsgBox_ShowWarning(Format("{}`n`nHandshake lost! Click OK to re-sync.", ret_errmsg), FoxitCoedit.Id)
+				this.DisplaySyncLostPopup(ret_errmsg)
 				
 				this.ResyncCoedit()
 			}
@@ -451,11 +475,12 @@ class FoxitCoedit
 		}
 		else if(this.state=="CoeditHandshaked")
 		{
-			GuiControl_SetText(GuiName, "gu_focoLblHeadline", "[ Activated ] Handshaked")
-			
 			this.RefreshMineFoxitHwnd()
 			
 			this.RefreshUic()
+			
+			GuiControl_SetText(GuiName, "gu_focoLblHeadline", this.txtHeadline)
+			GuiControl_SetText(GuiName, "gu_focoSSState", this.txtBottomline)
 			
 			;
 			; To detect HWND lost
@@ -579,7 +604,6 @@ class FoxitCoedit
 			
 			this.pedExepath := dev_GetExeFilepath("ahk_id " this.pedHwnd)
 			
-			GuiControl_SetText(GuiName, "gu_focoLblHeadline", "Detected Foxit Reader/Editor:")
 			this.RefreshMleDetail()
 		}
 		else
@@ -693,12 +717,24 @@ class FoxitCoedit
 		this.RefreshUic()
 	}
 	
+	OnBtnResync()
+	{
+		GuiName := FoxitCoedit.Id
+		if(this.coedit.state=="ProSaving" or this.coedit.state=="PasReload")
+		{
+			this.coedit.CancelSavingSession()
+			GuiControl_Disable(GuiName, "gu_focoBtnResync")
+		}
+		else
+		{
+			this.ResyncCoedit()
+		}
+	}
 	
 	ResyncCoedit()
 	{
 		this.state := "CoeditActivated"
 		this.prev_peerHwnd := 0
-		this.is_showing_syncerr_msgbox := false
 		
 		this.StoreMinesideIni("", "")
 		
@@ -711,6 +747,10 @@ class FoxitCoedit
 	fndocSyncSucc()
 	{
 		this.state := "CoeditHandshaked"
+		this.tsSyncSuccss := A_Now
+		
+		this.txtHeadline := "[ Activated ] Handshaked"
+		this.txtBottomline := Format("[{}] Start monitoring PDF.", dev_GetDateTimeStr("_", this.tsSyncSuccss))
 	
 		this.mine_prev_PdfPageNum := ""
 		this.mine_pagenum_seq := 0
@@ -726,6 +766,7 @@ class FoxitCoedit
 	
 	fndocSavePdf()
 	{
+		GuiName := FoxitCoedit.Id
 		this.dbg1("FoxitCoedit.fndocSavePdf() executing...")
 		
 		if(this.IsPdfModified())
@@ -756,8 +797,10 @@ class FoxitCoedit
 				}
 				
 				msec_used := dev_GetTickCount64() - msec_start
-				if( msec_used > (this.seconds_to_savepdf*1000) )
-					break
+				info := Format("Mineside PDF saving (+{} seconds)...", msec_used//1000)
+				GuiControl_SetText(GuiName, "gu_focoSSState", info)
+
+				; todo: detect cancel flag, then break
 			}
 
 			throw Exception(Format("FoxitCoedit.fndocSavePdf() operation fail. After {}ms trying, the PDF file is not saved yet.", msec_used))
@@ -774,22 +817,51 @@ class FoxitCoedit
 		this.was_activepdf := this.IsTargetPdfActive()
 		
 		Critical Off
+
+		GuiName := FoxitCoedit.Id
 	
 		hwnd := this.pedHwnd
 		this.dbg1(Format("FoxitCoedit.fndocClosePdf() executing..."))
 		
-		close_ok := dev_WinClose("ahk_id " hwnd, 5000) ; todo: make this timeout configurable
+		msec_start := dev_GetTickCount64()
+		wintitle := "ahk_id " hwnd
+		close_ok := false
 		
-		if(close_ok)
-			this.dbg1("FoxitCoedit.fndocClosePdf() success.")
-		else
-			throw Exception("FoxitCoedit.fndocClosePdf() fail!")
+		dev_WinClose(wintitle)
+		
+		Loop 
+		{
+			info := Format("[{}] Closing mineside PDF, +{} seconds"
+				, dev_GetDateTimeStr(), (dev_GetTickCount64()-msec_start)//1000)
+			this.txtBottomline := info
+			GuiControl_SetText(GuiName, "gu_focoSSState", info)
+			
+			close_ok := dev_WinWaitClose(wintitle, 1000) ; this delays 1 second
+			if(close_ok)
+			{
+				this.dbg1("FoxitCoedit.fndocClosePdf() success.")
+				return true
+			}
+			
+			if(this.coedit.cancel_flag)
+			{
+				this.dbg1("FoxitCoedit.fndocClosePdf() canceled by user.")
+				throw Exception("You canceled mineside PDF saving.")
+			}
+		}
 	}
 
 	fndocOpenPdf()
 	{
 		GuiName := FoxitCoedit.Id
-		this.dbg1("FoxitCoedit.fndocOpenPdf() executing...")
+		this.dbg1("FoxitCoedit.fndocOpenPdf() executing... ")
+		
+		if(FoxitCoedit.is_simulate_reopen_pdf_fail)
+		{
+			info := "FoxitCoedit.is_simulate_reopen_pdf_fail==true, so re-open pdf fails!"
+			this.dbg1(info)
+			throw Exception(info)
+		}
 		
 		is_succ := false
 		
@@ -797,7 +869,9 @@ class FoxitCoedit
 		
 		; First, ensure that no process of exepath is running.
 		if(WinExist("ahk_exe " exepath))
+		{
 			throw Exception(Format("Unexpected! fndocOpenPdf() sees ""{}"" still running.", exepath))
+		}
 		
 		Run % exepath
 		
@@ -1197,6 +1271,71 @@ class FoxitCoedit
 		dev_MsgBoxWarning(text, title)
 	}
 	
+	fndocNotifySSState(start_secs, dstate, sub_start_secs, errmsg)
+	{
+		GuiName := FoxitCoedit.Id
+		
+		;
+		; == General operation: Update bottom-line text. ==
+		;
+;AmDbg0("===this.coedit.state: " this.coedit.state)
+		dev_assert(this.coedit.state=="ProSaving" or this.coedit.state=="PasReload")
+		is_prosave := this.coedit.state=="ProSaving" ? true : false
+		
+		info := Format("[{}] Elapsed {} seconds ({} +{} secs)..."
+			, is_prosave ? "Saving PDF" : "Reloading PDF"
+			, start_secs, dstate, sub_start_secs)
+		
+		; some override:
+		if(dstate=="PRO_Success") {
+			info := Format("[{}] PDF saved, cost {} seconds.", dev_GetDateTimeStr(), start_secs)
+		}
+		else if(dstate=="PAS_Success") {
+			info := Format("[{}] PDF reloaded, cost {} seconds.", dev_GetDateTimeStr(), start_secs)
+		}
+		
+		GuiControl_SetText(GuiName, "gu_focoSSState", info)
+		this.txtBottomline := info
+		
+		;
+		; == Special operation for passive side: == (pattern similar to calling LaunchSaveDocSession)
+		;
+		
+		if(dstate=="PAS_DoMineClose")
+		{
+			GuiControl_SetText(GuiName, "gu_focoBtnResync", "Cancel Reloading")
+		}
+		else if(dstate=="PAS_Success" or dstate=="PAS_Fail")
+		{
+;AmDbg0("===EEEEEEEEEEnd:" dstate)
+			GuiControl_SetText(GuiName, "gu_focoBtnResync", FoxitCoedit.BtnTextResync)
+			GuiControl_Enable(GuiName, "gu_focoBtnResync") ; may have been disabled in OnBtnResync()
+			
+			if(dstate=="PAS_Fail")
+			{
+				this.coedit.SetMinePasseq(0) ; Indicate mineside failure to peer.
+				
+				this.DisplaySyncLostPopup(errmsg)
+				
+				; this.ResyncCoedit() 
+				; Code improvement pending: Currently, we are in PeersCoedit's callback,
+				; so we should not call this.ResyncCoedit() immediately, user should click Re-sync button manually.
+			}
+		}
+	}
+	
+	DisplaySyncLostPopup(errmsg)
+	{
+		this.is_showing_syncerr_msgbox := true
+		
+		full_errmsg := Format("{}`n`nSomething has gone wrong! Click OK to re-sync.", errmsg)
+		this.ModalMsgBox_ShowWarning(full_errmsg, FoxitCoedit.Id)
+
+		this.txtBottomline := "Something gone wrong, you should Re-sync."
+		
+		this.is_showing_syncerr_msgbox := false
+	}
+	
 } ; class FoxitCoedit
 
 
@@ -1231,9 +1370,9 @@ Foco_OnBtnSavePdf()
 	g_foco.OnBtnSavePdf()
 }
 
-Foco_OnBtnSync()
+Foco_OnBtnResync()
 {
-	g_foco.ResyncCoedit()
+	g_foco.OnBtnResync()
 }
 
 
@@ -1247,7 +1386,8 @@ FoxitCoeditGuiSize()
 	rsdict.gu_focoLblPeerFollow := JUL.PinToLeftBottom
 	rsdict.gu_focoDdlPeerFollowMe := JUL.PinToLeftBottom
 	rsdict.gu_focoBtnSavePdf := JUL.PinToLeftBottom
-	rsdict.gu_focoBtnSync := JUL.PinToRightBottom
+	rsdict.gu_focoBtnResync := JUL.PinToRightBottom
+	rsdict.gu_focoSSState := JUL.FillWidth_AtBottom
 	
 	dev_GuiAutoResize(FoxitCoedit.Id, rsdict, A_GuiWidth, A_GuiHeight)
 }

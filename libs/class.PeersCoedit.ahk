@@ -1,15 +1,35 @@
-
+; class PeersCoedit by Jimm Chen, 2024
+;
 ; Two machines, via Samba share etc, can "co-operatively" edit the same doc-file
-; (a doc file for example). We do not break the file-open locking law, but 
-; when self-side AHK detects that sideA wants to save the doc, AHK tells the peer-side
-; to close the doc first; when self-side saving done, AHK tell the peer-side 
-; to open the doc again. So it simulates that edit the same doc at the "same" time.
+; (a pdf file for example). We do not break the file-open locking law, but 
+; when mineside user wants to save the pdf, mineside AHK tells the peerside to close
+; the pdf first; when mineside-saving done, mineside AHK tells the peerside to re-open
+; the pdf. So it simulates the effect of editing the same pdf at the "same" time.
+;
 ; This is quite suitable for a single-person workflow that operates on the same doc 
 ; via two different editing software in turn.
 ;
-; Some cavets on PeersCoedit
+; == Terminology ==
+; If at one timepoint, user launches doc-saving at sideA, then 
+; sideA is called proactive-side. (PRO_xxx) 
+; sideB is called passive-side.  (PAS_xxx)
+;
+; == Save-session detailed state migration ==
+;   PRO_Start
+;   PRO_WaitPeerClose     ->
+;                                   PAS_DoMineClose
+;                         <-        PAS_WaitPeerSave
+;   PRO_DoMineSave
+;   PRO_WaitPeerOpen      ->
+;                                   PAS_DoMineOpen
+;                         <-        PAS_Success
+;   PRO_Success
+;                                   (can be PAS_Fail)
+;
+; Some caveats on PeersCoedit implementation:
 ; * Try not to write a file constantly(once every second) when the system is idle.
-;   Reading a file constantly is invevitable.
+;   Reading a file constantly is inevitable.
+;
 
 class PeersCoedit
 {
@@ -39,7 +59,11 @@ class PeersCoedit
 	peerdict := {}
 	
 	fndoc := {} ; Callables for real doc-operation.
-	            ; keys: .syncsucc .savedoc .closedoc .opendoc
+	            ; keys: .syncsucc .savedoc .closedoc .opendoc .notify_ssstate
+	;
+	; Note: SSState: saved-session state (dstate, detailed-state)
+	
+	cancel_flag := false
 	
 	dbg(msg, lv) {
 		AmDbg_output("PeersCoedit", msg, lv)
@@ -91,6 +115,18 @@ class PeersCoedit
 		return dev_IniWrite(this.mine_ini, "cfg", key, val)
 	}
 
+	SetMineProseq(newval)
+	{
+		this.proseq := newval
+		this.IniWriteMine("proseq", newval)
+	}
+
+	SetMinePasseq(newval)
+	{
+		this.passeq := newval
+		this.IniWriteMine("passeq", newval)
+	}
+	
 	IniIncreaseVal(key, inc:=1)
 	{
 		val0 := this.IniReadMine(key)
@@ -99,20 +135,30 @@ class PeersCoedit
 		return val1
 	}
 	
-	WaitPeerIni(key, val, wait_seconds)
+	WaitPeerIni(key, val, dstate, msec_start, msec_sub_start)
 	{
-		; Repeatedly check peer's ini, until we see `key=val` present.
-		; return true if see desired, false if timeout.
+		; Repeatedly check peer's ini, until we see `key=val` present, or see user-cancel.
+		; If canceled, throw Exception.
 		
-		end_tick := dev_GetTickCount64() + wait_seconds*1000
 		Loop
 		{
+			this.DoNotifySSState(dstate, msec_start, msec_sub_start)
+
 			peerval := this.IniReadPeer(key)
-			if(val==peerval)
+;AmDbg0("In WaitPeerIni(), peerval=" peerval)
+			if(peerval==val)
+			{
 				return true
+			}
+			else if(peerval==0)
+			{
+				throw Exception(Format("When in {}, peerside asserts failure.", dstate))
+			}
 			
-			if(dev_GetTickCount64() > end_tick)
-				return false
+			if(this.cancel_flag)
+			{
+				throw Exception(Format("You canceled {} before peerside responds.", dstate))
+			}
 			
 			dev_Sleep(1000)
 		}
@@ -197,13 +243,13 @@ class PeersCoedit
 		if(this.state=="Syncing")
 		{
 			this.SyncTimerCallback()
-			; todo : If false(INI write fail etc), then deactivate,
+			; todo? If false(INI write fail etc), then deactivate.
 		}
 		else if(this.state=="Handshaked")
 		{
 			is_succ := this.MonitorTimerCallback()
-			if(not is_succ)
-				this.ResetSyncState()
+;			if(not is_succ)
+;				this.ResetSyncState()
 		}
 	}
 	
@@ -250,6 +296,10 @@ class PeersCoedit
 	
 		if(is_succ)
 		{
+			; We start from 2, bcz 0 is used to indicate "failure".
+			this.SetMineProseq(2)
+			this.SetMinePasseq(2)
+			
 			this.state := "Handshaked"
 			this.fndoc.syncsucc.()
 		}
@@ -258,6 +308,7 @@ class PeersCoedit
 
 	LaunchSaveDocSession(byref is_conn_lost, byref ret_errmsg)
 	{
+		this.cancel_flag := false
 		is_conn_lost := false
 		ret_errmsg := ""
 	
@@ -272,54 +323,58 @@ class PeersCoedit
 		try 
 		{
 			msec_start := dev_GetTickCount64()
+			msec_sub_start := msec_start
 			
 			this.state := "ProSaving"
 			this.dbg1(Format("Start saving session ... (proseq={})", this.proseq))
+			this.DoNotifySSState("PRO_Start", msec_start, msec_sub_start)
 			
 			nowseq := this.IniReadMine("proseq")
 			dev_assert(this.proseq==nowseq)
 		
 			this.IniIncreaseVal("proseq")
 			
-			this.dbg1(Format("Waiting peerside to close doc..."))
-			
-			is_succ := this.WaitPeerIni("passeq", this.proseq+1, this.tos_pas_closedoc)
-			if(not is_succ)
-			{
-				throw Exception(Format("Peerside(close-doc) no response after {} seconds", this.tos_pas_closedoc))
-			}
+			this.dbg1(Format("Waiting peerside close doc..."))
+			msec_sub_start := dev_GetTickCount64()
 
-			this.dbg1("Waiting peerside to close doc, success.")
+			this.WaitPeerIni("passeq", this.proseq+1, "PRO_WaitPeerClose", msec_start, msec_sub_start)
+
+			this.dbg1("Waiting peerside close doc, success.")
 			
 			this.dbg1("Now saving mineside doc...")
+			msec_sub_start := dev_GetTickCount64()
+			this.DoNotifySSState("PRO_DoMineSave", msec_start, msec_sub_start)
+			;
 			this.fndoc.savedoc.() ; throw on error 
+			;
 			this.dbg1("Done saving mineside doc.")
 			
 			this.IniIncreaseVal("proseq")
 			
-			this.dbg1("Waiting peerside to reopen doc...")
+			this.dbg1("Waiting peerside reopen doc...")
+			msec_sub_start := dev_GetTickCount64()
 			
-			is_succ := this.WaitPeerIni("passeq", this.proseq+2, this.tos_pas_opendoc)
-			if(not is_succ)
-			{
-				throw Exception(Format("Peerside(open-doc) no response after {} seconds", this.tos_pas_opendoc))
-			}
+			this.WaitPeerIni("passeq", this.proseq+2, "PRO_WaitPeerOpen", msec_start, msec_sub_start)
 
-			this.dbg1("Waiting peerside to reopen doc, success.")
+			this.dbg1("Waiting peerside reopen doc, success.")
 
 			this.dbg1(Format("Done saving session. (proseq={})", this.proseq+2))
 			
 			this.proseq += 2
-			this.state := "Handshaked"
 			
 			msec_end := dev_GetTickCount64()
 			this.dbg1(Format("Done saving session. (proseq={}) [time cost: {:.1f}s]"
 				, this.proseq, (msec_end-msec_start)/1000))
 
+			this.DoNotifySSState("PRO_Success", msec_start, msec_end)
+
+			this.state := "Handshaked"
 			return true
 		}
 		catch e 
 		{
+			this.state := "Handshaked" ; so that it is not "ProSaving"
+		
 			ret_errmsg := e.Message
 			this.dbg1("LaunchSaveDocSession() got exception:`n" . dev_fileline_syse(e))
 			
@@ -339,8 +394,24 @@ class PeersCoedit
 		
 		try
 		{
+			this.cancel_flag := false
+			
+			if(this.passeq==0)
+			{
+;AmDbg0("MonitorTimerCallback(): this.passeq==0")
+				return false
+			}
+			
 			peer_proseq := this.IniReadPeer("proseq")
-			if(peer_proseq == this.passeq)
+			peer_passeq := this.IniReadPeer("passeq")
+			
+			if(peer_passeq==0)
+			{
+;AmDbg0("MonitorTimerCallback(): peer_passeq==0")
+				return false ; peer has gone wrong, nothing to do
+			}
+			
+			if(peer_proseq==this.passeq)
 			{
 				return true ; peer is silent, nothing to do
 			}
@@ -351,6 +422,7 @@ class PeersCoedit
 			}
 			
 			msec_start := dev_GetTickCount64()
+			msec_sub_start := msec_start
 			
 			this.state := "PasReload"
 			
@@ -359,46 +431,77 @@ class PeersCoedit
 			dev_assert(peer_proseq == this.passeq+1)
 			
 			this.dbg1("Now closing doc...")
+			this.DoNotifySSState("PAS_DoMineClose", msec_start, msec_sub_start)
 			this.fndoc.closedoc.() ; throw on error 
 			this.dbg1("Done closing doc.")
 			
 			this.IniIncreaseVal("passeq")
 			
 			this.dbg1("Waiting peer's writing doc...")
-			dev_SplitPath(this.docpath, oPdfFilenam)
-			ttmsg := Format("Waiting peer saving: {}`n`nMax wait time: {}s", oPdfFilenam, this.tos_pro_savedoc)
-			dev_TooltipAutoClear(ttmsg, this.tos_pro_savedoc*1000)
-			
-			is_succ := this.WaitPeerIni("proseq", this.passeq+2, this.tos_pro_savedoc)
-			tooltip
-			if(not is_succ)
-			{
-				throw Exception(Format("Peerside(save-doc) no response after {} seconds", this.tos_pro_savedoc))
-			}
+			msec_sub_start := dev_GetTickCount64()
+			;
+			this.WaitPeerIni("proseq", this.passeq+2, "PAS_WaitPeerSave", msec_start, msec_sub_start)
 
 			this.dbg1("Waiting peer's writing doc, success.")
 			
 			this.dbg1("Now re-opening doc...")
+			msec_sub_start := dev_GetTickCount64()
+			this.DoNotifySSState("PAS_DoMineOpen", msec_start, msec_sub_start)
 			this.fndoc.opendoc.() ; throw on error 
 			this.dbg1("Done re-opening doc...")
 			
 			this.IniIncreaseVal("passeq")
 			this.passeq += 2
 			
-			this.state := "Handshaked"
-			
 			msec_end := dev_GetTickCount64()
 			this.dbg1(Format("Mineside just refreshed the doc. (passeq={}) [time cost: {:.1f}s]"
 				, this.passeq, (msec_end-msec_start)/1000))
+			
+			this.DoNotifySSState("PAS_Success", msec_start, msec_end)
+			
+			this.state := "Handshaked"
 			
 			return true
 		}
 		catch e 
 		{
+			msec_end := dev_GetTickCount64()
 			this.dbg1("MonitorTimerCallback() got exception:`n" . dev_fileline_syse(e))
 			
+			this.DoNotifySSState("PAS_Fail", msec_start, msec_end, e.Message) 
+			; -- Here, we pass extra e.Message to outer-layer.
+			
+			this.state := "Handshaked" ; so that it is not "PasReload"
 			return false
 		}
 	}
+	
+	DoNotifySSState(dstate, msec_start, msec_sub_start, errmsg:="")
+	{
+		; dstate: detailed-state
+		; errmsg is only for PAS_Fail
+		
+		msec_now := dev_GetTickCount64()
+		
+		start_secs := (msec_now - msec_start) // 1000
+		; -- total seconds since saving-session starts.
+		
+		sub_start_secs := (msec_now - msec_sub_start) // 1000
+		; -- seconds since current PRO_/PAS_ state starts.
+		
+		this.fndoc.notify_ssstate.(start_secs, dstate, sub_start_secs, errmsg)
+	}
 
+	IsInSavingSession() ; FoxitCoedit calls this to query my state
+	{
+		if(this.state=="ProSaving" or this.state=="PasReload")
+			return true
+		else
+			return false
+	}
+	
+	CancelSavingSession()
+	{
+		this.cancel_flag := true
+	}
 }

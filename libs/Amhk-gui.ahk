@@ -496,7 +496,7 @@ class JUL
 	static PinToRightTop := "100,0,100,0"
 	static PinToRightBottom := "100,100,100,100"
 	
-	; Underscore in name, implies the Uic may stretch width orheight
+	; Underscore in name, implies the Uic may stretch width or stretch height
 	static FillWidth_AtTop := "0,0,100,0" 
 	static FillWidth_AtBottom := "0,100,100,100"
 	static FillArea := "0,0,100,100"
