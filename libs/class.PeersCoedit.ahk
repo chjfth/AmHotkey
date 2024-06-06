@@ -54,7 +54,7 @@ class PeersCoedit
 	fndoc := {} ; Callables for real doc-operation.
 	            ; keys: .syncsucc .savedoc .closedoc .opendoc .notify_ssstate
 	;
-	; Note: SSState: saved-session state (dstate, detailed-state)
+	; Note: SSState: saved-session state (=dstate, detailed-state)
 	
 	cancel_flag := false
 	
@@ -221,7 +221,7 @@ class PeersCoedit
 
 		this.peerdict := dev_IniReadSectionIntoDict(this.peer_ini, "cfg")
 		; -- This is useful, FoxitCoedit's "editing conflict detection" requires
-		;    us to know peer's state constantly.
+		;    us to know peer's state periodically.
 
 		if(this.state=="Syncing")
 		{
