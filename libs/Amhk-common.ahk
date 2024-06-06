@@ -100,6 +100,8 @@ dev_fileline_syse(sys_e)
 ;	Message: 1
 ;	File 'D:\gitw\AmHotkey\customize.ahk', Line 766: 
 ;			GuiControl, , % "ahk_id0123456", "user-text"
+;
+; [2024-06-06] Error case 2: Pass an invalid function to SetTimer .
 
 	msg := Format("Message: {}`nFile '{}', Line {}: `n{}"
 		, sys_e.Message

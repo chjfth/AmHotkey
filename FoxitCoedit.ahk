@@ -507,22 +507,22 @@ class FoxitCoedit
 			; Check editing conflict
 			;
 			
-			is_modified := this.IsPdfModified()
-			this.dbg2(Format("this.was_doc_modified={} , (now) is_modified={}", this.was_doc_modified, is_modified))
-
-			if(this.was_doc_modified != is_modified)
-			{
-				; Write to INI to indicate to other side
-				this.was_doc_modified := is_modified
-				this.coedit.IniWriteMine("is_modified", is_modified)
-			}
+			is_modified := this.RecheckPdfModifiedState()
 			
-			if(this.was_doc_modified and this.peerDocModified)
+			if(is_modified and this.peerDocModified)
 			{
-				this.ModalMsgBox_ShowWarning("Both sides pdf are being modified, you are doing conflict editing!`n`n"
+				temp_timer := Func("FoxitCoedit.RecheckPdfModifiedState").Bind(this) ; a BoundFunc object
+				dev_StartTimerPeriodic(temp_timer, 2000, true)
+				; -- this temp_timer is required, bcz, when ModalMsgBox_ShowWarning() blocks current AHK-thread,
+				;    and RootTimerCallback() no longer executes every second. So an extra timer is required
+				;    to check for this.IsPdfModified(), so that we can reset [INI] to is_modified=0 during the pop-up.
+				
+				this.ModalMsgBox_ShowWarning("Both sides pdf are being modified, you are doing conflicting editing!`n`n"
 					. "This warning keeps pop-up until you discard one-side's modification.`n`n"
 					. "Suggestion: If you decide to discard this-side's modification, go to Foxit, close the pdf without saving it, then reopen that pdf.`n`n"
 					, FoxitCoedit.Id)
+				
+				dev_StopTimer(temp_timer)
 				return
 			}
 			
@@ -730,7 +730,7 @@ class FoxitCoedit
 		this.state := "CoeditActivated"
 		this.prev_peerHwnd := 0
 		
-		this.StoreMinesideIni("", "")
+		this.StoreMinesideIni("0", "")
 		
 		this.coedit.ResetSyncState()
 		
@@ -796,7 +796,7 @@ class FoxitCoedit
 				; todo? (ProSaving side) detect cancel flag, then break.
 			}
 
-			throw Exception(Format("FoxitCoedit.fndocSavePdf() operation fail. After {}ms trying, the PDF file is not saved yet.", msec_used))
+			dev_assert(0) ; should not get here.
 		}
 
 		this.dbg1("FoxitCoedit.fndocSavePdf() success , no modify.")
@@ -1321,6 +1321,21 @@ class FoxitCoedit
 		this.txtBottomline := "Something gone wrong, you should Re-sync."
 		
 		this.is_showing_syncerr_msgbox := false
+	}
+	
+	RecheckPdfModifiedState()
+	{
+		is_modified := this.IsPdfModified()
+		this.dbg2(Format("this.was_doc_modified={} , (now) is_modified={}", this.was_doc_modified, is_modified))
+
+		if(this.was_doc_modified != is_modified)
+		{
+			; Write to INI to indicate to other side
+			this.was_doc_modified := is_modified
+			this.coedit.IniWriteMine("is_modified", is_modified)
+		}
+		
+		return is_modified
 	}
 	
 } ; class FoxitCoedit
