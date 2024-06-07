@@ -596,7 +596,7 @@ AmDbg_MakeLineMsg(modu, msg, lv, byref is_same_modu_as_prev)
 	
 	static s_prev_modu := ""
 	
-	now_ymdhsm_rtc := A_Now ; wall time reported by OS
+	now_ymdhms_rtc := A_Now ; wall time reported by OS
 	
 	now_tick := A_TickCount
 	msec_from_prev := now_tick - s_prev_msec
@@ -607,33 +607,33 @@ AmDbg_MakeLineMsg(modu, msg, lv, byref is_same_modu_as_prev)
 	sec_from_start := (now_tick - s_start_msec) // 1000
 	msec_frac := Mod(now_tick - s_start_msec, 1000)
 	
-	now_ymdhsm := dev_Ts14AddSeconds(s_start_ymdhms, sec_from_start)
+	now_ymdhms := dev_Ts14AddSeconds(s_start_ymdhms, sec_from_start)
 	
-	bias_seconds := dev_Ts14Diff(now_ymdhsm_rtc, now_ymdhsm)
+	bias_seconds := dev_Ts14Diff(now_ymdhms_rtc, now_ymdhms)
 	; -- If 2, it mean wall-time is 2 seconds ahead of deduced-time.
 	;
 	if(Abs(bias_seconds)>=2)
 	{
 		; OS User may have changed system time, or,
 		; user has paused VM for 10 seconds then resume, and we will get bias_seconds=10.
-		; So we need to adjust s_start_ymdhms to make our ymdhsm match the wall-time.
+		; So we need to adjust s_start_ymdhms to make our ymdhms match the wall-time.
 		s_start_ymdhms := dev_Ts14AddSeconds(s_start_ymdhms, bias_seconds)
-		now_ymdhsm := dev_Ts14AddSeconds(now_ymdhsm, bias_seconds)
+		now_ymdhms := dev_Ts14AddSeconds(now_ymdhms, bias_seconds)
 	}
 
-	; now_ymdhsm is like "20221212115851"
-;	year := substr(now_ymdhsm, 1, 4)
-;	mon  := substr(now_ymdhsm, 5, 2)
-;	day  := substr(now_ymdhsm, 7, 2)
-	ymd  := substr(now_ymdhsm, 1, 8)
-	hour := substr(now_ymdhsm, 9, 2)
-	minu := substr(now_ymdhsm, 11, 2)
-	sec  := substr(now_ymdhsm, 13, 2)
+	; now_ymdhms is like "20221212115851"
+;	year := substr(now_ymdhms, 1, 4)
+;	mon  := substr(now_ymdhms, 5, 2)
+;	day  := substr(now_ymdhms, 7, 2)
+	ymd  := substr(now_ymdhms, 1, 8)
+	hour := substr(now_ymdhms, 9, 2)
+	minu := substr(now_ymdhms, 11, 2)
+	sec  := substr(now_ymdhms, 13, 2)
 	
 	stimestamp := Format("{}_{}:{}:{}.{:03}", ymd, hour, minu, sec, msec_frac)
 	stimeplus  := Format("+{}.{:03}s", msec_from_prev//1000, Mod(msec_from_prev,1000)) ; "+1.002s" etc
 	
-;	msg := now_ymdhsm "  " msg . "`r`n"
+;	msg := now_ymdhms "  " msg . "`r`n"
 	
 	linemsg := Format("{1}*[{2}] ({3}) {4}`r`n"
 		, lv, stimestamp, stimeplus, msg)
