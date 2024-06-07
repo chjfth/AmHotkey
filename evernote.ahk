@@ -448,6 +448,8 @@ Evtbl_OnTableDivSwitch()
 	hideORshow := g_evtblIsSpan ? "Show" : "Hide"
 	GuiControl, EVTBL:%hideORshow%, g_evtblSpanText
 	GuiControl, EVTBL:%hideORshow%, g_evtblIsSpanMono
+
+	GuiControl, % "EVTBL:" (g_evtblIsTable?"Show":"Hide"), g_evtblChkboxTSV
 }
 
 Evtbl_ParseTableColumnWidth(ColumnSpec)
