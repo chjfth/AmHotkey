@@ -584,7 +584,7 @@ Amdbg_WM_MOUSEMOVE()
 
 AmDbg_MakeLineMsg(modu, msg, lv, byref is_same_modu_as_prev)
 {
-	; Makes single \n become \r\n, bcz Win32 editbox recognized only \r\n as newline.
+	; Makes single \n become \r\n, bcz Win32 editbox recognizes only \r\n as newline.
 	msg := StrReplace(msg, "`r`n", "`n")
 	msg := StrReplace(msg, "`n", "`r`n")
 	
@@ -596,15 +596,30 @@ AmDbg_MakeLineMsg(modu, msg, lv, byref is_same_modu_as_prev)
 	
 	static s_prev_modu := ""
 	
+	now_ymdhsm_rtc := A_Now ; wall time reported by OS
+	
 	now_tick := A_TickCount
 	msec_from_prev := now_tick - s_prev_msec
 
-;Dbgwin_AppendRaw(Format("s_prev_msec={} , now_tick={} ({})`r`n", s_prev_msec, now_tick, now_tick-s_prev_msec))
+	; Dbgwin_AppendRaw(Format("s_prev_msec={} , now_tick={} ({})`r`n", s_prev_msec, now_tick, now_tick-s_prev_msec))
+	; -- this is used to output dbg-info inside this very function(AmDbg_MakeLineMsg).
 	
-	sec_from_start := (A_TickCount-s_start_msec) // 1000
-	msec_frac := Mod(A_TickCount-s_start_msec, 1000)
+	sec_from_start := (now_tick - s_start_msec) // 1000
+	msec_frac := Mod(now_tick - s_start_msec, 1000)
 	
 	now_ymdhsm := dev_Ts14AddSeconds(s_start_ymdhms, sec_from_start)
+	
+	bias_seconds := dev_Ts14Diff(now_ymdhsm_rtc, now_ymdhsm)
+	; -- If 2, it mean wall-time is 2 seconds ahead of deduced-time.
+	;
+	if(Abs(bias_seconds)>=2)
+	{
+		; OS User may have changed system time, or,
+		; user has paused VM for 10 seconds then resume, and we will get bias_seconds=10.
+		; So we need to adjust s_start_ymdhms to make our ymdhsm match the wall-time.
+		s_start_ymdhms := dev_Ts14AddSeconds(s_start_ymdhms, bias_seconds)
+		now_ymdhsm := dev_Ts14AddSeconds(now_ymdhsm, bias_seconds)
+	}
 
 	; now_ymdhsm is like "20221212115851"
 ;	year := substr(now_ymdhsm, 1, 4)
