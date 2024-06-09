@@ -25,7 +25,7 @@ global gu_focoLblPeerFollow
 global gu_focoDdlPeerFollowMe
 global gu_focoBtnSavePdf
 global gu_focoBtnResync
-global gu_focoSSState
+global gu_focoBottomStatus
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 return ; End of auto-execute section.
@@ -157,8 +157,8 @@ class FoxitCoedit
 		xgap := fullwidth - save_btn_width - sync_btn_width
 		Gui_Add_Button(  GuiName, "gu_focoBtnResync", sync_btn_width, Format("x+{} ", xgap) gui_g("Foco_OnBtnResync"), FoxitCoedit.BtnTextResync)
 		
-		Gui_Add_Editbox( GuiName, "gu_focoSSState", fullwidth, "xm readonly -E0x200", "...") ; -E0x200: turn off WS_EX_CLIENTEDG
-		GuiControl_SetColor(GuiName, "gu_focoSSState", "8464B4") ; set grey text
+		Gui_Add_Editbox( GuiName, "gu_focoBottomStatus", fullwidth, "xm readonly -E0x200", "...") ; -E0x200: turn off WS_EX_CLIENTEDG
+		GuiControl_SetColor(GuiName, "gu_focoBottomStatus", "8464B4") ; set grey text
 
 		;
 		; init base facility
@@ -251,7 +251,7 @@ class FoxitCoedit
 		GuiControl_Enable(GuiName, "gu_focoBtnResync", focoBtnSync)
 
 		GuiControl_SetText(GuiName, "gu_focoLblHeadline", this.txtHeadline)
-		GuiControl_SetText(GuiName, "gu_focoSSState", this.txtBottomline)
+		GuiControl_SetText(GuiName, "gu_focoBottomStatus", this.txtBottomline)
 
 		this.RefreshMleDetail()
 	}
@@ -466,6 +466,7 @@ class FoxitCoedit
 		else if(this.state=="CoeditActivated")
 		{
 			GuiControl_SetText(GuiName, "gu_focoLblHeadline", "[ Activated ] Waiting for peer...")
+			GuiControl_SetText(GuiName, "gu_focoBottomStatus", "Waiting for peer to connect...")
 		}
 		else if(this.state=="CoeditHandshaked")
 		{
@@ -474,7 +475,7 @@ class FoxitCoedit
 			this.RefreshUic()
 			
 			GuiControl_SetText(GuiName, "gu_focoLblHeadline", this.txtHeadline)
-			GuiControl_SetText(GuiName, "gu_focoSSState", this.txtBottomline)
+			GuiControl_SetText(GuiName, "gu_focoBottomStatus", this.txtBottomline)
 			
 			;
 			; To detect HWND lost
@@ -791,7 +792,7 @@ class FoxitCoedit
 				
 				msec_used := dev_GetTickCount64() - msec_start
 				info := Format("Mineside PDF saving (+{} seconds)...", msec_used//1000)
-				GuiControl_SetText(GuiName, "gu_focoSSState", info)
+				GuiControl_SetText(GuiName, "gu_focoBottomStatus", info)
 
 				; todo? (ProSaving side) detect cancel flag, then break.
 			}
@@ -827,7 +828,7 @@ class FoxitCoedit
 			info := Format("[{}] Closing mineside PDF, +{} seconds"
 				, dev_GetDateTimeStr(), (dev_GetTickCount64()-msec_start)//1000)
 			this.txtBottomline := info
-			GuiControl_SetText(GuiName, "gu_focoSSState", info)
+			GuiControl_SetText(GuiName, "gu_focoBottomStatus", info)
 			
 			close_ok := dev_WinWaitClose(wintitle, 1000) ; this delays 1 second
 			if(close_ok)
@@ -1281,7 +1282,7 @@ class FoxitCoedit
 			info := Format("[{}] PDF reloaded, cost {} seconds.", dev_GetDateTimeStr(), start_secs)
 		}
 		
-		GuiControl_SetText(GuiName, "gu_focoSSState", info)
+		GuiControl_SetText(GuiName, "gu_focoBottomStatus", info)
 		this.txtBottomline := info
 		
 		;
@@ -1389,7 +1390,7 @@ FoxitCoeditGuiSize()
 	rsdict.gu_focoDdlPeerFollowMe := JUL.PinToLeftBottom
 	rsdict.gu_focoBtnSavePdf := JUL.PinToLeftBottom
 	rsdict.gu_focoBtnResync := JUL.PinToRightBottom
-	rsdict.gu_focoSSState := JUL.FillWidth_AtBottom
+	rsdict.gu_focoBottomStatus := JUL.FillWidth_AtBottom
 	
 	dev_GuiAutoResize(FoxitCoedit.Id, rsdict, A_GuiWidth, A_GuiHeight)
 }
