@@ -72,6 +72,39 @@ cc_IsCMDorConEmuActive()
 		return false
 }
 
+cc_WaitCMDorConEmuActive(timeout_millisec:=500)
+{
+	msec_start := dev_GetTickCount64()
+	Loop 
+	{
+		if(cc_IsCMDorConEmuActive())
+			return true
+	
+		if( dev_GetTickCount64()-msec_start > timeout_millisec )
+			return false
+		
+		dev_Sleep(50)
+	}
+}
+
+cc_PasteTextToCMDWindow(usertext, timeout_millisec:=500)
+{
+	if(not cc_WaitCMDorConEmuActive(timeout_millisec))
+	{
+		dev_TooltipAutoClear(Format("cc_WaitCMDorConEmuActive() not success after {} millisec", timeout_millisec))
+		return false
+	}
+	
+	if(not dev_SetClipboardWithTimeout(usertext, 100))
+	{
+		dev_MsgBoxWarning("Unexpect: cc_PasteTextToCMDWindow() cannot open Clipboard.")
+		return false
+	}
+	
+	cmdconsole_RightClickTheMainWindow(false)
+	return true
+}
+
 
 cmd_Backspace10()
 {

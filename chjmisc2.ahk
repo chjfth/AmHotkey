@@ -123,6 +123,42 @@ R200,100
 }
 
 
+; ====== Quick construct `net use \\10.22.x.x\d$' command. ======
+
+#If cc_IsCMDorConEmuActive()
+
+^n:: chj_PasteNetUseSambaCommand()
+chj_PasteNetUseSambaCommand()
+{
+	static s_prev_smbpath := "\\10.22.3.4\d$"
+	
+	smbpath := s_prev_smbpath
+	
+	isok := dev_InputBox_InitText("AHK: net use command"
+		, "Input a Samba share path, and a `net use \\server\share` command will be constructed for you."
+		,  smbpath)
+	if(not isok)
+		return
+	
+	s_prev_smbpath := smbpath
+	
+	isAdmin := dev_IsSubStr(smbpath, "$")
+	netusecmd := Format("net use {1} /user:{2} {3}"
+		, smbpath
+		, isAdmin ? "Admin" : "chj"
+		, isAdmin ? "Adm0000" : "123456" )
+	
+	if(not cc_PasteTextToCMDWindow(netusecmd))
+		return
+	
+	; Then place smbpath into Clipboard, bcz user probably want Explorer to go to that smbpath.
+	;
+	dev_Sleep(200)
+	dev_SetClipboardWithTimeout(smbpath, 100)
+	dev_TooltipAutoClear("Place to Clipboard: " smbpath)
+}
+
+#If
 
 ;==============================================================================
 ; Evernote 6.5.4 specific

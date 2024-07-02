@@ -2483,14 +2483,32 @@ dev_IsWin10()
 	}
 }
 
-dev_InputBox_InitText(title, prompt, byref usertext:="")
+dev_InputBox_InitText(title, prompt, byref usertext:="", on_active_window:=true)
 {
 	; Input param usertext is also the output param.
+
+	scrx := "" ; to position the Inputbox
+	scry := ""
+	
+	if(on_active_window)
+	{
+		; We make that Inputbox appear at center of current active window, 
+		; which is much more friendly to human user.
+		pos := dev_WinGetPos("A")
+		if(pos)
+		{
+			boxw := 375
+			boxh := 189 ; hard value according to AHK chm
+			
+			scrx := pos.x + (pos.w - boxw) / 2
+			scry := pos.y + (pos.h - boxh) / 2
+		}
+	}
 
 	if(title=="")
 		title := "AHK InputBox"
 	
-	InputBox, answer, % title, % prompt, , , , , , , 0, % usertext
+	InputBox, answer, % title, % prompt, , , , % scrx , % scry , , 0, % usertext
 	
 	usertext := answer
 
