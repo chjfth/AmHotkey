@@ -1233,7 +1233,7 @@ dev_SplitStrings(bigstring, sep:="`n")
 
 dev_ParseLinesToArray(bigstring, sep:="`n") ; old name
 {
-	dev_SplitStrings(bigstring, sep)
+	return dev_SplitStrings(bigstring, sep)
 }
 
 

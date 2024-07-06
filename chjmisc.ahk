@@ -1014,24 +1014,33 @@ IrfanView_EXIF_extract_GPS_position(Eoffset_fix:=0, Noffset_fix:=0)
 	
 	for index,line in arlines 
 	{
-		ptn := "\(([0-9]+\.[0-9]+)\)"
+		; AmDbg0(Format("EXIF line #{}: {}", index, line))
+		
+		ptn := "\(([0-9]+\.[0-9]+)\)" ; matches "119.324167" or "26.067089"
+		
 		if(StrIsStartsWith(line, "GPSLongitude`t"))
 		{
+			; Example:
+			;	GPSLongitude	119  19  27.0 (119.324167)
+			
 			foundpos := RegExMatch(line, "O)" ptn, subpat)
 			if(foundpos>0)
 			{
 				east := subpat.Value(1)
-				;Amdbg0("m1: " subpat.Value(1))
+				;Amdbg0("GPSLongitude: " subpat.Value(1))
 			}
 		}
 
 		if(StrIsStartsWith(line, "GPSLatitude`t"))
 		{
+			; Example:
+			;	GPSLatitude	26  4  1.52 (26.067089)
+			
 			foundpos := RegExMatch(line, "O)" ptn, subpat)
 			if(foundpos>0)
 			{
 				north := subpat.Value(1)
-				;Amdbg0("m1: " subpat.Value(1))
+				;Amdbg0("GPSLatitude: " subpat.Value(1))
 			}
 		}
 	}
