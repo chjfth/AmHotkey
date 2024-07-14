@@ -135,7 +135,7 @@ chj_PasteNetUseSambaCommand()
 	smbpath := s_prev_smbpath
 	
 	isok := dev_InputBox_InitText("AHK: net use command"
-		, "Input a Samba share path, and a `net use \\server\share` command will be constructed for you."
+		, "Input a Samba share path, and a ``net use \\server\share`` command will be constructed for you."
 		,  smbpath)
 	if(not isok)
 		return
