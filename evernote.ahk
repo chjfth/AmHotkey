@@ -91,6 +91,10 @@ global g_evtblEdtCsstableRows
 global g_evtblLblCsstableRows
 global g_evtblChkboxCsstableHead
 
+global g_evtblDivFullWidth
+global g_evtblDivLeftSide
+global g_evtblDivRightSide
+
 global lbl_TableColumnSpec, lbl_TableCellPadding, lbl_TableBorderPx
 global g_evtblTableColumnSpec
 global g_evtblCssTableColumnSpec ; This is for CssTable
@@ -351,6 +355,11 @@ Evtbl_CreateGui()
 	Gui, EVTBL:Add, Edit, xm y+9 w415       Hidden vg_evtblSpanText  , % "span text"
 	Gui, EVTBL:Add, Checkbox, x+3 yp+2 w80  Hidden vg_evtblIsSpanMono, % "mono-f&ont"
 	;
+	; 2024.07 DIV talk-leftside/talk-rightside
+	Gui, EVTBL:Add, Radio, xm+179 yp Group Checked Hidden vg_evtblDivFullWidth, % "Full width"
+	Gui, EVTBL:Add, Radio, x+10                    Hidden vg_evtblDivLeftSide, % "Left side"
+	Gui, EVTBL:Add, Radio, x+10                    Hidden vg_evtblDivRightSide, % "Right side"
+	;
 	; Table Columns: ____24,360,540____  [x] First column in color // reuse the same position as span-text
 	;
 	Gui, EVTBL:Add, Text, xm yp+2 vlbl_TableColumnSpec, % "Table Column&s:"
@@ -402,47 +411,42 @@ Evtbl_CreateGui()
 
 Evtbl_OnTableDivSwitch()
 {
-	; Memo: Initial hidden ctrls is controlled in Evtbl_CreateGui() ; /// old comment
+	; Memo: Initial hidden ctrls is controlled in Evtbl_CreateGui() ;
 	
 	all_ctls := [ "g_evtblEdtCsstableRows", "g_evtblLblCsstableRows", "g_evtblChkboxCsstableHead"
 		,			"g_evtblIsSpan"
 		, "lbl_TableColumnSpec", "g_evtblTableColumnSpec", "g_evtblCssTableColumnSpec", "g_evtblIsFirstColumnColor"
-		,		"g_evtblSpanText", "g_evtblIsSpanMono"
+		,		"g_evtblSpanText", "g_evtblIsSpanMono",  "g_evtblDivFullWidth", "g_evtblDivLeftSide", "g_evtblDivRightSide"
 		, "lbl_TableCellPadding", "g_evtblIsPaddingSparse", "g_evtblIsPaddingDense"
 		, 		"lbl_TableBorderPx", "g_evtblBorder1px", "g_evtblBorder2px" ]
 	; ------------------------------------------------------------------------------------------
 	table_ctls := [ "_", "_", "_"
 		,			"_"
 		, "lbl_TableColumnSpec", "g_evtblTableColumnSpec", "_", "g_evtblIsFirstColumnColor"
-		,		"_", "_"
+		,		"_", "_" , "_", "_", "_"
 		, "lbl_TableCellPadding", "g_evtblIsPaddingSparse", "g_evtblIsPaddingDense"
 		, 		"lbl_TableBorderPx", "g_evtblBorder1px", "g_evtblBorder2px" ]
 	; ------------------------------------------------------------------------------------------
 	csstbl_ctls := [ "g_evtblEdtCsstableRows", "g_evtblLblCsstableRows", "g_evtblChkboxCsstableHead"
 		,			"_"
 		, "lbl_TableColumnSpec", "", "_", "g_evtblCssTableColumnSpec", "g_evtblIsFirstColumnColor"
-		,		"_", "_"
+		,		"_", "_", "_", "_", "_"
 		, "_", "_", "_"
 		, 		"_", "_", "_" ]
 	; ------------------------------------------------------------------------------------------
 	div_ctls := [ "_", "_", "_"
 		,			"g_evtblIsSpan"
 		, "_", "_", "_", "_"
-		,		"_", "_"
+		,		"_", "_", "g_evtblDivFullWidth", "g_evtblDivLeftSide", "g_evtblDivRightSide"
 		, "_", "_", "_"
 		, 		"_", "_", "_" ]
 	; ------------------------------------------------------------------------------------------
 	span_ctls := [ "_", "_", "_"
 		,			"g_evtblIsSpan"
 		, "_", "_", "_", "_"
-		,		"g_evtblSpanText", "g_evtblIsSpanMono"
+		,		"g_evtblSpanText", "g_evtblIsSpanMono", "_", "_", "_"
 		, "_", "_", "_"
 		, 		"_", "_", "_" ]
-
-;	GuiControlGet, g_evtblIsTable, EVTBL:
-;	GuiControlGet, g_evtblIsDiv, EVTBL:
-;	GuiControlGet, g_evtblIsCssTable, EVTBL:
-;	GuiControlGet, g_evtblIsSpan, EVTBL:
 
 	Gui, EVTBL:Submit, NoHide
 	
@@ -615,16 +619,22 @@ Evtbl_GenHtml_Table(hexcolor1, hexcolor2)
 	return html
 }
 
-Evtbl_GenHtml_Div(hexcolor1, hexcolor2)
+Evtbl_GenHtml_Div(hexcolor1, hexcolor2, align:="FullWidth")
 {
+	cssmargin := ""
+	if(align=="LeftSide")
+		cssmargin := "margin-right: 20`%;"
+	else if(align=="RightSide")
+		cssmargin := "margin-left: 20`%;"
+
 	htmlptn = 
 (
-+<div style="padding: 0.8em; border: 1px solid rgb(220, 220, 220); {1};"><div><span>DIV</span></div></div><div>-</div>
++<div style="padding: 0.8em; {1} border: 1px solid rgb(220, 220, 220); {2};"><div><span>DIV</span></div></div><div>-</div>
 ) ; will be feed to Format, {1} will be replaced
 	
 	css_bg_rule := make_css_bg_rule(hexcolor1, hexcolor2)
 
-	html := Format(htmlptn, css_bg_rule)
+	html := Format(htmlptn, cssmargin, css_bg_rule)
 	return html
 }
 
@@ -661,7 +671,13 @@ Evtbl_GenHtml()
 	}
 	else if(g_evtblIsDiv)
 	{
-		html := Evtbl_GenHtml_Div(hexcolor1, hexcolor2)
+		align := ""
+		if(g_evtblDivLeftSide) 
+			align := "LeftSide"
+		else if(g_evtblDivRightSide) 
+			align := "RightSide"
+		
+		html := Evtbl_GenHtml_Div(hexcolor1, hexcolor2, align)
 	}
 	else if(g_evtblIsCssTable)
 	{
