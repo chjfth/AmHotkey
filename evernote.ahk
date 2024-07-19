@@ -421,7 +421,7 @@ Evtbl_OnTableDivSwitch()
 		, 		"lbl_TableBorderPx", "g_evtblBorder1px", "g_evtblBorder2px" ]
 	; ------------------------------------------------------------------------------------------
 	table_ctls := [ "_", "_", "_"
-		,			"_"
+		,			"g_evtblIsSpan"
 		, "lbl_TableColumnSpec", "g_evtblTableColumnSpec", "_", "g_evtblIsFirstColumnColor"
 		,		"_", "_" , "_", "_", "_"
 		, "lbl_TableCellPadding", "g_evtblIsPaddingSparse", "g_evtblIsPaddingDense"
