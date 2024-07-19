@@ -2443,6 +2443,16 @@ dev_ArrayTruncateAt_(ar, nkeeps)
 	}
 }
 
+dev_IsEleInArray(ele, array)
+{
+	for index,value in array
+    {
+        if(value==ele)
+        	return true
+    }
+	return false
+}
+
 
 dev_SetClipboardWithTimeout(text, timeout_millisec:=1000)
 {

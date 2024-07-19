@@ -402,52 +402,67 @@ Evtbl_CreateGui()
 
 Evtbl_OnTableDivSwitch()
 {
-	; Memo: Initial hidden ctrls is controlled in Evtbl_CreateGui()
-
-	tablectls_share := [ "lbl_TableColumnSpec", "g_evtblIsFirstColumnColor",
-		, "lbl_TableCellPadding", "g_evtblIsPaddingSparse", "g_evtblIsPaddingDense"
-		, "lbl_TableBorderPx", "g_evtblBorder1px", "g_evtblBorder2px" ]
-		; share by traditional <TABLE> and CssTable
-
-	GuiControlGet, g_evtblIsTable, EVTBL:
-	GuiControlGet, g_evtblIsCssTable, EVTBL:
-	GuiControlGet, g_evtblIsSpan, EVTBL:
+	; Memo: Initial hidden ctrls is controlled in Evtbl_CreateGui() ; /// old comment
 	
-	hideORshow := (g_evtblIsTable || g_evtblIsCssTable) ? "Show" : "Hide"
-	;
-	Loop, % tablectls_share.Length()
+	all_ctls := [ "g_evtblEdtCsstableRows", "g_evtblLblCsstableRows", "g_evtblChkboxCsstableHead"
+		,			"g_evtblIsSpan"
+		, "lbl_TableColumnSpec", "g_evtblTableColumnSpec", "g_evtblCssTableColumnSpec", "g_evtblIsFirstColumnColor"
+		,		"g_evtblSpanText", "g_evtblIsSpanMono"
+		, "lbl_TableCellPadding", "g_evtblIsPaddingSparse", "g_evtblIsPaddingDense"
+		, 		"lbl_TableBorderPx", "g_evtblBorder1px", "g_evtblBorder2px" ]
+	; ------------------------------------------------------------------------------------------
+	table_ctls := [ "_", "_", "_"
+		,			"_"
+		, "lbl_TableColumnSpec", "g_evtblTableColumnSpec", "_", "g_evtblIsFirstColumnColor"
+		,		"_", "_"
+		, "lbl_TableCellPadding", "g_evtblIsPaddingSparse", "g_evtblIsPaddingDense"
+		, 		"lbl_TableBorderPx", "g_evtblBorder1px", "g_evtblBorder2px" ]
+	; ------------------------------------------------------------------------------------------
+	csstbl_ctls := [ "g_evtblEdtCsstableRows", "g_evtblLblCsstableRows", "g_evtblChkboxCsstableHead"
+		,			"_"
+		, "lbl_TableColumnSpec", "", "_", "g_evtblCssTableColumnSpec", "g_evtblIsFirstColumnColor"
+		,		"_", "_"
+		, "_", "_", "_"
+		, 		"_", "_", "_" ]
+	; ------------------------------------------------------------------------------------------
+	div_ctls := [ "_", "_", "_"
+		,			"g_evtblIsSpan"
+		, "_", "_", "_", "_"
+		,		"_", "_"
+		, "_", "_", "_"
+		, 		"_", "_", "_" ]
+	; ------------------------------------------------------------------------------------------
+	span_ctls := [ "_", "_", "_"
+		,			"g_evtblIsSpan"
+		, "_", "_", "_", "_"
+		,		"g_evtblSpanText", "g_evtblIsSpanMono"
+		, "_", "_", "_"
+		, 		"_", "_", "_" ]
+
+;	GuiControlGet, g_evtblIsTable, EVTBL:
+;	GuiControlGet, g_evtblIsDiv, EVTBL:
+;	GuiControlGet, g_evtblIsCssTable, EVTBL:
+;	GuiControlGet, g_evtblIsSpan, EVTBL:
+
+	Gui, EVTBL:Submit, NoHide
+	
+	if(g_evtblIsTable)
+		need_ctls := table_ctls
+	else if(g_evtblIsDiv)
+		need_ctls := div_ctls
+	else if(g_evtblIsCssTable)
+		need_ctls := csstbl_ctls
+	else if(g_evtblIsSpan)
+		need_ctls := span_ctls
+	else
+		dev_assert(0)
+	
+	Loop, % all_ctls.Length()
 	{
-		ctlvar := tablectls_share[A_Index]
+		ctlvar := all_ctls[A_Index]
+		hideORshow := dev_IsEleInArray(ctlvar, need_ctls) ? "Show" : "Hide"
 		GuiControl, EVTBL:%hideORshow%, %ctlvar%
 	}
-	
-	hideORshow := g_evtblIsTable ? "Show" : "Hide"
-	GuiControl, EVTBL:%hideORshow%, g_evtblTableColumnSpec
-	
-	hideORshow := g_evtblIsCssTable ? "Show" : "Hide"
-	GuiControl, EVTBL:%hideORshow%, g_evtblCssTableColumnSpec
-	GuiControl, EVTBL:%hideORshow%, g_evtblEdtCsstableRows
-	GuiControl, EVTBL:%hideORshow%, g_evtblLblCsstableRows
-	GuiControl, EVTBL:%hideORshow%, g_evtblChkboxCsstableHead
-	;
-	if(g_evtblIsCssTable)
-	{
-		hide_more_ctls := [ "lbl_TableCellPadding", "g_evtblIsPaddingSparse", "g_evtblIsPaddingDense"
-			, "lbl_TableBorderPx", "g_evtblBorder1px", "g_evtblBorder2px", "g_evtblIsSpan" ]
-		Loop, % hide_more_ctls.Length()
-		{
-			GuiControl, EVTBL:Hide, % hide_more_ctls[A_Index]
-		}
-		
-	}
-	else 
-	{
-		GuiControl, EVTBL:Show, % "g_evtblIsSpan"
-	}
-	
-	hideORshow := g_evtblIsSpan ? "Show" : "Hide"
-	GuiControl, EVTBL:%hideORshow%, g_evtblSpanText
-	GuiControl, EVTBL:%hideORshow%, g_evtblIsSpanMono
 
 	GuiControl, % "EVTBL:" (g_evtblIsTable?"Show":"Hide"), g_evtblChkboxTSV
 }
