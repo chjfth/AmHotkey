@@ -356,9 +356,9 @@ Evtbl_CreateGui()
 	Gui, EVTBL:Add, Checkbox, x+3 yp+2 w80  Hidden vg_evtblIsSpanMono, % "mono-f&ont"
 	;
 	; 2024.07 DIV talk-leftside/talk-rightside
-	Gui, EVTBL:Add, Radio, xm+179 yp Group Checked Hidden vg_evtblDivFullWidth, % "Full width"
-	Gui, EVTBL:Add, Radio, x+10                    Hidden vg_evtblDivLeftSide, % "Left side"
-	Gui, EVTBL:Add, Radio, x+10                    Hidden vg_evtblDivRightSide, % "Right side"
+	Gui, EVTBL:Add, Radio, xm+179 yp Group Checked Hidden vg_evtblDivFullWidth, % "&Full width"
+	Gui, EVTBL:Add, Radio, x+10                    Hidden vg_evtblDivLeftSide, % "&Left side"
+	Gui, EVTBL:Add, Radio, x+10                    Hidden vg_evtblDivRightSide, % "&Right side"
 	;
 	; Table Columns: ____24,360,540____  [x] First column in color // reuse the same position as span-text
 	;
@@ -464,8 +464,16 @@ Evtbl_OnTableDivSwitch()
 	Loop, % all_ctls.Length()
 	{
 		ctlvar := all_ctls[A_Index]
-		hideORshow := dev_IsEleInArray(ctlvar, need_ctls) ? "Show" : "Hide"
+		isshow := dev_IsEleInArray(ctlvar, need_ctls)
+
+		hideORshow := isshow ? "Show" : "Hide"
 		GuiControl, EVTBL:%hideORshow%, %ctlvar%
+		
+		; Disable a Uic, so to make its Alt-hotchar in-effective.
+		; This is beneficial when two Uic-s share a single hotchar. 
+		; If one is disabled, the other will get instant response on that hotchar.
+		dis_enable := isshow ? "Enable" : "Disable"
+		GuiControl, EVTBL:%dis_enable%, %ctlvar%
 	}
 
 	GuiControl, % "EVTBL:" (g_evtblIsTable?"Show":"Hide"), g_evtblChkboxTSV
