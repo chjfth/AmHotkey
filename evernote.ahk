@@ -1779,7 +1779,16 @@ Evernote_GotoNoteListFirstItem()
 	; -- Go to first item in the list.
 }
 
-#IfWinActive ahk_class ENMainFrame
+; ==================================================================
+; Memo: Evernote 6.5.4's default hotkey behavior:
+; F5 : Switch MainFrame view style: Snippet View -> Card View -> Top List ...
+;	-- This is used pretty rarely, so I override F5 to call Evernote_GotoNoteListFirstItem().
+;
+; F6 : Goto full-text search box, clearing existing text in search box. 
+;	-- This is convenient and I do not override it.
+; ==================================================================
+
+#If Evernote_IsMainFrameActive()
 
 CapsLock & Left:: Evernote_ClickNoteListArea()
 
@@ -1793,8 +1802,15 @@ CapsLock & Up:: Evernote_GotoNoteListFirstItem()
 
 ^!s:: Send +!n ; Jump to Notebook(dropdown list)
 
+F5:: Evernote_MainFrameF5()
+Evernote_MainFrameF5()
+{
+	dev_TooltipAutoClear("evernote.ahk: F5 hotkey is overridden to be Evernote_GotoNoteListFirstItem()")
+	Evernote_GotoNoteListFirstItem()
+}
+
 ^F6:: 
-	ControlFocus, ENAutoCompleteEditCtrl1, A
+	ControlFocus, ENAutoCompleteEditCtrl1, A ; no clearing search-box text content
 return
 
 ^F1:: 
@@ -1802,13 +1818,19 @@ return
 	ClickInActiveControl("EnShortcutsBar1", 54, -8, true) ; Click on "first"(hopefully) shortcut link.
 return
 
-#IfWinActive
+#If
 
 
-#IfWinActive ahk_class ENSingleNoteView
+#If Evernote_IsSingleNoteActive()
 
 CapsLock & Right:: Evernote_ClickEditingArea()
 
+F5:: Evernote_SingleNoteF5()
+Evernote_SingleNoteF5()
+{
+	dev_TooltipAutoClear("evernote.ahk: F5 hotkey goes to MainFrame first-item.")
+	Evernote_GotoNoteListFirstItem()
+}
 
 ESC:: ; Do not allow ESC to close snippet window
 	if(Is_PinyinJiaJia_Floatbar_Visible() || dev_IsWinclassExist("QQPinyinCompWndTSF"))
@@ -1829,7 +1851,7 @@ ESC:: ; Do not allow ESC to close snippet window
 	}
 return 
 
-#IfWinActive ; ENSingleNoteView
+#If 
 
 
 
