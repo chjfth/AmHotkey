@@ -639,7 +639,7 @@ Evtbl_GenHtml_Div_once(hexcolor1, hexcolor2, align:="FullWidth", add_tail_dash:=
 
 	htmlptn = 
 (
-+<div style="padding: 0.8em; {1} border: 1px solid rgb(220, 220, 220); {2};"><div><span>DIV</span></div></div>
+-<div style="padding: 0.8em; {1} border: 1px solid rgb(220, 220, 220); {2};"><span>DIV</span></div>
 ) ; will be feed to Format(), {1} will be replaced
 	
 	if(add_tail_dash)
