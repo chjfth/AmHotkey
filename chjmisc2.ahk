@@ -80,6 +80,8 @@ type_python_shebang()
 Init_chjmisc2()
 {
 	dev_MenuAddItem(winshell.UtilityMenu, "Mouse goto screen x,y", "InputBox_MouseGoto")
+	
+	pN_Tweak_for_PYJJ_pageN_keystroke()
 }
 
 ;==============================================================================
@@ -224,3 +226,61 @@ return
 
 #If
 
+
+pN_Tweak_for_PYJJ_pageN_keystroke()
+{
+	; [2024-07-24] This solves a long-existing boring system behavior when using PYJJ.
+	;
+	; Before this tweak:
+	; When PYJJ is in ZH input state, and I want to type "p123" (meaning page 123)
+	; into text editor, I just can not type 『p123』directly, bcz:
+	;	the leading 『p』 provokes PJYY ZH-character candidates floatbar, 
+	;	then 『1』 will select the first ZH-character.
+	; So, to type in p123, I have to delete the already typed 『p』, then press 
+	; Shift once to switch from ZH to EN, type my p123, then press Shift once again 
+	; to go back to ZH state, -- quite stuttering typing experience.
+	;
+	; Now with this tweak:
+	; On PJYY's initial ZH state, I can really type p123 smoothly interspersed with 
+	; Chinese characters. Great!
+	
+
+	Loop, 9
+	{
+		; We want 'p1' to trigger AHK action, 'p2', 'p3'... as well.
+	
+		digit := A_Index
+		fnobj := Func("PYJJ_pageN_Hotstring_Action").Bind(digit)
+		Hotstring(":*:p" digit, fnobj, "On")
+	}
+}
+
+PYJJ_pageN_Hotstring_Action(digit)
+{
+	; digit can be 0 ~ 9.
+
+	is_pjyy := Is_PinyinJiaJia_Floatbar_Visible()
+
+	if(is_pjyy)
+	{
+		dev_TooltipAutoClear(Format("AHK: p{} triggers smooth pNNN input for PYJJ.", digit))
+		
+		; Note: On triggering this, the digit has been intercepted by Autohotkey engine,
+		; and the digit has not reach current text editor process. Autohotkey engine then
+		; sends one backspace to the text editor process, so the PYJJ(inside that process) 
+		; revokes the 'p' char on PYJJ float bar and the float bar vanishes from the screen.
+		
+		; Now, type Shift to place PYJJ into EN input-state (assume PYJJ configured as such),
+		; so that user from now on types digits(1~9) directly into text editor.
+		dev_Send("{Shift down}{Shift up}")
+	}
+
+	; Resend the two keystrokes of pN (p1, p2, ... or p9), so that our text editor gets them.
+	dev_SendRaw("p" digit) 
+	
+	if(is_pjyy)
+	{
+		; Send Shift again to bring PYJJ back into ZH input-state.
+		dev_Send("{Shift down}{Shift up}")
+	}
+} 

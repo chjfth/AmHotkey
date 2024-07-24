@@ -1614,6 +1614,16 @@ dev_PasteTextViaClipboard(usertext)
 	WinClip.Paste()
 }
 
+dev_Send(send_keys)
+{
+	Send % send_keys
+}
+
+dev_SendInput(send_keys)
+{
+	SendInput % send_keys
+}
+
 dev_SendRaw(rawstr)
 {
 	; `n represent Line-feed
@@ -1756,11 +1766,6 @@ dev_Menu_DeleteAll(menuname)
 	}
 }
 
-
-dev_Send(send_keys)
-{
-	Send % send_keys
-}
 
 dev_YMDHMS_AddSeconds(ymdhms, seconds)
 {
