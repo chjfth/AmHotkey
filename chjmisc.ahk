@@ -379,13 +379,6 @@ PrintScreen:: ClickInActiveWindow(90, -50)
 ; Skype 6.x/7.x , Swap Enter & Ctrl+Enter, so Ctrl+Enter to send message.
 ; Note: Skype 8.x start using Chromium framework UI.
 ;==============================================================
-skype_IsChsIMEActive()
-{
-	if WinExist("ahk_class PYJJ_COMPUI_WND") ; Pinyin JiaJia 
-		return true
-	else
-		return false
-}
 
 Is_Skype8Active()
 {
@@ -406,10 +399,10 @@ Is_Skype8Active()
 #If WinActive("ahk_class tSkMainForm") or Is_Skype8Active()
 
 Enter::
-	if(skype_IsChsIMEActive()) 
+	if(Is_PinyinJiaJia_Floatbar_Visible()) 
 	{
-		; If doing Pinyin JiaJia input(IME floating window on screen), don't change Enter
-		; dev_TooltipAutoClear("[Enter] PYJJ_COMPUI_WND active", 1000)
+		; If doing Pinyin JiaJia input(IME floating window on screen), don't change Enter behavior.
+		; dev_TooltipAutoClear("[Enter] PYJJ floatbar active", 1000)
 		SendInput {Enter}
 	}
 	else 
