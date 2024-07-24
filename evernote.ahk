@@ -94,6 +94,7 @@ global g_evtblChkboxCsstableHead
 global g_evtblDivFullWidth
 global g_evtblDivLeftSide
 global g_evtblDivRightSide
+global g_evtblDivQAstyle
 
 global lbl_TableColumnSpec, lbl_TableCellPadding, lbl_TableBorderPx
 global g_evtblTableColumnSpec
@@ -359,6 +360,7 @@ Evtbl_CreateGui()
 	Gui, EVTBL:Add, Radio, xm+179 yp Group Checked Hidden vg_evtblDivFullWidth, % "&Full width"
 	Gui, EVTBL:Add, Radio, x+10                    Hidden vg_evtblDivLeftSide, % "&Left side"
 	Gui, EVTBL:Add, Radio, x+10                    Hidden vg_evtblDivRightSide, % "&Right side"
+	Gui, EVTBL:Add, Radio, x+10                    Hidden vg_evtblDivQAstyle, % "&Q&&A Style"
 	;
 	; Table Columns: ____24,360,540____  [x] First column in color // reuse the same position as span-text
 	;
@@ -416,7 +418,7 @@ Evtbl_OnTableDivSwitch()
 	all_ctls := [ "g_evtblEdtCsstableRows", "g_evtblLblCsstableRows", "g_evtblChkboxCsstableHead"
 		,			"g_evtblIsSpan"
 		, "lbl_TableColumnSpec", "g_evtblTableColumnSpec", "g_evtblCssTableColumnSpec", "g_evtblIsFirstColumnColor"
-		,		"g_evtblSpanText", "g_evtblIsSpanMono",  "g_evtblDivFullWidth", "g_evtblDivLeftSide", "g_evtblDivRightSide"
+		,		"g_evtblSpanText", "g_evtblIsSpanMono",  "g_evtblDivFullWidth", "g_evtblDivLeftSide", "g_evtblDivRightSide", "g_evtblDivQAstyle"
 		, "lbl_TableCellPadding", "g_evtblIsPaddingSparse", "g_evtblIsPaddingDense"
 		, 		"lbl_TableBorderPx", "g_evtblBorder1px", "g_evtblBorder2px" ]
 	; ------------------------------------------------------------------------------------------
@@ -437,7 +439,7 @@ Evtbl_OnTableDivSwitch()
 	div_ctls := [ "_", "_", "_"
 		,			"g_evtblIsSpan"
 		, "_", "_", "_", "_"
-		,		"_", "_", "g_evtblDivFullWidth", "g_evtblDivLeftSide", "g_evtblDivRightSide"
+		,		"_", "_", "g_evtblDivFullWidth", "g_evtblDivLeftSide", "g_evtblDivRightSide", "g_evtblDivQAstyle"
 		, "_", "_", "_"
 		, 		"_", "_", "_" ]
 	; ------------------------------------------------------------------------------------------
@@ -627,7 +629,7 @@ Evtbl_GenHtml_Table(hexcolor1, hexcolor2)
 	return html
 }
 
-Evtbl_GenHtml_Div(hexcolor1, hexcolor2, align:="FullWidth")
+Evtbl_GenHtml_Div_once(hexcolor1, hexcolor2, align:="FullWidth", add_tail_dash:=true)
 {
 	cssmargin := ""
 	if(align=="LeftSide")
@@ -637,13 +639,37 @@ Evtbl_GenHtml_Div(hexcolor1, hexcolor2, align:="FullWidth")
 
 	htmlptn = 
 (
-+<div style="padding: 0.8em; {1} border: 1px solid rgb(220, 220, 220); {2};"><div><span>DIV</span></div></div><div>-</div>
-) ; will be feed to Format, {1} will be replaced
++<div style="padding: 0.8em; {1} border: 1px solid rgb(220, 220, 220); {2};"><div><span>DIV</span></div></div>
+) ; will be feed to Format(), {1} will be replaced
+	
+	if(add_tail_dash)
+		htmlptn .= "<div>-</div>"
 	
 	css_bg_rule := make_css_bg_rule(hexcolor1, hexcolor2)
 
 	html := Format(htmlptn, cssmargin, css_bg_rule)
 	return html
+}
+
+Evtbl_GenHtml_Div(hexcolor1, hexcolor2, align:="FullWidth")
+{
+	is_QAstyle := (align=="QAstyle")
+	
+	if(not is_QAstyle)
+	{
+		return Evtbl_GenHtml_Div_once(hexcolor1, hexcolor2, align)
+	}
+	else
+	{
+		Qhtml := Evtbl_GenHtml_Div_once(hexcolor1, "", "LeftSide", false)
+		
+		if(not hexcolor2)
+			hexcolor2 := hexcolor1
+		
+		Ahtml := Evtbl_GenHtml_Div_once(hexcolor2, "", "RightSide")
+		
+		return Qhtml . Ahtml
+	}
 }
 
 Evtbl_GenHtml()
@@ -680,10 +706,12 @@ Evtbl_GenHtml()
 	else if(g_evtblIsDiv)
 	{
 		align := ""
-		if(g_evtblDivLeftSide) 
+		if(g_evtblDivLeftSide)
 			align := "LeftSide"
-		else if(g_evtblDivRightSide) 
+		else if(g_evtblDivRightSide)
 			align := "RightSide"
+		else if(g_evtblDivQAstyle)
+			align := "QAstyle"
 		
 		html := Evtbl_GenHtml_Div(hexcolor1, hexcolor2, align)
 	}
@@ -1216,7 +1244,7 @@ Evtbl_WM_MOUSEMOVE()
 {
 	if(A_GuiControl=="g_evtblBtnColorMatrix" || A_GuiControl=="g_evtblBtnColorMatrix2")
 	{
-		tooltip, % "Show color matrix for easier picking."
+		tooltip, % "Pick background color visually."
 	}
 	else if(A_GuiControl=="g_evtblTableColumnSpec")
 	{
