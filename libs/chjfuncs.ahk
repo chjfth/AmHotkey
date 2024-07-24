@@ -25,7 +25,14 @@ IsTypingZhongwen_PinyinJiaJia()
 		
 		WinGetPos, jjx, jjy, jjw, jjh, ahk_class PYJJ_STATUS_WND
 		CoordMode, Pixel, Screen
+
+		msec1 := dev_GetTickCount64()
 		PixelGetColor, color, jjx+78, jjy+3, RGB
+		msec2 := dev_GetTickCount64()
+		
+		;AmDbg0(Format("AHK: PixelGetColor costs {} millisec.", msec2-msec1))
+		; -- On my Win7Evernote VM(on VirtualBox 6.1), it costs 60~180 millisec, quite slow.
+		
 		CoordMode, Pixel, Window
 		if(color==0xFF0099)
 			return true

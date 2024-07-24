@@ -82,6 +82,7 @@ Init_chjmisc2()
 	dev_MenuAddItem(winshell.UtilityMenu, "Mouse goto screen x,y", "InputBox_MouseGoto")
 	
 	pN_Tweak_for_PYJJ_pageN_keystroke()
+	HalfwidthChar_Tweak_for_PYJJ()
 }
 
 ;==============================================================================
@@ -284,3 +285,52 @@ PYJJ_pageN_Hotstring_Action(digit)
 		dev_Send("{Shift down}{Shift up}")
 	}
 } 
+
+HalfwidthChar_Tweak_for_PYJJ()
+{
+	halfwidth_chars := ".,+-*/"
+	nchars := StrLen(halfwidth_chars)
+	
+	Loop, % nchars
+	{
+		hwchar := SubStr(halfwidth_chars, A_Index, 1)
+		fnobj := Func("PYJJ_HalfwidthChar_Tweak_Action").Bind(hwchar)
+		Loop, 10
+		{
+			digit := A_Index-1
+			Hotstring(":?*B0:" digit hwchar, fnobj, "On")
+			;  ?  Hotstring matching is not required at word starting boundary.
+			;  *  Hotstring does not need to be trigger by a End-char(space char etc).
+			;  B0 When hotstring is triggered, tell AHK engine not to backspace-delete 
+			;     the already landing hotstring.
+		}
+	}
+}
+
+PYJJ_HalfwidthChar_Tweak_Action(hwchar)
+{
+	; hwchar can be . , + - * / etc
+
+	is_zh := IsTypingZhongwen_PinyinJiaJia() ; the may cost 100ms
+
+	if(is_zh)
+	{
+		dev_Send("{Shift down}{Shift up}") ; switch EN state
+	}
+
+	; Remove the full-width char(。，＋－×／ etc) and send the half-width counterpart.
+	dev_Send("{BS}" "{" hwchar "}")
+	; -- We need to enclose hwchar into "{ }", bcz some char(like "+") is considered as AHK modifier.
+	;    A pure "+" in `Send/SendInput` command will do nothing.
+
+	if(is_zh)
+	{
+		dev_Send("{Shift down}{Shift up}") ; switch back to ZH state
+	}
+}
+
+; 『Enter Dot』 as a hotstring ? Seems not allowed.
+;
+;	:*:{Enter}.::
+;	dev_TooltipAutoClear("enterrrrrrrrr")
+;	return
