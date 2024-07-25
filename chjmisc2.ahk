@@ -82,7 +82,8 @@ Init_chjmisc2()
 	dev_MenuAddItem(winshell.UtilityMenu, "Mouse goto screen x,y", "InputBox_MouseGoto")
 	
 	pN_Tweak_for_PYJJ_pageN_keystroke()
-	HalfwidthChar_Tweak_for_PYJJ()
+
+;	HalfwidthChar_Tweak_for_PYJJ() ; not using it due to big side-effect.
 }
 
 ;==============================================================================
@@ -288,6 +289,17 @@ PYJJ_pageN_Hotstring_Action(digit)
 
 HalfwidthChar_Tweak_for_PYJJ()
 {
+	; [2024-07-24] Purpose: When typing a Chinese article with PYJJ-IME, full-width "mode", 
+	; if a digit(0..9) is followed by a dot/comma/plus etc, I will make the dot/comma/plus 
+	; **half-width** .
+	;
+	; [2024-07-25] This code works, but with serious side-effect:
+	; Imagine: User brings up PYJJ floatbar then type '2' to select the second ZH candidate,
+	; now keyboard caret goes back to text editor and PYJJ floatbar disappears(the normal 
+	; behavior), then user type dot, hoping to type-in a Chinese full-width period symbol. 
+	; However, AHK code here will substitute that full-width period with a half-width dot.
+	; This is weird.
+
 	halfwidth_chars := ".,+-*/"
 	nchars := StrLen(halfwidth_chars)
 	
