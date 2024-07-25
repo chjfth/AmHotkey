@@ -311,6 +311,17 @@ PYJJ_HalfwidthChar_Tweak_Action(hwchar)
 {
 	; hwchar can be . , + - * / etc
 
+	if(Is_PinyinJiaJia_Floatbar_Visible())
+	{
+		; The user are in the process of selecting ZH-char candidates for a long ZH-word.
+		; During that time, user may be 
+		; * typing 1..9 to select one ZH-char,
+		; * typing dot(.) or comma(.) to page next/prev,
+		; So, A digit followed by a dot will trigger this hotstring,
+		; and we should not apply tweaking in this situation, so return.
+		return
+	}
+
 	is_zh := IsTypingZhongwen_PinyinJiaJia() ; the may cost 100ms
 
 	if(is_zh)
