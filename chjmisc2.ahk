@@ -369,7 +369,7 @@ PYJJ_HalfwidthChar_Tweak_Action(hwchar)
 
 appw_Zhihu_LiveCast_BigViewWithCommentSidebar()
 {
-	; Avaiable since 2024.06, for https://www.zhihu.com/education/
+	; Available since 2024.06, for https://www.zhihu.com/education/
 	
 	text =
 	(
