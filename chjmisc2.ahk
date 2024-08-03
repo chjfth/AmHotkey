@@ -229,6 +229,10 @@ return
 #If
 
 
+;==============================================================================
+; PYJJ
+;==============================================================================
+
 pN_Tweak_for_PYJJ_pageN_keystroke()
 {
 	; [2024-07-24] This solves a long-existing boring system behavior when using PYJJ.
@@ -357,3 +361,31 @@ PYJJ_HalfwidthChar_Tweak_Action(hwchar)
 ;	:*:{Enter}.::
 ;	dev_TooltipAutoClear("enterrrrrrrrr")
 ;	return
+
+
+;==============================================================================
+; Livecast in Chrome
+;==============================================================================
+
+appw_Zhihu_LiveCast_BigViewWithCommentSidebar()
+{
+	; Avaiable since 2024.06, for https://www.zhihu.com/education/
+	
+	text =
+	(
+// Autohotkey move window: =1900,=1400
+document.querySelectorAll('.PcLive-player-bB4as').forEach(element => {
+  element.style.width = '1560px'; // 此项调宽度
+});
+
+document.querySelectorAll('.PcPlayer-playerWrapper-2Wq7D').forEach(element => {
+  element.style.height = '900px'; // 此项调高度
+});
+
+document.querySelectorAll('.PcLive-rightWrapper-7SavL').forEach(element => {
+  element.style.width = '320px'; // 这是右侧网友发言区宽度
+});
+	)
+	winshell_AddOneSendTextMenu("F12 console - ZhihuLLM big webcast pane", text)
+
+}
