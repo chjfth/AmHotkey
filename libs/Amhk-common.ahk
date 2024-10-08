@@ -2898,3 +2898,13 @@ WinSet_Transparent(n0_255, wintitle:="")
 	WinSet, Transparent, % n0_255, % wintitle
 }
 
+dev_IsWin7()
+{
+	return A_OSVersion=="WIN_7" ? true : false
+}
+
+dev_IsWinXP()
+{
+	return A_OSVersion=="WIN_XP" ? true : false
+}
+

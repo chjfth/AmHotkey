@@ -81,7 +81,10 @@ Init_chjmisc2()
 {
 	dev_MenuAddItem(winshell.UtilityMenu, "Mouse goto screen x,y", "InputBox_MouseGoto")
 	
-	pN_Tweak_for_PYJJ_pageN_keystroke()
+	if(dev_IsWin7() or dev_IsWinXP())
+	{
+		pN_Tweak_for_PYJJ_pageN_keystroke()
+	}
 
 ;	HalfwidthChar_Tweak_for_PYJJ() ; not using it due to big side-effect.
 }
