@@ -1098,4 +1098,7 @@ QDir_F5_Refresh()
 ;	Send e
 }
 
+F8:: Send +^{Tab}
+F9:: Send ^{Tab}
+
 #If
