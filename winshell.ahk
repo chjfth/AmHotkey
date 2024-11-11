@@ -822,7 +822,7 @@ winshell_GrabControlTextUnderMouse(is_silent_return:=false)
 			prompt_lines := " (" lines " lines)"
 		}
 		else
-			color := "ffe088" ; yellow
+			color := "ffe088" ; orange
 		
 		DoHilightRectInTopwin("ahk_id " tophwnd, x,y,w,h, 500, color)
 		
@@ -895,7 +895,7 @@ winshell_GrabControlText(ctlhwnd)
 	{
 		; then consider it simple control types, Buttons, Static, Edit etc
 		
-		otext := dev_ControlGetText_hc(ctlhwnd, "")
+		otext := dev_ControlGetText_hwnd(ctlhwnd)
 	}
 	
 	return otext
