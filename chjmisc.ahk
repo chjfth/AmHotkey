@@ -31,6 +31,7 @@ return ; End of auto-execute section.
 
 #Include %A_LineFile%\..\libs\AmTrimPath.ahk
 #Include %A_LineFile%\..\AmTemplates.ahk
+#Include %A_LineFile%\..\libs\chjfuncs.ahk
 
 
 !#0:: dev_WinMove_with_backup_with_prompt(0, 0, "", "") ; move window to (0,0) in case you can't see that window
