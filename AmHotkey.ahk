@@ -2084,12 +2084,12 @@ Am_PlaySound(wavfile)
 
 PlaySoundLeftClick()
 {
-	Am_PlaySound("click.wav")
+	Am_PlaySound(A_ScriptDir "\click.wav")
 }
 
 PlaySoundRightClick()
 {
-	Am_PlaySound("sel.wav")
+	Am_PlaySound(A_ScriptDir "\sel.wav")
 }
 
 LeftClickWithSound(sound:=true)
