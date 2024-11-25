@@ -41,6 +41,7 @@ class FoxitCoedit
 	; static vars as constant >>>
 	static BtnTextResync := "R&e-sync"
 	static is_simulate_reopen_pdf_fail := false ; debugging purpose
+	static PdfBackups := 5
 	; static vars as constant <<<
 	
 	isGuiVisible := false
@@ -105,6 +106,12 @@ class FoxitCoedit
 	__New()
 	{
 		this.coedit := new PeersCoedit()
+		
+		if(FoxitCoeditCfg.PdfBackups>0)
+		{
+			; User can define FoxitCoeditCfg.PdfBackups in custom_env.ahk .
+			FoxitCoedit.PdfBackups := FoxitCoeditCfg.PdfBackups
+		}
 	}
 	
 	pdfpath[]
@@ -289,8 +296,14 @@ class FoxitCoedit
 			detail .= Format("TITLE:`n{}`n`n", this.pedWinTitle)
 				
 			if(this.pdfpath) 
+			{
 				detail .= "FILEPATH:`n" this.pdfpath
+				detail .= "`n`n"
+			}
 		}
+		
+		detail .= "PdfBackups: " FoxitCoedit.PdfBackups
+;		detail .= "`n`n"
 		
 		if(this.prev_mletext != detail)
 		{	
@@ -427,7 +440,7 @@ class FoxitCoedit
 			; Make a backup of the pdf file
 			pb := new PiledBackup(this.coedit.docpath
 				, this.coedit.docpath (this.ischk_Lside ? ".backupA" : ".backupB")
-				, 5)
+				, FoxitCoedit.PdfBackups)
 			this.dbg1("Making backup to folder: " pb.dirbackup)
 			pb.SaveOneBackup()
 		}
