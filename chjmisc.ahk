@@ -149,6 +149,8 @@ chjmisc_InitMenus()
 
 chjmisc_AddQuickPasteSnippets()
 {
+	; =====================================================
+
 	winshell_AddOneSendTextMenu("venv39 - transcode"
 		, ["d:\venv\venv39a\Scripts\activate.bat"
 		, "d:\PFNoInst\chjtranscode\setenv.bat"
@@ -164,6 +166,8 @@ fetch(apiurl)
 	)
 	winshell_AddOneSendTextMenu("F12 console - Query github.com repo size", text)
 
+	; =====================================================
+	
 	text = 
 	(
 class C1 {
@@ -174,6 +178,10 @@ public:
 };
 	)
 	winshell_AddOneSendTextMenu("a C++ class with ctor/dtor", text)
+
+	; =====================================================
+	
+	winshell_AddOneSendTextMenu("Git daemon", "git daemon --verbose --export-all --base-path=D:\gitw")
 }
 
 chj_StartMultiPageScreenGrabber(screenshot_hotkey, pgdn_hotkey, image_dir, pages, pgdn_wait_millisec:=500)
