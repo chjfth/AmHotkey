@@ -16,9 +16,18 @@ Stop_MonitorPausedVMsAndSuspendThem()
 	VMware does NOT provide out-of-box command to query whether a VM is paused,
 	so I have to check for vmx-folder all files's modification time to deduce. 
 
-*/
+Config:
+	In custom_env.ahk, user can define `class VmctlCfg{ static ... }` to customize
+	this module's behaviors. 
+	
+class VmctlCfg
+{
+	static vmwks_exedir := "D:\Program Files (x86)\VMware\VMware Workstation"
+	static idle_seconds := 3600*2
+	static exclude_dirs := [ "L:\tempVM\Win10WTG-uefi", "L:\tempVM\Win10-WTG" ]
+}
 
-global g_vmwks_exedir := "C:\Program Files (x86)\VMware\VMware Workstation"
+*/
 
 vmctl_InitEnv()
 
@@ -35,10 +44,14 @@ class vmctl
 	static _tmp_ := AmDbg_SetDesc(vmctl.Id, "Debug messages from vmware-control.ahk")
 
 	; Cfg:
+	static vmwks_exedir := "C:\Program Files (x86)\VMware\VMware Workstation"
+	
 	static chk_interval_seconds := 60
 	
 	static delay_seconds_bfr_suspend := 3600
 	; -- this value is changed by Start_MonitorPausedVMsAndSuspendThem()'s argument.
+	
+	static exclude_dirs := []
 	
 	;
 	; Runtime data:
@@ -51,7 +64,18 @@ class vmctl
 
 vmctl_InitEnv()
 {
+	; Always start this house-keeping timer.
+	;
 	dev_StartTimerPeriodic("_vmctl_smsec_inc", 1000)
+	
+	if(VmctlCfg.vmwks_exedir)
+		vmctl.vmwks_exedir := VmctlCfg.vmwks_exedir
+	
+	if(VmctlCfg.idle_seconds)
+		vmctl.delay_seconds_bfr_suspend := VmctlCfg.idle_seconds
+	
+	if(VmctlCfg.exclude_dirs)
+		vmctl.exclude_dirs := VmctlCfg.exclude_dirs
 }
 
 vmctl_dbg(msg)
@@ -80,10 +104,24 @@ Start_MonitorPausedVMsAndSuspendThem(minutes:=60)
 	if(minutes==0)
 		minutes := 1
 	
-	if(minutes>0)
+	if(minutes>0) {
 		vmctl.delay_seconds_bfr_suspend := minutes * 60
-	else
-		vmctl.delay_seconds_bfr_suspend := -minutes ; take it as seconds, debug purpose
+	}
+	else {
+		; take input 'minutes' value as seconds, a dev/debug facility
+		vmctl.delay_seconds_bfr_suspend := -minutes 
+	}
+
+	; Log configurations
+	msg := "[Configuration]`n"
+	msg .= "vmwks_exedir = " vmctl.vmwks_exedir "`n"
+	msg .= "idle_seconds = " vmctl.delay_seconds_bfr_suspend "`n"
+	msg .= "exclude_dirs = `n"
+	for index,dir in vmctl.exclude_dirs
+	{
+		msg .= "    " dir "`n"
+	}
+	vmctl_dbg(msg)
 
 	first_err := ""
 	if(not vmctl_CheckAndSuspendPausedVMs(first_err))
@@ -103,6 +141,15 @@ Stop_MonitorPausedVMsAndSuspendThem()
 	dev_StopTimer("vmctl_CheckAndSuspendPausedVMs")
 }
 
+vmctl_is_exclude_dir(vmxpath)
+{
+	for index,dir in vmctl.exclude_dirs
+	{
+		if(StrIsStartsWith(vmxpath, dir, true))
+			return true
+	}
+	return false
+}
 
 vmctl_CheckAndSuspendPausedVMs(byref errmsg:="")
 {
@@ -115,6 +162,9 @@ vmctl_CheckAndSuspendPausedVMs(byref errmsg:="")
 	
 	for index,vmxpath in vmxlist
 	{
+		if(vmctl_is_exclude_dir(vmxpath))
+			continue
+		
 		smsec_now := vmctl.smsec_now
 		
 		if(not vmctl.dictvm.HasKey(vmxpath))
@@ -194,10 +244,10 @@ vmctl_SuspendVmx(vmxpath)
 	; For VMwks 16.2.3, we need to Unpause VM first(in case it was paused), 
 	; to ensure VM Suspend success.
 
-	cmd := Format("""{}\vmrun.exe"" unpause ""{}""", g_vmwks_exedir, vmxpath)
+	cmd := Format("""{}\vmrun.exe"" unpause ""{}""", vmctl.vmwks_exedir, vmxpath)
 	dev_RunWaitOne(cmd, "hide")
 
-	cmd := Format("""{}\vmrun.exe"" suspend ""{}""", g_vmwks_exedir, vmxpath)
+	cmd := Format("""{}\vmrun.exe"" suspend ""{}""", vmctl.vmwks_exedir, vmxpath)
 
 	dev_RunWaitOne(cmd, "hide")
 	
@@ -206,7 +256,7 @@ vmctl_SuspendVmx(vmxpath)
 
 vmctl_GetRunningVmxList()
 {
-	cmd := Format("""{}\vmrun.exe"" list", g_vmwks_exedir)
+	cmd := Format("""{}\vmrun.exe"" list", vmctl.vmwks_exedir)
 
 /* Output is sth like this:
 
