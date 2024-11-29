@@ -2676,7 +2676,7 @@ Dbg_DumpChildWinsInfo(hwndtop)
 		pos := dev_ControlGetPos_hc(hwndtop, classnn)
 
 		wintext := dev_ControlGetText_hc(hwndtop, classnn)
-		wintext := Substr(wintext, 1, 100)
+		wintext := Substr(wintext, 1, 100) ; Limit length to 100
 		
 		childinfo := Format("#{} [{} , 0x{:08X}] @({},{}) {}", A_Index, classnn, hctrl, pos.x, pos.y, wintext)
 		
@@ -2709,7 +2709,7 @@ dev_ControlGetText_hwnd(hwnd)
 
 dev_ControlGetText_hc(hwndtop, classnn) ; hc: hwnd+classnn
 {
-	hctl := dev_GetHwndFromClassNN(classnn,  hwndtop)
+	hctl := dev_GetHwndFromClassNN(classnn, "ahk_id " hwndtop)
 	return dev_ControlGetText_hwnd(hctl)
 }
 
