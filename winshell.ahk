@@ -197,6 +197,8 @@ CalPPI_Init() ; Define it
 			g_CalppiDropboxSel := index
 		}
 	}
+	
+	dev_MenuAddItem("TRAY", "Power-saving my monitor", "mo_InitCountDown")
 }
 
 
