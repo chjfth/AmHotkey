@@ -884,9 +884,15 @@ class FoxitCoedit
 		
 		; Second, check that the new process really runs.
 		
-		Loop, 10
+		Loop, 100
 		{
 			dev_Sleep(500)
+			
+			if(this.coedit.cancel_flag)
+			{
+				this.dbg1("FoxitCoedit.fndocOpenPdf() canceled by user.")
+				throw Exception("You canceled mineside PDF Re-opening.")
+			}
 			
 			query_title := "ahk_exe " exepath
 			newhwnd := dev_GetHwndByWintitle(query_title)
@@ -903,6 +909,7 @@ class FoxitCoedit
 			
 			if( newpdf_title==oldpdf_title )
 			{
+				this.dbg2("[Dbginfo] See revived Foxit new process's title: " newpdf_title)
 				this.dbg1("FoxitCoedit.fndocOpenPdf() success.")
 				
 				; Third, grab new-process's HWND
