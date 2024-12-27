@@ -1049,6 +1049,66 @@ win32_CloseHandle(handle)
 	DllCall("CloseHandle", "Ptr", handle)
 }
 
+_win32_GetCaretPos() ; return client-area pos (Win32 POINT)
+{
+	; Using this function alone is almost useless, bcz it gets AutoHotkey.exe's 
+	; own caret pos, which most of them time is (0,0).
+	; To make it usefull, you need win32help_GetCaretPos().
+
+	VarSetCapacity( point, 8, 0 )
+	succ := DllCall("GetCaretPos", "Ptr", &point)
+	
+	pos := {}
+	pos.x := NumGet(point, 0, "Int")
+	pos.y := NumGet(point, 4, "Int")
+;	dev_MsgBoxInfo("GetCaretPos " succ " Pos.x " pos.x)
+	return pos
+}
+
+win32help_GetCaretPos()
+{
+	; Will peek current active window's caret position, in client-area coord.
+	; Returning a pos, with pos.x and pos.y .
+
+	awinid := dev_GetActiveHwnd()
+	tgTid := DllCall("GetWindowThreadProcessId", "Int",awinid, "Ptr", 0)
+	
+	if(tgTid==0)
+	{
+		AmDbg1(Format("Unexpect: GetWindowThreadProcessId(0x{:08X}) returns 0.", awinid))
+		return {}
+	}
+	
+	myTid := DllCall("GetCurrentThreadId")
+	
+	succ := DllCall("AttachThreadInput"
+		, "Int", myTid
+		, "Int", tgTid
+		, "Int", true)
+	if(not succ)
+	{
+		winerr := DllCall("GetLastError")
+		AmDbg1(Format("Unexpect: AttachThreadInput({}, {}, true) returns FALSE. WinErr={}", myTid, tgTid, winerr))
+		return {}
+	}
+	else 
+	{
+		hwndFocus := DllCall("GetFocus")
+		AmDbg1(Format("AttachThreadInput({}, {}, true) returns TRUE, focus=0x{:08X}.", myTid, tgTid, hwndFocus))
+	}
+	
+	pos := _win32_GetCaretPos()
+;	dev_TooltipAutoClear(Format("Caret pos: {} , {}", pos.x, pos.y))
+
+	succ := DllCall("AttachThreadInput"
+		, "Int", myTid
+		, "Int", tgTid
+		, "Int", false)
+	
+	return pos
+}
+
+
 win32_GetFileTime(filepath)
 {
 	; This function uses Win32 API GetFileTime() to retrieve real file-modification-time.

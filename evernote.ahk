@@ -178,6 +178,9 @@ return ; End of auto-execute section.
 class Evnt
 {
 	static pastecode_start_numline := 1
+	
+	static pastecode_retry_delaymsec := 200
+	static pastecode_restore_plaintext_delaymsec := 500
 }
 
 
@@ -2170,6 +2173,35 @@ evernote_GetClipboardSingleLine()
 	return codetext
 }
 
+Evernote_PasteHTML(html)
+{
+	oldpos := win32help_GetCaretPos()
+;	AmDbg0(Format("Caret oldpos: {} , {}", oldpos.x, oldpos.y))
+
+	dev_ClipboardSetHTML(html, true)
+	
+	if(oldpos.x==0 and oldpos.y==0)
+	{
+		; [2024-12-27] Strange! The win32help_GetCaretPos() result is unstable when 
+		; Evernote is activate, 
+		; * sometimes it has value, 
+		; * other times results in (0,0) -- even if AttachThreadInput() returns TRUE.
+		
+		AmDbg1("Unexpect! Evernote_PasteHTML() sees Evernote caret pos (0,0). Ignore it.")
+		return
+	}
+	
+	dev_Sleep(Evnt.pastecode_retry_delaymsec)
+	
+	; Check if the caret position has changed. If not, try paste again.
+	newpos := win32help_GetCaretPos()
+	if(newpos.x==oldpos.x and newpos.y==oldpos.y)
+	{
+		dev_TooltipAutoClear("Evernote_PasteHTML() retry pasting again, bcz Caret position has not changed.")
+		WinClip.Paste()
+	}
+}
+
 Evernote_PasteSingleLineCode(bgcolor:="#e0e0e0", is_monofont:=true, keep_orig_clipboard:=true)
 {
 	; This is a special-case shortcut for Evtbl_GenHtml_Span() .
@@ -2188,16 +2220,18 @@ Evernote_PasteSingleLineCode(bgcolor:="#e0e0e0", is_monofont:=true, keep_orig_cl
 		return
 	
 	html := Evtbl_GenHtml_Span(bgcolor, "", codetext, is_monofont ? true : false)
-
-	dev_ClipboardSetHTML(html, true)
-
+	
+	Evernote_PasteHTML(html)
+	
 	if(keep_orig_clipboard) {
-		; Restore plain-text to clipboard, bcz dev_ClipboardSetHTML() has .
+		; Restore plain-text to clipboard, bcz dev_ClipboardSetHTML() has ruined.
+		; the plain codtext with CF_HTML content.
+		
 		; [2023-04-28] We need to delay the restore a bit(500ms), bcz, 
 		; the target process receiving Ctrl+V needs some time to fetch that
 		; HTML content from clipboard.
 		fn := Func("evernote_RestoreClipboardText").Bind(codetext)
-		dev_StartTimerOnce(fn, 500)
+		dev_StartTimerOnce(fn, Evnt.pastecode_restore_plaintext_delaymsec)
 	} 
 }
 
