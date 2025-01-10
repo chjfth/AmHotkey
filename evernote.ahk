@@ -2157,7 +2157,7 @@ Evernote_TSVtoHtml(input_string, sepchar:="", hexcolor1="", hexcolor2="")
 evernote_GetClipboardSingleLine()
 {
 	codetext := ""
-	if(dev_CutToOrUseClipboard())
+	if(dev_GrabTextToClipboardIfAny())
 		codetext := Trim(Clipboard, "`r`n")
 	
 	if(StrLen(codetext)==0) {

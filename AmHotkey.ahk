@@ -116,6 +116,9 @@ class AmHotkey ; Store global vars here
 	static dbgid_HotkeyLegacy := "HotkeyLegacy"
 	
 	static hwnd_just_hidden := ""
+	
+	static do_cut  := 0
+	static do_copy := 1
 }
 
 
@@ -3330,41 +3333,54 @@ dev_WaitForClipboardFill(wait_millisec:=500)
 	return false
 }
 
-dev_CutToClipboard(wait_millisec:=500, is_msgbox_warn:=true)
+dev_CutOrCopyToClipboard(wait_millisec, cut_or_copy, is_msgbox_warn:=true)
 {
-	; Send Ctrl+X to current active window, then wait for wait_millisec
+	; Send Ctrl+X or Ctrl+C to current active window, then wait for wait_millisec
 	; for new text to appear in clipboard. If timeout, assert error.
 	
 	if(!dev_SetClipboardEmpty(wait_millisec))
 	{
 		if(is_msgbox_warn)
-			dev_MsgBoxWarning("ERROR in dev_CutToClipboard(): Cannot clear Clipboard.")
+			dev_MsgBoxWarning("ERROR in dev_CutOrCopyToClipboard(): Cannot clear Clipboard.")
 		return false
 	}
 	
-	dev_SendKeyToExeMainWindow("{Ctrl down}x{Ctrl up}")
+	if(cut_or_copy==AmHotkey.do_cut)
+		dev_SendKeyToExeMainWindow("{Ctrl down}x{Ctrl up}")
+	else ; AmHotkey.do_copy
+		dev_SendKeyToExeMainWindow("{Ctrl down}c{Ctrl up}")
 	
 	if(!dev_WaitForClipboardFill(wait_millisec))
 	{
 		if(is_msgbox_warn)
-			dev_MsgBoxWarning(Format("ERROR in dev_CutToClipboard(): Clipboard remains empty after {}ms's wait.", wait_millisec))
+			dev_MsgBoxWarning(Format("ERROR in dev_CutOrCopyToClipboard(): Clipboard remains empty after {}ms's wait.", wait_millisec))
 		return false
 	}
 	
 	return true
 }
 
-dev_CutToOrUseClipboard(cutwait_millisec:=100)
+dev_CutToClipboard(wait_millisec:=500, is_msgbox_warn:=true)
 {
-	; If we can cut something(via Ctrl+X) to clipboard, then use the cut content.
-	; If there is nothing cut(after cutwait_millisec), we'll use(=restore) initial Clipboard text.
+	return dev_CutOrCopyToClipboard(wait_millisec, AmHotkey.do_cut, is_msgbox_warn)
+}
+
+dev_CopyToClipboard(wait_millisec:=500, is_msgbox_warn:=true)
+{
+	return dev_CutOrCopyToClipboard(wait_millisec, AmHotkey.do_copy, is_msgbox_warn)
+}
+
+dev_GrabTextToClipboardIfAny(wait_millisec:=100)
+{
+	; If we can Ctrl+C copy something to clipboard, then use the copied content.
+	; If there is nothing copied(after wait_millisec), we'll use(=restore) initial Clipboard text.
 	
 	backup_text := Clipboard
 	
-	if(dev_CutToClipboard(cutwait_millisec, false))
+	if(dev_CopyToClipboard(wait_millisec, false))
 		return true ; Some text has put into Clipboard
 	
-	; We cut nothing, so restore initual clipboard text.
+	; We copied nothing, so restore initial clipboard text.
 	
 	Clipboard := backup_text
 	
