@@ -8,7 +8,7 @@ Everpic_InitHotkeys(http_server_baseurl:="") ; optional
 Evp_FixInternalHttpServer() 
 ; -- If HTTP server chokes(not respond to client), need to call this to recover. (testing)
 
-[Scenario 1] If user feels OK with the default hotkey of App+C, then, non of the above API is needed.
+[Scenario 1] If user feels OK with the default hotkey of App+C, then, none of the above API is needed.
 When user press App+C, Evp_LaunchUI() is triggered and the Everpic UI pops up converting the clipboard image.
 
 [Scenario 2a] If user feels OK with the default hotkey of App+C and want to have HTTP server activated
@@ -32,13 +32,14 @@ he should call one of below once in customize.ahk :
 
 ;;;;;;;; Everpic global vars ;;;;;;;;;;
 
-global g_evpTempDir := A_Temp "\Everpic"
+; global g_evpTempDir := A_Temp "\Everpic" ; [2025-01-13] Now use Everpic.dirTempImg .
+
 global gc_evpBatchConvertExecpath := A_ScriptDir "\exe\everpic-batch-prepare.bat"
 
 global g_evpBaseImageFilepath_100pct
 	; If user choose a new scale, we use g_evpBaseImageFilepath_100pct to re-generate
 	; new scaled images, instead of re-generate from clipboard.
-	; Note: The so-called "BaseImage", is always in g_evpTempDir.
+	; Note: The so-called "BaseImage", is always in Everpic.dirTempImg.
 ;global g_evpBaseImageFilepath_scaled ; no use
 
 global g_evpImageWidth
@@ -154,6 +155,10 @@ return ; End of auto-execute section.
 
 class Everpic
 {
+	static dirTempImg := A_Temp "\Everpic"
+	static dirSaveImg := A_AppData "\Everpic-save"
+	; -- User can override the above two dirs in customize.ahk .
+
 	static listen_port_base := 2024
 	static baseurl := "(not-set)" ; http://localhost:2024
 	
@@ -190,7 +195,7 @@ evp_HttpServing(ByRef request, ByRef response, ByRef server) {
 	parts := StrSplit(request.path, "/")
 	filenam := parts[parts.length()]
 
-	dir_everpic_save := A_AppData "\Everpic-save"
+	dir_everpic_save := Everpic.dirSaveImg
 	imgpath := Format("{}\{}", dir_everpic_save, filenam)
 ;	Amdbg0("Want: " imgpath)
 
@@ -293,9 +298,9 @@ Evp_LaunchUI(http_server_baseurl:="")
 		s_inited := true ; Even if HTTP server start-up fail.
 	}
 
-	if(!dev_CreateDirIfNotExist(g_evpTempDir))
+	if(!dev_CreateDirIfNotExist(Everpic.dirTempImg))
 	{
-		dev_MsgBoxError("Error. Cannot create folder: " g_evpTempDir)
+		dev_MsgBoxError("Error. Cannot create folder: " Everpic.dirTempImg)
 		return
 	}
 	
@@ -521,7 +526,7 @@ Evp_GenImageSigByTimestamp()
 
 Evp_BaseImageFilepathPrefix(imgsig)
 {
-	return Format("{}\{}", g_evpTempDir, imgsig)
+	return Format("{}\{}", Everpic.dirTempImg, imgsig)
 }
 
 Evp_ScaleDownImage(scale_pct, srcimgpath, dstimgpath, isKeepPngTransparent)
@@ -1681,7 +1686,7 @@ Evp_BtnOK()
 
 	; Save the used picture to a permanent directory, so that we can get it back 
 	; in case Evernote fail to actually store my picture in the note.
-	dir_everpic_save := A_AppData "\Everpic-save"
+	dir_everpic_save := Everpic.dirSaveImg
 	FileCreateDir, %dir_everpic_save%
 	FileCopy, %imgfilepath%, %dir_everpic_save%, 1 ; 1=overwrite
 	if(ErrorLevel) {
@@ -1734,7 +1739,7 @@ Evp_CleanupTempDir()
 {
 	; Cleanup stale everpic-... files in C:\Users\win7evn\AppData\Local\Temp\Everpic
 
-	Loop, Files, % g_evpTempDir "\*"
+	Loop, Files, % Everpic.dirTempImg "\*"
 	{
 		filename := A_LoopFileName ; example: "everpic-20221204_220000.q40.jpg"
 		
@@ -1750,7 +1755,7 @@ Evp_CleanupTempDir()
 
 			if(diff_seconds >= N*60)
 			{
-				pathdel := g_evpTempDir "\" filename
+				pathdel := Everpic.dirTempImg "\" filename
 			
 				Evp_DbgCleanup("Evp_CleanupTempDir(), FileDelete: " pathdel) ; debug
 				
