@@ -2197,7 +2197,9 @@ Evernote_PasteHTML(html)
 	newpos := win32help_GetCaretPos()
 	if(newpos.x==oldpos.x and newpos.y==oldpos.y)
 	{
-		dev_TooltipAutoClear("Evernote_PasteHTML() retry pasting again, bcz Caret position has not changed.")
+		msg := Format("Evernote_PasteHTML() retry pasting again, bcz Caret position has not changed. ({} , {})", newpos.x, newpos.y)
+		dev_TooltipAutoClear(msg)
+		AmDbg1(msg)
 		WinClip.Paste()
 	}
 }
