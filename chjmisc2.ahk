@@ -35,6 +35,10 @@ return ; End of auto-execute section.
 ; Type ``pp to get pprint.pprint (python)
 :*:````pp::from pprint import pprint as pp
 
+; Type ``/ to get a full-width forward-slash so to use in filename
+:*:````/::／
+
+
 ; Type:
 ;	 ``!
 ; Get HTML comment block.
