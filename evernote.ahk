@@ -177,10 +177,29 @@ return ; End of auto-execute section.
 
 class Evnt
 {
+	static Id := "Evernote"
+
 	static pastecode_start_numline := 1
 	
 	static pastecode_retry_delaymsec := 200
 	static pastecode_restore_plaintext_delaymsec := 500
+
+	dbg(msg, lv) {
+		AmDbg_output(Evnt.Id, msg, lv)
+	}
+	dbg0(msg) {
+		Evnt.dbg(msg, 0)
+	}
+	dbg1(msg) {
+		Evnt.dbg(msg, 1)
+	}
+	dbg2(msg) {
+		Evnt.dbg(msg, 2)
+	}
+	ethrow(msg) {
+		Evnt.dbg1(msg)
+		throw Exception(msg, -1)
+	}
 }
 
 
@@ -2178,29 +2197,58 @@ Evernote_PasteHTML(html)
 	oldpos := win32help_GetCaretPos()
 ;	AmDbg0(Format("Caret oldpos: {} , {}", oldpos.x, oldpos.y))
 
+	; First paste try:
 	dev_ClipboardSetHTML(html, true)
 	
-	if(oldpos.x==0 and oldpos.y==0)
+	; Now we check to see whether we need a second paste try.
+	
+	; [2024-12-27] Strange! The win32help_GetCaretPos() result is unstable when 
+	; Evernote is activate. E.g:
+	; * sometimes it has value, 
+	; * other times results in (0,0) -- even if AttachThreadInput() returns TRUE.
+	; * win32help_GetCaretPos Win32API can even fail.
+	;
+	; If win32help_GetCaretPos fails or reports (0,0), we do not know what 
+	; stupid thing has happened, so just give up.
+	;
+	if(not oldpos)
 	{
-		; [2024-12-27] Strange! The win32help_GetCaretPos() result is unstable when 
-		; Evernote is activate, 
-		; * sometimes it has value, 
-		; * other times results in (0,0) -- even if AttachThreadInput() returns TRUE.
-		
-		AmDbg1("Unexpect! Evernote_PasteHTML() sees Evernote caret pos (0,0). Ignore it.")
+		Evnt.dbg1("Unexpect! Evernote_PasteHTML() fails on win32help_GetCaretPos(). Ignore it.")
+		return
+	}
+	else if(oldpos.x==0 and oldpos.y==0)
+	{
+		Evnt.dbg1("Unexpect! Evernote_PasteHTML() sees editing-area caret pos (0,0). Ignore it.")
 		return
 	}
 	
+	; OK, go on checking. If the caret-pos did not change after first paste, we retry the paste.
+	
 	dev_Sleep(Evnt.pastecode_retry_delaymsec)
 	
-	; Check if the caret position has changed. If not, try paste again.
 	newpos := win32help_GetCaretPos()
+	if(not newpos)
+	{
+		Evnt.dbg1("Shit! Evernote_PasteHTML() fails on Second win32help_GetCaretPos(). Give up retry.")
+		return
+	}
+	else if(newpos.x==0 and newpos.y==0)
+	{
+		Evnt.dbg1("Shit! Evernote_PasteHTML() sees editing-area caret pos (0,0). Give up retry.")
+		return
+	}
+	
 	if(newpos.x==oldpos.x and newpos.y==oldpos.y)
 	{
 		msg := Format("Evernote_PasteHTML() retry pasting again, bcz Caret position has not changed. ({} , {})", newpos.x, newpos.y)
 		dev_TooltipAutoClear(msg)
-		AmDbg1(msg)
+		Evnt.dbg1(msg)
 		WinClip.Paste()
+	}
+	else
+	{
+		msg2 := Format("Evernote_PasteHTML() good seeing: caret ({},{}) to ({},{})", oldpos.x, oldpos.y, newpos.x, newpos.y)
+		Evnt.dbg2(msg2) ; Level 2 verbose
 	}
 }
 

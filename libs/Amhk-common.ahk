@@ -1058,6 +1058,9 @@ _win32_GetCaretPos() ; return client-area pos (Win32 POINT)
 	VarSetCapacity( point, 8, 0 )
 	succ := DllCall("GetCaretPos", "Ptr", &point)
 	
+	if(not succ)
+		return ""
+	
 	pos := {}
 	pos.x := NumGet(point, 0, "Int")
 	pos.y := NumGet(point, 4, "Int")
@@ -1069,6 +1072,7 @@ win32help_GetCaretPos()
 {
 	; Will peek current active window's caret position, in client-area coord.
 	; Returning a pos, with pos.x and pos.y .
+	; If fail, return empty "".
 
 	awinid := dev_GetActiveHwnd()
 	tgTid := DllCall("GetWindowThreadProcessId", "Int",awinid, "Ptr", 0)
@@ -1076,7 +1080,7 @@ win32help_GetCaretPos()
 	if(tgTid==0)
 	{
 		AmDbg1(Format("Unexpect: GetWindowThreadProcessId(0x{:08X}) returns 0.", awinid))
-		return {}
+		return "" ; return empty result representing failure
 	}
 	
 	myTid := DllCall("GetCurrentThreadId")
@@ -1089,7 +1093,7 @@ win32help_GetCaretPos()
 	{
 		winerr := DllCall("GetLastError")
 		AmDbg1(Format("Unexpect: AttachThreadInput({}, {}, true) returns FALSE. WinErr={}", myTid, tgTid, winerr))
-		return {}
+		return ""
 	}
 	else 
 	{
