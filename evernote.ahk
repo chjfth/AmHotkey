@@ -2195,7 +2195,6 @@ evernote_GetClipboardSingleLine()
 Evernote_PasteHTML(html)
 {
 	oldpos := win32help_GetCaretPos()
-;	AmDbg0(Format("Caret oldpos: {} , {}", oldpos.x, oldpos.y))
 
 	; First paste try:
 	dev_ClipboardSetHTML(html, true)
@@ -2226,7 +2225,7 @@ Evernote_PasteHTML(html)
 	
 	dev_Sleep(Evnt.pastecode_retry_delaymsec)
 	
-	newpos := win32help_GetCaretPos()
+	newpos := win32help_GetCaretPos(fromHwnd, fromTid) ; fromHwnd, fromTid are output vars
 	if(not newpos)
 	{
 		Evnt.dbg1("Shit! Evernote_PasteHTML() fails on Second win32help_GetCaretPos(). Give up retry.")
@@ -2250,6 +2249,8 @@ Evernote_PasteHTML(html)
 		msg2 := Format("Evernote_PasteHTML() good seeing: caret ({},{}) to ({},{})", oldpos.x, oldpos.y, newpos.x, newpos.y)
 		Evnt.dbg2(msg2) ; Level 2 verbose
 	}
+
+	Evnt.dbg2(Format("Caret from thread-id={}, Hwnd=0x{:08X} '{}'", fromTid, fromHwnd, dev_GetClassNameFromHwnd(fromHwnd)))
 }
 
 Evernote_PasteSingleLineCode(bgcolor:="#e0e0e0", is_monofont:=true, keep_orig_clipboard:=true)

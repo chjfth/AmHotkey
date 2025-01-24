@@ -1068,7 +1068,7 @@ _win32_GetCaretPos() ; return client-area pos (Win32 POINT)
 	return pos
 }
 
-win32help_GetCaretPos()
+win32help_GetCaretPos(byref fromHwnd:=0, byref fromTid:=0)
 {
 	; Will peek current active window's caret position, in client-area coord.
 	; Returning a pos, with pos.x and pos.y .
@@ -1076,6 +1076,9 @@ win32help_GetCaretPos()
 
 	awinid := dev_GetActiveHwnd()
 	tgTid := DllCall("GetWindowThreadProcessId", "Int",awinid, "Ptr", 0)
+	
+	fromHwnd := awinid ; set output var, for debugging
+	fromTid := tgTid   ; set output var, for debugging
 	
 	if(tgTid==0)
 	{
@@ -1091,7 +1094,7 @@ win32help_GetCaretPos()
 		, "Int", true)
 	if(not succ)
 	{
-		winerr := DllCall("GetLastError")
+		winerr := win32_GetLastError()
 		AmDbg1(Format("Unexpect: AttachThreadInput({}, {}, true) returns FALSE. WinErr={}", myTid, tgTid, winerr))
 		return ""
 	}
@@ -1108,6 +1111,12 @@ win32help_GetCaretPos()
 		, "Int", myTid
 		, "Int", tgTid
 		, "Int", false)
+	if(not succ)
+	{
+		winerr := win32_GetLastError()
+		AmDbg1(Format("Unexpect! AttachThreadInput([detach]) returns FALSE. WinErr={}", winerr))
+	}
+	
 	
 	return pos
 }
@@ -1342,14 +1351,14 @@ dev_KillProcessByPid(pid, byref winerr:=0)
 	                    , "uint", pid ) 
 
 	if(!hProcess) {
-		winerr := DllCall("GetLastError")
+		winerr := win32_GetLastError()
 ;		Dbgwin_Output(Format("OpenProcess(pid={}) fail. WinErr={}", pid, winerr))
 		return false
 	}
 	
 	is_succ := DllCall("TerminateProcess", "Ptr",hProcess, "uint",444)
 	if(!is_succ){
-		winerr := DllCall("GetLastError")
+		winerr := win32_GetLastError()
 ;		Dbgwin_Output(Format("TerminateProcess(pid={}) fail. WinErr={}", pid, winerr))
 	}
 	
@@ -2199,6 +2208,9 @@ dev_GetHwndFromClassNN(classnn, wintitle)
 
 dev_GetClassNameFromHwnd(hwnd)
 {
+	WinGetClass, class, ahk_id %hwnd%
+	return class
+/*
 	nbuf := 100
 	VarSetCapacity(classname, A_IsUnicode ? nbuf * 2 : nbuf)
 	nret := DllCall("GetClassName"
@@ -2209,6 +2221,7 @@ dev_GetClassNameFromHwnd(hwnd)
 		return ""
 	else
 		return classname
+*/
 }
 
 GetActiveClassnnFromXY(x, y)
