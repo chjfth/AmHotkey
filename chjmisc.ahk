@@ -140,10 +140,40 @@ chjmisc_InitMenus()
 	winshell_AddOneAhkFunctionMenuItem("AHK Trim path utility", "AmTrimPath_ShowGui")
 	winshell_AddOneAhkFunctionMenuItem("[AmTemplate] Select new", "Amt_LaunchMenu")
 	winshell_AddOneAhkFunctionMenuItem("[AmTemplate] Show previous", "Amt_ShowPreviousGui")
+
+	winshell_AddOneAhkFunctionMenuItem("Vbox VM paste HTML from host (fix the bug)", "VboxVM_PasteHtmlFromHost_fixbug")
 	
 ;	winshell_AddOneAhkFunctionMenuItem("[BadMenu] BadItem", "NotExistingFunction") ; test error reporting
 	
 	chjmisc_AddQuickPasteSnippets()
+}
+
+VboxVM_PasteHtmlFromHost_fixbug()
+{
+	; [2025-02-14] I find a problem when I copy some HTML content from host-machine Web-browser and 
+	; try to paste it into VBox 6.1.26 VM. 
+	; The workaround is: Get the raw html text from the clipboard, can re-wrap then via dev_ClipboardSetHTML().
+	;
+	; So, we I have copied a block of text from Chrome/Firefox etc, and switch to a VBox VM's Evernote 
+	; window, I can just call VboxVM_PasteHtmlFromHost_fixbug() to paste the HTML(Rich) content into my evclip.
+	; If I just press Ctrl+V in Evernote window, I just got plain text(all HTML format stripped off),
+	; that's probably due to the original text-stream format in "HTML Format" clipboard region is *invalid*.
+	; Hmm, that may be a VirtualBox bug.
+	;
+	; Valid format is like:
+	;	Version:0.9
+	;	StartHTML:0000000415
+	;	EndHTML:0000003976
+	;	StartFragment:0000000451
+	;	EndFragment:0000003940
+	;	SourceURL:https://cn.bing.com/search?q=....
+
+	htmltext := WinClip.GetHtml() 
+		; Got sth like: 
+		;
+		;	<span style="color: rgb(0, 200, 0);">Some Text</span>
+	
+	dev_ClipboardSetHTML(htmltext, true)
 }
 
 

@@ -2377,6 +2377,8 @@ evernote_InlinePaste_InitMenu()
 	fn := Func("Evernote_PasteSingleLineWithHtmlDeco").Bind("Htmldeco_chs_translate")
 	dev_MenuAddItem("evernote_menuInlinePaste", "&Chs Translate style", fn)
 	
+	; Check if user hooking function Evernote_AddExtraInlineStyles exists, if so, call it.
+	; User normally define this function in customize.ahk
 	if(IsFunc("Evernote_AddExtraInlineStyles"))
 	{
 		Func("Evernote_AddExtraInlineStyles").()
