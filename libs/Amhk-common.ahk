@@ -2347,6 +2347,18 @@ dev_IsWin7SaveAsDialog()
 		return false
 }
 
+dev_IsValidVarnameWord(word)
+{
+	if(StrLen(word)==0)
+		return false
+
+	foundpos := RegExMatch(word, "[^A-Za-z0-9_]")
+	if(foundpos==0) ; not found
+		return true
+	else ; found
+		return false
+}
+
 dev_WinGetClientAreaPos(WinId, isScreenCoord:=false)
 {
 	; https://www.autohotkey.com/boards/viewtopic.php?p=257561&sid=d2327857875a0de35c9281ab43c6a868#p257561

@@ -504,6 +504,25 @@ AMT_BtnOK()
 		if(!isgo)
 			return
 	}
+	
+	; Check that new words does NOT contain varname-unfriendly chars
+	suspect_words := ""
+	for index,obj in gu_amt_arTemplateWords
+	{
+		; If oldword is valid varname, we consider newword should also be valid varname.
+		; A varname should not have chars: - , (space) etc
+		if( dev_IsValidVarnameWord(obj.oldword) and !dev_IsValidVarnameWord(obj.newword) )
+			suspect_words .= obj.newword "`n"
+	}
+	;
+	if(suspect_words)
+	{
+		msg := Format("The following new word(s) are not suitable for program varname:`n`n{}`n`nAre you sure to use them?", suspect_words)
+		isgo := dev_MsgBoxYesNo_Warning(msg, false)
+		if(!isgo)
+			return
+	}
+	
 
 	isok := Amt_DoExpandTemplate(gu_amtTemplateSrcDir, finalApplyDir)
 	; -- implicit input: gu_amt_arTemplateGuids[], gu_amt_arTemplateWords
