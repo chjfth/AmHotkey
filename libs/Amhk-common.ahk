@@ -1185,7 +1185,7 @@ dev_GetFileTime(filepath, is_throw:=false)
 		if(is_throw) {
 			dev_rethrow_syse(e, errmsg)
 		} else {
-			ErrorLevel := A_LastError>0 ? A_LastError : 1
+			ErrorLevel := A_LastError!=0 ? A_LastError : -1
 			return ""
 		}
 	}
