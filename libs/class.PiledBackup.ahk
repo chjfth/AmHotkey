@@ -14,20 +14,24 @@
 
 class PiledBackup
 {
+	static DoMove := 0
+	static DoCopy := 1
+
 	master_filepath := ""
 	versions_tokeep := 3
 	
 	filenam := ""
 	dirbackup := ""
 	
-	__New(inputfile, dirbackup, nkeep:=3)
+	doCopyOrMove :=
+	
+	__New(inputfile, dirbackup, nkeep:=3, doCopyOrMove:=1)
 	{
+		; [2025-03-23] Note: I cannot write `doCopyOrMove:=PiledBackup.DoCopy`,
+		; bcz AHK 1.1.32 would report error on loading: Unsupported parameter default.
+	
 		if(not dev_IsDiskFile(inputfile))
 			dev_throw("Not a diskfile: " inputfile)
-		
-		dev_CreateDirIfNotExist(dirbackup)
-		if(not dev_IsDiskFolder(dirbackup))
-			dev_throw(Format("I need to create disk folder ""{}"", but fails. Please check the reason yourself.", dirbackup))
 		
 		if(InStr(inputfile, "*") or InStr(inputfile, "?"))
 			dev_throw("Wildcard * or ? not allowed in you input file: " inputfile)
@@ -42,6 +46,8 @@ class PiledBackup
 		this.filenam := filenam
 		
 		this.dirbackup := dirbackup
+		
+		this.doCopyOrMove := doCopyOrMove
 	}
 	
 	filepath_by_seq(seq)
@@ -52,7 +58,7 @@ class PiledBackup
 	; Public API
 	SaveOneBackup()
 	{
-		; Should throw exception on disk/file operation error.
+		; Will throw exception on disk/file operation error.
 	
 		dev_CreateDirIfNotExist(this.dirbackup)
 		if(not dev_IsDiskFolder(this.dirbackup))
@@ -72,12 +78,19 @@ class PiledBackup
 			newpath := this.filepath_by_seq(newseq)
 			
 			if(FileExist(oldpath))
-				dev_MoveFile(oldpath, newpath)
+				dev_MoveFile(oldpath, newpath, true, "throw")
 		}
 		
 		; Save the latest 
 		newpath := this.filepath_by_seq(1)
-		dev_CopyFile(this.master_filepath, newpath)
+		if(this.doCopyOrMove==PiledBackup.DoCopy)
+		{
+			dev_CopyFile(this.master_filepath, newpath, true, "throw")
+		}
+		else
+		{
+			dev_MoveFile(this.master_filepath, newpath, true, "throw")
+		}
 		
 		return true
 	}

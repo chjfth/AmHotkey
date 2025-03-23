@@ -420,31 +420,75 @@ class FoxitCoedit
 		if(is_ctrldown)
 			this.HideGui()
 
+		docpath_now := this.coedit.docpath
+		
+		; Make a backup of the original pdf content.
+		;
+		pdfdir := dev_SplitPath(docpath_now, ret_pdfname)
+		dir_prebackup := Format("{}\_prebackup", pdfdir)
+		dev_CreateDirIfNotExist(dir_prebackup)
+		docpath_prebackup := Format("{}\{}", dir_prebackup, ret_pdfname)
+		dev_FileDelete(docpath_prebackup)
+		
+		saving_succ := dev_Copy1File(docpath_now, docpath_prebackup)
+		if(not saving_succ)
+		{
+			dev_MsgBoxError(Format("[ERROR] Cannot backup orignal PDF! I will not go on saving current pdf in case Foxit Reader/Editor could cause damage to your PDF content."
+				. "`n`nFail to create the backup file:`n`n{}", docpath_prebackup))
+			return
+		}
+		this.dbg1("Created prebackup file: " docpath_prebackup)
+		
 		oldstate := this.state
 		this.state := "Freezing"
 		GuiControl_Enable(GuiName, "gu_focoBtnSavePdf", false)
 		GuiControl_SetText(GuiName, "gu_focoBtnSavePdf", "Saving...")
 		GuiControl_SetText(GuiName, "gu_focoBtnResync", "Cancel Saving")
+		
 		;
 		is_succ := this.coedit.LaunchSaveDocSession(ret_is_conn_lost, ret_errmsg)
-		; -- this will block for some time, but can be canceled by calling this.coedit.>CancelSavingSession() .
+		; -- this will block for some time, but can be canceled by calling this.coedit.CancelSavingSession() .
+		;    Note: I require NO exception be thrown. Statements below must be executed, no matter success of failure.
 		;
 		GuiControl_SetText(GuiName, "gu_focoBtnSavePdf", "&Save pdf now")
 		GuiControl_Enable(GuiName, "gu_focoBtnSavePdf", true)
 		GuiControl_SetText(GuiName, "gu_focoBtnResync", FoxitCoedit.BtnTextResync)
 		GuiControl_Enable(GuiName, "gu_focoBtnResync") ; may have been disabled in OnBtnResync()
 		this.state := oldstate
-		
-		if(is_succ)
+
+		; We want to move the prebackup pdf to subdir backupA/backup.B ,
+		; no matter LaunchSaveDocSession() succeeds.
+		;
+		if(not dev_IsFileModifyTimeSame(docpath_now, docpath_prebackup))
 		{
-			; Make a backup of the pdf file
-			pb := new PiledBackup(this.coedit.docpath
-				, this.coedit.docpath (this.ischk_Lside ? ".backupA" : ".backupB")
-				, FoxitCoedit.PdfBackups)
-			this.dbg1("Making backup to folder: " pb.dirbackup)
-			pb.SaveOneBackup()
+			try 
+			{
+				pb := new PiledBackup(docpath_prebackup
+					, docpath_now . (this.ischk_Lside ? ".backupA" : ".backupB")
+					, FoxitCoedit.PdfBackups
+					, PiledBackup.DoMove)
+				this.dbg1("Moving backup pdf to folder: " pb.dirbackup)
+				
+				pb.SaveOneBackup()
+			}
+			catch e 
+			{
+				errmsg := Format("After PDF saving, FoxitCoedit cannot move the prebackup file"
+					. "`n`n  {}`n`n"
+					. "to backup folder:"
+					. "`n`n  {}`n`n"
+					. "Error message is:`n`n{}`n`n"
+					. "So, before solving the problem, please manually set-aside the prebackup file, to prevent it being overwritten."
+					, docpath_prebackup
+					, pb.dirbackup
+					, e.Message)
+				dev_MsgBoxWarning(errmsg)
+			}
 		}
-		else
+		
+		; Some error-recovering action on failure
+		;
+		if(!is_succ)
 		{
 			if(is_ctrldown)
 			{
