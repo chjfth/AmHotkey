@@ -43,7 +43,7 @@ dev_assert(success_condition, msg_on_error:="", is_attach_code:=true)
 	throw Exception(fullmsg, -1) ; Chj 2024.04.17
 }
 
-dev_getCallStack(deepness:=20, is_print_code:=true)
+dev_getCallStack(max_deepness:=20, is_print_code:=true, byref output_deepness:=0)
 {
 	; Call this function to get current callstack.
 	; Usage: If we want to report an error to user(MsgBox etc), showing a full callstack helps greatly.
@@ -54,9 +54,9 @@ dev_getCallStack(deepness:=20, is_print_code:=true)
 	stack := ""
 	stack_prev := ""
 	
-	loop % deepness
+	loop % max_deepness
 	{
-		lvl := -1 - deepness + A_Index
+		lvl := -1 - max_deepness + A_Index
 		oEx := Exception("", lvl)
 		oExPrev := Exception("", lvl - 1)
 		
@@ -70,7 +70,9 @@ dev_getCallStack(deepness:=20, is_print_code:=true)
 			lv_first_print := A_Index
 		
 		stack_prev := stack
-		stack .= (stack ? "`n" : "") . Format("[#{1}] ", A_Index-lv_first_print+1) . "File '" oEx.file "', Line " oEx.line (oExPrev.What = lvl-1 ? "" : ", in " oExPrev.What "()") (is_print_code ? ":`n" linetext : "") "`n"
+		
+		output_deepness := A_Index - lv_first_print
+		stack .= (stack ? "`n" : "") . Format("[#{1}] ", output_deepness+1) . "File '" oEx.file "', Line " oEx.line (oExPrev.What = lvl-1 ? "" : ", in " oExPrev.What "()") (is_print_code ? ":`n" linetext : "") "`n"
 	}
 	
 	return stack_prev
@@ -110,15 +112,18 @@ dev_fileline_syse(sys_e)
 	return msg
 }
 
-dev_rethrow_syse(sys_e, new_msg)
+dev_rethrow_syse(sys_e, user_errmsg)
 {
-	new_e := Exception(new_msg)
+	new_e := Exception(user_errmsg)
 	new_e.Line := sys_e.Line
 	
-	supp := Format("[##] File '{}', Line {}: `n{}"
+	stacktrace_text := dev_getCallStack(20, true, ret_deepness)
+	
+	final_stack := Format("[#{}] File '{}', Line {}: `n{}"
+		, ret_deepness+1
 		, sys_e.File, sys_e.Line, dev_FileRead_NthLine(sys_e.File, sys_e.Line))
 	
-	AmDbg0("Got system exception:`n" dev_getCallStack() "`n" supp)
+	new_e.StackTrace := stacktrace_text "`n" final_stack "`n"
 	
 	throw new_e
 }
@@ -1165,6 +1170,32 @@ win32_GetFileTime(filepath)
 	ts14 := Format("{:04d}{:02d}{:02d}{:02d}{:02d}{:02d}", year, month, mday, hour, minute, second)
 	
 	return ts14
+}
+
+dev_GetFileTime(filepath, is_throw:=false)
+{
+	; Suggestion: User pass "throw" to is_throw as true value.
+
+	ts14 := ""
+	try {
+	    FileGetTime, ts14, % filepath
+	} catch e {
+		errmsg := Format("dev_GetFileTime(""{}"") fail with WinErr={}", filepath, A_LastError)
+		
+		if(is_throw) {
+			dev_rethrow_syse(e, errmsg)
+		} else {
+			ErrorLevel := A_LastError>0 ? A_LastError : 1
+			return ""
+		}
+	}
+	
+	return ts14
+}
+
+dev_IsFileModifyTimeSame(file1, file2)
+{
+	; xxx todo
 }
 
 dev_FileGetSize(filepath)
