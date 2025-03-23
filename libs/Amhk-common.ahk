@@ -128,12 +128,15 @@ dev_rethrow_syse(sys_e, user_errmsg)
 	throw new_e
 }
 
-dev_throw(errmsg)
+dev_throw(user_errmsg)
 {
 	; throw with stacktrace info
-	; better than `throw Exception(errmsg)`
+	; better than `throw Exception(user_errmsg)`
+
+	new_e := Exception(user_errmsg)
+	new_e.StackTrace := dev_getCallStack()
 	
-	throw Exception(errmsg "`n`n" dev_getCallStack())
+	throw new_e
 }
 
 
@@ -600,14 +603,97 @@ dev_FileRemoveDir(dirpath, is_recurse)
 		return true
 }
 
-dev_MoveFile(oldpath, newpath, is_overwrite:=false) ; rename
+dev_MoveFile(oldpath, newpath, is_overwrite:=false, is_throw:=false) ; rename
 {
-	FileMove, % oldpath, % newpath, % is_overwrite
+	if(not FileExist(oldpath))
+	{
+		if(is_throw)
+		{
+			errmsg := Format("dev_MoveFile(): Source file not found: ""{}""", oldpath)
+			dev_throw(errmsg)
+		}
+		else
+		{
+			ErrorLevel := win32c.ERROR_FILE_NOT_FOUND
+			return false
+		}
+	}
+
+	try {
+		FileMove, % oldpath, % newpath, % is_overwrite
+	} catch e {
+		errmsg := Format("dev_MoveFile(""{}"", ""{}"", overwrite={}) fail, WinErr={}"
+			, oldpath, newpath
+			, is_overwrite ? "yes" : "no"
+			, A_LastError)
+		
+		if(is_throw) {
+			dev_rethrow_syse(e, errmsg)
+		} else {
+			ErrorLevel := A_LastError
+			return false
+		}
+	}
+	
+	return true
 }
 
-dev_CopyFile(oldpath, newpath, is_overwrite:=false)
+dev_CopyFile(oldpath, newpath, is_overwrite:=false, is_throw:=false)
 {
-	FileCopy, % oldpath, % newpath, % is_overwrite
+	if(not FileExist(oldpath))
+	{
+		if(is_throw)
+		{
+			errmsg := Format("dev_CopyFile(): Source file not found: ""{}""", oldpath)
+			dev_throw(errmsg)
+		}
+		else
+		{
+			ErrorLevel := win32c.ERROR_FILE_NOT_FOUND
+			return false
+		}
+	}
+	
+	try {
+		FileCopy, % oldpath, % newpath, % is_overwrite
+	} catch e {
+		errmsg := Format("dev_CopyFile(""{}"", ""{}"", overwrite={}) fail, WinErr={}"
+			, oldpath, newpath
+			, is_overwrite ? "yes" : "no"
+			, A_LastError)
+		
+		if(is_throw) {
+			dev_rethrow_syse(e, errmsg)
+		} else {
+			ErrorLevel := A_LastError
+			return false
+		}
+	}
+	
+	return true
+}
+
+dev_Copy1File(srcfilepath, dstfilepath, is_overwrite:=false)
+{
+	dev_assert(InStr(srcfilepath, "*")==0)
+	
+	srcfileattr := FileExist(srcfilepath)
+
+	if(srcfileattr=="")
+		return false ; srcfile not exist
+	
+	if(InStr(srcfileattr, "D")>0)
+		return false ; src must not be a folder
+	
+	if(InStr(FileExist(dstfilepath), "D")>0) 
+		return false ; dst must not be a folder
+	
+	dstdir := dev_SplitPath(dstfilepath)
+	dev_CreateDirIfNotExist(dstdir)
+	
+	succ := dev_CopyFile(srcfilepath, dstfilepath, is_overwrite)
+	
+	return succ
 }
 
 
@@ -716,31 +802,6 @@ dev_WriteWholeFile_rawstring(filepath, text, codepage:=65001) ; 65001 is CP_UTF8
 	}
 }
 
-dev_Copy1File(srcfilepath, dstfilepath, is_overwrite:=false)
-{
-	dev_assert(InStr(srcfilepath, "*")==0)
-	
-	srcfileattr := FileExist(srcfilepath)
-
-	if(srcfileattr=="")
-		return false ; srcfile not exist
-	
-	if(InStr(srcfileattr, "D")>0)
-		return false ; src must not be a folder
-	
-	if(InStr(FileExist(dstfilepath), "D")>0) 
-		return false ; dst must not be a folder
-	
-	dstdir := dev_SplitPath(dstfilepath)
-	dev_CreateDirIfNotExist(dstdir)
-	
-	FileCopy, % srcfilepath, % dstfilepath, % (is_overwrite?"1":"")
-	
-	if(ErrorLevel)
-		return false
-	else
-		return true
-}
 
 dev_ReadFileLines(filepath, maxlines:=-1)
 {
@@ -1172,13 +1233,13 @@ win32_GetFileTime(filepath)
 	return ts14
 }
 
-dev_GetFileTime(filepath, is_throw:=false)
+dev_GetFileTime(filepath, WhichTime:="M", is_throw:=false)
 {
 	; Suggestion: User pass "throw" to is_throw as true value.
 
 	ts14 := ""
 	try {
-	    FileGetTime, ts14, % filepath
+	    FileGetTime, ts14, % filepath, % WhichTime
 	} catch e {
 		errmsg := Format("dev_GetFileTime(""{}"") fail with WinErr={}", filepath, A_LastError)
 		
@@ -1195,7 +1256,15 @@ dev_GetFileTime(filepath, is_throw:=false)
 
 dev_IsFileModifyTimeSame(file1, file2)
 {
-	; xxx todo
+	ts1 := dev_GetFileTime(file1, "M")
+	ts2 := dev_GetFileTime(file2, "M")
+	
+	if(!ts1 or !ts2)
+		return false
+	if(ts1==ts2)
+		return true
+	else
+		return false
 }
 
 dev_FileGetSize(filepath)

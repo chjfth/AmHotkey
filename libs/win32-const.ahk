@@ -1,6 +1,9 @@
 
 class win32c
 {
+	static ERROR_FILE_NOT_FOUND := 2
+
+; ===================================
 
 	static WM_CREATE := 0x0001
 	static WM_DESTROY := 0x0002
