@@ -974,16 +974,18 @@ ctlmove_AimControlUnderMouse()
 		; "combobox dropdown width often too narrow" baffle.
 		if(StrIsStartsWith(classnn, "ComboLBox"))
 		{
-			; mouse_at_htopwin is probably 0x10010
+			; mouse_at_htopwin will always be 0x10010 for "ComboLBox"
 			
 			wintitle := "ahk_id " mouse_at_htopwin
 			ControlGetPos, x,y, w,h, %classnn%, %WinTitle%
 			newwidth := w + g_ctlmove_unit
 			
+			hwndctl := dev_GetHwndFromClassNN(classnn, wintitle)
+			
 			ControlMove, %classnn%, %x%, %y%, %newwidth%, %h%, %wintitle%
 			
-			dev_TooltipAutoClear(Format("Combobox dropdown at X,Y={},{} W,H={},{}. Now width increased to {}."
-				, x,y, w,h, newwidth), 5000)
+			dev_TooltipAutoClear(Format("ComboLBox(0x{:08x}) at X,Y={},{} W,H={},{}. Now width increased to {}."
+				,hwndctl , x,y, w,h, newwidth), 5000)
 			
 			; Set the two g_ vars so that we can later press (Shift+)Ctrl+Win+NumpadArrows to try to further 
 			; increase/decrease its width/height. But weird: I can only see its height decreased but not increased.

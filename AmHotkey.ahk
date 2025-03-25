@@ -203,6 +203,17 @@ dev_CheckWindowInfo(hwnd)
 	
 	CoordMode, Mouse, Window
 	MouseGetPos, mxWindow, myWindow, tophwnd_undermouse, classnn
+	
+	WinGetPos, x_top, y_top, w_top, h_top, ahk_id %tophwnd_undermouse%
+	xend_top := x_top + w_top
+	yend_top := y_top + h_top
+	
+	info_tophwnd = 
+	(
+Toplevel-hwnd under mouse: %tophwnd_undermouse%
+Toplevel-Pos: X ( %x_top% ~ %xend_top% ), Y ( %y_top% ~ %yend_top% ), size ( %w_top% x %h_top% )
+	)
+	
 	if(classnn)
 	{
 		; Get child's relative position(relative to parent window's top-left corner).
@@ -246,10 +257,13 @@ Current focused classnn: %focusNN%
 Current focused hctrl: ahk_id=%focus_hctrl%
 
 Process ID: %pid%
+
 Process path: %exepath%
 
 Mouse position: In-window: (%mxWindow%,%myWindow%)  `; In-screen: (%mxScreen%,%myScreen%)
 
+%info_tophwnd%
+.
 %info_child%
 
 Answer [Yes] to see more system info.
