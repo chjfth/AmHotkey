@@ -34,6 +34,16 @@ return ; End of auto-execute section.
 #Include %A_LineFile%\..\pdfreader.ahk
 #Include %A_LineFile%\..\libs\class.PeersCoedit.ahk
 
+/* Customization:
+   ; User can define FoxitCoeditCfg.PdfBackups etc in custom_env.ahk .
+
+class FoxitCoeditCfg
+{
+	static PdfBackups := 9
+	static PdfBackupDir := "S:\FoxitCoedit.baks"
+}
+*/
+
 class FoxitCoedit
 {
 	static Id := "FoxitCoedit"
@@ -109,7 +119,6 @@ class FoxitCoedit
 		
 		if(FoxitCoeditCfg.PdfBackups>0)
 		{
-			; User can define FoxitCoeditCfg.PdfBackups in custom_env.ahk .
 			FoxitCoedit.PdfBackups := FoxitCoeditCfg.PdfBackups
 		}
 	}
@@ -421,13 +430,18 @@ class FoxitCoedit
 			this.HideGui()
 
 		docpath_now := this.coedit.docpath
+		pdfdir := dev_SplitPath(docpath_now, pdfname) ; pdfname is outvar
+		bakdir := strlen(FoxitCoeditCfg.PdfBackupDir)>0 ? FoxitCoeditCfg.PdfBackupDir : pdfdir
 		
 		; Make a backup of the original pdf content.
-		;
-		pdfdir := dev_SplitPath(docpath_now, ret_pdfname)
-		dir_prebackup := Format("{}\_prebackup", pdfdir)
+		; Assume pdfname is foo.pdf , I will finally generate:
+		; 	<bakdir>\foo.pdf.backupA\recent1.foo.pdf
+		;	<bakdir>\foo.pdf.backupB\recent5.foo.pdf
+		; etc.
+		
+		dir_prebackup := Format("{}\_prebackup", bakdir)
 		dev_CreateDirIfNotExist(dir_prebackup)
-		docpath_prebackup := Format("{}\{}", dir_prebackup, ret_pdfname)
+		docpath_prebackup := Format("{}\{}", dir_prebackup, pdfname)
 		dev_FileDelete(docpath_prebackup)
 		
 		saving_succ := dev_Copy1File(docpath_now, docpath_prebackup)
@@ -464,7 +478,7 @@ class FoxitCoedit
 			try 
 			{
 				pb := new PiledBackup(docpath_prebackup
-					, docpath_now . (this.ischk_Lside ? ".backupA" : ".backupB")
+					, Format("{}\{}{}", bakdir, pdfname, (this.ischk_Lside ? ".backupA" : ".backupB"))
 					, FoxitCoedit.PdfBackups
 					, PiledBackup.DoMove)
 				this.dbg1("Moving backup pdf to folder: " pb.dirbackup)
