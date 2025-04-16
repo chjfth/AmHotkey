@@ -77,7 +77,15 @@ foxit_IsWinActive()
 		return false
 }
 
-foxit_IsForegroundProcess()
+foxit_IsEditor11Active()
+{
+	if(dev_IsExeActive("FoxitPDFEditor.exe"))
+		return true
+	else
+		return false
+}
+
+foxit_IsFoxit7_ForegroundProcess()
 {
 	WinGet, Awinid, ID, A ; cache active window unique id
 	WinGet, exepath, ProcessPath, ahk_id %Awinid%
@@ -92,7 +100,9 @@ foxit_IsForegroundProcess()
 
 foxit_IsAnnoationPropertyWindowActive()
 {
-	if(! foxit_IsForegroundProcess())
+	; Note: Foxit 9+, which is Ribbon-only, no longer has this floating Property window.
+
+	if(! foxit_IsFoxit7_ForegroundProcess())
 		return false
 
 	WinGet, Awinid, ID, A ; cache active window unique id
@@ -419,8 +429,80 @@ foxit_FocusReaderPane()
 	}
 }
 
-^F12:: foxit_ClickTextColorSelection()
-foxit_ClickTextColorSelection()
+
+NumpadMult:: foxitHotkey_HighlightText()
+
+NumpadSub:: foxitHotkey_UnderlineText()
+NumpadAdd:: foxitHotkey_SquiggleText()
+
+NumLock:: foxitHotkey_SelectHandMode()
+
+^w:: dev_TooltipDisableCloseWindow("Ctrl+W")
+^q:: dev_TooltipDisableCloseWindow("Ctrl+Q")
+
+
+vkE2:: foxit_AltW() ; vkE2 is the Central Europe extra \ key at the left-side of 'Z'.
+;!w::   foxit_AltW()
+; -- [2024-01-27] Weird, Alt+W hotkey high-probably causes FoxitReader 7 to loose 
+;    PYJJ visual bar on FoxitReader App window title, so I trend to use vkE2 today.
+foxit_AltW()
+{
+;	dev_TooltipAutoClear("Alt+W")
+	dev_WaitKeyRelease("Alt")
+	foxitHotkey_TypeWriterReady()
+}
+
+#If ; #If foxit_IsWinActive() 
+
+
+
+#If foxit_IsAnnoationPropertyWindowActive() or (foxit_IsWinActive() and !foxit_IsEditor11Active())
+
+NumpadDiv:: foxit_SwitchTo_SelectText_mode()
+foxit_SwitchTo_SelectText_mode()
+{
+	if(not foxitR_ActivateMainWindow()) {
+		dev_TooltipAutoClear("foxitR_ActivateMainWindow() failed.")
+		return
+	}
+
+	foxitHotkey_SelectTextMode()
+}
+
+^F12:: foxit7_ClickTextColorSelection()
+
+F12:: foxit_ClickColorProperty() ; The hotkey I have used since 2015
+!q::  foxit_ClickColorProperty() ; for left-hand ease (2023.04)
+; -- Note: This foxit_ClickColorProperty(), not Ex, is used when:
+;    the comment object is selected, but the mouse is not hovering on it.
+
+NumpadEnter:: foxit_ClickColorPropertyEx() ; for easier human right-hand hotkey activating (2023.04)
+
+foxit_ClickColorPropertyEx()
+{
+	; [2023-04-07] New: User only has to hover mouse pointer on a comment object
+	; (Underline, Squiggly, Strikeout etc), then call this function to popup 
+	; color selection box. Yes, no longer need to manally click on the comment object.
+
+	if(not foxitR_ActivateMainWindow()) {
+		dev_TooltipAutoClear("foxitR_ActivateMainWindow() failed.")
+		return
+	}
+	
+	foxitHotkey_SelectAnnotationMode()
+	
+	Click 
+	; -- This "Click" makes the commented area "selected"(display in inverted color), 
+	; only then, can foxit_ClickColorProperty() be effective.
+	; Memo: Before calling foxit_ClickColorPropertyEx(), user should have placed
+	; mouse cursor onto the commented area and the comment(underline, squiggles etc)
+	; has benn applied, otherwise, in vain.
+	; Tested in Foxit Reader 7.1.5 on Win7.
+	
+	foxit_ClickColorProperty() 
+}
+
+foxit7_ClickTextColorSelection()
 {
 	; This click the Text color selection "button" on the []Format toolbar.
 	; I have to put this toolbar on a pre-defined location.
@@ -503,75 +585,6 @@ foxit_PixelGetColor_greyscale(x, y)
 	; some ref: http://www.joellipman.com/articles/automation/autohotkey/functions-to-convert-hex-2-rgb-and-vice-versa.html
 	
 	return (r+g+b)/3
-}
-
-NumpadMult:: foxitHotkey_HighlightText()
-
-NumpadSub:: foxitHotkey_UnderlineText()
-NumpadAdd:: foxitHotkey_SquiggleText()
-
-NumLock:: foxitHotkey_SelectHandMode()
-
-^w:: dev_TooltipDisableCloseWindow("Ctrl+W")
-^q:: dev_TooltipDisableCloseWindow("Ctrl+Q")
-
-
-vkE2:: foxit_AltW() ; vkE2 is the Central Europe extra \ key at the left-side of 'Z'.
-;!w::   foxit_AltW()
-; -- [2024-01-27] Weird, Alt+W hotkey high-probably causes FoxitReader 7 to loose 
-;    PYJJ visual bar on FoxitReader App window title, so I trend to use vkE2 today.
-foxit_AltW()
-{
-;	dev_TooltipAutoClear("Alt+W")
-	dev_WaitKeyRelease("Alt")
-	foxitHotkey_TypeWriterReady()
-}
-
-#If ; #If foxit_IsWinActive()
-
-
-#If foxit_IsAnnoationPropertyWindowActive() or foxit_IsWinActive()
-
-NumpadDiv:: foxit_SwitchTo_SelectText_mode()
-foxit_SwitchTo_SelectText_mode()
-{
-	if(not foxitR_ActivateMainWindow()) {
-		dev_TooltipAutoClear("foxitR_ActivateMainWindow() failed.")
-		return
-	}
-
-	foxitHotkey_SelectTextMode()
-}
-
-F12:: foxit_ClickColorProperty() ; The hotkey I have used since 2015
-!q::  foxit_ClickColorProperty() ; for left-hand ease (2023.04)
-; -- Note: This foxit_ClickColorProperty(), not Ex, is used when:
-;    the comment object is selected, but the mouse is not hovering on it.
-
-NumpadEnter:: foxit_ClickColorPropertyEx() ; for easier human right-hand hotkey activating (2023.04)
-
-foxit_ClickColorPropertyEx()
-{
-	; [2023-04-07] New: User only has to hover mouse pointer on a comment object
-	; (Underline, Squiggly, Strikeout etc), then call this function to popup 
-	; color selection box. Yes, no longer need to manally click on the comment object.
-
-	if(not foxitR_ActivateMainWindow()) {
-		dev_TooltipAutoClear("foxitR_ActivateMainWindow() failed.")
-		return
-	}
-	
-	foxitHotkey_SelectAnnotationMode()
-	
-	Click 
-	; -- This "Click" makes the commented area "selected"(display in inverted color), 
-	; only then, can foxit_ClickColorProperty() be effective.
-	; Memo: Before calling foxit_ClickColorPropertyEx(), user should have placed
-	; mouse cursor onto the commented area and the comment(underline, squiggles etc)
-	; has benn applied, otherwise, in vain.
-	; Tested in Foxit Reader 7.1.5 on Win7.
-	
-	foxit_ClickColorProperty() 
 }
 
 
