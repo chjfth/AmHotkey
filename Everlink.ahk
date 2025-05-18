@@ -41,8 +41,8 @@ class Everlink
 	; static vars as constant
 	static Id := "Everlink"
 	static linktag_allow_unicode := true
-	static linktag_maxlen := 20
-	static recent_max := 30
+	static linktag_maxlen := 32
+	static recent_max := 30     ; recently used items to keep in UI
 	static _tmp_ := AmDbg_SetDesc(Everlink.Id
 		, "Everlink collects links in a form called Linktag, and store them in a .csv file. "
 		. "User can later call up Everlink UI to quickly pick up a Linktag and insert it into current Evclip.`n`n"
