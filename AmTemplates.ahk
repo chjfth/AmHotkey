@@ -20,7 +20,6 @@ global g_dirsAmTemplates := [ A_ScriptDir "\AmTemplates" ]
 
 ; global constant use by this module
 global gu_amtIniCfgFilename := "AmTemplate.cfg.ini"
-global gu_amtIniResultFileName := "AmTemplate.result.ini" ; looks useless
 global gu_amtRootMenu := "AmtMenu"
 
 global gu_amtGuidFormatRegex := "\{CCCCCCCC-0000-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{4}-[0-9A-Fa-f]{12}\}"
@@ -240,12 +239,30 @@ Amt_attach_scandir_to_LaunchMenu(submenu_name, scandir)
 		
 		if(amtfound==0)
 		{
-			dev_MenuAddItem(gu_amtRootMenu, menutext, "dev_nop")
+			fn := Func("Amt_BlameEmptyDir").Bind(scandir)
+			dev_MenuAddItem(gu_amtRootMenu, menutext, fn)
 		}
 		else
 		{
 			dev_MenuAddItem(gu_amtRootMenu, menutext, ":" submenu_name)
 		}
+	}
+}
+
+Amt_BlameEmptyDir(emptydir)
+{
+	attr := FileExist(emptydir)
+	if(attr=="")
+	{
+		dev_MsgBoxError("This directory does not exist:`n`n" emptydir)
+	}
+	else if(not dev_IsSubStr(attr, "D"))
+	{
+		dev_MsgBoxError("This path is not a directory:`n`n" emptydir)
+	}
+	else
+	{
+		dev_MsgBoxWarning(Format("Cannot find any ""{}"" in directory:`n`n{}", gu_amtIniCfgFilename, emptydir))
 	}
 }
 
@@ -957,8 +974,6 @@ Amt_DoExpandTemplate(srcdir, dstdir)
 
 	Amt_GenerateNextLevelCfgIni(srcdir, dstdir)
 
-;	Amt_GenerateResultIni(cfgini, dstdir "\" gu_amtIniResultFileName)
-	
 	return true
 }
 

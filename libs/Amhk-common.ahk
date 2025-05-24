@@ -1883,7 +1883,7 @@ dev_MenuAddSepLine(menuname)
 dev_MenuAddItem(menuname, itemtext, target)
 {
 	; To add a menu-item to AHK's systray popup, use menuname="TRAY"
-	; If `target` is a function, caller should write "some_function" as target, i.e. with double-quotes.
+	; If `target` is a function, caller should write "some_function" as target, i.e. WITH double-quotes.
 	; The `target` can be a function-object resulting from Func("some_function").Bind() .
 
 	dev_assert(target, "ERROR: dev_MenuAddItem() gets empty 'target' parameter.")
