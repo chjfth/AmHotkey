@@ -2372,7 +2372,7 @@ dev_GetMouseScreenXY()
 	return {x:outx, y:outy}
 }
 
-dev_MouseMove(x, y, mode, movespeed:=3)
+dev_MouseMove(x, y, mode, movelag:=3)
 {
 	; mode:
 	; "S" screen coordinate
@@ -2388,13 +2388,13 @@ dev_MouseMove(x, y, mode, movespeed:=3)
 		else
 			CoordMode, Mouse, Window
 	
-		MouseMove, % x, % y, % movespeed
+		MouseMove, % x, % y, % movelag
 
 		CoordMode, Mouse, Window
 	}
 	else
 	{
-		MouseMove, % x, % y, % movespeed, R
+		MouseMove, % x, % y, % movelag, R
 	}
 }
 

@@ -97,9 +97,9 @@ Init_chjmisc2()
 ; Windows generic
 ;==============================================================================
 
-InputBox_MouseGoto()
+InputBox_MouseGoto(dlgbox_on_active_window:=true, movelag:=3)
 {
-	static coordxy := "S200,100"
+	static s_coordxy := "S200,100"
 	
 	hint = 
 	(
@@ -113,14 +113,15 @@ R200,100
     Relative to current mouse pointer.
 	)
 	
-	isok := dev_InputBox_InitText("AHK move mouse", hint, coordxy)
+	isok := dev_InputBox_InitText("AHK move mouse", hint, s_coordxy, dlgbox_on_active_window)
 	if(!isok)
 		return
 	
-	arnum := StrSplit(coordxy, ",")
+	arnum := StrSplit(s_coordxy, ",")
 
 	word1 := arnum[1]
 	prefix := SubStr(word1, 1, 1)
+	prefix := dev_StringUpper(prefix)
 	mx := SubStr(word1, 2)
 	my := arnum[2]
 	
@@ -130,7 +131,7 @@ R200,100
 		return
 	}
 	
-	dev_MouseMove(mx, my, prefix)
+	dev_MouseMove(mx, my, prefix, movelag)
 }
 
 
