@@ -499,7 +499,7 @@ AMT_BtnOK()
 	Gui, AMT:Submit, NoHide
 	Gui, AMT:+OwnDialogs ; So that child dialogboxes are Modal.
 	
-	finalApplyDir := gu_amtTxtApplyDirFinal
+	finalApplyDir := Trim(gu_amtTxtApplyDirFinal)
 	
 	if(FileExist(finalApplyDir))
 	{
@@ -618,7 +618,7 @@ Amt_OnNewWordChange()
 	
 	GuiControlGet, %idCtrl%, AMT:
 	newtext := %idCtrl%
-	gu_amt_arTemplateWords[index].newword := newtext
+	gu_amt_arTemplateWords[index].newword := Trim(newtext)
 	
 ;	dev_TooltipAutoClear("text changed to: " newtext)
 
@@ -732,12 +732,14 @@ Amt_ResyncUI()
 	
 	Gui, AMT:Submit, NoHide
 	
+	gu_amteditNewword1 := Trim(gu_amteditNewword1)
+	
 	if(gu_amtIsCreateDirForFirstWord)
 	{
 		ckbText := Format("Create a subdir named ""{1}"" .", gu_amteditNewword1)
 		GuiControl, AMT:, gu_amtIsCreateDirForFirstWord, % ckbText
 		
-		finalApplyDir := gu_amtEdtOutdirUser "\" gu_amteditNewword1
+		finalApplyDir := Trim( gu_amtEdtOutdirUser "\" gu_amteditNewword1 )
 	}
 	else
 	{
