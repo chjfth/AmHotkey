@@ -36,46 +36,83 @@ dev_assert(success_condition, msg_on_error:="", is_attach_code:=true)
 			. "Stacktrace below: `r`n`r`n"
 	}
 	
-	fullmsg .= dev_getCallStack(20, is_attach_code)
+	fullmsg .= dev_getCallStackEx(1, is_attach_code)
 	
 	dev_MsgBoxError(fullmsg, "AHK Assertion Fail!")
 	
 	throw Exception(fullmsg, -1) ; Chj 2024.04.17
 }
 
-dev_getCallStack(max_deepness:=20, is_print_code:=true, byref output_deepness:=0)
+dev_getCallStackEx(top_drops:=1, is_print_code:=true, byref output_deepness:=0)
 {
 	; Call this function to get current callstack.
 	; Usage: If we want to report an error to user(MsgBox etc), showing a full callstack helps greatly.
 	;
 	; Thanks to: https://www.autohotkey.com/board/topic/76062-ahk-l-how-to-get-callstack-solution/
+	;
+	; top_drops: How many tips/tails of the callstack you don't want to see.
+	;            Default is 1, bcz the caller normally don't want to see dev_getCallStackEx() itself.
+	;
+	; output_deepness: How many stack elements are output, not including those dropped.
 	
-	lv_first_print := -1
-	stack := ""
-	stack_prev := ""
+/*
+0*[20250528_18:30:53.750] (+1.219s) topseq=-1 , .What=dev_getCallStackEx , .Line=3590 , File='D:\gitw\AmHotkey\customize.ahk'
+0*[20250528_18:30:53.984] (+0.234s) topseq=-2 , .What=in_test_yyy , .Line=3584 , File='D:\gitw\AmHotkey\customize.ahk'
+0*[20250528_18:30:54.015] (+0.031s) topseq=-3 , .What=test_yyy , .Line=3580 , File='D:\gitw\AmHotkey\customize.ahk'
+0*[20250528_18:30:54.015] (+0.000s) topseq=-4 , .What=!#y , .Line=98 , File='D:\gitw\AmHotkey\AmHotkey.ahk'
+0*[20250528_18:30:54.015] (+0.000s) topseq=-5 , .What=-5 , .Line=75 , File='D:\gitw\AmHotkey\libs\Amhk-common.ahk' (meaningless)
+0*[20250528_18:30:54.015] (+0.000s) topseq=-6 , .What=-6 , .Line=75 , File='D:\gitw\AmHotkey\libs\Amhk-common.ahk' (meaningless)
+*/	
+	ar_oEx := []
 	
-	loop % max_deepness
+	Loop, 20 ; max 20 elements
 	{
-		lvl := -1 - max_deepness + A_Index
-		oEx := Exception("", lvl)
-		oExPrev := Exception("", lvl - 1)
+		; From Autohotkey.chm: When construction an Exception object,
+		; `What` can be a negative offset from the top of the call stack. For example, a value of -1 
+		; sets [Exception.What to the current function or subroutine] and [Exception.Line to the line which called it].
 		
-		if(is_print_code)
-			FileReadLine, linetext, % oEx.file, % oEx.line
+		topseq := 0 - A_Index
+		oEx := Exception("", topseq)
 		
-		if(oEx.What = lvl)
-			continue
-			
-		if(lv_first_print==-1) 
-			lv_first_print := A_Index
+		; AmDbg0(Format("topseq={} , .What={} , .Line={} , File='{}'", topseq, oEx.What, oEx.Line, oEx.File)) ; debug
 		
-		stack_prev := stack
-		
-		output_deepness := A_Index - lv_first_print
-		stack .= (stack ? "`n" : "") . Format("[#{1}] ", output_deepness+1) . "File '" oEx.file "', Line " oEx.line (oExPrev.What = lvl-1 ? "" : ", in " oExPrev.What "()") (is_print_code ? ":`n" linetext : "") "`n"
+		if(oEx.What == topseq)
+		{
+			; already at root of the stack 
+			break
+		}
+
+		ar_oEx.Push(oEx)
 	}
 	
-	return stack_prev
+	ret_text := ""
+	eles := ar_oEx.Length()
+	output_deepness := eles - top_drops
+	botseq := 1 ; from bottom-sequence 1
+	
+	Loop
+	{
+		if(botseq > output_deepness)
+			break
+		
+		oEx :=     ar_oEx[eles - A_Index + 1]
+		oExPrev := ar_oEx[eles - A_Index + 2]
+		
+		this_ele_text := Format("[#{}] ", A_Index) 
+			. Format( "File '{}', Line {}{}:`n", oEx.File, oEx.Line
+				, (A_Index==1 ? "" : Format(", in {}()", oExPrev.What)) ) ; oExPrev.What is a function name string
+		
+		if(is_print_code)
+		{
+			this_ele_text .= dev_FileRead_NthLine(oEx.File, oEx.Line) . "`n"
+		}
+		
+		ret_text .= (A_Index==1 ? "" : "`n") . this_ele_text
+		
+		botseq += 1
+	}
+	
+	return ret_text
 }
 
 dev_FileRead_NthLine(file, line)
@@ -114,17 +151,28 @@ dev_fileline_syse(sys_e)
 
 dev_rethrow_syse(sys_e, user_errmsg)
 {
-	new_e := Exception(user_errmsg)
-	new_e.Line := sys_e.Line
-	
-	stacktrace_text := dev_getCallStack(20, true, ret_deepness)
+	stacktrace_text := dev_getCallStackEx(2, true, ret_deepness)
 	
 	final_stack := Format("[#{}] File '{}', Line {}: `n{}"
 		, ret_deepness+1
 		, sys_e.File, sys_e.Line, dev_FileRead_NthLine(sys_e.File, sys_e.Line))
 	
-	new_e.StackTrace := stacktrace_text "`n" final_stack "`n"
+	all_stacks := stacktrace_text "`n" final_stack "`n"
 	
+	excpt_msg_all := _dev_Concate_excpt_msg_all(user_errmsg, all_stacks)
+
+	; [2025-05-28] Note on Autohotkey 1.1.32: 
+	; If outside user code does not explicitly catch exception, the following `throw new_e`
+	; will cause the AHK engine to pop-out a dialogbox showing the exception, 
+	; BUT, that dialogbox truncates excpt_msg_all to only about 512 chars.
+	; So, I'll append excpt_msg_all to global file excpt_msg_all.txt so user can check it later.
+	_dev_Append_excpt_msg_all(excpt_msg_all)
+	
+	new_e := Exception(excpt_msg_all)
+	new_e.Line := sys_e.Line
+	new_e.UserErrMsg := user_errmsg
+	new_e.StackTrace := all_stacks
+
 	throw new_e
 }
 
@@ -133,12 +181,34 @@ dev_throw(user_errmsg)
 	; throw with stacktrace info
 	; better than `throw Exception(user_errmsg)`
 
-	new_e := Exception(user_errmsg)
-	new_e.StackTrace := dev_getCallStack()
+	all_stacks := dev_getCallStackEx()
+	excpt_msg_all := _dev_Concate_excpt_msg_all(user_errmsg, all_stacks)
+	
+	_dev_Append_excpt_msg_all(excpt_msg_all)
+
+	new_e := Exception(excpt_msg_all)
+	new_e.UserErrMsg := user_errmsg
+	new_e.StackTrace := all_stacks
 	
 	throw new_e
 }
 
+
+_dev_Concate_excpt_msg_all(user_errmsg, all_stacks)
+{
+	filehint := "(complete stacktrace appends to excpt_msg_all.txt)"
+	return user_errmsg "`n" filehint "`n" all_stacks
+}
+
+_dev_Append_excpt_msg_all(msg)
+{
+	nowtime := dev_GetDateTimeStrNow()
+	text := Format("`n========{}========`n{}", nowtime, msg)
+	
+	filename := "excpt_msg_all.txt"
+	
+	FileAppend, % text, % filename, % "UTF-8-RAW"
+}
 
 dev_EnvGet(varname)
 {
@@ -3043,7 +3113,7 @@ dev_OpenSelectFileDialog(path_hint, dlg_title:="", filter:="")
 	catch e {
 		; If path_hint is "Caution: danger", we get this. (due to the bad colon char)
 		; More bad chars like: <|>/
-		dev_MsgBoxError("Unexpected! FileSelectFile execution fail!`n`n" dev_getCallStack())
+		dev_MsgBoxError("Unexpected! FileSelectFile execution fail!`n`n" dev_getCallStackEx())
 	}
 	return outpath_selected
 }

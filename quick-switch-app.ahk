@@ -278,7 +278,7 @@ dev_MyActivateGroupByBooleanFunc(funcname, suffixkey="")
 	
 	if(not funcname)
 	{
-		errmsg := "Error: Input parameter funcname is null!" . "`n`nCallstack below:`n`n" . dev_getCallStack()
+		errmsg := "Error: Input parameter funcname is null!" . "`n`nCallstack below:`n`n" . dev_getCallStackEx()
 		dev_MsgBoxError(errmsg)
 		return
 	}

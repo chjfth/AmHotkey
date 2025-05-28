@@ -1229,7 +1229,7 @@ class FoxitCoedit
 		}
 		else
 		{
-			; AmDbg0( "PdfPageNum-null:`n" dev_getCallStack() )
+			; AmDbg0( "PdfPageNum-null:`n" dev_getCallStackEx() )
 			this.ModalMsgBox_ShowWarning("Unexpect! Cannot locate Foxit's PageNum editbox.")
 		}
 		

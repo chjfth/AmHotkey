@@ -2758,7 +2758,7 @@ dev_MouseActInChildwnd(hwnd, ux,xomode, uy,yomode, is_movemouse:=true, is_click:
 		
 		errmsg := Format("[AmHotkey]Unexpected in dev_MouseActInChildwnd(): WinGetPos returns blank for hwnd={}", hwnd)
 		
-		MsgBox, % errmsg . "`n`nCallstack below (most recent call last):`n`n" . dev_getCallStack()
+		MsgBox, % errmsg . "`n`nCallstack below (most recent call last):`n`n" . dev_getCallStackEx()
 		
 		return
 	}
