@@ -372,7 +372,7 @@ PYJJ_HalfwidthChar_Tweak_Action(hwchar)
 
 
 ;==============================================================================
-; Livecast in Chrome
+; F12console:  Zhihu.com Livecast 
 ;==============================================================================
 
 appw_Zhihu_LiveCast_BigViewWithCommentSidebar()
@@ -397,3 +397,43 @@ document.querySelectorAll('.PcLive-rightWrapper-7SavL').forEach(element => {
 	winshell_AddOneSendTextMenu("F12 console - ZhihuLLM big webcast pane", text)
 
 }
+
+
+;==============================================================================
+; F12console: Deepseek webtext style compact
+;==============================================================================
+appw_F12console_DeekseekWebStyleCompact()
+{
+	text =
+	(
+	const style = document.createElement('style')
+	style.textContent = ``
+	  p.ds-markdown-paragraph {
+	    line-height: 1.0 !important;
+	    font-size: 14px !important;
+	  }
+	  .ds-markdown li::marker {
+	    line-height: 1.0 !important;
+	  }
+	  .ds-markdown hr {
+	    margin: 3px !important;
+	  }
+	  .ds-markdown h3 {
+	    line-height: 1.1 !important;
+	    margin: 0.5em !important;
+	  }
+	  .ds-markdown h4 {
+	    line-height: 1.1 !important;
+	    margin: 0.5em !important;
+	  }
+	``
+	document.head.appendChild(style);
+
+	document.querySelectorAll('.markdown-table-wrapper td').forEach(element => {
+	  element.style.fontSize = '14px';
+	  element.style.padding = '2px';
+	})
+	)
+	winshell_AddOneSendTextMenu("F12console - Deepseek 压缩排版高度", text)
+}
+
