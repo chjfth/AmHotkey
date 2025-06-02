@@ -81,6 +81,12 @@ type_python_shebang()
 
 ^#/:: devui_ChangeWindowPosition()
 
+!#/:: ; Interactively change g_winmove_unit
+	InputBox g_winmove_unit, Autohotkey move step, Input new window move unit in pixels, , , , , , , , %g_winmove_unit%
+return
+
+
+
 Init_chjmisc2()
 {
 	dev_MenuAddItem(winshell.UtilityMenu, "Mouse goto screen x,y", "InputBox_MouseGoto")

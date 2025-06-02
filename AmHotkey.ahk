@@ -2569,10 +2569,6 @@ Current window(%winclass%) at <%x%,%y%> , size [%width%,%height%]
 	return
 }
 
-!#/:: ; Interactively change g_winmove_unit
-	InputBox g_winmove_unit, Autohotkey move step, Input new window move unit in pixels, , , , , , , , %g_winmove_unit%
-return
-
 
 NewCoordFromHint(x, width, xhint, omode:=false)
 {
