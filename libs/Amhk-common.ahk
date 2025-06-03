@@ -2224,6 +2224,27 @@ dev_GetHwndByClass(classname)
 	return dev_GetHwndByWintitle("ahk_class " classname)
 }
 
+dev_WinWait(wintitle, timeout_millisec:=2000)
+{
+	WinWait, % wintitle, , % timeout_millisec/1000
+	if not ErrorLevel {
+		return true
+	} else {
+		return false
+	}
+}
+
+
+dev_WinWaitActivate(wintitle, timeout_millisec:=2000)
+{
+	WinWaitActive, % wintitle, , % timeout_millisec/1000
+	if not ErrorLevel {
+		return true
+	} else {
+		return false
+	}
+}
+
 dev_WinActivateHwnd(hwnd, timeout_millisec:=0)
 {
 	WinActivate, ahk_id %hwnd%
@@ -2954,6 +2975,17 @@ dev_WinGet_ControlList(wintitle)
 	WinGet, xClassnn, ControlList, %wintitle%
 	return dev_SplitStrings(xClassnn, "`n")
 }
+
+dev_ControlClick(wintitle, CtlOrPos, WhichButton:="Left", ClickCount:=1, Options:="")
+{
+	try {
+		ControlClick, % CtlOrPos, % wintitle, , % WhichButton, % ClickCount, % Options
+	} catch e {
+		errmsg := Format("dev_ControlClick(""{}"", ""{}"") fails.", wintitle, CtlOrPos)
+		dev_rethrow_syse(e, errmsg)
+	}
+}
+
 
 dev_ControlGetText_hwnd(hwnd)
 {
