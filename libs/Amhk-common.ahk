@@ -356,31 +356,6 @@ dev_WinGet_Hwnd(wintitle, wintext:="")
 	return winid
 }
 
-dev_WinClose(wintitle, timeout_millisec:=0)
-{
-	WinClose, % wintitle
-	
-	if(timeout_millisec==0)
-		return true
-	
-	return dev_WinWaitClose(wintitle, timeout_millisec)
-}
-
-dev_WinWaitClose(wintitle, timeout_millisec:=-1)
-{
-	; wintitle can be "ahk_id 0xC5134C" etc
-	
-	if(timeout_millisec<0)
-		timeout_sec := "" ; to wait indefinitely
-	else if(timeout_millisec==0)
-		return true
-	else
-		timeout_sec := timeout_millisec/1000
-
-	WinWaitClose, % wintitle, , % timeout_sec
-	return ErrorLevel==0 ? true : false
-}
-
 dev_MsgBoxInfo(text, wintitle:="") ; with a blue (i) icon
 {
 	if(!wintitle)
@@ -2283,6 +2258,31 @@ dev_WinWaitActive_with_timeout(wintitle, wintext:="", timeout_sec:=1)
 	{
 		return false
 	}
+}
+
+dev_WinClose(wintitle, timeout_millisec:=0)
+{
+	WinClose, % wintitle
+	
+	if(timeout_millisec==0)
+		return true
+	
+	return dev_WinWaitClose(wintitle, timeout_millisec)
+}
+
+dev_WinWaitClose(wintitle, timeout_millisec:=-1)
+{
+	; wintitle can be "ahk_id 0xC5134C" etc
+	
+	if(timeout_millisec<0)
+		timeout_sec := "" ; to wait indefinitely
+	else if(timeout_millisec==0)
+		return true
+	else
+		timeout_sec := timeout_millisec/1000
+
+	WinWaitClose, % wintitle, , % timeout_sec
+	return ErrorLevel==0 ? true : false
 }
 
 dev_WinShow_byHwnd(hwnd)
