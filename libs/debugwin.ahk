@@ -433,7 +433,7 @@ Amdbg_SetValueBtn()
 	succ := Amdbg_SetValue()
 	
 	if(succ)
-		Amdbg_HideGui()
+		dev_MsgBoxInfo("Set success.")
 }
 
 AmdbgGuiSize()
