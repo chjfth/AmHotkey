@@ -2741,7 +2741,7 @@ MouseActInActiveControl(classnn, ux,xomode, uy,yomode, is_movemouse:=true, is_cl
 	dev_MouseActInChildwnd(output_hctrl, ux,xomode, uy,yomode, is_movemouse, is_click, movespeed, is_warn)
 }
 
-dev_MouseActInChildwnd(hwnd, ux,xomode, uy,yomode, is_movemouse:=true, is_click:=false, movespeed:=0, is_warn:=true)
+dev_MouseActInChildwnd(hwnd, ux,xomode, uy,yomode, is_movemouse:=true, is_click:=false, movespeed:=0, is_throw:=true)
 {
 	; If is_click==true, this function does not really operate at the target control, 
 	; but operate on the screen position of that control.
@@ -2750,16 +2750,15 @@ dev_MouseActInChildwnd(hwnd, ux,xomode, uy,yomode, is_movemouse:=true, is_click:
 	WinGetPos, winx, winy, width, height, ahk_id %hwnd% ; we need absolute screen pos
 
 ;	Dbgwin_Output(Format("chd_hwnd={:#x} winx={}, winy={}", hwnd, winx, winy)) ; debug
-	if(!winx and is_warn) {
-		
-		errmsg := Format("[AmHotkey]Unexpected in dev_MouseActInChildwnd(): WinGetPos returns blank for hwnd={}", hwnd)
-		
-		MsgBox, % errmsg . "`n`nCallstack below (most recent call last):`n`n" . dev_getCallStackEx()
-		
-		return
+	if(!winx) {
+		if(is_throw) {
+			errmsg := Format("Input error in dev_MouseActInChildwnd(): WinGetPos returns blank for hwnd={}", hwnd)
+			dev_throw(errmsg)
+		}
+		return false
 	}
 	if (!is_movemouse && !is_click)
-		return
+		return true
 
 	dev_SaveMouseScreenPos()
 
@@ -2777,6 +2776,8 @@ dev_MouseActInChildwnd(hwnd, ux,xomode, uy,yomode, is_movemouse:=true, is_click:
 
 	If (not is_movemouse)
 		dev_RestoreMouseScreenPos()
+		
+	return true
 }
 
 
