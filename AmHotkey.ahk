@@ -2713,9 +2713,16 @@ MouseActInActiveWindow(ux,xomode, uy,yomode, is_movemouse:=true, is_click:=false
 dev_ClickInChildClassnn(hwnd, classnn, ux, uy, is_movemouse:=false, is_warn:=true)
 {
 	; When calling, remember to pass quoted-string for classnn
-	ControlGet, output_hctrl, HWND, , %classnn%, ahk_id %hwnd%
+	hwndCtl := dev_GetHwndFromClassNN(classnn, "ahk_id " hwnd)
 
-	dev_MouseActInChildwnd(output_hctrl, ux,false, uy,false, is_movemouse, true, is_movemouse?3:0, is_warn)
+	return dev_MouseActInHwnd(hwndCtl, ux,false, uy,false, is_movemouse, true, is_movemouse?3:0, is_warn)
+}
+
+dev_MouseMoveInChildClassnn(hwnd, classnn, ux, uy, movespeed:=3, is_warn:=true)
+{
+	hwndCtl := dev_GetHwndFromClassNN(classnn, "ahk_id " hwnd)
+	
+	return dev_MouseActInHwnd(hwndCtl, ux,false, uy,false, true, false, movespeed, is_warn)
 }
 
 ClickInActiveControl(classnn, ux, uy, is_movemouse:=false, is_warn:=true)
@@ -2738,10 +2745,10 @@ MouseActInActiveControl(classnn, ux,xomode, uy,yomode, is_movemouse:=true, is_cl
 	; When calling, remember to pass quoted-string for classnn
 	ControlGet, output_hctrl, HWND, , %classnn%, A
 	
-	dev_MouseActInChildwnd(output_hctrl, ux,xomode, uy,yomode, is_movemouse, is_click, movespeed, is_warn)
+	dev_MouseActInHwnd(output_hctrl, ux,xomode, uy,yomode, is_movemouse, is_click, movespeed, is_warn)
 }
 
-dev_MouseActInChildwnd(hwnd, ux,xomode, uy,yomode, is_movemouse:=true, is_click:=false, movespeed:=0, is_throw:=true)
+dev_MouseActInHwnd(hwnd, ux,xomode, uy,yomode, is_movemouse:=true, is_click:=false, movespeed:=0, is_throw:=true)
 {
 	; If is_click==true, this function does not really operate at the target control, 
 	; but operate on the screen position of that control.
@@ -2752,7 +2759,7 @@ dev_MouseActInChildwnd(hwnd, ux,xomode, uy,yomode, is_movemouse:=true, is_click:
 ;	Dbgwin_Output(Format("chd_hwnd={:#x} winx={}, winy={}", hwnd, winx, winy)) ; debug
 	if(!winx) {
 		if(is_throw) {
-			errmsg := Format("Input error in dev_MouseActInChildwnd(): WinGetPos returns blank for hwnd={}", hwnd)
+			errmsg := Format("Input error in dev_MouseActInHwnd(): WinGetPos returns blank for hwnd={}", hwnd)
 			dev_throw(errmsg)
 		}
 		return false
