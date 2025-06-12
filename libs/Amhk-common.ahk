@@ -241,6 +241,19 @@ dev_str2num(str)
 ;}
 ;
 
+dev_assert_callable(funcware)
+{
+	dev_assert(dev_which_functype(funcware))
+}
+
+dev_IsCallable(funcware)
+{
+	if(dev_which_functype(funcware))
+		return true
+	else
+		return false
+}
+
 dev_which_functype(funcware)
 {
 	; [2024-04-17] A gross triage of three different function(callable) types.
@@ -2830,6 +2843,7 @@ dev_StartTimerOnce(str_callable, millisec)
 	;	dev_StartTimerOnce(fn, 500)
 
 	dev_assert(millisec>0, "dev_StartTimerPeriodic() `millisec` must be >0")
+	dev_assert_callable(str_callable)
 
 	SetTimer, % str_callable, % 0-millisec
 }
@@ -2837,6 +2851,7 @@ dev_StartTimerOnce(str_callable, millisec)
 dev_StartTimerPeriodic(str_callable, millisec, is_exec_now:=false)
 {
 	dev_assert(millisec>0, "dev_StartTimerPeriodic() `millisec` must be >0")
+	dev_assert_callable(str_callable)
 
 	if(is_exec_now)
 		%str_callable%()
