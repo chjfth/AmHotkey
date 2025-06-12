@@ -21,28 +21,6 @@ dev_false()
 	return false
 }
 
-dev_assert(success_condition, msg_on_error:="", is_attach_code:=true)
-{
-	; msg_on_error is the text message you want to say to user, in case success_condition is not met.
-
-	if(success_condition)
-		return
-	
-	fullmsg := ""
-	
-	if(msg_on_error)
-	{
-		fullmsg := msg_on_error "`r`n`r`n"
-			. "Stacktrace below: `r`n`r`n"
-	}
-	
-	fullmsg .= dev_getCallStackEx(1, is_attach_code)
-	
-	dev_MsgBoxError(fullmsg, "AHK Assertion Fail!")
-	
-	throw Exception(fullmsg, -1) ; Chj 2024.04.17
-}
-
 dev_getCallStackEx(top_drops:=1, is_print_code:=true, byref output_deepness:=0)
 {
 	; Call this function to get current callstack.
@@ -193,11 +171,34 @@ dev_throw(user_errmsg)
 	throw new_e
 }
 
+dev_assert(success_condition, msg_on_error:="", is_attach_code:=true)
+{
+	; msg_on_error is the text message you want to say to user, in case success_condition is not met.
+
+	if(success_condition)
+		return
+	
+	fullmsg := ""
+	
+	if(msg_on_error)
+	{
+		fullmsg := msg_on_error "`r`n`r`n"
+			. "Stacktrace below: `r`n`r`n"
+	}
+	
+	fullmsg .= dev_getCallStackEx(1, is_attach_code)
+	
+	dev_MsgBoxError(fullmsg, "AHK Assertion Fail!")
+	
+	throw Exception(fullmsg, -1) ; Chj 2024.04.17
+}
+
+
 
 _dev_Concate_excpt_msg_all(user_errmsg, all_stacks)
 {
 	filehint := "(complete stacktrace appends to excpt_msg_all.txt)"
-	return user_errmsg "`n" filehint "`n" all_stacks
+	return user_errmsg "`n" filehint "`n`n" all_stacks
 }
 
 _dev_Append_excpt_msg_all(msg)
