@@ -2249,7 +2249,7 @@ dev_WinWait(wintitle, timeout_millisec:=2000)
 }
 
 
-dev_WinWaitActivate(wintitle, timeout_millisec:=2000)
+dev_WinWaitActive(wintitle, timeout_millisec:=2000)
 {
 	WinWaitActive, % wintitle, , % timeout_millisec/1000
 	if not ErrorLevel {
