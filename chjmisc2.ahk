@@ -415,11 +415,11 @@ appw_F12console_DeekseekWebStyleCompact()
 	const style = document.createElement('style')
 	style.textContent = ``
 	  p.ds-markdown-paragraph {
-	    line-height: 1.0 !important;
+	    line-height: 1.05 !important;
 	    font-size: 14px !important;
 	  }
 	  .ds-markdown li::marker {
-	    line-height: 1.0 !important;
+	    line-height: 1.05 !important;
 	  }
 	  .ds-markdown hr {
 	    margin: 3px !important;
