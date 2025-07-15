@@ -46,11 +46,6 @@ global g_ppi_LogiX, g_ppi_LogiY ; Gui-assoc
 CalPPI_Init() ; Call it
 ; Calculate monitor PPI globals <<<
 
-; Systray menu-items
-global winshell_menutext_WindowOp := "Daily window op"
-	global winshell_menutext_CheckActiveWindowInfo := "Check active window info"
-	global winshell_menutext_ActiveWindowDwmOff := "Active-window DWM rendering off"
-	global winshell_menutext_ActiveWindowDwmOn  := "Active-window DWM rendering on"
 
 winshell_WindowOp_Init()
 
@@ -1104,7 +1099,7 @@ winshell_WindowOp_Init()
 	;
 	; Define a set of AHK systray menu items:
 	;
-
+	
 	; Define submenu item list:
 	dev_MenuAddItem("winshell_menutext_WindowOp", "Check active window info", "dev_CheckActiveWindowInfo")
 	;
@@ -1115,7 +1110,7 @@ winshell_WindowOp_Init()
 	dev_MenuAddItem("winshell_menutext_WindowOp", "Active-window DWM rendering on", fn)
 
 	; Attach above submenu to main menu
-	dev_MenuAddSubmenu("TRAY", winshell_menutext_WindowOp, "winshell_menutext_WindowOp")
+	dev_MenuAddSubmenu("TRAY", "Daily window op", "winshell_menutext_WindowOp")
 	
 	; ...
 	
@@ -1123,7 +1118,7 @@ winshell_WindowOp_Init()
 }
 winshell_popup_WindowOpMenu()
 {
-	Menu, winshell_menutext_WindowOp, Show
+	dev_MenuShow("winshell_menutext_WindowOp")
 }
 
 winshell_AddOneUtilitiesMenu(menuitem_text, cmd_and_params)
