@@ -113,7 +113,7 @@ global g_evtblHwndToPaste
 global g_HwndPreviewHtml ; GuiName: PvHtml
 global g_PvhtmlEdit
 global g_PvhtmlClipboard
-global g_PvhtmlMsg
+global gu_PvhtmlMsg
 
 global g_HwndColorMatrix
  ; global gar_ColorCellHwnd:=[]
@@ -1400,6 +1400,8 @@ PreviewHtml_CreateGui()
 {
 	; Create the Preview HTML(CF_HTML raw content) GUI
 	
+	GuiName := "PvHtml"
+	
 	Gui, PvHtml:New
 	
 	Gui, PvHtml:+Hwndg_HwndPreviewHtml
@@ -1409,7 +1411,7 @@ PreviewHtml_CreateGui()
 
 	Gui, PvHtml:Font, s8 cBlack, Tahoma
 	Gui, PvHtml:Add, Button, xm vg_PvhtmlClipboard gPvhtml_SendtoClipboard , % "&Send to Clipboard as CF_HTML"
-	Gui, PvHtml:Add, Text, x+10 w500 vg_PvhtmlMsg, % ""
+	Gui_Add_TxtLabel(GuiName, "gu_PvhtmlMsg", 500, "x+10")
 
 	; Make the GUI resizable with current size as minimum size.
 	Gui, PvHtml:+Resize +MinSize
@@ -1428,9 +1430,9 @@ Pvhtml_SendtoClipboard()
 	dev_ClipboardSetHTML(g_PvhtmlEdit, false)
 
 	; Set prompt message and clear it after 1000ms
-	GuiControl_SetText("PvHtml", "g_PvhtmlMsg", "Sent to clipboard done.")
+	GuiControl_SetText("PvHtml", "gu_PvhtmlMsg", "Sent to clipboard done.")
 
-	fn_clearmsg := Func("GuiControl_SetText").Bind("PvHtml", "g_PvhtmlMsg", "")
+	fn_clearmsg := Func("GuiControl_SetText").Bind("PvHtml", "gu_PvhtmlMsg", "")
 	SetTimer, %fn_clearmsg%, -1000
 }
 
@@ -1448,7 +1450,7 @@ PvHtmlGuiSize() ; Window resizing hook: PvHtml++GuiSize
 	rsdict := {}
 	rsdict.g_PvhtmlEdit := "0,0,100,100" ; Left/Top/Right/Bottom
 	rsdict.g_PvhtmlClipboard := "0,100,0,100"
-	rsdict.g_PvhtmlMsg := "0,100,0,100"
+	rsdict.gu_PvhtmlMsg := "0,100,0,100"
 	dev_GuiAutoResize("PvHtml", rsdict, A_GuiWidth, A_GuiHeight)
 }
 
