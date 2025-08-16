@@ -149,6 +149,8 @@ class FoxitCoedit
 		GuiName := FoxitCoedit.Id
 		
 		Gui_New(GuiName)
+		Gui_Switch_Font(GuiName, 8, "", "Tahoma")
+
 		Gui_ChangeOpt(GuiName, "+Resize +MinSize")
 		Gui_AssociateHwndVarname(GuiName, "g_HwndFOCOGui")
 		
