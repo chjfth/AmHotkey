@@ -18,9 +18,14 @@ When user press App+C, Evp_LaunchUI() is triggered and the Everpic UI pops up co
 
 once in customize.ahk .
 
+	(Note: Everpic.ahk bundled HTTP server is not very stable, so a customized HTTP server is suggested.
+	The light-weighted HFS-2.2f is quite a good choice.)
+
 [Scenario 2b] If user wants to work with customized HTTP server, then in customize.ahk, he calls once:
 
 	Everpic_InitHotkeys("http://localhost:2017") 
+	
+	In this example, http://localhost:2017/Everpic-save/ must point to the Everpic-save directory.
 
 [Scenario 3] If user wants to have another hotkey(^#c for example) to activate Everpic UI, then
 he should call one of below once in customize.ahk :
@@ -31,8 +36,6 @@ he should call one of below once in customize.ahk :
 */
 
 ;;;;;;;; Everpic global vars ;;;;;;;;;;
-
-; global g_evpTempDir := A_Temp "\Everpic" ; [2025-01-13] Now use Everpic.dirTempImg .
 
 global gc_evpBatchConvertExecpath := A_ScriptDir "\exe\everpic-batch-prepare.bat"
 
