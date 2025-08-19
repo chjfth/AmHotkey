@@ -225,6 +225,11 @@ Foxit_F1_Paste()
 F8:: SendInput +^{Tab}
 F9:: SendInput ^{Tab}
 
+; Chj prefer Ctrl+] to execute Comment->Typewriter (right hand).
+; And to make my left hand execute this, I summon Alt+Z to do so as well.
+!z:: dev_SendInput("^]")
+
+
 $F5:: Foxit_HkToggleBookmarkSidebar()
 Foxit_HkToggleBookmarkSidebar()
 {
