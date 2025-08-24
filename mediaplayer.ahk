@@ -26,6 +26,18 @@ global g_mpcaot_custwndsize := { w:160 , h:120 }
 MPC_InitHotkeys()
 MpcAot_InitTrayicon()
 
+/* 
+
+	MediaplayerAhkInit static vars to be customized in custom_env.ahk :
+
+class MediaplayerAhkInit
+{
+	static NoCtrlClickHotkey := 1
+	; -- Should set to 1 on chji Win7, to workaround 20231014.c1 weird problem.
+}
+
+*/
+
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 return ; End of auto-execute section.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
@@ -499,7 +511,10 @@ MPC_InitHotkeys()
 {
 	MPC_DefineHotkeysSeekPercents()
 	
-	dev_DefineHotkeyWithCondition("~^LButton", "MpcAot_IsActive", "MpcAot_ShowSizingMenu_LButton")
+	if(not MediaplayerAhkInit.NoCtrlClickHotkey)
+	{
+		dev_DefineHotkeyWithCondition("~^LButton", "MpcAot_IsActive", "MpcAot_ShowSizingMenu_LButton")
+	}
 }
 
 MPC_cond_F1toF9Seek()
