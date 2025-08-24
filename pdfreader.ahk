@@ -229,6 +229,8 @@ F9:: SendInput ^{Tab}
 ; And to make my left hand execute this, I summon Alt+Z to do so as well.
 !z:: dev_SendInput("^]")
 
+; Alt+. sends a big bullet character to act as unordered list bullet.
+!.:: dev_SendInput("•")
 
 $F5:: Foxit_HkToggleBookmarkSidebar()
 Foxit_HkToggleBookmarkSidebar()

@@ -401,7 +401,7 @@ MyActivateWindowGroupFlex(winclass, wincls_regex, title_regex, appdesc) ; Flex: 
 }
 
 
-sample_DefineQuickSwitchApps() ; as template for actual users
+example_DefineQuickSwitchApps() ; as template for actual users
 {
 	QSA_DefineActivateGroup_Caps("/", "Notepad", "Notepad")
 	QSA_DefineActivateGroupFlex_Caps("1", "Chrome_WidgetWin_1", QSA_NO_WNDCLS_REGEX, "(Google Chrome|Comodo Dragon)$", "Google Chrome")
@@ -416,6 +416,9 @@ sample_DefineQuickSwitchApps() ; as template for actual users
 		; VC6 winclass is like Afx:400000:8:10009:0:3ab31345
 		; Sigh, with 1.1.19.02, MRU behavior is broken with this regex mode
 		; http://superuser.com/questions/876491/autohotkey-groupactivate-mru-behavior-discrepancy-any-way-to-fix
+
+	; VS2008 MSDN offline document
+	QSA_DefineActivateGroupFlex_Caps("8", "wndclass_desked_gsk", QSA_NO_WNDCLS_REGEX, "Microsoft Document Explorer", "VS2008 MSDN Documents")
 
 	; Visual Studio VS2010+
 	QSA_DefineActivateGroupFlex_Caps("0", QSA_NO_WNDCLASS, "^HwndWrapper", "Microsoft Visual Studio( \(Administrator\))*$", "VS2010_or_above")
