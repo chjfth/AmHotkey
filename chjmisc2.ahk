@@ -131,7 +131,7 @@ chj_PasteNetUseSambaCommand()
 ;==============================================================================
 ; Evernote 6.5.4 and MPC-HC interaction.
 ;==============================================================================
-
+/*
 #If Evernote_IsSingleNoteActive() and WinExist("ahk_class MediaPlayerClassicW") 
 F3::        MPC_Bg_PausePlay(true)
 F1::        MPC_Bg_PausePlay_front(true)
@@ -153,7 +153,7 @@ Evernote_MPC_PasteCurrentPlaytime(bypass_hotkey="")
 	}
 }
 #If
-
+*/
 
 #If Evernote_IsSingleNoteActive()
 NumpadSub:: Evernote_MoveYClick(-24) ; in hope to click onto prev table Row
