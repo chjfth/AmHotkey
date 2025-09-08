@@ -316,10 +316,14 @@ vmctl_GetVmLastModifyTime(vmx_filepath, ts14_old:="")
 	
 	; Scan for all .vmdk files's modification time as clue for VM Activity.
 	; If a VM is paused, it vmdk files will cease being modified.
+	;
+	; [2025-09-06] On my chji Win7(VMwks 15.5), vmdk's timestamp can lag updating
+	; for very long time(1+ hours), only vmware.log's timestamp is updated constantly.
+	; So I'll check for all files instead of only vmdk-s.
 	
-	Loop, Files, % vmxdir "\*.vmdk"
+	; Loop, Files, % vmxdir "\*.vmdk"
+	Loop, Files, % vmxdir "\*.*"
 	{
-		
 		; Note: Merely checking A_LoopFileTimeModified is not enough, whose timestamp 
 		; may be lagged quite a bit. We need to explicitly query against the specific file.
 		
