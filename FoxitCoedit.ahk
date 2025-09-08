@@ -51,7 +51,7 @@ class FoxitCoedit
 	; static vars as constant >>>
 	static BtnTextResync := "R&e-sync"
 	static is_simulate_reopen_pdf_fail := false ; debugging purpose
-	static PdfBackups := 5
+	static PdfBackups := 9
 	; static vars as constant <<<
 	
 	isGuiVisible := false
