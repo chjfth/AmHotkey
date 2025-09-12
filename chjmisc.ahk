@@ -1024,7 +1024,7 @@ F12:: Paragon12_BeautifyHexView()
 
 Is_IrfanviewEXIFDialog_Active()
 {
-	if((dev_IsExeActive("i_view64.exe") or dev_IsExeActive("i_view64.exe")) 
+	if((dev_IsExeActive("i_view64.exe") or dev_IsExeActive("i_view32.exe")) 
 		and IsWinTitleMatchRegex("EXIF Info$"))
 		return true
 	else
@@ -1109,6 +1109,79 @@ IrfanView_EXIF_extract_GPS_position(Eoffset_fix:=0, Noffset_fix:=0)
 ;F1:: IrfanView_EXIF_extract_GPS_position(+0.0114, +0.0032)
 
 ;#If 
+
+IsIrfanViewRenameDlgboxActive()
+{
+    if(dev_IsExeActive("i_view32.exe") and IsWinTitleMatchRegex("Rename/Create"))
+        return true
+    else
+        return false
+}
+
+#If IsIrfanViewRenameDlgboxActive()
+
+; Press {End} twice to copy "suffix" string of current filename
+;
+End:: irfanview_EndKey()
+irfanview_EndKey()
+{
+    ; Double-press End key, to select and cut all-but-first words.
+    static s_prevtick := 0
+   
+    nowtick := A_TickCount
+    if(nowtick - s_prevtick > 500)
+        Send, {End}
+    else
+        irfanview_CopyAllButFirstWord()
+   
+    s_prevtick := nowtick
+}
+
+irfanview_CopyAllButFirstWord()
+{
+    SendInput, {End}{Shift down}{Home}{Ctrl down}{Right}{Ctrl up}{Shift up}
+   
+;    Clipboard := ""
+    SendInput, ^x
+}
+
+
+#If ; IsIrfanViewRenameDlgboxActive()
+
+#If IsWinClassActive("IrfanView")
+
+^t:: Rename_and_Paste_append_BeiMian()
+Rename_and_Paste_append_BeiMian()
+{
+    Send {F2}
+   
+    if(!dev_WinWaitActive_with_timeout("Rename/Create"))
+    {
+        dev_MsgBoxWarning("Expect Rename/Create dialog popup, but failed.")
+        return
+    }
+   
+    Clipboard := Clipboard . "，背面"
+    Send {End}{Space}
+    Send ^v
+}
+
+^F2:: ImgRenameAdd__()
+ImgRenameAdd__()
+{
+	Send {F2}
+	
+    if(!dev_WinWaitActive_with_timeout("Rename/Create"))
+    {
+        dev_MsgBoxWarning("Expect Rename/Create dialog popup, but failed.")
+        return
+    }
+	
+	Send {End}
+	SendRaw __
+}
+
+#If
 
 
 
