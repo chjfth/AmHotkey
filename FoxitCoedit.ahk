@@ -315,7 +315,10 @@ class FoxitCoedit
 		}
 		
 		detail .= "PdfBackups: " FoxitCoedit.PdfBackups
-;		detail .= "`n`n"
+		detail .= "`n"
+		
+		detail .= "PdfBackups in dir:`n" this.GetBakdirMyside()
+;		detail .= "`n`n" (final line, no need extra \n)
 		
 		if(this.prev_mletext != detail)
 		{	
@@ -433,16 +436,18 @@ class FoxitCoedit
 			this.HideGui()
 
 		docpath_now := this.coedit.docpath
-		pdfdir := dev_SplitPath(docpath_now, pdfname) ; pdfname is outvar
-		bakdir := strlen(FoxitCoeditCfg.PdfBackupDir)>0 ? FoxitCoeditCfg.PdfBackupDir : pdfdir
+		dev_SplitPath(docpath_now, pdfname) ; pdfname is outvar
+		
+		bakdirBase := this.GetBakdirBase(pdfdir)
+		bakdirMyside := this.GetBakdirMyside()
 		
 		; Make a backup of the original pdf content.
 		; Assume pdfname is foo.pdf , I will finally generate:
-		; 	<bakdir>\foo.pdf.backupA\recent1.foo.pdf
-		;	<bakdir>\foo.pdf.backupB\recent5.foo.pdf
+		; 	<bakdirBase>\foo.pdf.backupA\recent1.foo.pdf
+		;	<bakdirBase>\foo.pdf.backupB\recent5.foo.pdf
 		; etc.
 		
-		dir_prebackup := Format("{}\_prebackup", bakdir)
+		dir_prebackup := Format("{}\_prebackup", bakdirBase)
 		dev_CreateDirIfNotExist(dir_prebackup)
 		docpath_prebackup := Format("{}\{}", dir_prebackup, pdfname)
 		dev_FileDelete(docpath_prebackup)
@@ -481,7 +486,7 @@ class FoxitCoedit
 			try 
 			{
 				pb := new PiledBackup(docpath_prebackup
-					, Format("{}\{}{}", bakdir, pdfname, (this.ischk_Lside ? ".backupA" : ".backupB"))
+					, bakdirMyside
 					, FoxitCoedit.PdfBackups
 					, PiledBackup.DoMove)
 				this.dbg1("Moving backup pdf to folder: " pb.dirbackup)
@@ -1418,6 +1423,21 @@ class FoxitCoedit
 		}
 		
 		return is_modified
+	}
+	
+	GetBakdirBase() ; instance
+	{
+		pdfdir := dev_SplitPath(this.coedit.docpath, _) 
+
+		return strlen(FoxitCoeditCfg.PdfBackupDir)>0 ? FoxitCoeditCfg.PdfBackupDir : pdfdir
+	}
+	
+	GetBakdirMyside() ; instance
+	{
+		bakdirBase := this.GetBakdirBase()
+		dev_SplitPath(this.coedit.docpath, pdfname) ; pdfname is outvar
+		
+		return Format("{}\{}{}", bakdirBase, pdfname, (this.ischk_Lside ? ".backupA" : ".backupB"))
 	}
 	
 } ; class FoxitCoedit
