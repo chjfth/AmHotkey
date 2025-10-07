@@ -32,6 +32,7 @@ return ; End of auto-execute section.
 ;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;;
 
 #Include %A_LineFile%\..\pdfreader.ahk
+#Include %A_LineFile%\..\libs\class.PiledBackup.ahk
 #Include %A_LineFile%\..\libs\class.PeersCoedit.ahk
 
 /* Customization:
