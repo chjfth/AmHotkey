@@ -27,9 +27,19 @@ class PiledBackup
 	
 	__New(inputfile, dirbackup, nkeep:=3, doCopyOrMove:=1)
 	{
-		; [2025-03-23] Note: I cannot write `doCopyOrMove:=PiledBackup.DoCopy`,
+		; [2025-03-23] Note on param spec: I cannot write `doCopyOrMove:=PiledBackup.DoCopy`,
 		; bcz AHK 1.1.32 would report error on loading: Unsupported parameter default.
-	
+
+		this.master_filepath := inputfile
+		this.versions_tokeep := nkeep
+		
+		_tmp := dev_SplitPath(this.master_filepath, filenam) ; filenam is output var
+		this.filenam := filenam
+		
+		this.dirbackup := dirbackup
+		
+		this.doCopyOrMove := doCopyOrMove
+		
 		if(not dev_IsDiskFile(inputfile))
 			dev_throw("Not a diskfile: " inputfile)
 		
@@ -38,16 +48,6 @@ class PiledBackup
 		
 		if(nkeep<1)
 			dev_throw("Invalid nkeep parameter: " versions_tokeep)
-			
-		this.master_filepath := inputfile
-		this.versions_tokeep := nkeep
-		
-		_tmp := dev_SplitPath(this.master_filepath, filenam)
-		this.filenam := filenam
-		
-		this.dirbackup := dirbackup
-		
-		this.doCopyOrMove := doCopyOrMove
 	}
 	
 	filepath_by_seq(seq)
