@@ -511,7 +511,7 @@ foxit_ClickColorPropertyEx()
 
 foxit7_ClickTextColorSelection()
 {
-	; This click the Text color selection "button" on the []Format toolbar.
+	; This clicks the Text color selection "button" on the []Format toolbar.
 	; I have to put this toolbar on a pre-defined location.
 	;
 	; When I'm editing the text in a comment text-block, it changes the text color.
@@ -565,11 +565,12 @@ RETRY:
 			;MouseMove, 10, 10, %movespeed% , R
 			;Click ; Properties is the first popup menu item (but cannot use hot char there in Foxit 7.1.5)
 				; Using mouse will fail if the menu is popping out upward(when mouse cursor is near screen bottom).
-			Send {Down} ;
+			
+			Send {Down}
 			Sleep, 500
 			Send {Enter}
 			
-			Sleep, 200
+			Sleep, 600
 			goto RETRY
 		}
 	}
