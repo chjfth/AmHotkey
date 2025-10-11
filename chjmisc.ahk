@@ -1148,40 +1148,6 @@ irfanview_CopyAllButFirstWord()
 
 #If ; IsIrfanViewRenameDlgboxActive()
 
-#If IsWinClassActive("IrfanView")
-
-^t:: Rename_and_Paste_append_BeiMian()
-Rename_and_Paste_append_BeiMian()
-{
-    Send {F2}
-   
-    if(!dev_WinWaitActive_with_timeout("Rename/Create"))
-    {
-        dev_MsgBoxWarning("Expect Rename/Create dialog popup, but failed.")
-        return
-    }
-   
-    Clipboard := Clipboard . "，背面"
-    Send {End}{Space}
-    Send ^v
-}
-
-^F2:: ImgRenameAdd__()
-ImgRenameAdd__()
-{
-	Send {F2}
-	
-    if(!dev_WinWaitActive_with_timeout("Rename/Create"))
-    {
-        dev_MsgBoxWarning("Expect Rename/Create dialog popup, but failed.")
-        return
-    }
-	
-	Send {End}
-	SendRaw __
-}
-
-#If
 
 
 
