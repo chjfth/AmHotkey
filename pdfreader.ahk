@@ -570,7 +570,7 @@ RETRY:
 			Sleep, 500
 			Send {Enter}
 			
-			Sleep, 600
+			Sleep, 900 ; temp, was 600
 			goto RETRY
 		}
 	}
