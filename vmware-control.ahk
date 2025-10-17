@@ -320,6 +320,14 @@ vmctl_GetVmLastModifyTime(vmx_filepath, ts14_old:="")
 	; [2025-09-06] On my chji Win7(VMwks 15.5), vmdk's timestamp can lag updating
 	; for very long time(1+ hours), only vmware.log's timestamp is updated constantly.
 	; So I'll check for all files instead of only vmdk-s.
+	;
+	; [2025-10-17] Bad! I found on chji(VMwks 15.5.7) that, even a Win10.21h2 VM is paused, 
+	; the vmware.log file may still get occasionally appended with new messages:
+;
+;	2025-10-17T08:06:56.854+08:00| vmx| I005: GuestRpcSendTimedOut: message to toolbox timed out.
+;	2025-10-17T08:06:56.854+08:00| vmx| W003: ToolsTimeSyncRpcCompletionRoutine: Timeout while sending guestrpc
+;
+	; so, it becomes impossible to reliably check for PAUSED state.
 	
 	; Loop, Files, % vmxdir "\*.vmdk"
 	Loop, Files, % vmxdir "\*.*"
