@@ -461,6 +461,9 @@ class win32c
 	static VK_LAUNCH_APP1 := 0xB6
 	static VK_LAUNCH_APP2 := 0xB7
 	
+	; ====== Editbox messages ======
+	
+	static EM_GETSEL := 0xB0
 }
 
 LOWORD(n)

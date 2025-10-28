@@ -3035,6 +3035,45 @@ dev_ControlSetText_hc(hwndtop, classnn, newtext) ; hc: hwnd+classnn
 	ControlSetText, %classnn%, %newtext%, ahk_id %hwndtop%
 }
 
+dev_ControlGetFocus(hwndtop)
+{
+	; Return HWND of the focus window/child-window
+
+	try {
+		ControlGetFocus, focusNN, ahk_id %hwndtop%
+		ControlGet, focus_hctrl, HWND, , %focusNN%, ahk_id %hwndtop%
+	} catch e {
+		; hwndtop's thread does not have a focused HWND
+		; AmDbg0(Format("No focus for hwndtop 0x{:08X}", hwndtop))
+		return ""
+	}
+
+	; AmDbg0(Format("Focus on 0x{:08X}", focus_hctrl))
+	return focus_hctrl
+}
+
+dev_GetActiveFocusText()
+{
+	hwndtop := dev_GetActiveHwnd()
+	hwndFocus := dev_ControlGetFocus(hwndtop)
+	
+	text := dev_ControlGetText_hwnd(hwndFocus)
+	if(text=="")
+		return ""
+	
+	dev_SendMessage(hwndFocus, win32c.EM_GETSEL, 0, 0)
+	msgret := ErrorLevel
+;	AmDbg0(Format("EM_GETSEL's ErrorLevel={:08X}", msgret))
+
+	iStart := msgret & 0xFFFF
+	iEnd   := (msgret>> 16) & 0xFFFF
+	
+	seltext := SubStr(text, iStart+1, iEnd-iStart)
+;	AmDbg0(Format("dev_GetActiveFocusText() returns '{}'", seltext))
+	
+	return seltext
+}
+
 
 dev_ControlGetPos_hc(hwndtop, classnn)
 {

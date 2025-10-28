@@ -1132,7 +1132,10 @@ irfanview_EndKey()
     if(nowtick - s_prevtick > 500)
         Send, {End}
     else
-        irfanview_CopyAllButFirstWord()
+    {
+        ; irfanview_CopyAllButFirstWord()
+        irfanview_ChjCutFilenameStemwords()
+	}
    
     s_prevtick := nowtick
 }
@@ -1145,6 +1148,38 @@ irfanview_CopyAllButFirstWord()
     SendInput, ^x
 }
 
+irfanview_ChjCutFilenameStemwords()
+{
+	; [2025-10-28] Example:
+	; If current editbox has string:
+	;	20251003_180601[IMG] chj stem words
+	; then we will cut:
+	;	chj stem words
+
+    SendInput, {End}{Shift down}{Home}{Ctrl down}{Right}{Ctrl up}
+    ; -- As per the example above, this selects:
+    ;	20251003_180601
+	; (Shift-key still holding down)
+
+	dev_Sleep(100) ; need a small sleep
+
+	; Now finding a word like [IMG], [VID], [scrn] etc, eliminate them from text selection.
+	;
+	seltext := dev_GetActiveFocusText()
+;	Amdbg0("seltext = " seltext)
+	foundpos := RegExMatch(seltext, "^(\[.+\]).+$", subpat)
+;	Amdbg0("foundpos = " foundpos)
+	if(foundpos==1)
+	{
+		discards := StrLen(subpat1)
+		SendInput, {Right %discards%}
+	}
+	
+	; Finally, release Shift-key
+	SendInput, {Shift up}
+	
+    SendInput, ^x
+}
 
 #If ; IsIrfanViewRenameDlgboxActive()
 
