@@ -557,7 +557,7 @@ dev_WinMoveHwnd(hwnd, x:="", y:="", w:="", h="")
 	}
 }
 
-dev_WinGetPos(wintitle)
+dev_WinGetPos(wintitle:="A")
 {
 	WinGet, hwnd, ID, % wintitle
 	
@@ -3100,10 +3100,32 @@ dev_ControlMove(hwndtop, classnn, x, y, w, h)
 }
 
 
+X_00RGB(red, green, blue)
+{
+	return (red & 0xff)<<16 + (green & 0xff)<<8 + (blue & 0xff)
+}
+
 dev_PixelGetColor(x, y, coordmode:="Relative")
 {
+	; Return the X_00RGB int.
+	; So orange is 0xFF8040.
+
 	CoordMode, Pixel, % coordmode
+
+	if(coordmode=="Relative")
+	{
+		; Allow x & y to be negative, indicating offset from right-edge & bottom.
 	
+		pos := dev_WinGetPos()
+	
+		if(x<0)	{
+			x := pos.w + x
+		}
+		if(y<0) {
+			y := pos.h + y
+		}
+	}
+
 	PixelGetColor, rgb, % x, % y, RGB
 	return rgb
 }
@@ -3258,4 +3280,6 @@ dev_IsWinXP()
 {
 	return A_OSVersion=="WIN_XP" ? true : false
 }
+
+
 
