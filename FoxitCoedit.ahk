@@ -440,6 +440,10 @@ class FoxitCoedit
 		
 		bakdirBase := this.GetBakdirBase(pdfdir)
 		bakdirMyside := this.GetBakdirMyside()
+
+		this.dbg1("FoxitCoedit is creating a backup for current pdf ...")
+		GuiControl_SetText(GuiName, "gu_focoBottomStatus", "Creating backup for pdf ...")
+
 		
 		; Make a backup of the original pdf content.
 		; Assume pdfname is foo.pdf , I will finally generate:
@@ -478,8 +482,8 @@ class FoxitCoedit
 		GuiControl_Enable(GuiName, "gu_focoBtnResync") ; may have been disabled in OnBtnResync()
 		this.state := oldstate
 
-		; We want to move the prebackup pdf to subdir backupA/backup.B ,
-		; no matter LaunchSaveDocSession() succeeds.
+		; We want to move the prebackup pdf to subdir backupA/backupB ,
+		; no matter LaunchSaveDocSession() succeeds or not.
 		;
 		if(not dev_IsFileModifyTimeSame(docpath_now, docpath_prebackup))
 		{
