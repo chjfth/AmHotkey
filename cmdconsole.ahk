@@ -106,20 +106,6 @@ cc_PasteTextToCMDWindow(usertext, timeout_millisec:=500)
 }
 
 
-cmd_Backspace10()
-{
-	Send {Backspace 10}
-	dev_WaitKeyRelease("Backspace")
-		; Do a keywait to avoid deleting too much after user has released the hotkey.
-}
-
-cmd_Del10()
-{
-	Send {Del 10}
-	dev_WaitKeyRelease("Del")
-		; Do a keywait to avoid deleting too much after user has released the hotkey.
-}
-
 ;==============================================================
 ; CMD window
 ;==============================================================
@@ -164,9 +150,9 @@ Answering Yes to add, No to delete, Cancel to take no action.
 	; But very strange! Send and SendInput often randomly loses one or two chars(on chji Win7 etc).
 return
 
-!Backspace:: cmd_Backspace10()
+!Backspace:: dev_SendKeyXTimes("Backspace", 10)
 
-!Del:: cmd_Del10()
+!Del:: dev_SendKeyXTimes("Del", 10)
 
 !m:: cc_LoadChjMacros()
 cc_LoadChjMacros()

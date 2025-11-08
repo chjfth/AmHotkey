@@ -3281,5 +3281,13 @@ dev_IsWinXP()
 	return A_OSVersion=="WIN_XP" ? true : false
 }
 
+dev_SendKeyXTimes(keystr, n)
+{
+	; Example: dev_SendKeyXTimes("Backspace", 10)
+
+	Send {%keystr% %n%}
+	dev_WaitKeyRelease(keystr)
+	; -- Do a keywait to avoid blindly repeating too much.
+}
 
 
