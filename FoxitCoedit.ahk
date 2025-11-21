@@ -442,8 +442,14 @@ class FoxitCoedit
 		bakdirMyside := this.GetBakdirMyside()
 
 		this.dbg1("FoxitCoedit is creating a backup for current pdf ...")
-		GuiControl_SetText(GuiName, "gu_focoBottomStatus", "Creating backup for pdf ...")
-
+		GuiControl_SetText(GuiName, "gu_focoBottomStatus"
+			, Format("[{}] Creating backup for pdf ...", dev_GetDateTimeStrNow()))
+		
+		DllCall("UpdateWindow", "Ptr", GuiControl_GetHwnd(GuiName, "gu_focoBottomStatus"))
+		; -- Important: We'd better force repaint the control, bcz the subsequent file/dir functions
+		; may freeze the AHK's engine-thread for quite some seconds if Samba file-sharing connection 
+		; is lost(e.g. after Windows hibernate/resume). If not repaint now, AHK will not get a 
+		; timing to repaint the control during that freeze period.
 		
 		; Make a backup of the original pdf content.
 		; Assume pdfname is foo.pdf , I will finally generate:
