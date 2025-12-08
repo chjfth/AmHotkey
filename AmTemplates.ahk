@@ -329,6 +329,12 @@ Amt_CreateGui(inipath)
 		Gui_Add_Editbox(GuiName, varname_oldword, gu_amtWordEdtWidth, "xm ReadOnly -Tabstop", key)
 		Gui_Add_Editbox(GuiName, varname_newword, gu_amtWordEdtWidth, "yp x+10 g" . "Amt_OnNewWordChange", key)
 		
+		; A special case for YYYYMMDD: The initial value is current date.
+		if(key=="YYYYMMDD")
+		{
+			GuiControl_SetText(GuiName, varname_newword, dev_GetCurrentDatetime("yyyyMMdd"))
+		}
+		
 		gu_amt_arTemplateWords[index] := {"oldword":key, "newword":key, "desc":value}
 	}
 	
