@@ -1286,11 +1286,17 @@ class FoxitCoedit
 	{
 		pagenum_spec := this.coedit.IniReadPeer("PdfPageNumSpec", "")
 		if(not pagenum_spec)
+		{
+			this.dbg2("Peer INI has not generated PdfPageNumSpec.")
 			return
+		}
 
 		hwndEditbox := this.GetFoxit_PageNum_Editbox()
 		if(not hwndEditbox)
+		{
+			this.dbg2("Unexpect: Mine-side GetFoxit_PageNum_Editbox() returns null.")
 			return
+		}
 		
 		parts := StrSplit(pagenum_spec, ";") ; Example: Seq#6;19 (35 / 179)
 		seqpart := parts[1]
@@ -1317,8 +1323,30 @@ class FoxitCoedit
 		
 		this.dbg1(Format("Peer has updated PdfPageNum to 'Seq#{};{}', now follow it.", peer_now_pagenum_seq, PdfPageNum))
 
-		dev_ControlSetText_hwnd(hwndEditbox, PdfPageNum)
-		dev_ControlSend_hwnd(hwndEditbox, "{Enter}")
+		newpage_ok := false
+		Loop, 4
+		{
+			; [2025-12-10] When the peer use "follow me only after saving PDF", mine-side' timing to follow PdfPageNum
+			; is right after re-opening PDF reader. In this timing, dev_ControlSetText_hwnd(hwndEditbox, "xxx") may
+			; NOT take effect immediately, so, we'd better retry several times.
+			
+			dev_ControlSetText_hwnd(hwndEditbox, PdfPageNum)
+			dev_ControlSend_hwnd(hwndEditbox, "{Enter}")
+			
+			dev_Sleep(500)
+			
+			newtext := dev_ControlGetText_hwnd(hwndEditbox)
+			if(newtext==PdfPageNum) {
+				newpage_ok := true
+				this.dbg1(Format("OK. Mine-side PDF reader's PdfPageNum has been set to '{}'.", newtext))
+				break
+			}
+			this.dbg2(Format("Mine-side pagenum-editbox lags with old text '{}', retry after 500ms.", newtext))
+		}
+		
+		if(not newpage_ok) {
+			this.dbg1(Format("Unexpect! Mine-side pagenum-editbox remains old text '{}'. Follow-peer fails!", newtext))
+		}
 		
 		this.msec_passive_followed := dev_GetTickCount64()
 	}
