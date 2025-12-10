@@ -25,7 +25,15 @@ return ; End of auto-execute section.
 #Include %A_LineFile%\..\libs\chjfuncs.ahk
 
 
-; Define hotkeys below
+/* Customization:
+	; User can define PdfReaderCfg.Foxit7PaletteWaitMillisec etc in custom_env.ahk .
+
+class PdfReaderCfg
+{
+	static Foxit7PaletteWaitMillisec := 300
+}
+*/
+
 
 
 ;==============================================================
@@ -570,7 +578,12 @@ RETRY:
 			Sleep, 500
 			Send {Enter}
 			
-			Sleep, 900 ; temp, was 600
+			waitmsec := PdfReaderCfg.Foxit7PaletteWaitMillisec
+			if(not waitmsec)
+				waitmsec := 300
+			waitmsec := Max(100, waitmsec)
+			dev_Sleep(waitmsec) ; wait the palette to popup
+			
 			goto RETRY
 		}
 	}
