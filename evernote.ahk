@@ -175,6 +175,16 @@ return ; End of auto-execute section.
 #Include %A_LineFile%\..\libs\AHKhttp.ahk
 #Include %A_LineFile%\..\libs\chjfuncs.ahk
 
+/* Customization:
+	; User can define EvernoteCfg.xxx in custom_env.ahk .
+
+class EvernoteCfg
+{
+	static QAstyleMarginPct := 15
+}
+*/
+
+
 class Evnt
 {
 	static Id := "Evernote"
@@ -653,11 +663,23 @@ Evtbl_GenHtml_Table(hexcolor1, hexcolor2)
 
 Evtbl_GenHtml_Div_once(hexcolor1, hexcolor2, align:="FullWidth", add_tail_dash:=true)
 {
+	static s_prev_marginpct := 0
+
+	marginpct := EvernoteCfg.QAstyleMarginPct
+	if(not marginpct || marginpct<1 || marginpct>50)
+		marginpct := 20
+
+	if(s_prev_marginpct != marginpct)
+	{
+		Evnt.dbg2("Evernote.QAstyleMarginPct new value: " marginpct)
+		s_prev_marginpct := marginpct
+	}
+
 	cssmargin := ""
 	if(align=="LeftSide")
-		cssmargin := "margin-right: 20`%;"
+		cssmargin := Format("margin-right: {}`%;", marginpct)
 	else if(align=="RightSide")
-		cssmargin := "margin-left: 20`%;"
+		cssmargin := Format("margin-left: {}`%;", marginpct)
 
 	htmlptn = 
 (
