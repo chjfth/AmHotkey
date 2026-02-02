@@ -196,10 +196,35 @@ MPC_txc_tooltip_display(text)
 	SetTimer, lb_MPC_tooltip_timer, 1000
 }
 
-MPC_CalAllSeconds(h, m, s)
+MPC_CalAllSeconds_no_use(h, m, s)
 {
 	return (h*60+m)*60+s
 }
+
+MPC_CalAllMillis(h, m, s, ms)
+{
+	return ((h*60+m)*60+s) * 1000 + ms
+}
+
+MPC_AddMillis(h, m, s, ms, add_millis)
+{
+	Tot_Millis := MPC_CalAllMillis(h, m, s, ms)
+	Cur_Millis += Tot_Millis + add_millis
+	
+	if(Cur_Millis<0)
+		Cur_Millis := 0
+	
+	curMillis := mod(Cur_Millis, 1000)
+	tmp       := floor(Cur_Millis/1000)
+	curSecond := mod(tmp, 60)
+	tmp       := floor(tmp/60)
+	curMinute := mod(tmp, 60)
+	curHour   := floor(tmp/60)
+	
+	return {"hour":curHour, "minute":curMinute, "second":curSecond, "millis":curMillis
+		, "AllSeconds":floor(Cur_Millis/1000), "AllMillis":Cur_Millis}
+}
+
 
 MPC_txc_GetPlaytime(wintitle="")
 {
@@ -207,7 +232,7 @@ MPC_txc_GetPlaytime(wintitle="")
 	; ret[1].hour , ret[1].minute , ret[1].second, ret[1].AllSeconds // this is for total time
 	; ret[2].hour , ret[2].minute , ret[2].second, ret[2].AllSeconds // this is for current play time
 	; Returning a empty string on failure.
-	;
+	; [2026-02-01] Add .millisec part, bcz MPC-HC has [High precision] option.
 
 	if(not wintitle)
 	{
@@ -228,6 +253,7 @@ MPC_txc_GetPlaytime(wintitle="")
 	; First, played time:
 	;	02:06 / 24:55
 	;	00:02:06 / 01:24:55
+	;	00:02:06.123 / 01:24:55.900
 	; Second, remaining time:
 	;	- 17:19 / 24:55
 	;	- 01:17:19 / 01:24:55
@@ -236,74 +262,91 @@ MPC_txc_GetPlaytime(wintitle="")
 	
 	if(StrIsStartsWith(mpc_timetext, "-"))
 	{
-		if(RegExMatch(mpc_timetext, "- ([0-9]{2}):([0-9]{2}):([0-9]{2}) / ([0-9]{2}):([0-9]{2}):([0-9]{2})", r)>0)
+		if(RegExMatch(mpc_timetext, "- ([0-9]{2}):([0-9]{2}):([0-9]{2})(\.[0-9]{3})? / ([0-9]{2}):([0-9]{2}):([0-9]{2})(\.[0-9]{3})?", r)>0)
 		{
 			remHour := r1 ; rem: remain
 			remMinute := r2
 			remSecond := r3
-			totHour := r4
-			totMinute := r5
-			totSecond := r6
+			remMillis := r4 ? SubStr(r4, 2) : "0"
+			
+			endHour := r5
+			endMinute := r6
+			endSecond := r7
+			endMillis := r8 ? SubStr(r8, 2) : "0"
 		}
-		else if(RegExMatch(mpc_timetext, "- ([0-9]{2}):([0-9]{2}) / ([0-9]{2}):([0-9]{2})", r)>0)
+		else if(RegExMatch(mpc_timetext, "- ([0-9]{2}):([0-9]{2})(\.[0-9]{3})? / ([0-9]{2}):([0-9]{2})(\.[0-9]{3})?", r)>0)
 		{
 			remHour := 0
 			remMinute := r1
 			remSecond := r2
-			totHour := 0
-			totMinute := r3
-			totSecond := r4
+			remMillis := r3 ? SubStr(r3, 2) : "0"
+			
+			endHour := 0
+			endMinute := r4
+			endSecond := r5
+			endMillis := r6 ? SubStr(r6, 2) : "0"
 		}
 		else 
 		{
-			MsgBox, % msgboxoption_IconExclamation , , % "Unexpected MPC timetext: " mpc_timetext
+			MsgBox, % msgboxoption_IconExclamation , , % "[-]Unexpected MPC timetext: " mpc_timetext
 			return ""
 		}
 		
-		TotSeconds := MPC_CalAllSeconds(totHour, totMinute, totSecond)
-		RemSeconds := MPC_CalAllSeconds(remHour, remMinute, remSecond)
-		CurSeconds := TotSeconds - RemSeconds
-		;
-		curSecond := mod(CurSeconds, 60)
-		tmp := floor(CurSeconds/60)
-		curMinute := mod(tmp, 60)
-		curHour := floor(tmp/60)
+		Tot_Millis := MPC_CalAllMillis(endHour, endMinute, endSecond, endMillis)
+		Rem_Millis := MPC_CalAllMillis(remHour, remMinute, remSecond, remMillis)
+		Cur_Millis := Tot_Millis - Rem_Millis
 	}
 	else
 	{
 		
-		if(RegExMatch(mpc_timetext, "([0-9]{2}):([0-9]{2}):([0-9]{2}) / ([0-9]{2}):([0-9]{2}):([0-9]{2})", r)>0)
+		if(RegExMatch(mpc_timetext, "([0-9]{2}):([0-9]{2}):([0-9]{2})(\.[0-9]{3})? / ([0-9]{2}):([0-9]{2}):([0-9]{2})(\.[0-9]{3})?", r)>0)
 		{
 			curHour := r1
 			curMinute := r2
 			curSecond := r3
-			totHour := r4
-			totMinute := r5
-			totSecond := r6
+			curMillis := r4 ? SubStr(r4, 2) : "0"
+			
+			endHour := r5
+			endMinute := r6
+			endSecond := r7
+			endMillis := r8 ? SubStr(r8, 2) : "0"
 		}
-		else if(RegExMatch(mpc_timetext, "([0-9]{2}):([0-9]{2}) / ([0-9]{2}):([0-9]{2})", r)>0)
+		else if(RegExMatch(mpc_timetext, "([0-9]{2}):([0-9]{2})(\.[0-9]{3})? / ([0-9]{2}):([0-9]{2})(\.[0-9]{3})?", r)>0)
 		{
 			curHour := 0
 			curMinute := r1
 			curSecond := r2
-			totHour := 0
-			totMinute := r3
-			totSecond := r4
+			curMillis := r3 ? SubStr(r3, 2) : "0"
+			
+			endHour := 0
+			endMinute := r4
+			endSecond := r5
+			endMillis := r6 ? SubStr(r6, 2) : "0"
 		}
 		else 
 		{
-			MsgBox, % msgboxoption_IconExclamation , , % "Unexpected MPC timetext: " mpc_timetext
+			MsgBox, % msgboxoption_IconExclamation , , % "[ ]Unexpected MPC timetext: " mpc_timetext
 			return ""
 		}
-		TotSeconds := MPC_CalAllSeconds(totHour, totMinute, totSecond)
+		
+		Tot_Millis := MPC_CalAllMillis(endHour, endMinute, endSecond, endMillis)
+		Cur_Millis := MPC_CalAllMillis(curHour, curMinute, curSecond, curMillis)
 	}
-	;MsgBox, %curHour% / %curMinute% / %curSecond% // %totHour% / %totMinute% / %totSecond% ; debug
 	
-	CurSeconds := MPC_CalAllSeconds(curHour, curMinute, curSecond)
+	curMillis := mod(Cur_Millis, 1000)
+	tmp       := floor(Cur_Millis/1000)
+	curSecond := mod(tmp, 60)
+	tmp       := floor(tmp/60)
+	curMinute := mod(tmp, 60)
+	curHour   := floor(tmp/60)
+	
+	; AmDbg0(Format("MPC_txc cur: {:02d}:{:02d}:{:02d}.{:03d}", curHour, curMinute, curSecond, curMillis)) ; debug
 	
 	ret := Object()
-	ret.Insert({"hour":totHour, "minute":totMinute, "second":totSecond, "AllSeconds":TotSeconds})
-	ret.Insert({"hour":curHour, "minute":curMinute, "second":curSecond, "AllSeconds":CurSeconds})
+	ret.Insert({"hour":endHour, "minute":endMinute, "second":endSecond, "millis":endMillis
+		, "AllSeconds":floor(Tot_Millis/1000), "AllMillis":Tot_Millis})
+	ret.Insert({"hour":curHour, "minute":curMinute, "second":curSecond, "millis":curMillis
+		, "AllSeconds":floor(Cur_Millis/1000), "AllMillis":Cur_Millis})
 	return ret
 }
 
