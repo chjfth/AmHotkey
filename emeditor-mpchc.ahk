@@ -15,7 +15,7 @@ AUTOEXEC_EmMpc:
 ; * Customize these global vars according to your running machine:
 ; * Call the run-once functions.
 
-global mpcwin := "ahk_class MediaPlayerClassicW"
+global g_mpcwin := "ahk_class MediaPlayerClassicW"
 
 Init_EmMpcEnv()
 ; -- This function's body is defined after the first "return",
@@ -54,10 +54,10 @@ Init_EmMpcEnv()
 #If Eme_IsActive() and MPC_IsRunning()
 
 
-F2:: dev_ControlSend(mpcwin, "", "^!{Left}")  ; Jump Backward (small)
-F4:: dev_ControlSend(mpcwin, "", "^!{Right}") ; Jump Forward (small)
+F2:: dev_ControlSend(g_mpcwin, "", "^!{Left}")  ; Jump Backward (small)
+F4:: dev_ControlSend(g_mpcwin, "", "^!{Right}") ; Jump Forward (small)
 
-F3:: dev_ControlSend(mpcwin, "", "{Space}")
+F3:: dev_ControlSend(g_mpcwin, "", "{Space}")
 
 `:: emmpc_PasteMpcCurrentTime()
 emmpc_PasteMpcCurrentTime()
@@ -79,7 +79,7 @@ emmpc_PasteMpcCurrentTime()
 	; If [Remaining time] is ticked, a minus sign appears first, e.g:
 	;	-00:19 / 01:08
 	
-	mpctimes := MPC_txc_GetPlaytime(mpcwin)
+	mpctimes := MPC_txc_GetPlaytime(g_mpcwin)
 	tnow := mpctimes[2]
 	tnowstr := Format("{:02d}:{:02d}:{:02d},{:03d}", tnow.hour, tnow.minute, tnow.second, tnow.millis)
 	
