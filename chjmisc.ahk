@@ -1112,8 +1112,11 @@ IrfanView_EXIF_extract_GPS_position(Eoffset_fix:=0, Noffset_fix:=0)
 
 IsIrfanViewRenameDlgboxActive()
 {
-    if(dev_IsExeActive("i_view32.exe") and IsWinTitleMatchRegex("Rename/Create"))
-        return true
+	if((dev_IsExeActive("i_view32.exe") || dev_IsExeActive("i_view64.exe")) `
+		and IsWinTitleMatchRegex("Rename/Create"))
+	{
+		return true
+	}
     else
         return false
 }
