@@ -276,10 +276,12 @@ class Everlink
 		if(!g_HwndEVLGui) {
 			this.CreateGui()
 		}
+	
 		
 		Gui_Show("EVL", "AutoSize", "Everlink")
 		
 		dev_OnMessageRegister(win32c.WM_KEYDOWN, "Evl_WM_KEYDOWN")
+		dev_OnMessageRegister(win32c.WM_MOUSEMOVE , "Evl_WM_MOUSEMOVE")
 		
 		this.isGuiVisible := true
 	}
@@ -289,6 +291,7 @@ class Everlink
 		Gui_Hide("EVL")
 
 		dev_OnMessageUnRegister(win32c.WM_KEYDOWN, "Evl_WM_KEYDOWN")
+		dev_OnMessageUnRegister(win32c.WM_MOUSEMOVE, "Evl_WM_MOUSEMOVE")
 
 		this.isGuiVisible := false
 	}
@@ -398,7 +401,7 @@ class Everlink
 	OnBtnOK()
 	{
 		GuiName := "EVL"
-	;	Gui_Default(GuiName)
+;		Gui_Default(GuiName)
 		
 		rowsel := this.CurRowIdx(GuiName)
 		
@@ -413,8 +416,13 @@ class Everlink
 			dev_MsgBoxInfo("No link is selected yet. Nothing to do.")
 			return
 		}
+
+		isCtrl := GetKeyState("Ctrl")
+		if(isCtrl)
+			html := Format("<span>[<a href='{1}'>{2}</a>]&nbsp;</span>", url, tag)
+		else
+			html := Format("<span><a href='{1}'>{2}</a>&nbsp;</span>", url, tag)
 		
-		html := Format("<span>[<a href='{1}'>{2}</a>]&nbsp;</span>", url, tag)
 		dev_ClipboardSetHTML(html, true, this.hwndToPaste)
 		
 		evkey := Everlink.make_evkey(tag, url)
@@ -712,6 +720,32 @@ Evl_OnBtnOK()
 Evl_WM_KEYDOWN(wParam, lParam, msg, hwnd)
 {
 	g_everlink.On_WM_KEYDOWN(wParam, lParam, msg, hwnd)
+}
+
+Evl_WM_MOUSEMOVE(wParam, lParam, msg, hwnd)
+{
+	evl_ShowUicTooltips(wParam, lParam, msg, hwnd)
+}
+
+evl_ShowUicTooltips(wParam, lParam, msg, hwnd)
+{
+    static s_prev_tooltiping_uic := 0
+
+    is_from_tooltiping_uic := true ; assume message is from a GuiControl
+	
+	if(A_GuiControl=="gu_evlBtnOK")
+	{
+		dev_Tooltip("Hold down Ctrl to add extra [...] around link-text.")
+	}
+	else
+		is_from_tooltiping_uic := false
+	
+	if(is_from_tooltiping_uic) {
+		s_prev_tooltiping_uic := A_GuiControl
+	} else if(s_prev_tooltiping_uic) {
+		tooltip ; clear tooltip
+		s_prev_tooltiping_uic := 0
+	}
 }
 
 Evl_OnCkbRecent()

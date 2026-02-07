@@ -350,7 +350,7 @@ Evp_ShowGui()
 ;		MsgBox, % "Skip Evp_CreateGui()"
 	}
 
-	Evp_AutosizeNowUI() ; Gui, EVP:Show inside
+	Evp_AutosizeNowUI() ; Gui_Show() inside
 
 	g_evpIsGuiVisible := true
 	
