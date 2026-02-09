@@ -32,6 +32,7 @@ return
 
 ; Type ``/ to get a full-width forward-slash so to use in filename
 :*:````/::／
+:*:````\::＼
 
 
 ; Type:
@@ -74,8 +75,3 @@ type_python_shebang()
 :*R:````u::#-*- coding: utf-8 -*-
 
 
-; [2025-07-06] 
-; forward slash full-width
-:*:,,/::／
-; backward slash full-width
-:*:,,\::＼
