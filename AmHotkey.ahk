@@ -26,7 +26,7 @@ global g_MouseNudgeTitleAM = "Non-existing title"
 
 global g_AmMute := false
 
-
+global g_ChangeWindowPosition_spec
 
 ;;;;;;;;;;;;;;;;;;;;;;;;;; ^^^ user configurable globals end ^^^ ;;;;;;;;;;;;;;;;;;;;;;;;;;
 
@@ -2499,10 +2499,12 @@ devui_ChangeWindowPosition()
 	WinGetPos x, y, width, height, ahk_id %Awinid%
 	x2 := x + width
 	y2 := y + height
-	textpreset := % "" . x . "," . y . "," . x2 . "," . y2
+	curpos_spec := Format("{},{},{},{}", x, y, x2, y2)
+	
+	dev_SetClipboardWithTimeout(curpos_spec)
 	
 	WinGetClass, winclass, ahk_id %Awinid%
-	InputBox, size_xy , % "Autohotkey move window", 
+	InputBox, newpos_spec , % "Autohotkey move window", 
 	(
 Assign new position and size for current active window. For example, 
 
@@ -2522,11 +2524,12 @@ Assign new position and size for current active window. For example,
     Set window width=800, height=600, not changing left-top.
 
 Current window(%winclass%) at <%x%,%y%> , size [%width%,%height%]
-	), , 600, 420, , , , , %textpreset%
+Current window position spec in clipboard: %curpos_spec%
+	), , 600, 440, , , , , %g_ChangeWindowPosition_spec%
 	if ErrorLevel
 		return
 	
-	n := StrSplit(size_xy, ",", " ")
+	n := StrSplit(newpos_spec, ",", " ")
 	x1_ := n[1]
 	y1_ := n[2]
 	x2_ := n[3]
@@ -2560,7 +2563,11 @@ Current window(%winclass%) at <%x%,%y%> , size [%width%,%height%]
 			newheight := y2_ - newy
 	}
 	else
+	{
 		newheight := height
+	}
+	
+	g_ChangeWindowPosition_spec := newpos_spec
 	
 ;	msgbox, zzz %newx%, %newy%, %newwidth%, %newheight% ; debug
 
