@@ -85,6 +85,7 @@ global g_isdbg_DefineHotkeyLegacy := g_isdbg_DefineHotkeyLegacy_default
 global g_isdbg_DefineHotkeyFlex   := g_isdbg_DefineHotkeyFlex_default
 ; -- User can override g_isdbg_DefineHotkeyFlex_default in custom_env.ahk .
 
+global g_TemporalGuiHwnd ; Global var used by Gui_Show_CenterOnParent()
 
 
 ;==========;==========;==========;==========;==========;==========;==========;==========;
@@ -2329,7 +2330,7 @@ dev_SetWindowSize_StickCorner(hwnd, newwidth, newheight, escape_taskbar:=false)
 	; If the hwnd straddles across multiple monitors, we'll pick the monitor with the most occupied area
 	; as the "good monitor"
 	idx_good_monitor := 1
-	area_goodr_monitor := 0
+	area_good_monitor := 0
 	
 	;
 	; Check whether the hwnd totally resides in a specific monitor(no straddle)
@@ -2349,9 +2350,9 @@ dev_SetWindowSize_StickCorner(hwnd, newwidth, newheight, escape_taskbar:=false)
 		interx := _Lineseg_IntersectLen(x, x+w, mrect.left, mrect.right)
 		intery := _Lineseg_IntersectLen(y, y+h, mrect.top, mrect.bottom)
 		intersect_area := interx * intery
-		if(intersect_area>area_goodr_monitor)
+		if(intersect_area>area_good_monitor)
 		{
-			area_goodr_monitor := intersect_area
+			area_good_monitor := intersect_area
 			idx_good_monitor := A_Index
 		}
 	}
@@ -2378,23 +2379,11 @@ dev_SetWindowSize_StickCorner(hwnd, newwidth, newheight, escape_taskbar:=false)
 		if(h>mheight)
 			h := mheight
 		
-		; adjust hwnd's Right border
-		Rofs := x+w - mrect.right
-		if(Rofs>0)
-			x -= Rofs
+		tmprect := {left:x, top:y, right:x+w, bottom:y+h}
+		newpos := dev_ConfineRectAToB(tmprect, mrect)
 		
-		; adjust hwnd's Bottom border
-		Bofs := y+h - mrect.bottom
-		if(Bofs>0)
-			y -= Bofs
-		
-		; adjust hwnd's Left border
-		if(x < mrect.left)
-			x := mrect.left
-			
-		; adjust hwnd's Top border
-		if(y < mrect.top)
-			y := mrect.top
+		x := newpos.x
+		y := newpos.y
 		
 		; Now, x,y,w,h is a rectangle that fits into mrect.
 	}
@@ -3334,17 +3323,37 @@ devcb_EnumDisplayMonitors(hMonitor, hDC, pRect, arg)
 }
 
 
-dev_ConfineHwndToRect(hwnd, inrect)
+dev_ConfineRectAToB(rectA, rectB)
 {
-	centerx := inrect.left + (inrect.right-inrect.left)/2
-	centery := inrect.top + (inrect.bottom-inrect.top)/2
+	; This function adjusts A's position so that it falls into B's area, returning this new pos of A
+	; (expressed in dict .x .y. .w .h .x_ .y_)
+	; This is useful when parent window B wants to pop-out a owned window A, so that A is shown "inside" B.
+	; If A is wider or higher than B, strict "inside" is impossible, so I'll try to align their left-top corner.
 
-	wndpos := dev_WinGetPos_byHwnd(hwnd)
+	x := rectA.left
+	y := rectA.top
+	w := rectA.right - rectA.left
+	h := rectA.bottom - rectA.top
+
+	; adjust A's Right border
+	Rofs := x+w - rectB.right
+	if(Rofs>0)
+		x -= Rofs
 	
-	newLeft := centerx - wndpos.w/2
-	newRight := centery - wndpos.h/2
+	; adjust A's Bottom border
+	Bofs := y+h - rectB.bottom
+	if(Bofs>0)
+		y -= Bofs
 	
-	dev_WinMoveHwnd(hwnd, newLeft, newRight)
+	; adjust A's Left border
+	if(x < rectB.left)
+		x := rectB.left
+		
+	; adjust A's Top border
+	if(y < rectB.top)
+		y := rectB.top
+
+	return { x:x , y:y , w:w , h:h, x_:x+w , y_:y+h }
 }
 
 dev_CenterHwndA_on_hwndB(hwndA, hwndB)
@@ -3375,22 +3384,15 @@ dev_CenterHwndA_on_hwndB(hwndA, hwndB)
 		}
 	}
 	
+	if(idxMon==0)
+		idxMon := mlo.idxPrimaryMonitor
+	
 	rectMon := mlo.workarea_rects[idxMon]
 	
-	Rofs := xA + posA.w - rectMon.right
-	if(Rofs>0)
-		xA -= Rofs
+	rectA := {left:xA, top:yA, right:xA+posA.w, bottom:yA+posA.h}
+	finalpos := dev_ConfineRectAToB(rectA, rectMon)
 	
-	Bofs := yA + posA.h - rectMon.bottom
-	if(Bofs>0)
-		yA -= Bofs
-	
-	if(xA < rectMon.left)
-		xA := rectMon.left 
-	if(yA < rectMon.top)
-		yA := rectMon.top
-	
-	dev_WinMoveHwnd(hwndA, xA, yA)
+	dev_WinMoveHwnd(hwndA, finalpos.x, finalpos.y)
 }
 
 dev_SetClipboardEmpty(wait_millisec:=500)

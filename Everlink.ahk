@@ -277,11 +277,7 @@ class Everlink
 			this.CreateGui()
 		}
 	
-		hwndParent := dev_GetActiveHwnd()
-		
-		Gui_Show("EVL", "AutoSize", "Everlink")
-		
-		dev_CenterHwndA_on_hwndB(g_HwndEVLGui, hwndParent)
+		Gui_Show_CenterOnParent("EVL", "AutoSize", "Everlink")
 		
 		dev_OnMessageRegister(win32c.WM_KEYDOWN, "Evl_WM_KEYDOWN")
 		dev_OnMessageRegister(win32c.WM_MOUSEMOVE , "Evl_WM_MOUSEMOVE")

@@ -74,6 +74,18 @@ Gui_Show(GuiName, options="", title:="AHKGUI")
 	Gui, % cmd, % options, % title
 }
 
+Gui_Show_CenterOnParent(GuiName, options="", title:="AHKGUI")
+{
+	hwndParent := dev_GetActiveHwnd()
+	
+	Gui_AssociateHwndVarname(GuiName, "g_TemporalGuiHwnd")
+	; -- It seems we must use a global var for this
+	
+	Gui_Show(GuiName, options, title)
+	
+	dev_CenterHwndA_on_hwndB(g_TemporalGuiHwnd, hwndParent)
+}
+
 Gui_Submit(GuiName, is_keep_gui:=false)
 {
 	cmd := (GuiName ? GuiName ":" : "") "Submit"
@@ -83,6 +95,9 @@ Gui_Submit(GuiName, is_keep_gui:=false)
 
 Gui_AssociateHwndVarname(GuiName, HwndVarname)
 {
+	; Note: HwndVarname string must refer to a global-var.
+	; Autohotkey 1.1.32 seems to require this to be global-var.
+	
 	Gui_ChangeOpt(GuiName, "+Hwnd" HwndVarname)
 }
 
