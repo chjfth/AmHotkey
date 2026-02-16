@@ -3253,12 +3253,6 @@ dev_ClipboardSetHTML(html, is_paste_now:=false, wait_hwnd:=0)
 }
 
 
-;test_EnumDisplayMonitors()
-;{
-;	mlo := dev_EnumDisplayMonitors()
-;	MsgBox, % mlo.desctext
-;}
-
 dev_EnumDisplayMonitors()
 {
 	mlo := g_tmpMonitorsLayout ; create a short-name reference to the global var 
@@ -3267,6 +3261,7 @@ dev_EnumDisplayMonitors()
 	mlo.monitor_rects := []
 	mlo.workarea_rects := []
 	mlo.desctext := ""
+	mlo.idxPrimaryMonitor := 0 ; 0 means unset yet, would be 1,2,3 etc
 
 	hCB := RegisterCallback("devcb_EnumDisplayMonitors", "F", 4, 0)
 	if DllCall("user32\EnumDisplayMonitors", "Ptr", 0, "Ptr", 0, "Ptr", hCB, "UInt", 0)
@@ -3286,12 +3281,14 @@ dev_EnumDisplayMonitors()
 		MsgBox, % "Unexpected! Calling WinAPI EnumDisplayMonitors() failed!"
 	}
 
-	return mlo.Clone()
+	dev_assert(mlo.idxPrimaryMonitor>0, "ERROR on EnumDisplayMonitors() execution. Returned idxPrimaryMonitor should not be 0.")
+
+	return mlo.Clone() ; Clone() to let go g_tmpMonitorsLayout
 }
 
 devcb_EnumDisplayMonitors(hMonitor, hDC, pRect, arg)
 {
-	if !hMonitor
+	if(!hMonitor)
 	    return false
 
 	static sizeof_GetMonitorInfo := 40
@@ -3299,7 +3296,7 @@ devcb_EnumDisplayMonitors(hMonitor, hDC, pRect, arg)
 ;	  DWORD  cbSize; 
 ;	  RECT   rcMonitor; 
 ;	  RECT   rcWork; 
-;	  DWORD  dwFlags; 
+;	  DWORD  dwFlags; // only one flag: MONITORINFOF_PRIMARY(=1)
 ;	} MONITORINFO, *LPMONITORINFO; 
 
 	VarSetCapacity(mi, sizeof_GetMonitorInfo) ; mi: MonitorInfo
@@ -3319,11 +3316,16 @@ devcb_EnumDisplayMonitors(hMonitor, hDC, pRect, arg)
 	rect_workarea.top := NumGet(mi, 24, Int)
 	rect_workarea.right := NumGet(mi, 28, Int)
 	rect_workarea.bottom := NumGet(mi, 32, Int)
+	
+	isPrimaryMonitor := NumGet(mi, 36, Int)
+	; Amdbg0("isPrimaryMonitor = " isPrimaryMonitor)
 
 	mlo := g_tmpMonitorsLayout ; create a short-name reference to the global var
 	mlo.monitor_rects.Push(rect)
 	mlo.workarea_rects.Push(rect_workarea)
 	mlo.count += 1
+	if(isPrimaryMonitor)
+		mlo.idxPrimaryMonitor := mlo.count
 
 ;	MsgBox, % Format("devcb_EnumDisplayMonitors [{1}]`nL={2} T={3} R={4} B={5} , W={6} H={7} `nL={8} T={9} R={10} B={11} , W={12} H={13}", mlo.count
 ;		, rect.left, rect.top, rect.right, rect.bottom, (rect.right-rect.left), (rect.bottom-rect.top)
@@ -3331,6 +3333,19 @@ devcb_EnumDisplayMonitors(hMonitor, hDC, pRect, arg)
 	return true
 }
 
+
+dev_ConfineHwndToRect(hwnd, inrect)
+{
+	centerx := inrect.left + (inrect.right-inrect.left)/2
+	centery := inrect.top + (inrect.bottom-inrect.top)/2
+
+	wndpos := dev_WinGetPos_byHwnd(hwnd)
+	
+	newLeft := centerx - wndpos.w/2
+	newRight := centery - wndpos.h/2
+	
+	dev_WinMoveHwnd(hwnd, newLeft, newRight)
+}
 
 dev_SetClipboardEmpty(wait_millisec:=500)
 {

@@ -277,8 +277,18 @@ class Everlink
 			this.CreateGui()
 		}
 	
+hwnd := dev_GetActiveHwnd()
 		
 		Gui_Show("EVL", "AutoSize", "Everlink")
+		
+;mlo := dev_EnumDisplayMonitors()
+ ;mlo.idxPrimaryMonitor 
+wndpos := dev_WinGetPos_byHwnd(hwnd)
+;AmDbg0(Format("wndpos {}, {}, {}, {}", wndpos.x, wndpos.y , wndpos.x_ ,wndpos.y_ ))
+prc := { "left":wndpos.x , "top":wndpos.y , "right":wndpos.x_ , "bottom":wndpos.y_ }
+AmDbg0(Format("prc L{}, R{}, T{}, B{}", prc.left, prc.top , prc.right , prc.bottom ))
+
+dev_ConfineHwndToRect(g_HwndEVLGui, prc)
 		
 		dev_OnMessageRegister(win32c.WM_KEYDOWN, "Evl_WM_KEYDOWN")
 		dev_OnMessageRegister(win32c.WM_MOUSEMOVE , "Evl_WM_MOUSEMOVE")
