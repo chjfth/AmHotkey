@@ -3347,6 +3347,52 @@ dev_ConfineHwndToRect(hwnd, inrect)
 	dev_WinMoveHwnd(hwnd, newLeft, newRight)
 }
 
+dev_CenterHwndA_on_hwndB(hwndA, hwndB)
+{
+	; Purpose:
+	; Consider B is the parent(base) hwnd, and we want to bring up A to make it display at center of B.
+	; Also, we try it adjust A to make it NOT straddle across multiple monitors.
+	
+	posA := dev_WinGetPos_byHwnd(hwndA)
+	posB := dev_WinGetPos_byHwnd(hwndB)
+	
+	centerx := (posB.x + posB.x_) / 2
+	centery := (posB.y + posB.y_) / 2
+	
+	xA := Floor(centerx - posA.w / 2)
+	yA := Floor(centery - posA.h / 2)
+	
+	; Now check whether xA,yA would cause hwndA to straddle across multiple monitors, and adjust.
+	
+	idxMon := 0  ; which monitor to show hwndA
+	mlo := dev_EnumDisplayMonitors() ; mlo: monitor layout
+	Loop, % mlo.count
+	{
+		if (dev_XYinRect(centerx, centery, mlo.workarea_rects[A_Index]))
+		{
+			idxMon := A_Index
+			break
+		}
+	}
+	
+	rectMon := mlo.workarea_rects[idxMon]
+	
+	Rofs := xA + posA.w - rectMon.right
+	if(Rofs>0)
+		xA -= Rofs
+	
+	Bofs := yA + posA.h - rectMon.bottom
+	if(Bofs>0)
+		yA -= Bofs
+	
+	if(xA < rectMon.left)
+		xA := rectMon.left 
+	if(yA < rectMon.top)
+		yA := rectMon.top
+	
+	dev_WinMoveHwnd(hwndA, xA, yA)
+}
+
 dev_SetClipboardEmpty(wait_millisec:=500)
 {
 	tick_end := A_TickCount + wait_millisec
