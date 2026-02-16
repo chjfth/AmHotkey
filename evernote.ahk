@@ -279,7 +279,7 @@ Evtbl_ShowGui()
 		Evtbl_CreateGui()
 	}
 
-	Gui, EVTBL:Show, , % "EverTable"
+	Gui_Show_CenterOnParent("EVTBL", "", "EverTable")
 	
 	; Always set keyboard focus to color Combobox on GUI showing.
 	GuiControl, EVTBL:Focus, g_evtblComboColor
@@ -2022,7 +2022,7 @@ Evernote_InsertSupSub()
 		Gui, Supsub:Add, Button, x150 y110 Default gBtnSupsubOK, % "Insert"
 	}
 	
-	Gui, Supsub:Show, , % "Insert <sup> or <sub>"
+	Gui_Show_CenterOnParent("Supsub", "", "Insert <sup> or <sub>")
 }
 
 BtnSupsubOK()

@@ -205,7 +205,7 @@ class FoxitCoedit
 			this.CreateGui()
 		}
 		
-		Gui_Show(GuiName, "AutoSize", FoxitCoedit.Id)
+		Gui_Show_CenterOnParent(GuiName, "AutoSize", FoxitCoedit.Id)
 		
 		Editbox_ClearSelection(GuiName, "gu_focoMleInfo") 
 		; -- to avoid seeing all text in Mle defaultly selected on first sight, effective only after Gui_Show()
@@ -1378,7 +1378,7 @@ class FoxitCoedit
 			title := "FoxitCoedit Warning"
 		
 		GuiName := FoxitCoedit.Id
-		Gui_Show(GuiName, "AutoSize", FoxitCoedit.Id)
+		Gui_Show_CenterOnParent(GuiName, "AutoSize", FoxitCoedit.Id)
 		Gui_ChangeOpt(GuiName, "+OwnDialogs")
 		dev_MsgBoxWarning(text, title)
 	}

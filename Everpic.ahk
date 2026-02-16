@@ -314,7 +314,8 @@ Evp_LaunchUI(http_server_baseurl:="")
 
 	Evp_ShowGui()
 
-	Gui_Show("EVP", "", Evp_WinTitle()) ; This ensures EVP is brought to front(not passing "NoActive" option)
+	Gui_Show_CenterOnParent("EVP", "", Evp_WinTitle()) 
+	; -- This ensures EVP is brought to front(not passing "NoActive" option)
 
 	; If the EVP GUI has been on screen, and user calls up Evp_LaunchUI(), and there is currently
 	; no bitmap in the clipboard, our UI will keep *silent* (=not popping a msgbox saying clipboard is empty).
@@ -468,7 +469,7 @@ Evp_CreateGui()
 	;
 	Evp_ShowAllControls(false)
 	
-	Gui_Show("EVP", "xCenter yCenter", Evp_WinTitle()) ; only center it when first created
+	Gui_Show_CenterOnParent("EVP", "xCenter yCenter", Evp_WinTitle()) ; only center it when first created
 	
 	g_evpConvertStartCount := 0
 	g_evpConvertSuccCount := 0	
@@ -503,7 +504,7 @@ Evp_AutosizeNowUI()
 
 	showopt := "AutoSize" . (is_auto ? " NoActivate" : "")
 
-	Gui_Show("EVP", showopt, Evp_WinTitle())
+	Gui_Show_CenterOnParent("EVP", showopt, Evp_WinTitle())
 }
 
 
@@ -804,7 +805,7 @@ Evp_LaunchBatchConvert(fpFromImage:="", scale_pct:=0)
 	
 	if(g_evpConvertStartCount==1)
 	{	; Center the UI only at the first run.
-		Gui_Show("EVP", "xCenter yCenter", Evp_WinTitle())
+		Gui_Show_CenterOnParent("EVP", "xCenter yCenter", Evp_WinTitle())
 	}
 	
 	return true

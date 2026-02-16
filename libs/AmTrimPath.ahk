@@ -84,7 +84,7 @@ Amtp_ShowGui()
 		_Amtp_CreateGui() ; destroy old and create new
 	}
 	
-	Gui_Show(GuiName, "", "AHK Trim path utility")
+	Gui_Show_CenterOnParent(GuiName, "", "AHK Trim path utility")
 	
 	if(not AmTrimPath._isGuiVisible) 
 	{
