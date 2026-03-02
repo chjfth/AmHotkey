@@ -442,7 +442,7 @@ Amt_ShowGui(inipath)
 
 	Amt_ResyncUI()
 	
-	dev_StartTimerPeriodic("Amt_RegenGuidsByCheckbox", 1000)
+	Amt_StartAutoGuidTimer()
 }
 
 Amt_HideGui()
@@ -452,6 +452,16 @@ Amt_HideGui()
 	OnMessage(0x200, Func("Amt_WM_MOUSEMOVE"), 0) ; remove message hook
 	tooltip
 	
+	Amt_StopAutoGuidTimer()
+}
+
+Amt_StartAutoGuidTimer()
+{
+	dev_StartTimerPeriodic("Amt_RegenGuidsByCheckbox", 1000)
+}
+
+Amt_StopAutoGuidTimer()
+{
 	dev_StopTimer("Amt_RegenGuidsByCheckbox")
 }
 
@@ -501,6 +511,16 @@ AMTGuiEscape()
 }
 
 AMT_BtnOK()
+{
+	; Pause timer so that gu_amt_arTemplateWords[] stops refreshing
+	Amt_StopAutoGuidTimer()
+
+	AMT_inBtnOK()
+
+	Amt_StartAutoGuidTimer()
+}
+
+AMT_inBtnOK()
 {
 	Gui, AMT:Submit, NoHide
 	Gui, AMT:+OwnDialogs ; So that child dialogboxes are Modal.
