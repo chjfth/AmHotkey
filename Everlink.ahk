@@ -580,6 +580,7 @@ class Everlink
 
 		if(this.dict.HasKey(evkey))
 		{
+			this.dbg2(Format("Linktag '{}' already in store, nothing to do.", linktag))
 			this.InsertRecentEvkey(evkey)
 			return
 		}
@@ -598,7 +599,13 @@ class Everlink
 			this.RefreshUI()
 			this.SaveData()
 		}
+		
+		; [2026-03-23] User does not want to add this temporal evkey to permanent store, but we still
+		; add it to recent-list, bcz user may probably want to refer to that evlink in the next minutes.
+		this.dbg2(Format("Add linktag '{}' to recent-list", linktag))
+		this.InsertRecentEvkey(evkey)
 	}
+	
 	
 	InsertRecentEvkey(evkey1)
 	{
