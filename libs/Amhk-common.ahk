@@ -1648,10 +1648,15 @@ dev_IsDictEmpty(dict)
 }
 
 
-dev_GetCurrentDatetime(format)
+dev_FormatTimeNow(format)
 {
 	FormatTime, outvar, , %format%
 	return outvar
+}
+
+dev_GetCurrentDatetime(format) ; old name
+{
+	dev_FormatTimeNow(format)
 }
 
 dev_GetDateTimeStr(sep:="_", ts14:="now")
@@ -1665,8 +1670,6 @@ dev_GetDateTimeStr(sep:="_", ts14:="now")
 
 dev_GetDateTimeStrNow(sep:="_")
 {
-;	FormatTime, dt, , % "yyyy-MM-dd.HH:mm:ss"
-;	return dt
 	return dev_GetDateTimeStr(sep, A_Now)
 }
 

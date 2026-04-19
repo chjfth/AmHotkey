@@ -70,6 +70,16 @@ return
 ; 下角标: ₀₁₂₃₄₅₆₇₈₉₊₋₌₍₎
 
 
+; Type ``; to get current date like [2026-04-19]
+:*:````;:: 
+dev_SendInput(dev_FormatTimeNow("[yyyy-MM-dd]"))
+return
+
+; Type ``' to get current date like 20260419
+:*:````':: 
+dev_SendInput(dev_FormatTimeNow("yyyyMMdd"))
+return
+
 
 ; Type:
 ;	 ``!
