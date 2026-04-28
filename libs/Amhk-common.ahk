@@ -1599,6 +1599,11 @@ dev_IsString(s, least:=2)
 		return false
 }
 
+dev_IsEmptyString(s)
+{
+	return StrLen(s)==0 ? true : false
+}
+
 dev_IsExistingFuncName(s)
 {
 	; Check if a string is an existing(already defined) AHK function name.
@@ -1654,9 +1659,9 @@ dev_FormatTimeNow(format)
 	return outvar
 }
 
-dev_GetCurrentDatetime(format) ; old name
+dev_GetCurrentDatetime(format)
 {
-	dev_FormatTimeNow(format)
+	return dev_FormatTimeNow(format)
 }
 
 dev_GetDateTimeStr(sep:="_", ts14:="now")

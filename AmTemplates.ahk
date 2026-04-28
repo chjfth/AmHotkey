@@ -533,6 +533,20 @@ AMT_inBtnOK()
 		return
 	}
 
+	; Check that new words are not empty.
+	dangling_oldwords := ""
+	for index,obj in gu_amt_arTemplateWords
+	{
+		if( dev_IsEmptyString(obj.newword) )
+			dangling_oldwords .= obj.oldword "`n"
+	}
+	if(dangling_oldwords)
+	{
+		msg := Format("Error: These old words are being replaced to empty string(s):`n`n" . dangling_oldwords)
+		dev_MsgBoxError(msg)
+		return
+	}
+	
 	; Check that editbox contents has changed.
 	stales := ""
 	for index,obj in gu_amt_arTemplateWords
