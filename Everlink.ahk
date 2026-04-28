@@ -425,8 +425,7 @@ class Everlink
 		dev_ClipboardSetHTML(html, true, this.hwndToPaste)
 		
 		evkey := Everlink.make_evkey(tag, url)
-
-		this.SaveRecentListToDisk()
+		this.InsertRecentEvkey(evkey)
 
 		this.HideGui()
 	}
@@ -629,6 +628,8 @@ class Everlink
 		
 		if(this.was_show_recent)
 			this.RefreshUI()
+
+		this.SaveRecentListToDisk()
 	}
 	
 } ; class Everlink
