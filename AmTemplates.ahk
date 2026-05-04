@@ -329,12 +329,6 @@ Amt_CreateGui(inipath)
 		Gui_Add_Editbox(GuiName, varname_oldword, gu_amtWordEdtWidth, "xm ReadOnly -Tabstop", key)
 		Gui_Add_Editbox(GuiName, varname_newword, gu_amtWordEdtWidth, "yp x+10 g" . "Amt_OnNewWordChange", key)
 		
-		; A special case for YYYYMMDD: The initial value is current date.
-		if(key=="YYYYMMDD")
-		{
-			GuiControl_SetText(GuiName, varname_newword, dev_GetCurrentDatetime("yyyyMMdd"))
-		}
-		
 		gu_amt_arTemplateWords[index] := {"oldword":key, "newword":key, "desc":value}
 	}
 	
@@ -439,6 +433,10 @@ Amt_ShowGui(inipath)
 	
 	Amt_RegenGuidsByCheckbox()
 	; -- to avoid using stale auto-GUIDs from maybe several hours/days agao.
+
+	; Special for template word "YYYYMMDD": The initial value is current date.
+	Amt_GenerateCurrentDate_for_DateFields()
+		
 
 	Amt_ResyncUI()
 	
@@ -639,8 +637,20 @@ Amt_GenerateAllGuidsByTime()
 	for index,obj in gu_amt_arTemplateGuids
 	{
 		obj.newword := Amt_GenerateGuidByTime(index)
-	
-		GuiControl, AMT:, % Format("gu_amteditNewguid{1}", index), % obj.newword
+		
+		GuiControl_SetText("AMT", "gu_amteditNewguid" index, obj.newword)
+	}
+}
+
+Amt_GenerateCurrentDate_for_DateFields()
+{
+	for index,obj in gu_amt_arTemplateWords
+	{
+		if(obj.oldword=="YYYYMMDD")
+		{
+			obj.newword := dev_GetCurrentDatetime("yyyyMMdd")
+			GuiControl_SetText("AMT", "gu_amteditNewword" index, obj.newword)
+		}
 	}
 }
 
