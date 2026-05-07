@@ -12,10 +12,12 @@ class DbgwinInit
 	
 	DoInit()
 	{
-		; User can enable/set debug-message verbose level here.
+		; User can set default debug-message verbose level here.
 		; DbgwinInit.VerboseLv[modu] will be checked by debugwin.ahk .
+		; If not set, they all defaults to 0.
 	
-;		DbgwinInit.VerboseLv["_default_"] := 1
+;		DbgwinInit.VerboseLv["_default_"] := 1 
+		; -- [2025-01-24] 1=need to see win32help_GetCaretPos()'s msg
 		
 ;		DbgwinInit.VerboseLv["Clipmon"] := 1
 
@@ -33,9 +35,10 @@ class DbgwinInit
 	}
 }
 
-;global g_DefaultDbgLv_HotkeyFlex   := 1
-;global g_DefaultDbgLv_HotkeyLegacy := 1
 
-;global g_DefaultDbgLv_Clipmon := 1
-
-;global g_DefaultDbgLv_VmCtl := 1
+; Usual style to customize running-configuration for individual modules:
+;
+class VmCtl_Cfg
+{
+	static CheckOnlyVmdkForActivity := true
+}
