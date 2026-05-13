@@ -193,6 +193,8 @@ class Evnt
 	
 	static pastecode_retry_delaymsec := 200
 	static pastecode_restore_plaintext_delaymsec := 500
+	
+	static sar_SubsInStr := [] ; // used by Evernote_HtmlPrespanFix
 
 	dbg(msg, lv) {
 		AmDbg_output(Evnt.Id, msg, lv)
@@ -2459,6 +2461,47 @@ Evernote_ChangeStartLinenum()
 	if(isok)
 		Evnt.pastecode_start_numline := ln
 }
+
+
+Evernote_HtmlPrespanFix(html)
+{
+	Evnt.sar_SubsInStr := []
+
+	RegExReplace(html, "is)<pre\b[^>]*>.*?</pre>(?C_evernote_GotOnePrespanToFix)")
+	; -- Why don't I use RegExReplace, bcz AHK-1.1.36 a subtle bug, see Evclip 20260513.6 .
+	
+	replace_count := Evnt.sar_SubsInStr.Length()
+	
+	if(replace_count==0)
+		return html ; nothing to change
+	
+	arsubs := Evnt.sar_SubsInStr
+	
+	srcpos := arsubs[1].offset
+
+	fixedhtml := SubStr(html, 1, srcpos-1)
+	
+	for index,subinfo in arsubs
+    {
+    	fixedhtml .= arsubs[index].dsttext
+
+    	srcpos += arsubs[index].srclen
+    	
+    	src_end_ := index<replace_count ? arsubs[index+1].offset : StrLen(html)+1
+    	src_keep_len := src_end_-srcpos
+    	
+    	src_seg := SubStr(html, srcpos, src_keep_len)
+    	fixedhtml .= src_seg
+		
+		srcpos += src_keep_len
+    }
+    
+	return fixedhtml
+}
+
+
+
+
 
 
 #If Evernote_IsMainFrameOrSingleActive()

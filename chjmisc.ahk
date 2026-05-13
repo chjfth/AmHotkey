@@ -141,6 +141,8 @@ chjmisc_InitMenus()
 	winshell_AddOneAhkFunctionMenuItem("[AmTemplate] Select new", "Amt_LaunchMenu")
 	winshell_AddOneAhkFunctionMenuItem("[AmTemplate] Show previous", "Amt_ShowPreviousGui")
 
+;	winshell_AddOneAhkFunctionMenuItem("Evernote paste HTML (fix PreSpan bug)", "EvernotePastHTML_FixPrespanBug")
+	winshell_AddOneAhkFunctionMenuItem("Vbox VM paste HTML from host (ChatGPT fix pre-grey-bg)", "VboxVM_PasteHtmlFromHost_chatgpt_fix")
 	winshell_AddOneAhkFunctionMenuItem("Vbox VM paste HTML from host (fix the bug)", "VboxVM_PasteHtmlFromHost_fixbug")
 	
 ;	winshell_AddOneAhkFunctionMenuItem("[BadMenu] BadItem", "NotExistingFunction") ; test error reporting
@@ -148,13 +150,13 @@ chjmisc_InitMenus()
 	chjmisc_AddQuickPasteSnippets()
 }
 
-VboxVM_PasteHtmlFromHost_fixbug()
+VboxVM_PasteHtmlFromHost_fixbug(htmltext:="")
 {
 	; [2025-02-14] I find a problem when I copy some HTML content from host-machine Web-browser and 
 	; try to paste it into VBox 6.1.26 VM. 
-	; The workaround is: Get the raw html text from the clipboard, can re-wrap then via dev_ClipboardSetHTML().
+	; The workaround is: Get the raw html text from the clipboard, then re-wrap them via dev_ClipboardSetHTML().
 	;
-	; So, we I have copied a block of text from Chrome/Firefox etc, and switch to a VBox VM's Evernote 
+	; So, when I have copied a block of text from Chrome/Firefox etc, and switch to a VBox VM's Evernote 
 	; window, I can just call VboxVM_PasteHtmlFromHost_fixbug() to paste the HTML(Rich) content into my evclip.
 	; If I just press Ctrl+V in Evernote window, I just got plain text(all HTML format stripped off),
 	; that's probably due to the original text-stream format in "HTML Format" clipboard region is *invalid*.
@@ -168,12 +170,26 @@ VboxVM_PasteHtmlFromHost_fixbug()
 	;	EndFragment:0000003940
 	;	SourceURL:https://cn.bing.com/search?q=....
 
-	htmltext := WinClip.GetHtml() 
+	if(htmltext=="")
+	{
+		htmltext := WinClip.GetHtml()
 		; Got sth like: 
 		;
 		;	<span style="color: rgb(0, 200, 0);">Some Text</span>
+	}
+	
+	htmltext := Evernote_HtmlPrespanFix(htmltext)
 	
 	dev_ClipboardSetHTML(htmltext, true)
+}
+
+VboxVM_PasteHtmlFromHost_chatgpt_fix()
+{
+	htmltext := WinClip.GetHtml()
+	
+	htmltext := StrReplace(htmltext, "<pre", "<pre style='background-color: #F6F6F6;'")
+	
+	VboxVM_PasteHtmlFromHost_fixbug(htmltext)
 }
 
 
