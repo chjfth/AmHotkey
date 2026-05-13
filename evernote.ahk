@@ -2463,6 +2463,30 @@ Evernote_ChangeStartLinenum()
 }
 
 
+_evernote_GotOnePrespanToFix(m, _nouse_, FoundPos)
+{
+	; m is the matched substring
+;	AmDbg0(Format("nFoundPos={}`nm={}", FoundPos, m))
+
+	srclen := StrLen(m)
+	
+	dsttext := dev_StrReplace_CRLF_to_LF(m)
+	dsttext := StrReplace(dsttext, "</span>`n<span", "</span><br/>`n<span", outCount)
+;	AmDbg0(Format("outCount={}", outCount))
+
+	; Check if the matched string has 
+	if(outCount==0)
+		return 0
+
+	dstlen := StrLen(dsttext)
+
+;	AmDbg0(Format("DstLen={}`n{}", dstlen, dsttext))
+	
+	Evnt.sar_SubsInStr.Push(new CSubsInStr(FoundPos, srclen, dstlen, dsttext))
+;	AmDbg0("###############" dsttext)
+	return 0
+}
+
 Evernote_HtmlPrespanFix(html)
 {
 	Evnt.sar_SubsInStr := []
@@ -2471,6 +2495,7 @@ Evernote_HtmlPrespanFix(html)
 	; -- Why don't I use RegExReplace, bcz AHK-1.1.36 a subtle bug, see Evclip 20260513.6 .
 	
 	replace_count := Evnt.sar_SubsInStr.Length()
+;	AmDbg0("replace_count = " replace_count)
 	
 	if(replace_count==0)
 		return html ; nothing to change
@@ -2478,15 +2503,15 @@ Evernote_HtmlPrespanFix(html)
 	arsubs := Evnt.sar_SubsInStr
 	
 	srcpos := arsubs[1].offset
-
+;AmDbg0("[0] srcpos=" srcpos)
 	fixedhtml := SubStr(html, 1, srcpos-1)
-	
+;AmDbg0("[A]" fixedhtml)
 	for index,subinfo in arsubs
     {
     	fixedhtml .= arsubs[index].dsttext
 
     	srcpos += arsubs[index].srclen
-    	
+;AmDbg0("[B] srcpos=" srcpos)
     	src_end_ := index<replace_count ? arsubs[index+1].offset : StrLen(html)+1
     	src_keep_len := src_end_-srcpos
     	
@@ -2499,7 +2524,53 @@ Evernote_HtmlPrespanFix(html)
 	return fixedhtml
 }
 
+Evernote_HtmlPrespanFix_from_CF_HTML(cfhtml)
+{
+	; If you have some CF_HTML content that is copied from local machine(mixed with <pre> blocks), 
+	; and want to paste into Evernote, you may need this fix. Otherwise, some \n inside <pre>
+	; may get lost. (Evclip 20260513.x1)
 
+	; cfhtml has text like this(typically from WinClip.GetHtml()):
+	/*
+Version:0.9
+StartHTML:0000000158
+EndHTML:0000000910
+StartFragment:0000000194
+EndFragment:0000000874
+SourceURL:file:///D:/gitw/AmHotkey/libs/evbug2.html
+<html>
+<body>
+<!--StartFragment--><pre style="color: rgb(0, 0, 0); font-style: normal; font-variant-ligatures: normal; font-variant-caps: normal; font-weight: 400; letter-spacing: normal; orphans: 2; text-align: start; text-indent: 0px; text-transform: none; widows: 2; word-spacing: 0px; -webkit-text-stroke-width: 0px; text-decoration-thickness: initial; text-decoration-style: initial; text-decoration-color: initial; white-space: pre-wrap; border: 1px solid rgb(204, 204, 204); font-family: monospace; padding: 0.3em; margin: 0.3em;">int a = 1;
+const char * s = <span style="color: rgb(0, 187, 0);">// trailing comment</span>
+<span style="color: rgb(221, 0, 238);">"String content"</span>;
+void func(){ }</pre><!--EndFragment-->
+</body>
+</html>
+	*/
+	; We just grab the html from <!--StartFragment--> to <!--EndFragment-->
+	
+	startPos := InStr(cfhtml, "<!--StartFragment-->")
+	endPos := InStr(cfhtml, "<!--EndFragment-->")
+	
+	pfxlen := StrLen("<!--StartFragment-->")
+	
+;AmDbg0(Format("startPos={} endPos={}", startPos, endPos))
+	
+	if(startPos>0 and endPos>0)
+	{
+	
+		html := SubStr(cfhtml, startPos+pfxlen, endPos-startPos-pfxlen)
+;AmDbg0("Bfr::: " html)
+		html := Evernote_HtmlPrespanFix(html)
+;AmDbg0("Aft::: " html)
+	}
+	else
+	{
+		html := Evernote_HtmlPrespanFix(cfhtml)
+	}
+	
+	return html
+}
 
 
 

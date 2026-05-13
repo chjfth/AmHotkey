@@ -141,13 +141,21 @@ chjmisc_InitMenus()
 	winshell_AddOneAhkFunctionMenuItem("[AmTemplate] Select new", "Amt_LaunchMenu")
 	winshell_AddOneAhkFunctionMenuItem("[AmTemplate] Show previous", "Amt_ShowPreviousGui")
 
-;	winshell_AddOneAhkFunctionMenuItem("Evernote paste HTML (fix PreSpan bug)", "EvernotePastHTML_FixPrespanBug")
+	winshell_AddOneAhkFunctionMenuItem("Evernote paste HTML (PreSpan fix)", "PasteToEvernote_fix_CF_HTML")
 	winshell_AddOneAhkFunctionMenuItem("Vbox VM paste HTML from host (ChatGPT fix pre-grey-bg)", "VboxVM_PasteHtmlFromHost_chatgpt_fix")
 	winshell_AddOneAhkFunctionMenuItem("Vbox VM paste HTML from host (fix the bug)", "VboxVM_PasteHtmlFromHost_fixbug")
 	
 ;	winshell_AddOneAhkFunctionMenuItem("[BadMenu] BadItem", "NotExistingFunction") ; test error reporting
 	
 	chjmisc_AddQuickPasteSnippets()
+}
+
+PasteToEvernote_fix_CF_HTML()
+{
+	htmltext := WinClip.GetHtml()
+	htmltext := Evernote_HtmlPrespanFix_from_CF_HTML(htmltext)
+	
+	dev_ClipboardSetHTML(htmltext, true)
 }
 
 VboxVM_PasteHtmlFromHost_fixbug(htmltext:="")
