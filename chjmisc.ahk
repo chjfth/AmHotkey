@@ -142,7 +142,7 @@ chjmisc_InitMenus()
 	winshell_AddOneAhkFunctionMenuItem("[AmTemplate] Show previous", "Amt_ShowPreviousGui")
 
 	winshell_AddOneAhkFunctionMenuItem("Evernote paste HTML (PreSpan fix)", "PasteToEvernote_fix_CF_HTML")
-	winshell_AddOneAhkFunctionMenuItem("Vbox VM paste HTML from host (ChatGPT fix pre-grey-bg)", "VboxVM_PasteHtmlFromHost_chatgpt_fix")
+	winshell_AddOneAhkFunctionMenuItem("Evernote paste HTML (ChatGPT add grey-bg)", "PasteToEvernote_chatgpt_AddGreyBg")
 	winshell_AddOneAhkFunctionMenuItem("Vbox VM paste HTML from host (fix the bug)", "VboxVM_PasteHtmlFromHost_fixbug")
 	
 ;	winshell_AddOneAhkFunctionMenuItem("[BadMenu] BadItem", "NotExistingFunction") ; test error reporting
@@ -152,13 +152,16 @@ chjmisc_InitMenus()
 
 PasteToEvernote_fix_CF_HTML()
 {
+	; [2026-05-14] No matter it is pasted from Host→VboxVM or Host→Host, this function is 
+	; suitable for both, bcz Evernote_HtmlPrespanFix_from_CF_HTML() implicitly fixes the Host→VboxVM bug.
+
 	htmltext := WinClip.GetHtml()
 	htmltext := Evernote_HtmlPrespanFix_from_CF_HTML(htmltext)
 	
 	dev_ClipboardSetHTML(htmltext, true)
 }
 
-VboxVM_PasteHtmlFromHost_fixbug(htmltext:="")
+VboxVM_PasteHtmlFromHost_fixbug()
 {
 	; [2025-02-14] I find a problem when I copy some HTML content from host-machine Web-browser and 
 	; try to paste it into VBox 6.1.26 VM. 
@@ -178,26 +181,23 @@ VboxVM_PasteHtmlFromHost_fixbug(htmltext:="")
 	;	EndFragment:0000003940
 	;	SourceURL:https://cn.bing.com/search?q=....
 
-	if(htmltext=="")
-	{
-		htmltext := WinClip.GetHtml()
-		; Got sth like: 
-		;
-		;	<span style="color: rgb(0, 200, 0);">Some Text</span>
-	}
-	
-	htmltext := Evernote_HtmlPrespanFix(htmltext)
-	
+	htmltext := WinClip.GetHtml()
+	; Got sth like: 
+	;
+	;	<span style="color: rgb(0, 200, 0);">Some Text</span>
+
 	dev_ClipboardSetHTML(htmltext, true)
 }
 
-VboxVM_PasteHtmlFromHost_chatgpt_fix()
+PasteToEvernote_chatgpt_AddGreyBg()
 {
 	htmltext := WinClip.GetHtml()
 	
 	htmltext := StrReplace(htmltext, "<pre", "<pre style='background-color: #F6F6F6;'")
+
+	htmltext := Evernote_HtmlPrespanFix_from_CF_HTML(htmltext)
 	
-	VboxVM_PasteHtmlFromHost_fixbug(htmltext)
+	dev_ClipboardSetHTML(htmltext, true)
 }
 
 
