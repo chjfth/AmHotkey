@@ -1074,7 +1074,7 @@ IrfanView_EXIF_extract_GPS_position(Eoffset_fix:=0, Noffset_fix:=0)
 		
 		ptn := "\(([0-9]+\.[0-9]+)\)" ; matches "119.324167" or "26.067089"
 		
-		if(StrIsStartsWith(line, "GPSLongitude`t"))
+		if(InStr(line, "GPSLongitude`t"))
 		{
 			; Example:
 			;	GPSLongitude	119  19  27.0 (119.324167)
@@ -1087,7 +1087,7 @@ IrfanView_EXIF_extract_GPS_position(Eoffset_fix:=0, Noffset_fix:=0)
 			}
 		}
 
-		if(StrIsStartsWith(line, "GPSLatitude`t"))
+		if(InStr(line, "GPSLatitude`t"))
 		{
 			; Example:
 			;	GPSLatitude	26  4  1.52 (26.067089)
