@@ -193,7 +193,14 @@ PasteToEvernote_chatgpt_AddGreyBg()
 {
 	htmltext := WinClip.GetHtml()
 	
+	; Add grey background for <pre> block.
 	htmltext := StrReplace(htmltext, "<pre", "<pre style='background-color: #F6F6F6;'")
+	
+	; Some more HTML embellishment.
+	; Add thin <table> border.
+	htmltext := StrReplace(htmltext, "<table ", "<table border='1' style='border-collapse:collapse; border-color:#c8d8c8;' ")
+	htmltext := StrReplace(htmltext, "<td ",    "<td style='border-color:#c0d0c0;' ") 
+	; -- Note: the two border-color-s are different which looks acceptingly good, better than both #c0d0c0, collapsing color behavior weird.
 
 	htmltext := Evernote_HtmlPrespanFix_from_CF_HTML(htmltext)
 	
