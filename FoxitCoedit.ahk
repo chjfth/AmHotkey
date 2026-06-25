@@ -465,7 +465,7 @@ class FoxitCoedit
 		saving_succ := dev_Copy1File(docpath_now, docpath_prebackup)
 		if(not saving_succ)
 		{
-			dev_MsgBoxError(Format("[ERROR] Cannot backup orignal PDF! I will not go on saving current pdf in case Foxit Reader/Editor could cause damage to your PDF content."
+			dev_MsgBoxWarning(Format("[ERROR] Cannot backup original PDF! I will not go on saving current pdf in case Foxit Reader/Editor could cause damage to your PDF content."
 				. "`n`nFail to create the backup file:`n`n{}", docpath_prebackup))
 			return
 		}
