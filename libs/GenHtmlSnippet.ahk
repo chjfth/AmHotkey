@@ -76,11 +76,16 @@ in_genhtml_code2pre_2022(codetext, lnprefix_start:=0
 		html := StrReplace(html, "  ", "&nbsp; ")
 		
 		; -- note: StrReplace(html, "  ", " &nbsp;") is problematic,
-		;    bcz " &nbsp" at START of a text line will be rendered as only ONE space.
+		;    bcz " &nbsp;" at START of a text line will be rendered as only ONE space.
 		
 		; Now we need to replace it a second time, otherwise(for example),
 		; "   " would result in "&nbsp;  " that would be ONLY TWO space.
 		html := StrReplace(html, "  ", " &nbsp;")
+		
+		; [20260628.x1] Fix one more Evernote 6.5.4 bug:
+		; If a " " appears at line start, that one " " will be swallowed.
+		; So do the replace:
+		html := StrReplace(html, "`n ", "`n&nbsp;")
 	}
 	
 	if(is_color)
