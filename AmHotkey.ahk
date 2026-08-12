@@ -2565,7 +2565,8 @@ Current window position spec in clipboard: %curpos_spec%
 	return
 }
 
-
+; [2026-07-13] C++: RangeOffset_pon
+;
 NewCoordFromHint(x, width, xhint, omode:=false)
 {
 	; Although function parameters refer to 'x', it can be used by 'y' as well.
