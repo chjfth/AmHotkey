@@ -293,6 +293,8 @@ class Everlink
 		dev_OnMessageUnRegister(win32c.WM_MOUSEMOVE, "Evl_WM_MOUSEMOVE")
 
 		this.isGuiVisible := false
+		
+		dev_TooltipClear()
 	}
 
 	CurRowIdx()
