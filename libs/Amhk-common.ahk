@@ -480,9 +480,17 @@ dev_IniReadVal(inifilepath, section, key:="", default_val:=0)
 	return dev_str2num(str)
 }
 
-dev_IniWrite(inifilepath, section, key, val)
+dev_CreateEmptyAnsiTextFile_IfNotExist(filepath)
+{
+	FileAppend,, % filepath, CP0
+}
+
+dev_IniWrite(inifilepath, section, key, val,  is_create_utf16:=false)
 {
 	try {
+		if(!is_create_utf16)
+			dev_CreateEmptyAnsiTextFile_IfNotExist(inifilepath)
+	
 		IniWrite, % val, % inifilepath, % section, % key
 	}
 	catch e {
@@ -491,10 +499,13 @@ dev_IniWrite(inifilepath, section, key, val)
 	return true
 }
 
-dev_IniWriteSection(inifilepath, section, items)
+dev_IniWriteSection(inifilepath, section, items,  is_create_utf16:=false)
 {
 	; note: would overwrite whole section.
 	try {
+		if(!is_create_utf16)
+			dev_CreateEmptyAnsiTextFile_IfNotExist(inifilepath)
+
 		IniWrite, % items, % inifilepath, % section
 	}
 	catch e {
@@ -507,6 +518,9 @@ dev_IniWriteSectionVA(inifilepath, section, items*)
 {
 	; Usage example:
 	; dev_IniWriteSectionVA("test1.ini", "section1", "key1=val1", "key2=val2")
+	;
+	; If user wants to ensure ANSI file output, user can call 
+	; dev_CreateEmptyAnsiTextFile_IfNotExist() forehand.
 	
 	linestext := ""
 	for index,item in items
