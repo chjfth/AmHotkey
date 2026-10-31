@@ -2645,5 +2645,9 @@ CF_HTML_PasteCodeBlock(line_comment, block_comment:="", lnprefix_start:=0)
 }
 
 
-#If
+^Space:: dev_TooltipAutoClear("Evernote.ahk: [Ctrl+Space] Simplify Formating is disabled.")
 
+^+Space:: dev_TooltipAutoClear("Evernote.ahk: [Ctrl+Shift+Space] Remove Formating is disabled.")
+
+
+#If
