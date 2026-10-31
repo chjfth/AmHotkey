@@ -1410,7 +1410,7 @@ PreviewHtml_ShowGui(html)
 	
 	GuiControl, PvHtml:, g_PvhtmlEdit, % html
 	
-	Gui, PvHtml:Show, , % "Preview CF_HTML Content"
+	Gui_Show_CenterOnParent("PvHtml", "", "Preview CF_HTML Content")
 
 	if(g_HwndEvtbl)
 	{
@@ -1522,7 +1522,7 @@ ColorMatrix_ShowGui()
 		ColorMatrix_CreateGui()
 	}
 
-	Gui, ColorMatrix:Show, , % "EverTable ColorMatrix"
+	Gui_Show_CenterOnParent("ColorMatrix", "", "EverTable ColorMatrix")
 	
 	OnMessage(0x200, Func("ColorMatrix_WM_MOUSEMOVE")) ; add message hook
 	
