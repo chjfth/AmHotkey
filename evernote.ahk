@@ -687,9 +687,11 @@ Evtbl_GenHtml_Div_once(hexcolor1, hexcolor2, align:="FullWidth", add_tail_dash:=
 	else if(align=="RightSide")
 		cssmargin := Format("margin-left: {}`%;", marginpct)
 
+	pb_text_color := g_evtblIsWhiteText ? "white" : "black" ; text-color for those background-painted cells
+
 	htmlptn = 
 (
--<div style="padding: 0.8em; {1} border: 1px solid rgb(220, 220, 220); {2};"><span>DIV</span></div>
+-<div style="padding: 0.8em; {1} border: 1px solid rgb(220, 220, 220); {2}; color:{3}"><span>DIV</span></div>
 ) ; will be feed to Format(), {1} will be replaced
 	
 	if(add_tail_dash)
@@ -697,7 +699,7 @@ Evtbl_GenHtml_Div_once(hexcolor1, hexcolor2, align:="FullWidth", add_tail_dash:=
 	
 	css_bg_rule := make_css_bg_rule(hexcolor1, hexcolor2)
 
-	html := Format(htmlptn, cssmargin, css_bg_rule)
+	html := Format(htmlptn, cssmargin, css_bg_rule, pb_text_color)
 	return html
 }
 
