@@ -195,6 +195,8 @@ class Evnt
 	static pastecode_restore_plaintext_delaymsec := 500
 	
 	static sar_SubsInStr := [] ; // used by Evernote_HtmlPrespanFix
+	
+	static AppsKey_tick64 := 0
 
 	dbg(msg, lv) {
 		AmDbg_output(Evnt.Id, msg, lv)
@@ -220,6 +222,8 @@ Evernote_InitThisModule()
 	evernote_InlinePaste_InitMenu()
 
 	evernote_InitHotkeys()
+	
+	evernote_Deny_QuickAppskeyC()
 }
 
 
@@ -2573,6 +2577,36 @@ void func(){ }</pre><!--EndFragment-->
 }
 
 
+evernote_Deny_QuickAppskeyC()
+{
+	; [2026-11-06] Chj: See reason at Evclip 20261106.c1 
+	
+	fxhk_DefineHotkeyCond("Appskey up", "Evernote_IsMainFrameOrSingleActive", true, "_evernote_AppskeyUp")
+	
+	fxhk_DefineHotkeyCond( "c", "Evernote_IsMainFrameOrSingleActive", false, "_evernote_key_c", false)
+	fxhk_DefineHotkeyCond("+c", "Evernote_IsMainFrameOrSingleActive", false, "_evernote_key_c", true)
+}
+
+_evernote_AppskeyUp()
+{
+	Evnt.AppsKey_tick64 := dev_GetTickCount64()
+;	AmDbg0("Tick= " Evnt.AppsKey_tick64)
+}
+
+_evernote_key_c(is_shift)
+{
+	ticknow := dev_GetTickCount64()
+	
+	colddown_millisec := 5000
+	if(ticknow - Evnt.AppsKey_tick64 < colddown_millisec)
+	{
+		dev_TooltipAutoClear("evernote.ahk: Pressing C after Appskey too quickly, ignored.")
+	}
+	else
+	{
+		devx_HookLetterRelay("c", is_shift)
+	}
+}
 
 
 #If Evernote_IsMainFrameOrSingleActive()

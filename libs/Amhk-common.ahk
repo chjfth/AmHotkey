@@ -3313,3 +3313,25 @@ dev_SendKeyXTimes(keystr, n)
 }
 
 
+devx_HookLetterRelay(char, is_shift)
+{
+	; [2026-11-06] Used by evernote_Deny_QuickAppskeyC() → _evernote_key_c()
+
+	ascii := Asc(char)
+	is_capslock_on := GetKeyState("CapsLock", "T")
+	is_flip := is_capslock_on ^ is_shift
+
+	if(is_flip)
+	{
+		if(ascii>=Asc("A") && ascii<=Asc("Z"))
+			char := Chr(ascii+32) ; convert to lower case
+		else if(ascii>=Asc("a") && ascii<=Asc("z"))
+			char := Chr(ascii-32) ; convert to upper case
+	}
+
+	; AmDbg0(Format("Peek '{}'  ascii={} (0x{:X})", char, Asc(char), Asc(char)))
+
+	dev_SendRaw(char)
+}
+
+
