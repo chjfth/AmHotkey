@@ -868,7 +868,6 @@ GetMonitorWorkArea(monidx)
 
 dbgHotkeyFlex(msg)
 {
-
 	AmDbg_output(AmHotkey.dbgid_HotkeyFlex, msg)
 }
 
@@ -1175,20 +1174,53 @@ _dev_HotkeyFlex_callback()
 	
 		if(not _fxhk_IsComboKeyname(keynamed, out_prefix_keyname, out_suffix_keyname))
 		{
-			; keynamed is like: F2 , ^1 , #!u , ...
-			;                   __   __   ___
+			; keynamed is like: F2 , ^1 , #!u , +r ...
+			;                   __   __   ___ , __
 			
-			sendcompat := _HotkeynameToSendCompat(keynamed) ; get a compatible string representing the key for `Send`
+			; [2026-11-07] >>> Big updates, to enable letter-char hooking/monitoring
 			
-			dev_assert(sendcompat!="")
+			; Check whether keynamed is a single letter like r or +r , if so, we need to 
+			; determine if to send upper-case or lower-case. If uppercase, add a "+" prefix to sendcompat.
+			isLetterChar := _fxhk_is_keynamed_LetterChar(keynamed, out_is_upper)
+;AmDbg0("isLetterChar=" isLetterChar)
+			if(isLetterChar)
+			{
+				; Here, keynamed must be `r` or `+r` or `+R` , cannot be `PgUp` etc.
+				
+				is_capslock_on := GetKeyState("CapsLock", "T")
+				need_shift := (is_capslock_on ^ out_is_upper) ? true : false
+;AmDbg0(Format("caps={} , upr={} , need_shift={}", is_capslock_on, out_is_upper, need_shift))
+				
+				; Construct correct find AHK `Send` instruction
+				
+				if(SubStr(keynamed, 1, 1)=="+")
+				{
+					; If NOT need_shift, we need to strip off the "+".
+					resend := need_shift ? keynamed : SubStr(keynamed, 2, 1)
+;AmDbg0("[111] resend =" resend)
+				}
+				else
+				{
+					resend := need_shift ? "+" keynamed : keynamed
+;AmDbg0("[222] resend =" resend)
+				}
+			}
+			else
+			{
+				sendcompat := _HotkeynameToSendCompat(keynamed) ; get a compatible string representing the key for `Send`
+				dev_assert(sendcompat!="")
 			
+				resend := sendcompat
+			}
+			; [2026-11-07] <<<
+
 			dbgHotkeyFlex(Format("[seq:{}]〖{}〗 NCC-passthrough {} → Send {}"
 				, nowseq
 				, keynamed
 				, meet_passthru?"(explicit)":"(implicit)"
-				, sendcompat))
+				, resend))
 				
-			Send % sendcompat
+			Send % resend
 		}
 		else
 		{
@@ -1280,6 +1312,36 @@ fxhk_get_hpcontext(user_keyname, purposename)
 	return context
 }
 
+_fxhk_is_keynamed_LetterChar(keynamed, byref out_is_upper)
+{
+	; If keynamed is `+a`, `+b`, `+E` etc, out_is_upper will be true.
+	; The plus prefix signifies the upper-case fact.
+
+	out_is_upper := false ; assume false, change later
+
+	klen := StrLen(keynamed)
+	char1 := SubStr(keynamed, 1, 1)
+	char2 := SubStr(keynamed, 2, 1)
+	
+	if(klen>2)
+		return false
+	else if(klen==2)
+	{
+		if (char1=="+" and dev_IsLetterChar(char2))
+		{
+			out_is_upper := true
+			return true
+		}
+		else
+			return false
+	}
+	else if(klen==1)
+	{
+		return dev_IsLetterChar(char1)
+	}
+	else
+		return false
+}
 
 _HotkeynameToSendCompat(a__thishotkey)
 {

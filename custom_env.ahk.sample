@@ -4,6 +4,7 @@ class DbgwinInit
 	; This class accompanies debugwin.ahk .
 
 	static VerboseLv := {}
+
 	static _tmp_ := DbgwinInit.DoInit()
 	; -- Note: We use `class static` here, because `DbgwinInit.DoInit()` is guaranteed
 	;    to be executed on seen.

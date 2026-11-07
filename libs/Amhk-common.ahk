@@ -3312,6 +3312,23 @@ dev_SendKeyXTimes(keystr, n)
 	; -- Do a keywait to avoid blindly repeating too much.
 }
 
+dev_IsLetterChar(char, byref is_upper:=false)
+{
+	ascii := Asc(char)
+	if (ascii>=65 and ascii<=90)
+	{
+		is_upper := true
+		return true
+	}
+	else if (ascii>=97 and ascii<=122)
+	{
+		is_upper := false
+		return true
+	}
+	else
+		return false
+}
+
 
 devx_HookLetterRelay(char, is_shift)
 {
