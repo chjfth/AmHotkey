@@ -538,24 +538,26 @@ amhk_CallAutoexecLabels(arAutoexecLabels)
 
 	;	MsgBox, % Format("filecopy {} -- {}", srcfile, dstfile)
 		
-		FileCopy, %srcfile%, %dstfile%
-		
-		if(ErrorLevel)
+		if( !FileExist(dstfile) )
 		{
-			dev_MsgBoxError(Format("Cannot find or generate ""{}"" . The program will exit.", dstfile))
-			ExitApp, 4
-		}
-		
-		; Generate customize.ahk from customize.ahk.sample as well
-		
-		dst_customize_ahk := A_ScriptDir "\customize.ahk"
-		FileCopy, % A_ScriptDir "\customize.ahk.sample" , % dst_customize_ahk , 0 ; no overwrite
-		if(!FileExist(dst_customize_ahk))
-		{
-			dev_MsgBoxWarning("Cannot create file: " dst_customize_ahk)
-		}
-		
-		MsgBox, % msgboxoption_IconInfo, % "AmHotkey.ahk starts", 
+			FileCopy, %srcfile%, %dstfile%
+			
+			if(ErrorLevel)
+			{
+				dev_MsgBoxError(Format("Cannot find or generate ""{}"" . The program will exit.", dstfile))
+				ExitApp, 4
+			}
+			
+			; Generate customize.ahk from customize.ahk.sample as well
+			
+			dst_customize_ahk := A_ScriptDir "\customize.ahk"
+			FileCopy, % A_ScriptDir "\customize.ahk.sample" , % dst_customize_ahk , 0 ; no overwrite
+			if(!FileExist(dst_customize_ahk))
+			{
+				dev_MsgBoxWarning("Cannot create file: " dst_customize_ahk)
+			}
+			
+			MsgBox, % msgboxoption_IconInfo, % "AmHotkey.ahk starts", 
 (
 This is the first time you run this script. 
 
@@ -567,15 +569,24 @@ to customize what AHK modules to load into this program.
 
 Click OK to continue.
 )
-		Reload
+			Reload
+		}
 	}
-	;
-	start_msgbox_info =
+	
+	if(module_count==0)
+	{
+		start_msgbox_info := "_more_includes_.ahk file is empty, so no modules is loaded."
+	}
+	else
+	{
+		start_msgbox_info =
 (
 %A_ScriptDir%\%A_ScriptName% has loaded the following modules:`n
 %msglistmodules%
 )
+	}
 	dev_MsgBoxInfo(start_msgbox_info, "AmHotkey script loading info")
+
 }
 
 
