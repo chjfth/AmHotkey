@@ -1445,7 +1445,7 @@ fxhk_DefineHotkeyComment(_keyname, purpose_name, comment, is_passthru, fn_act, a
 	return purpose_name
 }
 
-fxhk_DefineHotkeyCondComment(_keyname, purpose_name, comment, is_passthru, fn_cond, fn_act, act_args*)
+fxhk_DefineHotkeyCondComment(_keyname, fn_cond, purpose_name, comment, is_passthru, fn_act, act_args*)
 {
 	; explicit `comment` parameter
 
@@ -1494,9 +1494,9 @@ fxhk_DefineComboHotkeyCondComment(prefix_keyname, suffix_keyname, user_purpose, 
 
 	ahk_keyname := prefix_keyname " & " suffix_keyname
 	
-	user_purpose := fxhk_DefineHotkeyCondComment(ahk_keyname, user_purpose, user_comment
+	user_purpose := fxhk_DefineHotkeyCondComment(ahk_keyname, fn_cond, user_purpose, user_comment
 		, false     ; is_passthru
-		, fn_cond, fn_act, act_args*)
+		, fn_act, act_args*)
 	
 	;
 	; Define implicit hotkeys for prefix_keyname's DOWN and UP action.
@@ -1504,19 +1504,19 @@ fxhk_DefineComboHotkeyCondComment(prefix_keyname, suffix_keyname, user_purpose, 
 	
 	purpose_keydown := _fxhk_getComboKeyDownPurposeName(prefix_keyname)
 	fxhk_DefineHotkeyCondComment(prefix_keyname ; note: Don't add " DOWN" suffix, which results in invalid `Hotkey` keyname.
+		, ""     ; fn_cond
 		, purpose_keydown
 		, Format("This holds back prefix-key-down action of {}", prefix_keyname) ; comment
 		, false  ; is_passthru
-		, ""     ; fn_cond
 		, "_fxhk_callback_ComboPrefixHoldback" ; fn_act
 		, prefix_keyname) ; parameters to fn_act
 	
 	purpose_keyup := _fxhk_getComboKeyUpPurposeName(prefix_keyname)
 	fxhk_DefineHotkeyCondComment(prefix_keyname " UP"
+		, ""     ; fn_cond
 		, purpose_keyup
 		, Format("This will re-send prefix-key-up action of {} (only if clean-press)", prefix_keyname) ; comment
 		, false  ; is_passthru
-		, ""     ; fn_cond
 		, "_fxhk_callback_ComboPrefixResend" ; fn_act
 		, prefix_keyname) ; parameters to fn_act
 	

@@ -378,8 +378,9 @@ class FoxitCoedit
 		this.StoreMinesideIni("", "")
 		
 		; Override Ctrl+S for Foxit Reader/Editor 
-		fxhk_DefineHotkeyCondComment("^s", "FoxitCoedit_SaveDoc_hotkey", "assigned by FoxitCoedit"
-			, false	, "foxit_IsWinActive", "FoxitCoedit_CtrlS")
+		fxhk_DefineHotkeyCondComment("^s", "foxit_IsWinActive"
+		, "FoxitCoedit_SaveDoc_hotkey", "assigned by FoxitCoedit"
+			, false, "FoxitCoedit_CtrlS")
 	}
 	
 	DeactivateCoedit()
