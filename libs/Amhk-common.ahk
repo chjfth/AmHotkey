@@ -2888,6 +2888,17 @@ dev_StartTimerPeriodic(str_callable, millisec, is_exec_now:=false)
 
 dev_StopTimer(str_callable:="")
 {
+	; To succeed, user must pass in the same str_callable as dev_StartTimerPeriodicEx().
+	;
+	; Special note for has-args start-timer case.
+	; [Wrong usage]
+	; dev_StartTimerPeriodicEx(millisec, true, "dev_Send", "{PgDn}")
+	; dev_StopTimer("dev_Send") ; wrong bcz "dev_Send" does NOT match make_solo_callable("dev_Send", foo)
+	;
+	; [Correct usage]
+	; g_fnobj_foo := dev_StartTimerPeriodicEx(millisec, true, "dev_Send", "{PgDn}")
+	; dev_StopTimer(g_fnobj_foo)
+
 	if(str_callable)
 		SetTimer, % str_callable, Off
 	else
@@ -2899,19 +2910,19 @@ dev_StartTimerPeriodicEx(millisec, is_exec_now, funcware, callback_args*)
 	if millisec is not number 
 	{
 		dev_assert(0, Format("millisec parameter MUST be a number, not '{}'.", millisec))
+		return ""
 	}
 	
-	fn := make_solo_callable(funcware, callback_args*)
-	if(is_exec_now)
-		%fn%()
+	fnobj := make_solo_callable(funcware, callback_args*)
 	
-	SetTimer, % fn, % millisec
-	; -- To stop the timer, you should call dev_StopTimer() from *within* your timer callback.
-	;    instead of calling dev_StopTimer().
-	;
-	;    -- because, most of the time, even if you pass the same funcware object to 
-	;    dev_StartTimerPeriodicEx() and to dev_StopTimer(), the resulting `fn` 
-	;    may NOT be the same, so dev_StopTimer() does not take effect.
+	dev_assert(fnobj, Format("make_solo_callable() returns empty object for funcware='{}'", funcware))
+	
+	if(is_exec_now)
+		%fnobj%()
+	
+	SetTimer, % fnobj, % millisec
+
+	return fnobj
 }
 
 dev_StopTimerPeriodicEx(args*)
